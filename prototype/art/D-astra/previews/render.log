@@ -1,0 +1,7 @@
+/home/bookbot/.t3/projects/voices-from-the-void/prototype/art/tools/render_model.py:75: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat.use_nodes = True
+00:01.541  render           | Saved: '/home/bookbot/.t3/projects/voices-from-the-void/prototype/art/D-astra/previews/essentia_jar.png'
+rendered /home/bookbot/.t3/projects/voices-from-the-void/prototype/art/D-astra/previews/essentia_jar.png
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:34:58)
+
+Blender quit

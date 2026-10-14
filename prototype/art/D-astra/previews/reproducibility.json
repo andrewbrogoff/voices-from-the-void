@@ -1,0 +1,41 @@
+{
+  "passed": false,
+  "method": "Two successive full gen/build.sh runs on the installed toolchain; SHA-256 comparison",
+  "artifact_count": 31,
+  "mismatches": [
+    "previews/essentia_jar.png"
+  ],
+  "sha256": {
+    "assets/vftv/blockstates/essentia_jar.json": "8087b366f29b818d32eb9a5c619fe560ae2606326b142b71ba2ff30356c35aed",
+    "assets/vftv/items/essentia_jar.json": "4a7cd59f5a0f5926f9dc997949adab32b3f1ab02b6332e549619a95510297df9",
+    "assets/vftv/items/hollow_bell.json": "4af631d4e51e9f326debb8f9de3f44d1e8ec9fa4dd2a414aeb92a9efb37f2f99",
+    "assets/vftv/items/resonant_brass_ingot.json": "7ec57e90a134162e6ad40b1a7aa86943c34d7a62a9351dd40b6b20a715dc3541",
+    "assets/vftv/items/tuning_fork.json": "d4b6d78cfa0d467d1365c77b54e4ee73185e0cf7aa14bc1478d4fb3f8f7afe4a",
+    "assets/vftv/models/block/essentia_jar.json": "abecfe8dd89a2db5a0ffe20294e417fb0ea9aeec5e816c20b5cf8a4b78959b06",
+    "assets/vftv/models/item/hollow_bell.json": "d85bab3cf6272c91fc2eb092d0c9f7d2d7dcc02d4fb0e5d1ba4667f65c64796f",
+    "assets/vftv/models/item/resonant_brass_ingot.json": "c52d9397b7fe4546ff770eef0cc510d965d156f923558087472ec71a63023b31",
+    "assets/vftv/models/item/tuning_fork.json": "f1aa7caca67c2475779dc8a638300a7ad436a8918aecb3c0e3a04a05bfc0aa28",
+    "assets/vftv/sounds/tuning_fork_strike.ogg": "180fcd746834eca49eec6c14ece6168916d37a36adecb678016d4aa14e3176ce",
+    "assets/vftv/sounds.json": "871a55ea7202a1bc3fb2c32d5dc45283cb3a75ae87f31ce3445f1feb9724bacf",
+    "assets/vftv/textures/block/essentia_jar_band.png": "afe777ce6e374c26820dedb1288b19b81eb097e45c6971d1a40b45a0dceafe2a",
+    "assets/vftv/textures/block/essentia_jar_essentia.png": "d97db7545f444e805a8a773ab3e28b4de85ad147dc5ea7aaa5c3f09c6160ef02",
+    "assets/vftv/textures/block/essentia_jar_essentia_top.png": "ef9c4261d961dacc28f005778c0fb6efa5a9e453d9fff7ae906eac77901723cf",
+    "assets/vftv/textures/block/essentia_jar_glass.png": "b04414e36bdde914f01a9107ae4501133d26f6f749664df24bda2f5fe8c8266b",
+    "assets/vftv/textures/block/essentia_jar_glass_top.png": "15fb63a749bc4cd16c6f34dc48eca417adaa0d96d8a6fa433e019c013be9b2a2",
+    "assets/vftv/textures/block/essentia_jar_lid.png": "485ebe6662092d77e1ccdbdf29cdf8ff9cdb39d02ec0dcd470168ade8c56634a",
+    "assets/vftv/textures/item/hollow_bell.png": "0866044c6e9475bc50efba310b25adebb2e6ea0beb9b671aaa73d0c425c7414a",
+    "assets/vftv/textures/item/resonant_brass_ingot.png": "34d5a71a2ed834aa37417f4b97275d940bbc1bdb1f40f853a7e6ddbbec821cbf",
+    "assets/vftv/textures/item/tuning_fork.png": "c6830b12fad270f474cb8bf684e739383dbd4abed7c02f4671f6a31906aa972c",
+    "previews/essentia_jar.png": "41940c0a4792e25e17529cead706467c8cc767364808ddb894397994fee538d4",
+    "previews/essentia_jar_slot.png": "3c226c0c177783bc0526b779c4b6de4bc721bf9efafdb53b1b02351a0b91a3fc",
+    "previews/revisions/00-initial.png": "432b8ae3056f6ad67a38ed477c20a0b0b4f8741dcde554bbc30feb391ea43a26",
+    "previews/revisions/01-openings.png": "93c9fb5ce8a5dc38f106a50bac7aa3d43845203972659f7458b7c8f9ecf8b060",
+    "previews/revisions/02-final.png": "37c889366e15a028f03238420fee7869cd08093aef0ec99799de0e3802abb9df",
+    "previews/sheet.png": "92b8403c4f03576ac2d494e9501c119e333b3fb1a5fa8a3890efb0191352c80e",
+    "previews/slots.png": "37c889366e15a028f03238420fee7869cd08093aef0ec99799de0e3802abb9df",
+    "previews/spectrogram.png": "1c10f057d538215ba94711ec869ccc86906a15b061904e83f96a946f5f35e635",
+    "previews/review.html": "c1360e431df8a974aa4360ae7ad44fee60f9fd566ee3c77c23246ae19e4b4ebf",
+    "previews/audio-metrics.json": "b8ee5b27fcd3774b1e7529883c1939412e42afb14d70198c377d92f5e5624c82",
+    "previews/sound-stat.txt": "b9f454a52f43faf3ce3de3f03fefbae396ffc0cc8fbcb531723fc924d393fb9e"
+  }
+}

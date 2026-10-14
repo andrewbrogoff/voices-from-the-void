@@ -1,0 +1,10 @@
+{
+  "tuning_fork_strike": {
+    "sounds": [
+      {
+        "name": "vftv:tuning_fork_strike",
+        "volume": 0.65
+      }
+    ]
+  }
+}

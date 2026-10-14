@@ -1,0 +1,12 @@
+{
+  "duration_s": 2.6,
+  "sample_rate_hz": 44100,
+  "channels": 1,
+  "peak_dbfs": -7.05412703448605,
+  "rms_dbfs": -22.750583396067704,
+  "dc_mean": 1.5628747492586778e-06,
+  "energy_fraction_above_10khz": 1.0057712620346202e-08,
+  "last_10ms_peak_dbfs": -240.0,
+  "first_sample": 0.000152587890625,
+  "last_sample": 0.0
+}
