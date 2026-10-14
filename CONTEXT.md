@@ -38,6 +38,24 @@ _Avoid_: eldritch script, the Old Tongue
 How audible the Void finds you: your resonance with it, grown by listening and by Void-tier work. The share of it that is permanent is what can never be un-heard.
 _Avoid_: sanity, corruption, madness
 
+**Temporary warp**:
+Warp that fades on its own within minutes.
+
+**Lasting warp**:
+Warp that stays until the Listener treats it. Treatment always works but always costs something.
+_Avoid_: sticky warp, normal warp
+
+**Permanent warp**:
+The small share of warp that can never be removed, gained only from a few named milestone choices that show their exact cost beforehand.
+
+**Gear warp**:
+Warp that counts only while its item is carried, and goes when the item is put down.
+_Avoid_: item warp
+
+**Bargain**:
+An offer from the Voices of power in exchange for more warp. It can always be refused at no cost.
+_Avoid_: pact, deal
+
 ### Aspects and energy
 
 **Aspect**:
@@ -112,3 +130,17 @@ _Avoid_: construct, automaton
 
 **Eldritch**:
 An adjective only, for things of the Void's deepest tier. Never a proper noun.
+
+### Progression
+
+**Stage**:
+One of the four steps of the Listener's progression. A Stage is entered by finding something in the world, never by reaching a point total. In order: **Resonance**, **Distillation**, **Ruins**, **The Choir's Road**.
+_Avoid_: tier (aspects have tiers), era, chapter
+
+**Joining**:
+One of the two ways a Listener can end their story: answering the Choir and going in after them. It is chosen per player and cannot be undone.
+_Avoid_: ending (as a proper noun), ascension, good/bad ending
+
+**Silencing**:
+The other way to end the story: ending the Choir's voice for yourself. It removes temporary and lasting warp, but permanent warp stays. It is chosen per player and cannot be undone.
+_Avoid_: ending (as a proper noun), banishing, good/bad ending
