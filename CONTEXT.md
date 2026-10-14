@@ -1,0 +1,114 @@
+# Voices From The Void
+
+A Minecraft magic mod in the lineage of Thaumcraft 4. The world is resonance, the Void is the silence beneath it, and the Voices are what a scholar hears when they listen to that silence.
+
+## Language
+
+### The Void
+
+**Void**:
+The silence beneath all resonance; what the world is struck upon. Not a place to visit by default, but what lies under every place.
+_Avoid_: the Abyss, the Outside, the Far Lands
+
+**Voices**:
+What can be heard in the Void: the echoes of the Choir. Not malicious, no longer human, and they want to be heard.
+_Avoid_: whispers (as a proper noun), Old Ones, the Eldritch
+
+**Listening**:
+The deliberate act of tuning in to the Void. It is always a choice the player makes, never something that happens to them.
+_Avoid_: scrying, channelling
+
+**Listener**:
+One who has begun listening to the Void: the player's role in the fiction. Used sparingly.
+_Avoid_: thaumaturge, mage, wizard
+
+**Choir**:
+The earlier order of scholars who listened too long and went into the Void; the Voices are what the Choir became. Its ruins and journal pages remain in the world.
+_Avoid_: the Ancients, the Precursors
+
+**Answerers**:
+A living faction who speak back to the Voices without understanding them. Hostile, and found at Choir sites.
+_Avoid_: cultists, the Cult
+
+**Void-tongue**:
+The invented language of the Voices, used only for eldritch-tier names and late Voice lines. It is breathy and liquid, with no hard stops.
+_Avoid_: eldritch script, the Old Tongue
+
+**Warp**:
+How audible the Void finds you: your resonance with it, grown by listening and by Void-tier work. The share of it that is permanent is what can never be un-heard.
+_Avoid_: sanity, corruption, madness
+
+### Aspects and energy
+
+**Aspect**:
+One of the fundamental "notes" that every thing in the world resonates with. Aspects carry their Latin names (Aer, Ignis, Vacuos…).
+_Avoid_: element, essence
+
+**Primal**:
+An aspect that is not made of others.
+_Avoid_: base aspect, elemental
+
+**Compound**:
+An aspect made of exactly two lower aspects.
+_Avoid_: complex aspect, derived aspect
+
+**Vacuos**:
+The aspect of the Void. It seems to be a compound, but listening reveals it to be a hidden primal that lies beneath the others.
+
+**Vis**:
+Free-flowing magical energy: resonance not bound to any object.
+_Avoid_: mana, aura energy
+
+**Essentia**:
+An aspect distilled out of matter into a material, storable form.
+_Avoid_: liquid aspect, aspect fluid
+
+**Flux**:
+The spilled residue of careless or unstable magic.
+_Avoid_: pollution, miasma
+
+**The Hush**:
+Land or creatures where pooled flux has thinned the world until the Void seeps through. They are quiet, drained of colour, and hollowed.
+_Avoid_: taint, corruption, blight
+
+**Node**:
+A naturally occurring knot of vis in the world, which can be found, tapped and cultivated.
+_Avoid_: aura node, ley point
+
+### Craft
+
+**Commonplace Book**:
+The Listener's own research notebook, which serves as the in-game codex. Its prose grows less reliable as warp rises, but its recipes and numbers are always accurate. Choir pages found in ruins are tipped into it.
+_Avoid_: codex (in player-facing text), Thaumonomicon, guidebook
+
+**Tuning Fork**:
+The first listening instrument. Striking it against a thing reveals that thing's aspects.
+_Avoid_: scanner, Thaumometer
+
+**Resonant Brass**:
+The first magical metal, made by attuning copper.
+_Avoid_: Thaumium, magic brass
+
+**Wand**:
+The hand-held instrument that holds vis and spends it on arcane work.
+_Avoid_: staff (unless it is a distinct tier), rod (which is a wand part)
+
+**Focus**:
+An attachment that gives a wand a spell to cast. Plural: foci.
+_Avoid_: spell, glyph
+
+**Arcane crafting**:
+Crafting that costs vis as well as materials.
+
+**Crucible**:
+A vessel that dissolves items into their aspects and recombines them.
+
+**Infusion**:
+Altar crafting that drives essentia into a central item.
+
+**Golem**:
+A crafted servant that carries out jobs it has been marked for.
+_Avoid_: construct, automaton
+
+**Eldritch**:
+An adjective only, for things of the Void's deepest tier. Never a proper noun.
