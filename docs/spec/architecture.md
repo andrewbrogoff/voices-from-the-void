@@ -40,7 +40,7 @@ Generated resources are committed to `src/generated/resources` (see "Datagen").
 …datagen        data providers
 ```
 
-- **Allowed access:** `neoforge` may use `core` and `api`. `core` may use `api`. Nothing may use `neoforge`.
+- **Allowed access:** `neoforge` may use `core` and `api` (including `api.neoforge`). `core` may use `api` but not `api.neoforge`. Nothing may use `neoforge`.
 - **`core` is loader-free.** It never touches `net.neoforged..` or `org.spongepowered..`.
 - **Organised by feature:** each feature is one `core.<feature>` package, and features have no import cycles between them.
 - **The `model` tier** holds the heavy logic: the essentia network solver, validation of the research puzzle, the Voice event counter, infusion stability, golem job planning. It may not use `net.minecraft..`, so it gets millisecond unit tests without booting FML, and JMH benchmarks. It is thread-agnostic (immutable inputs, no shared mutable state).
@@ -145,8 +145,8 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | Rule | Checks |
 |---|---|
 | `NO_REFLECTION` | No use of `java.lang.reflect..`, `java.lang.invoke..`, `sun.misc..` or `jdk.internal..`, no reflective `Class` methods (`forName`, `getMethod`, `setAccessible`…), and no `ObfuscationReflectionHelper`. `java.util.ServiceLoader` is banned too. |
-| `LAYERS` | `api` ← `core` ← `neoforge`; nothing uses `neoforge` |
-| `CORE_IS_LOADER_FREE` | `api` and `core` never use `net.neoforged..` or `org.spongepowered..` |
+| `LAYERS` | `api` ← `core` ← `neoforge`; nothing uses `neoforge`; `core` never uses `api.neoforge` |
+| `CORE_IS_LOADER_FREE` | `api` (outside `api.neoforge`) and `core` never use `net.neoforged..` or `org.spongepowered..` |
 | `API_IS_PURE` | `api` (outside `api.neoforge`) uses only `java..`, `net.minecraft..`, `com.mojang..` and `org.jspecify..` |
 | `MODEL_IS_MINECRAFT_FREE` | `..model..` packages never use `net.minecraft..` or `com.mojang..` |
 | `CLIENT_SEPARATION` | only `..client..` packages use `net.minecraft.client..` or `com.mojang.blaze3d..` |
@@ -155,8 +155,9 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | `COMPAT_CONFINED` | `curios`, `jei` and `terrablender` types are used only in their own `neoforge.compat.<mod>` package |
 
 **Other checks:**
-- A Gradle check fails if any line in `META-INF/accesstransformer.cfg` lacks a trailing `# why` comment.
+- A Gradle check fails if any active line (not blank, not a comment) in `META-INF/accesstransformer.cfg` lacks a trailing `# why` comment.
 - Interface-injection data files are banned. We only consume NeoForge's own injected interfaces.
-- If a rule ever has to bend, freeze it (`FreezingArchRule`); never disable it.
+- If a rule ever has to bend, freeze it (`FreezingArchRule`); never disable it. The freeze store starts empty, CI never creates or refreezes it, and any change to it is reviewed like code.
+- The full set of gates, tests and the definition of done is in the [quality gates spec](quality-gates.md).
 
 **The order of preference stands:** a NeoForge event or API, then an AT, then a mixin, which counts interface injection as a mixin. v1 is planned with no mixins and no ATs.
