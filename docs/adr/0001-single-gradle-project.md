@@ -1,0 +1,3 @@
+# One Gradle project, with layers enforced by ArchUnit
+
+We want a Fabric port to stay possible, and the usual answer is MultiLoader-style subprojects, where `common` is compiled against vanilla only so the compiler enforces loader-freedom. We chose one Gradle project instead. The layers (`api`, `core`, `neoforge`) are packages, enforced by ArchUnit rules that were shown to catch every loader leak in the dev-tooling research. The only extra source set is `api`, so the addon jar is built cleanly. Package boundaries are what's expensive to change, and the Gradle layout isn't: if the packages are clean, splitting into subprojects for the Fabric port is mechanical. Until then, it would double the build plumbing and complicate testing without FML for no gain.

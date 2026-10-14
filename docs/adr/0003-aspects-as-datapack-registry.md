@@ -1,0 +1,3 @@
+# Aspects are a synced datapack registry
+
+The aspect set is a datapack registry with a network codec, not a static registry defined in code. Aspects are mostly data (name, colour, parent aspects, icon), modpack makers and addons will want to add their own without Java, and vanilla took the same path for enchantments. The costs: code refers to built-in aspects through `ResourceKey` constants and resolves them through `RegistryAccess`, not through static holders. The aspect set is fixed when a world loads; `/reload` doesn't change it. Nothing special can be hard-coded per aspect, so even Vacuos's status as a hidden primal is a property in its data.
