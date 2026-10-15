@@ -245,6 +245,38 @@ _Avoid_: retention, lock
 **Infusion**:
 Altar crafting that drives essentia into a central item.
 
+**Singing Bowl**:
+The centre of an altar: a struck bowl on a plinth that holds the central item. Striking it with a wand reads the altar; striking again begins.
+_Avoid_: matrix, runic matrix, altar stone
+
+**Pedestal**:
+A stand that holds one offering for an altar's Singing Bowl. Once an infusion begins, its offering is promised to that bowl.
+_Avoid_: arcane pedestal, plinth (a part of the bowl)
+
+**Altar**:
+A Singing Bowl together with the pedestals, stabilisers and essentia vessels within its reach, as the bowl hears them.
+_Avoid_: infusion altar (in player-facing text), multiblock
+
+**Stabiliser**:
+A block, such as an amethyst cluster or a lit candle, that steadies an altar when another stands at its mirrored place across the bowl.
+_Avoid_: candle (as the general term), damper
+
+**Stability**:
+The percentage an altar's readout shows before an infusion begins. It sets the chance of an upset at each step, and it is exact.
+_Avoid_: instability (as the shown number), safety
+
+**Upset**:
+A moment where an infusion falters: an offering is knocked loose, or drawn essentia spills as flux. Never the central item.
+_Avoid_: instability event, flux event, backlash
+
+**Echo rod**:
+The Stage 3 rod, infused from a chime rod.
+_Avoid_: silverwood, greatwood
+
+**Echo cap**:
+The Stage 3 cap, infused from a Resonant Brass cap.
+_Avoid_: thaumium cap, charged cap
+
 **Golem**:
 A crafted servant that carries out jobs it has been marked for.
 _Avoid_: construct, automaton

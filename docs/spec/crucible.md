@@ -626,7 +626,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 |---|---|
 | `DISSOLVED` | level and position; the thrower or none; a copy of the item whose count is the number dissolved; the aspects added |
 | `CRAFTED` | level and position; the player; the recipe id; a count-one copy of the catalyst; a copy of the result; the aspects spent |
-| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` (the enum's third value, `DESTROYED`, is posted only by the [essentia spec's](essentia.md#events) `EssentiaEvent`) |
+| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` (the enum's other values are posted only by other events: `DESTROYED` by the [essentia spec's](essentia.md#events) `EssentiaEvent`, and `UPSET` and `ABANDONED` by the [infusion spec's](infusion.md#events) `InfusionEvent`, which also posts `REMOVED`) |
 
 - **Once per commit:** one `DISSOLVED` per dissolve action, one `CRAFTED` per craft, one `SPILLED` per non-empty spill.
 - **Nothing fires** for a refusal, an extraction, a fill, a refresh or a step.

@@ -40,7 +40,7 @@ Two **synced datapack registries**, fixed when a world opens, like the aspect se
 
 - **Required built-in keys** (`WandPartKeys` in `api`): the four entries above. Packs may override their values and add parts; they cannot delete these.
 - **Load validation** refuses the world with a clear error naming the entry: an unknown item or air; one item used by two parts, across both registries; a value out of range; a required key missing.
-- **Later tiers** (Stages 3–4) are entries added by [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21) or [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), with no code. An addon's part model needs an override of `items/wand.json`; two addons overriding that one file conflict, a known limitation handed to the API spec.
+- **Later tiers** (Stages 3–4) are entries added by [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21) or [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), with no code. Stage 3's are the [infusion spec](infusion.md#the-echo-rod-and-cap)'s rod `vftv:echo` (`vftv:echo_rod`, capacity 300) and cap `vftv:echo` (`vftv:echo_cap`, ×0.70). An addon's part model needs an override of `items/wand.json`; two addons overriding that one file conflict, a known limitation handed to the API spec.
 - Names are lang keys `wand_rod.<ns>.<path>` and `wand_cap.<ns>.<path>`.
 
 ### Assembly
@@ -79,6 +79,8 @@ All persistent and network-synced.
    "fallback": {"type": "minecraft:model", "model": "vftv:item/wand/cap/unknown"}}
 ]}}
 ```
+
+**Later tiers append cases.** [Wand assets](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) delivers the file above first. A later tier's asset ticket then appends one case per part to the matching select, keeping every existing case, both `unknown` fallbacks and the foci layer; it never rewrites the file while #38 is open. The first is the [infusion spec](infusion.md#production-tickets)'s: `{"when": "vftv:echo", "model": {"type": "minecraft:model", "model": "vftv:item/wand/rod/echo"}}` in the rod select and `{"when": "vftv:echo", "model": {"type": "minecraft:model", "model": "vftv:item/wand/cap/echo"}}` in the cap select, with the layer textures `assets/vftv/textures/item/wand/rod/echo.png` and `…/wand/cap/echo.png`.
 
 ### Vis storage
 
@@ -618,6 +620,8 @@ content/lang/en_us/wands.json   every key under "Lang keys"
 ```
 
 **Rejected:** a required key missing; anything that fails the parts load validation.
+
+**Other content files** may use the same schema for later-tier parts (the [infusion spec](infusion.md#wand-parts)'s `content/infusion/wand_parts.json` is the first). Datagen merges them; a part id declared in two `content/` files fails datagen.
 
 ### Recipes
 

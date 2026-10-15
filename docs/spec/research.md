@@ -470,9 +470,9 @@ A code registry, **`vftv:page_type`**. Page *i* (0-based) of entry `<ns>:<path>`
 | Type | Fields | Prose | Draws |
 |---|---|---|---|
 | `vftv:text` | none | required | the prose |
-| `vftv:recipe` | `recipe` (any synced recipe id, ours or vanilla); `preview` (default `false`) | optional caption | the recipe from synced recipe data through `SlotDisplay`, with costs from the owning spec's preview. When that preview takes a **context** (the arcane spec's reference wand, the [crucible spec](crucible.md#the-authoritative-preview)'s targeted crucible), the page names the context and its availability, and never shows a value for a context that isn't there. With `preview: true` it is a **locked preview** ("Not yet within my reach") that implies no craftability. |
+| `vftv:recipe` | `recipe` (any synced recipe id, ours or vanilla); `preview` (default `false`) | optional caption | the recipe from synced recipe data through `SlotDisplay`, with costs from the owning spec's preview. When that preview takes a **context** (the arcane spec's reference wand, the [crucible spec](crucible.md#the-authoritative-preview)'s targeted crucible, the [infusion spec](infusion.md#the-authoritative-preview)'s current readout of the targeted Singing Bowl), the page names the context and its availability, and never shows a value for a context that isn't there. With `preview: true` it is a **locked preview** ("Not yet within my reach") that implies no craftability. |
 | `vftv:aspects` | `of` (a scan key) | optional caption | the thing's aspects: known ones exact, unheard ones as the unheard icon with the exact amount |
-| `vftv:structure` | `multiblock` (an id in the owning spec's data) | optional caption | a rotatable preview through `PictureInPictureRenderer` |
+| `vftv:structure` | `multiblock` (an id `<ns>:<path>` naming the client resource `assets/<ns>/multiblock/<path>.json`, in the owning spec's format; the [infusion spec](infusion.md#the-altar-multiblock)'s `{"format": 1, "size", "bowl", "blocks"}` is the first) | optional caption | a rotatable preview through `PictureInPictureRenderer`. A missing or unreadable resource draws the visible "missing" marker and is logged once. |
 | `vftv:image` | `sprite` (a GUI sprite id, at most 130×120) | optional caption | the sprite |
 | `vftv:action` | none | none | per kind: the note grid button and Learn/Abandon, Buy in skip mode, or Listen |
 | `vftv:choir` | none | required | the prose on Choir paper, never degraded |
@@ -519,7 +519,9 @@ A code registry, **`vftv:page_type`**. Page *i* (0-based) of entry `<ns>:<path>`
 span   = "{fact:" source ":" args "}"        args are split on ":"; the arity is fixed per source
 recipe : <ns> ":" <path> ":" <field>         field from the owning spec's preview: at least
                                              output, inputs, and every decision cost it returns
-                                             (e.g. vis, vis_effective, flux; stability for infusion;
+                                             (e.g. vis, vis_effective, flux; for infusion stability,
+                                             chance, clean_floor, clean_full_supply, upset_flux,
+                                             abandon_flux, stabilisers_capped and clamped;
                                              aspects and status for the crucible)
 aspects: <kind> ":" <ns> ":" <path>          a scan key of kind item, block or entity
 entry  : <ns> ":" <path> ":" ("warp" | "skip_cost" | "rewards" | "held")
@@ -529,6 +531,7 @@ key    : <key mapping name>                  e.g. key.use
 vis    : <VisRules key>                      a tuning key or limits.* key of the wands spec's synced
                                              VisRules, e.g. tap.amount, relay.range, limits.network_members
 essentia: <EssentiaRules key>                exactly one of the keys listed under "essentia keys" below
+infusion: <InfusionRules key>                exactly one of the keys listed under "infusion keys" below
 ```
 
 **`essentia` keys** ([essentia spec, Tuning and limits](essentia.md#tuning-and-limits)). Arity 1; the key is a dotted name, so it contains no `:`. Every value is a non-negative integer, rendered in plain ASCII digits with no separators or units. Prose supplies the unit ("every {fact:essentia:tube.pulse} ticks").
@@ -549,8 +552,26 @@ essentia: <EssentiaRules key>                exactly one of the keys listed unde
 - A key outside this table is a malformed span, rejected by the validator.
 - **Until the first `EssentiaRules` arrives,** an `essentia` span renders as `[?]` without logging. Every player receives `EssentiaRules` on join, before any book can open.
 
+**`infusion` keys** ([infusion spec, Tuning and limits](infusion.md#tuning-and-limits)). Arity 1, with the same rendering rules as `essentia` keys. Per-mille values render as their integer per mille; prose supplies the unit.
+
+| Key | Value |
+|---|---|
+| `run.interval`, `run.rate` | ticks between a run's steps; most units per draw |
+| `symmetry.lone_pedestal`, `symmetry.lone_item` | stability points per lone pedestal and per lone offering |
+| `stabilise.per_pair`, `stabilise.max_pairs` | points per matched stabiliser pair; how many count |
+| `upset.max_chance` | the chance of an upset per step at stability 0, per mille |
+| `upset.max`, `upset.spill` | upsets per run; most units per spill |
+| `upset.jolt_weight`, `upset.spill_weight` | the two upset weights |
+| `enchant.instability_per_level` | points per enchantment level already on the item |
+| `arm.ttl`, `arm.refresh`, `abandon.window` | ticks a readout lasts after a strike; between its refreshes; to confirm abandoning |
+| `limits.box_radius`, `limits.box_below`, `limits.box_above` | the altar's reach across, below and above the bowl |
+| `limits.max_pedestals`, `limits.max_sources` | the most pedestals an altar may have; the most vessels it draws from |
+
+- A key outside this table is a malformed span, rejected by the validator.
+- **Until the first `InfusionRules` arrives,** an `infusion` span renders as `[?]` without logging. Every player receives `InfusionRules` on join.
+
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand, or the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`), and for `infusion` spans the arrival of a new `InfusionRules` ([infusion spec, Sync and state](infusion.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.
@@ -933,6 +954,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)** (the recipe-gate contracts also bind [Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20), [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) and [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for their own recipe types)
 - **Gate:** each research-gated recipe carries `research: <entry id>`. The server refuses every processing and output path until that entry is learned, proved by a GameTest with an unlearned player.
+  - **Machines that run over time** (reconciled with the [infusion spec](infusion.md#stage)): the gate is checked at the **commit** that starts the run, before anything is claimed, drawn or consumed. The committed run then completes that authorised craft even if the research is later revoked, or its starter is offline or dead, just as a committed Worktable output is never confiscated. Such a spec states its commit point and proves it with a GameTest that revokes the research mid-run.
 - **Recipe-page validator:** a `recipe` page in entry E shows a recipe that is ungated, or gated by E or by anything in E's transitive `parents` ∪ `hidden_parents` closure. Any other (forward-looking) recipe must be marked `preview: true`.
 - **One authoritative cost preview** per recipe type: base and effective vis, flux spill and every other decision cost, with capped modifiers flagged. It backs both the recipe page and the fact fields (`output`, `inputs` and each cost).
 - **JEI** filters by the **learned gate**, updates on grant, revoke, login and logout, and marks recipes the player currently can't afford accurately. Everything works with JEI absent.
@@ -942,7 +964,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Book pages follow the real essentia rules, including the Vacuos statement it owns. Point synthesis in the puzzle is a separate, explicitly defined economy and implies nothing about essentia.
 
 **[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)**
-- The preview includes **stability** as a fact field, and the altar is a `multiblock` id that structure pages can show.
+- The preview includes **stability** as a fact field, and the altar is a `multiblock` id that structure pages can show. *Met by the [infusion spec](infusion.md#the-authoritative-preview): every decision cost as a fact field (`stability`, `instability`, `chance`, `clean_floor`, `clean_full_supply` with `clean` as the floor's alias, `upset_flux` with `flux` as its alias, a live run's `abandon_flux`, and the `stabilisers_capped` and `clamped` flags), from an armed readout or a matching run's, with exact absent texts and the visible `checked_at` identity; the `infusion` fact source above; and `vftv:infusion_altar` under the structure resource contract (amended here).*
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
 - `book_bands`: three ascending warp thresholds in its tuning. It syncs the owner's current band (0–3) and their exact warp per kind.
