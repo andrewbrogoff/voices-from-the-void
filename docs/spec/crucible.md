@@ -68,7 +68,7 @@ The **`water`** property is boolean, and **water is never consumed** by dissolvi
 
 | Held item | Crucible (first match) | Effect | Returns |
 |---|---|---|---|
-| water or empty bucket | dormant (see "Sync and state") | refused: nothing changes; the action bar shows `message.vftv.crucible.dormant` | `CONSUME` |
+| water or empty bucket | dormant (see "Sync and state") | refused: nothing changes; the status line shows `message.vftv.crucible.dormant` | `CONSUME` |
 | water or empty bucket | transaction-busy, or an operation open (see "Essentia out" and "Emptying by bucket") | refused: nothing changes, so an open extraction's rollback can never restore a pool into a dry crucible | `CONSUME` |
 | water bucket | dry | **fill:** `water = true`, `boiling` recomputed; the bucket becomes an empty one through `ItemUtils.createFilledResult` (creative play keeps its bucket, and a full inventory drops the result, as vanilla's cauldron does); `crucible.fill` plays; game event `FLUID_PLACE` | `SUCCESS` |
 | water bucket | has water | nothing changes: no water is placed anywhere and the bucket is kept | `CONSUME` |
@@ -215,7 +215,7 @@ An item is **protected** iff it is in the item tag **`vftv:crucible_refuses`** (
 
 Which entity survives an equal-count merge is vanilla's choice; a GameTest records it, so a vanilla change is noticed. The promise is no stronger than "while the marked entity survives": a mark on the `ItemStack` would leak into inventories through hoppers, and a merge mixin isn't justified.
 
-**Feedback:** the online thrower gets **at most one action-bar line per step**: their first refusal in drain order. Chat is never used ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)). The `SHORT` argument is the shortfall, cost − pool for each short aspect, as "*Aspect* *n*" in ascending aspect id, joined by ", ". An aspect the thrower hasn't discovered is named `crucible.vftv.unheard`, with its exact *n*. Numbers are plain integers in ASCII digits ([arcane crafting, The screen](arcane.md#the-screen), number formats).
+**Feedback:** the online thrower gets **at most one [status line](accessibility.md#r5-the-status-line) per step**: their first refusal in drain order. It wraps, so the whole `SHORT` list (at most `MAX_COST_ENTRIES`, 8 aspects) is always shown. Chat is never used ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)). The `SHORT` argument is the shortfall, cost − pool for each short aspect, as "*Aspect* *n*" in ascending aspect id, joined by ", ". An aspect the thrower hasn't discovered is named `crucible.vftv.unheard`, with its exact *n*. Numbers are plain integers in ASCII digits ([arcane crafting, The screen](arcane.md#the-screen), number formats).
 
 ## Crucible recipes
 
@@ -406,17 +406,20 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 | Spill line | `hud.vftv.crucible.spill` (1 arg: `essentiaFlux(pool, EMPTIED)`), iff the crucible has water and a non-empty, readable pool |
 
 **Geometry,** in GUI-scaled pixels on a scaled screen of `W` × `H`:
-- the header and spill lines are 9 px tall, clipped with "…" to the widest inner width, `maxInner = W − 12` (a 2-px screen margin and the 4-px padding on each side);
+- the header and spill lines **wrap** to the widest inner width, `maxInner = W − 12` (a 2-px screen margin and the 4-px padding on each side), with the font's own `split`, so no number is ever cut ([localisation, R3](accessibility.md#r3-hud-text)): `h` header lines and `p` spill lines (0 without a spill line), 9 px each;
+- **the usable height** `H′` is `H` with no caption showing, else `bandTop − 2`, where `bandTop` is the top of the [caption band](accessibility.md#the-caption-band), read from its published value before this layout; `bandTop` is never above ⌊`H` / 3⌋, so `H′` is never negative. A caption never covers a card's numbers;
 - a **cell** is 16 px tall: the icon at (0, 0), the amount at (18, 4). Its width is `18 + T`, where `T` is the widest amount string in the pool by the font's own metrics, measured once per layout. The column pitch is cell + 4 and the row pitch 18;
 - **no entries** (an empty pool, or a dormant record): columns = rows = 0 and no grid is drawn;
-- otherwise `maxFit = max(1, ⌊(maxInner + 4) / pitch⌋)`. The **columns** `c` are the smallest count from `min(n, 4, maxFit)` up to `min(n, maxFit)` whose frame fits `H − 4` tall, else `min(n, maxFit)`; rows are ⌈`n` / `c`⌉;
-- frame height = 17 + 18 × rows + 11 if there is a spill line; frame width = 8 + the widest of the header, the spill line and the grid (`c` × cell + (`c` − 1) × 4, or 0 with no columns);
-- **fallback:** if the frame is still wider than `W − 4` or taller than `H − 4`, it is drawn at the pose scale `s = min((W − 4) / width, (H − 4) / height)`;
-- **position:** the drawn size is ⌈width × `s`⌉ × ⌈height × `s`⌉ (rounded **up**, so a fractional edge never eats the margin). The frame is anchored at (⌊`W`/2⌋ + 8, ⌊`H`/2⌋ + 8), then clamped: `x = max(2, min(anchor x, W − drawn width − 2))`, and likewise `y`, so it stays at least 2 px inside the screen.
+- otherwise `maxFit = max(1, ⌊(maxInner + 4) / pitch⌋)`. The **columns** `c` are the smallest count from `min(n, 4, maxFit)` up to `min(n, maxFit)` whose frame fits `H′ − 4` tall, else `min(n, maxFit)`; rows are ⌈`n` / `c`⌉;
+- frame height = 8 + 9 × `h` + 18 × rows + (2 + 9 × `p` if there is a spill line), which is the earlier 17 + 18 × rows + 11 when each line fits on one; frame width = 8 + the widest of the header lines, the spill lines and the grid (`c` × cell + (`c` − 1) × 4, or 0 with no columns);
+- **fallback:** if the frame is still wider than `W − 4` or taller than `H′ − 4`, it is drawn at the pose scale `s = min((W − 4) / width, (H′ − 4) / height)`;
+- **sheets,** when that `s` would be below **0.75**: the card is split into stable **sheets** instead of shrinking further. A card has a **head** (here the header lines), a **foot** (here the spill lines) and a **body** (here the grid rows), each consumer declaring its own. Every sheet repeats the head and the foot, and ends with the indicator `hud.vftv.card.sheet` (sheet, sheets, and the names of the two sheet keys; [localisation, Lang keys](accessibility.md#lang-keys)), one line with a 2-px gap. A sheet holds `r = max(1, ⌊((H′ − 4) / 0.75 − fixed) / 18⌋)` body rows, where `fixed = 8 + 9 × h + (2 + 9 × p if there is a spill line) + 11`; columns stay `c` as chosen above, and the indicator's width joins the frame width's maximum. Every sheet is drawn at **sheet 1's size**, `fixed + 18 × r` tall, at `s = min(1, (W − 4) / width, (H′ − 4) / height)`, so the frame never jumps; sheets = ⌈rows / `r`⌉. If even `r` = 1 doesn't fit at 0.75 (only on a window below 320 × 240), the sheet draws at the scale that fits;
+- **turning sheets:** never automatic. The key mappings `key.vftv.card.previous_sheet` and `key.vftv.card.next_sheet` (Page Up and Page Down by default, rebindable) turn the card under the crosshair one sheet, stopping at the ends; they are consumed only while a card with more than one sheet shows and no screen is open. A turn narrates the new sheet's body once ([localisation, HUD narration](accessibility.md#hud-narration)). The sheet resets to 1 when the target changes and is clamped to the new count on a relayout. Every entry is on exactly one sheet, in order;
+- **position:** the drawn size is ⌈width × `s`⌉ × ⌈height × `s`⌉ (rounded **up**, so a fractional edge never eats the margin). The frame is anchored at (⌊`W`/2⌋ + 8, ⌊`H`/2⌋ + 8), then clamped: `x = max(2, min(anchor x, W − drawn width − 2))`, and `y = max(2, min(anchor y, H′ − drawn height − 2))`, so it stays at least 2 px inside the screen and above the caption band.
 
 **Every pool fits.** The total is at most 10,000, so only a one-entry pool can hold a five-digit amount; with 2–64 entries every amount has at most 4 digits. With the vanilla font (6-px digits) the largest pool fits **unscaled** on the smallest scaled screen, 320 × 240, which vanilla's GUI scale never goes below for a window that size or larger. The pose-scale fallback covers resource-pack fonts and smaller windows.
 
-**Vectors** (reference implementation, cross-checked against the JDK):
+**Vectors** (reference implementation, cross-checked against the JDK; no caption showing, so `H′ = H`, and every header and spill line fits on one line; "a wide pack font" is the [localisation spec's wide-font fixture](accessibility.md#fixtures)):
 
 | `W` × `H` | Entries | `T` | Header, spill widths | Columns × rows | Frame | Drawn at | Scale |
 |---|---|---|---|---|---|---|---|
@@ -426,7 +429,20 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 | 320 × 240 | 1 | 30 | 120, 180 | 1 × 1 | 188 × 46 | (130, 128) | 1 |
 | 320 × 240 | 64 | 36 (a wide pack font) | 120, 180 | 5 × 13 | 294 × 262, drawn 265 × 236 | (53, 2) | 0.9008 |
 
-- **Precomputing:** the layout is rebuilt only when the block entity's synced data, the viewer's knowledge, #26's synced rules, the resources or the scaled screen size change. Our draw code allocates nothing per frame.
+**Combined vectors** (the same reference; 320 × 240 with `leftHeight` = `rightHeight` = 49, so the action-bar baseline is 172 and the caption band's bottom 164; header 120 and spill 180 wide, one line each; the indicator 150 wide; the caption blocks as the [localisation spec](accessibility.md#the-caption-band) sizes them):
+
+| Captions | `bandTop`, `H′` | Entries, `T` | Columns × rows | Sheet: rows `r`, sheets, frame | Drawn at | Scale |
+|---|---|---|---|---|---|---|
+| status 1 line, Voice 1 line | 130, 128 | 64, 24 | 6 × 11 | 7, 2, 280 × 165, drawn 211 × 124 | (107, 2) | 124/165 ≈ 0.7515 |
+| status 1 line, Voice 1 line | 130, 128 | 64, 36 (wide) | 5 × 13 | 7, 2, 294 × 165, drawn 221 × 124 | (97, 2) | 124/165 ≈ 0.7515 |
+| status 3 lines, Voice 4 lines (the band's maximum) | 85, 83 | 64, 24 | 6 × 11 | 3, 4, 280 × 93, drawn 238 × 79 | (80, 2) | 79/93 ≈ 0.8495 |
+| status 3 lines, Voice 4 lines | 85, 83 | 64, 36 (wide) | 5 × 13 | 3, 5, 294 × 93, drawn 250 × 79 | (68, 2) | 79/93 ≈ 0.8495 |
+| status 1 line, Voice 1 line | 130, 128 | 1, 30 | 1 × 1 | no sheets: 188 × 46 | (130, 80) | 1 |
+
+The no-caption vectors above are unchanged: their scale never falls below 0.75, so none pages.
+
+- **Precomputing:** the layout is rebuilt only when the block entity's synced data, the viewer's knowledge, #26's synced rules, the resources, the language, the scaled screen size, the [caption band's](accessibility.md#the-caption-band) revision or the sheet change. Our draw code allocates nothing per frame.
+- **Shared geometry:** the [infusion HUD](infusion.md#the-hud), the [golem card](golems.md#the-golem-card), the [Spectacles card](armor.md#drawing) and the [strike card](aspects.md#what-a-strike-reveals) reuse this frame, wrapping, `H′`, fallback, sheets and clamp unchanged, each declaring its head, foot and body, and each rebuilding on the caption band's revision and the language.
 - **Overlap:** the clamp can push a very large frame over the `vftv:vis` layer at the top left; the layer order above decides what is on top, and the worst-case mockups show it.
 - **The fork's strike** on a crucible still reads the crucible's own aspects, never its contents ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)).
 
@@ -752,7 +768,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- the HUD in every state (boiling, cold, dry, dormant), with unheard aspects and missing ids, **at the maximum layout (64 entries, 4-digit amounts) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool);
+- the HUD in every state (boiling, cold, dry, dormant), with unheard aspects and missing ids, **at the maximum layout (64 entries, 4-digit amounts) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool); under the [localisation fixtures](accessibility.md#fixtures) the header and spill lines wrap with the spill number whole, the outer pose scale stays ≥ 0.75, and with a status line and a Voice line showing the frame stays above them, paged as the combined vectors say, every entry reachable with Page Up and Page Down and each turn narrated once; a caption appearing and then expiring over an unchanged crucible re-lays the card both times;
+- a `SHORT` refusal naming 8 aspects on the status line, whole;
 - the liquid tint and its absence when dry; the bubbles, sounds and subtitles;
 - the book recipe pages and fact fields with no crucible targeted, a dry one, a cold one, a short one and a ready one;
 - **with JEI:** hide and unhide on grant and revoke, on join with research learned, with recipes arriving before and after the runtime, and after a recipe reload; the status line following the targeted crucible; **a maximum cost (1000) cell** with the vanilla font and with a wide resource-pack font (the number never reaches the icon; the tooltip exact); **a long-coordinate context** (e.g. x = −29,999,999) clipped on the line and complete in its tooltip; **without JEI**, nothing breaks;

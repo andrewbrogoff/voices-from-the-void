@@ -169,7 +169,7 @@ By inventory click, the [foci spec's attach pattern](foci.md#attaching-and-detac
 
 The golem item's `useOn` on a block face, reached after vanilla's spawn protection, `mayInteract`, `RightClickBlock` and the block's own use, like a spawn egg (`MC:server/level/ServerPlayerGameMode.java:383–418`). **The spawn cell** is the clicked position offset by the clicked face; the golem stands at its bottom centre.
 
-1. **Refusals,** first match, each on the action bar, returning `FAIL` and changing nothing:
+1. **Refusals,** first match, each on the [status line](accessibility.md#r5-the-status-line), returning `FAIL` and changing nothing:
    - a dormant item: `message.vftv.golem.unreadable`; no body or an unknown material: `.unknown_body`; no core: `.no_core`; a core whose item or job isn't registered: `.unknown_core`;
    - the spawn cell isn't in a loaded, entity-ticking chunk (`ServerLevel#isPositionEntityTicking`, `MC:server/level/ServerLevel.java:1823`), is outside the world border, or is outside the build height: `.not_here`;
    - `golems.max_per_chunk` golems are already loaded in the spawn cell's chunk: `.crowded`. **This is admission only,** not a resident cap: golems walking home or reloading can gather more in one chunk, which the load scenarios measure;
@@ -236,7 +236,7 @@ A **mark** is `{pos, face, role, filter?}`: a face of a block, what to do there,
 - **The Baton** takes the player's record and **consumes** it. It must match this click's level, hand, position and face and the current game time; then it reads the event's **final** `getUseBlock()`.
 - **Fail closed:** no record, a mismatched one (a re-entrant click that replaced it, a mod calling `onItemUseFirst` without the event), or a final `getUseBlock()` of `FALSE` refuses the edit.
 
-First match, each refusal on the action bar and returning `FAIL` (no block use follows):
+First match, each refusal on the status line and returning `FAIL` (no block use follows):
 
 | # | When | Effect |
 |---|---|---|
@@ -602,7 +602,9 @@ Every number a decision rests on is shown exactly, live, and never in prose.
 
 Each page ends with `hud.vftv.golem.page` (page, 4).
 
-**Overflow:** **wrapping, not clipping.** Each line wraps to `maxInner` with the font's own `split`, so no number or name is ever cut; then the frame, padding, position, clamp and pose-scale fallback are the [crucible HUD](crucible.md#the-hud)'s, unchanged, as the [infusion HUD](infusion.md#the-hud) does. The layout rebuilds only when the golem's synced data, the viewer's knowledge, the page, the resources or the screen size change; our draw code allocates nothing per frame.
+**Narration:** a page turn queues the newly selected page's lines once as system narration ([localisation, HUD narration](accessibility.md#hud-narration)). Passive status updates on an unchanged page, and the 100-tick return to page 0, narrate nothing.
+
+**Overflow:** **wrapping, not clipping.** Each line wraps to `maxInner` with the font's own `split`, so no number or name is ever cut; then the frame, padding, position, clamp, caption band, pose-scale fallback and sheets are the [crucible HUD](crucible.md#the-hud)'s, unchanged, as the [infusion HUD](infusion.md#the-hud) does. **Head:** the golem's name; **foot:** `hud.vftv.golem.page`; a card's sheets are separate from its four pages. The layout rebuilds only when the golem's synced data, the viewer's knowledge, the page, the sheet, the resources, the language, the screen size or the [caption band's](accessibility.md#the-caption-band) revision change; our draw code allocates nothing per frame.
 
 **Statuses** (synced as one byte, with the target or mark number as a second):
 
@@ -627,6 +629,7 @@ Each page ends with `hud.vftv.golem.page` (page, 4).
 - **Baseline** on subscribing; **updates** when the revision changes (any mark or home edit, a fault change, a target change), coalesced to at most one per golem per subscriber per tick; **`GolemMarksClear(entityId)`** on unsubscribing: a hand switch, untracking, unload, a level change, logout or the golem's removal.
 - **The client** binds each snapshot to the entity id and golem UUID, and drops it when that entity leaves its level or the UUID differs.
 - **Drawn** (extract-then-submit, cosmetic): each marked face's role sprite with its 1-based number; a fault glyph on faulted marks; the home ring; a line from the golem to its current target.
+- **Roles and statuses never rest on hue:** each role sprite (16 × 16) and each status glyph (9 × 9) is a distinct silhouette at its real size, reviewed in the greyscale and colour-vision contact sheets ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)).
 
 ### Other views
 
@@ -1017,7 +1020,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- the golem card on every page and status, at 320 × 240 with a long translation and a long item name (wrapped, nothing cut), unheard and missing aspects;
+- the golem card on every page and status, at 320 × 240 with a long translation and a long item name (wrapped, nothing cut; the [localisation fixtures](accessibility.md#fixtures), outer pose scale ≥ 0.75), unheard and missing aspects;
+- a page turn's narration attempted once with the new page, and none for a passive status update (the localisation capture); a refusal on the status line;
 - **the overlay:** subscribing on equip and on attune, updates on a mark edit, a fault and a target change, and clearing on a hand switch, a level change, unload and logout; a second client sees no overlay and the status glyph;
 - tooltips; every sound and subtitle; the five bodies, carrying and decanting, seen by a second client;
 - the Stage 2 flow: learn `vftv:golems`, craft a terracotta golem and a carrying core, mark a chest and a crucible, and watch a Resonant Brass ingot made by FEED; then learn `vftv:golem_decanting` and decant into jars (a state dump at each step);

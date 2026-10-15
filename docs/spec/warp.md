@@ -396,7 +396,12 @@ Everything in this section runs on the owner's client and never touches server s
 - **Which cue plays a line:** a whisper plays from `band<b>` with *b* the cue's band; an insight plays from `insight`; an offer plays from `offer`. No other type plays a line.
 - **Draws:** the line `pool[nextInt(n)]`, then a whisper's side `nextInt(2)` (0 left, 1 right).
 - **Playback:** on `SoundSource.VOICE` (`MC:sounds/SoundSource.java:13`), so vanilla's Voice slider sets its volume; relative to the listener, offset one block to the drawn side, at volume 1.0 and pitch 1.0. One line at a time: a line cue arriving while a line plays is dropped.
-- **The Voice text:** our own HUD layer (`RegisterGuiLayersEvent`), centred above the hotbar, at most 240 logical pixels wide and wrapped to at most 3 lines, in italic: `amethyst` for a line with any `void` segment, `hush3` otherwise. It shows for the clip's length plus 20 ticks. It is **on by default, independent of vanilla's subtitle option**, because the lore requires text with every Voice line; the client option `voices.text` is its opt-out. Never chat.
+- **The Voice text:** our own HUD layer (`RegisterGuiLayersEvent`), centred above the hotbar, at most 240 logical pixels wide, in italic: **`amethyst3`** (`#c4b0ec`) for a line with any `void` segment, **`hush3`** (`#c6c2c4`) otherwise. It is **on by default, independent of vanilla's subtitle option**, because the lore requires text with every Voice line; the client option `voices.text` is its opt-out. Never chat. The [localisation spec](accessibility.md#voice-text) sets the rest:
+  - **Backing:** our own black backing at alpha 0.8 behind the block, 2 px of padding, never `Options.getBackgroundColor`, whose opacity the player can lower to zero. At 0.8 over white, `amethyst3` measures 6.48:1 and `hush3` 7.17:1.
+  - **Wrapping:** at 240 px with the active font, never cut; three lines is the English design target. A line holds at most 80 code points in every locale, which fits **4 lines** even in the wide-font fixture; text that would need more is drawn at the pose scale that fits 4 lines' height ([localisation, The caption band](accessibility.md#the-caption-band)).
+  - **Position:** in the shared **caption band**: its bottom edge 8 px above the top of the [status line](accessibility.md#r5-the-status-line) while one shows, else at the band's bottom; the crosshair cards' usable height ends above the band. Its line count and visibility feed the band's published revision.
+  - **Hold:** `ceil((clip ticks + 20) × max(1, notificationDisplayTime))` ticks.
+  - **Replacement:** a line that is allowed to start (no line's sound is playing; the rule below) replaces a caption still showing.
 - **Lang:** line `<ns>:<path>` is the sound event `<ns>:voice.<path>` and the lang key `voice.<ns>.<path>`.
 
 ### Perception effects
@@ -435,7 +440,7 @@ Everything in this section runs on the owner's client and never touches server s
 
 ### Accessibility
 
-**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; disguises and apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. On the client it takes effect at the next frame or tick: `voices.text` off hides a line already on screen while its sound plays on; `voices.colour_shift` off ramps out within 50 ticks (see "Perception effects"); `voices.phantoms` off removes existing apparitions and disguises silently; `voices.phantom_sounds` off starts no new phantom sound, and one playing finishes. Files, ranges and comments are the [configuration spec's](config.md#client-keys). The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`, and Darkness follows `darknessEffectScale`.
+**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; disguises and apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. On the client it takes effect at the next frame or tick: `voices.text` off hides a line already on screen while its sound plays on; `voices.colour_shift` off ramps out within 50 ticks (see "Perception effects"); `voices.phantoms` off removes existing apparitions and disguises silently; `voices.phantom_sounds` off starts no new phantom sound, and one playing finishes. Files, ranges and comments are the [configuration spec's](config.md#client-keys). The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`, and Darkness follows `darknessEffectScale`. The mod-wide baseline (captions, subtitles, photosensitivity, contrast, narration) is the [localisation and accessibility spec's](accessibility.md); this spec's surfaces conform to it.
 
 ## In the Commonplace Book
 
@@ -486,7 +491,7 @@ content/lang/en_us/voices.json     every Voice line's text
 | `events.json` | `vftv:voice_events/1` | each event `<ns>:<path>` → `data/<ns>/vftv/voice_event/<path>.json` |
 | `bargains.json` | `vftv:bargains/1` | each bargain → `data/<ns>/vftv/bargain/<path>.json` |
 | `phantoms.json` | `vftv:phantoms/1` | `assets/vftv/voices/phantoms.json` |
-| `voice_lines.json` | `vftv:voice_lines/1` | `assets/vftv/voices/lines.json`, and a `sounds.json` entry `<ns>:voice.<path>` per line |
+| `voice_lines.json` | `vftv:voice_lines/1` | `assets/vftv/voices/lines.json`, and a `sounds.json` entry `<ns>:voice.<path>` per line, **with no subtitle**: the Voice text is its caption ([localisation, Subtitles](accessibility.md#subtitles)) |
 | `recipes.json` | `vftv:warp_recipes/1` | `data/vftv/recipe/stilling_draught.json`, its body unchanged |
 | `bootstrap.json` | `vftv:warp_bootstrap/1` | nothing: read by the review |
 | `fixtures.json` | `vftv:warp_fixtures/1` | nothing: read by the unit tests |
@@ -603,7 +608,7 @@ Band 0 (`total` below 8, which covers early Stage 3) hears only whispers and ins
 | `note` | 1–120 characters | one line of performance direction |
 
 - **Exactly 46 lines:** 8 in each band pool, 4 in `insight`, 4 in `offer`, and the 6 ending lines copied verbatim from the lexicon's `ending_lines` (same ids, pools and segments).
-- Every line's text is `voice.<ns>.<path>` in `voices.json`, at most 80 characters, equal to its segments' concatenation. The pool rules and the `void` segment lint are under "Language segments".
+- Every line's text is `voice.<ns>.<path>` in `voices.json`, at most 80 characters, equal to its segments' concatenation. In another locale the `en` segments are translated, every `void` segment is kept exactly and in order, and the line stays within 80 code points ([localisation, Protected text](accessibility.md#protected-text)); a `void`-only line may be omitted, since the fallback is identical. The pool rules and the `void` segment lint are under "Language segments".
 - **Rejected:** another count; a pool count other than above; a mismatch with the lexicon's ending lines; a text over 80 characters, or differing from its segments; a segment breaking "Language segments".
 
 ```json
@@ -680,7 +685,9 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `subtitles.vftv.apparition.vanish`, `.voice.insight`, `.bargain.accept`, `.stilling.drink_end` | 0 | "Something fades", "A voice gives", "A bargain is struck", "A draught settles" |
 | `voice.<ns>.<path>` (in `voices.json`) | 0 | every line's text |
 
-**Used, not declared here:** effect, aspect and player names; the research spec's confirm dialog and "The cost has changed."
+**Used, not declared here:** effect, aspect and player names; the research spec's confirm dialog and "The cost has changed." (`message.vftv.research.cost_changed`, [research, Book UI keys](research.md#book-ui-keys)).
+
+**Subtitles:** every sound event of this spec names `subtitles.vftv.<event>` above, **except the 46 Voice line events**, enumerated by `voice_lines.json`; `vftv:voice.insight`, an effect sound, keeps `subtitles.vftv.voice.insight`. The Stilling Draught's refusals (`nothing_to_still`, `busy`) go to the [status line](accessibility.md#r5-the-status-line); the offer's are the Ledger's feedback line.
 
 **Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
 
@@ -842,7 +849,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - an apparition vanishing when approached and when struck: **no attack, interact or swing packet** in the protocol dump, the fork silent, no sounding;
 - client options off, including `voices.colour_shift` turned off at the 65% peak reaching zero within 50 ticks; `VoiceClear` on Silencing; cleanup on a level change;
 - sync on join, reconnect, dimension change and `/reload`;
-- the asset, lang and sound validators.
+- the asset, lang and sound validators;
+- **the Voice text** under the [localisation fixtures](accessibility.md#fixtures): a long translated line wrapping past three lines, uncut; on its backing over a white sky with vanilla's text-background opacity at 0; above a status line shown with Baffle rows; the hold doubled at `notificationDisplayTime` 2.0; a new line replacing a lingering caption; no subtitle for a Voice line, and `subtitles.vftv.voice.insight` shown for an insight.
 
 ## Contracts on sibling specs
 

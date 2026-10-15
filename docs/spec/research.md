@@ -323,7 +323,7 @@ Warp is never a hidden tax. It is only ever applied by an explicit commit the pl
 
 Stage 3 and 4 `find` entries in the `vftv:choir_pages` category, each carried by one item, **`vftv:choir_page`**, whose component **`vftv:page`** holds the entry id. They are lucid, they carry the backstory, they sometimes contradict the player's notes, they never degrade, and they may grant rewards. They are the guaranteed supply of Alienis, Spiritus and Silentium, which the aspects spec allows to come from VFTV content alone.
 
-**Tipping in:** use the item, in either hand.
+**Tipping in:** use the item, in either hand. Each message is a `message.vftv.choir_page.*` key ("Book UI keys") on the [status line](accessibility.md#r5-the-status-line).
 
 | Case | Message | Item | State |
 |---|---|---|---|
@@ -359,17 +359,19 @@ content/research/categories.json          categories
 content/research/stage1.json … stage4.json entries and page descriptors (Choir pages in stage3/stage4)
 content/research/path-stage1.json … 4     affordability paths
 content/research/overlay.json             warp-overlay numbers (client)
-content/research/number-words-allowed.json reviewed exceptions to the number-word lint
+content/research/number_words/en_us.json  the English number-word list and its reviewed exceptions
 content/lang/en_us/stage1.json … 4        titles, hints and pages
 content/lang/en_us/marginalia.json        marginalia pools
 ```
+
+The book's own interface strings are code-defined, not authored here ("Book UI keys").
 
 | Input | Generated output |
 |---|---|
 | `categories.json`, `stage<N>.json` | `data/<ns>/vftv/research_category/<path>.json`, `data/<ns>/vftv/research/<path>.json` (an id `vftv:choir/x` becomes `choir/x.json`) |
 | `overlay.json` | `assets/vftv/commonplace/overlay.json` |
-| `lang/<lang>/*.json` | only each file's `strings` object is merged into `assets/vftv/lang/<lang>.json`, together with the code-defined UI keys; a duplicate key fails datagen |
-| `path-stage<N>.json`, `number-words-allowed.json` | nothing: read by the affordability test and the lint only |
+| `lang/<lang>/*.json` | only each file's `strings` object is merged into `assets/vftv/lang/<lang>.json`, together with the code-defined UI keys; a duplicate key fails datagen. The merge and the common rules are the [localisation spec's](accessibility.md#the-lang-pipeline) |
+| `path-stage<N>.json`, `number_words/<lang>.json` | nothing: read by the affordability test and the lint only |
 
 Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown field, a wrong type, a value out of range, or an entry that fails load validation.
 
@@ -379,7 +381,7 @@ Every file is one JSON object with a `"schema"` string. Datagen rejects an unkno
 | `stage<N>.json` | `vftv:research_entries/1` | `{"entries": {<id>: <entry>}}` |
 | `path-stage<N>.json` | `vftv:affordability_path/1` | see "Affordability paths" |
 | `overlay.json` | `vftv:overlay/1` | see "Overlay numbers" |
-| `number-words-allowed.json` | `vftv:number_words_allowed/1` | `{"allowed": {<lang key>: <one-line reason>}}` |
+| `number_words/<lang>.json` | `vftv:number_words/1` | `{"words": [...], "allowed": {<lang key>: <one-line reason>}}`, the [localisation spec's](accessibility.md#per-locale-lints) schema |
 | `lang/<lang>/*.json` (prose and marginalia) | `vftv:lang/1` | `{"strings": {<key>: <text>}}` |
 
 ### Entry files
@@ -520,7 +522,7 @@ A code registry, **`vftv:page_type`**. Page *i* (0-based) of entry `<ns>:<path>`
 }}
 ```
 
-**Rejected** (by the build-phase validator): a key outside the patterns above; a `research.*` key for an entry or page index that doesn't exist; a `.margin.<band>` outside 1–3; a required key missing in `en_us`; an empty string; a pool with a gap in *n*; a duplicate key across files; a malformed fact span; and either lint failing.
+**Rejected** (by the build-phase validator): a key outside the patterns above; a `research.*` key for an entry or page index that doesn't exist; a `.margin.<band>` outside 1–3; a required key missing in `en_us`; an empty string; a pool with a gap in *n*; a duplicate key across files; a malformed fact span; and either lint failing. **In another locale,** also: a marginalia pool that isn't either whole (the same *n* as `en_us`) or absent, and a `.margin.<band>` key that `en_us` doesn't have. The rules every lang input shares (envelope, duplicates, ownership, fact-span multisets, protected Void-tongue and aspect names) are the [localisation spec's](accessibility.md#validation).
 
 **Markup:** paragraphs are separated by a blank line (`\n\n`); `*…*` is italic; `\` escapes `*`, `{` and `\`; and **fact spans** insert live data.
 
@@ -725,9 +727,9 @@ road   : <key>                               exactly one of the keys listed unde
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
 - **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`), and for `infusion` spans the arrival of a new `InfusionRules` ([infusion spec, Sync and state](infusion.md#sync-and-state): on join and after `/reload`), and for `golem` and `golem_material` spans the arrival of a new `GolemRules` ([golems spec, Sync and state](golems.md#sync-and-state): on join and after `/reload`; the material registry is fixed while a world is open), and for `wearable` spans the arrival of the item data maps `vftv:wearable` and `vftv:gear_warp` ([armor spec, After a reload](armor.md#after-a-reload): a sync, or in an integrated world the server's reload; the item registry is fixed while a world is open), and for `hush` spans the arrival of a new `FluxRules` ([Hush spec, Sync and state](hush.md#sync-and-state): on join, after `/reload` and after a server config reload), and for `road` spans the arrival of a new `RoadRules` ([Eldritch tier spec, Sync and state](eldritch.md#sync-and-state): on join and after `/reload`), and for `baffle` spans the arrival of a new `ArmorRules` ([armor spec, Sync and state](armor.md#sync-and-state): on join and after `/reload`; the enchantment registry is fixed while a world is open) and, for `current` and `capacity`, any change to the reader's Baffle record, their `vftv:baffle` attribute, their armour slots, their synced warp record or `WarpRules`, and for `focus*` spans any input of the [foci spec's preview](foci.md#the-authoritative-preview): the reference focus and the pricing wand (hand, off hand or inventory contents, including the wand's pools), the learned set, the focus registries, `FociRules`, `VisRules`, the discount attribute, the reader's `block_interaction_range` attribute, #25's factor and amplifier inputs, or a disconnect (every cache cleared), and for `warp`, `warp_rules` and `entry:…:warp` spans any change to the reader's synced warp record (including a gear sample) or the arrival of a new `WarpRules` ([warp spec, Sync and state](warp.md#sync-and-state): on join, after `/reload` and after a server config reload). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
-  - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
-  - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.
-  - **Exceptions:** a key may use a listed word only if it appears, with a one-line reason, in `content/research/number-words-allowed.json`, e.g. `{"schema": "vftv:number_words_allowed/1", "allowed": {"research.vftv.choir.beneath_the_notes.page.0": "'one' as a pronoun, not a quantity"}}`.
+  - **Digits:** shipped prose contains **no decimal digit** (`\p{Nd}`, not only ASCII) outside fact spans, in every locale.
+  - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive, and `content/research/number_words/en_us.json` transcribes it. **Each other locale** has its own list in `content/research/number_words/<lang>.json`, and a locale without one can't ship ([localisation, Per-locale lints](accessibility.md#per-locale-lints), which owns the schema and the matching).
+  - **Exceptions:** a key may use a listed word only if it appears, with a one-line reason, in that locale's file's `allowed`, e.g. `{"schema": "vftv:number_words/1", "words": ["zero", "…"], "allowed": {"research.vftv.choir.beneath_the_notes.page.0": "'one' as a pronoun, not a quantity"}}`.
   - A review checklist in each content ticket covers the rest: prose never states a quantity a decision rests on.
 - An unresolvable span (data removed by a pack) renders as `[?]` and is logged once. It never shows a stale number.
 
@@ -823,7 +825,7 @@ Each content ticket freezes its Stage's roster: ids, kinds, dependency edges, an
 
 - **Tabs:** Resonance, Distillation, Ruins, The Choir's Road and Choir Pages (each shown once its Stage is reached, or once a page is tipped in), then the **Ledger**. Each Stage tab is one chapter in one voice, following the authored decline.
 - **Canvas:** each Stage tab is a pannable canvas of entry frames with parent lines. The frame's shape shows the kind and marks the opener; its finish shows LOCKED, OPEN or LEARNED.
-- **Search:** a case-insensitive substring match over the titles of non-HIDDEN entries in the current language. Results replace the canvas, and Enter opens the first.
+- **Search:** a case-insensitive substring match over the titles of non-HIDDEN entries in the current language, both sides folded with `Locale.ROOT` ([localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)). Results replace the canvas, and Enter opens the first; with none, the canvas shows `book.vftv.search.none`.
 - **Bookmarks:** up to 9, stored in the attachment and toggled on an entry page. Keys 1–9 jump to them.
 - **Recipe links:** clicking an item on a recipe page opens the non-HIDDEN entry with a recipe page whose recipe outputs that item, by lowest Stage and then lowest id. With none, it shows the tooltip only.
 - **Locked entries** open to one page: title, authored hint and mechanical blockers. No content pages.
@@ -834,7 +836,8 @@ Each content ticket freezes its Stage's roster: ids, kinds, dependency edges, an
 All sizes are **logical pixels**, and one sprite texel is one logical pixel.
 
 - **Book screen:** 320×240, centred.
-- **Scale:** the screen draws at the integer pixel scale `s = max(1, min(guiScale, ⌊framebufferWidth / 320⌋, ⌊framebufferHeight / 240⌋))`, applying a pose scale of `s / guiScale`, so it always fits the window and stays pixel-crisp.
+- **Scale:** the screen draws at the integer pixel scale `s = max(1, min(guiScale, ⌊framebufferWidth / 320⌋, ⌊framebufferHeight / 240⌋))`, applying a pose scale of `s / guiScale`, so it always fits the window and stays pixel-crisp. `guiScale` is the effective scale, `Window.getGuiScale()`, never the option's value (0 means "auto").
+- **Overflow, focus and narration** follow the [localisation spec's](accessibility.md#text-overflow) shared rules: R1 for every prose viewport and the confirm's body, R2 for every one-line field and button label.
 
 | Element | Size | Position (screen origin top-left) |
 |---|---|---|
@@ -847,8 +850,8 @@ All sizes are **logical pixels**, and one sprite texel is one logical pixel.
 | Bookmark ribbons (9) | 12×16, hanging below the spread | x = 196 + 12*i*, y = 224 |
 | Back arrow | 18×10 | (20, 200) |
 | Page arrows | 18×10 | previous (132, 200), next (282, 200) |
-| Feedback line | 130×9 | (170, 188); text columns stop at y = 186 |
-| Confirm dialog | 160×80 with two 54×18 buttons | centred on the spread |
+| Feedback line | 130×9 | (170, 188); text columns stop at y = 186. One line under R2; an inspection focus target while it shows text |
+| Confirm dialog | 160×80 with two 54×18 buttons | centred on the spread. Inside it: the title, one line under R2, at (8, 4); the **body**, a prose viewport (R1) at (8, 16), 138×38, with its scrollbar at (148, 16); **Confirm** at (20, 58) and **Cancel** at (86, 58) |
 
 - **Canvas view:** one 292×188 viewport across both pages, with the gutter drawn over it. **Entry frames** are 26×26 with a 16×16 icon, and position `[x, y]` puts the frame's centre at `(32x, 32y)` in canvas space. Parent lines are elbow connectors (horizontal, then vertical), 2 px wide, drawn in code: `ink2` while locked, `brass2` once learned. Panning is clamped to the entries' extent plus one grid unit.
 - **Note view** (the whole spread):
@@ -862,8 +865,8 @@ All sizes are **logical pixels**, and one sprite texel is one logical pixel.
   - **Left page:** a prose viewport (the rules below) holding, one row each: `ledger.vftv.warp.title`; temporary, lasting, permanent (with the cap), gear and total; the band, with the next threshold unless at band 3; the counter, with its maximum; the **chance per eligible check** with the check's interval in seconds (`ledger.vftv.warp.chance`) and its parts (`ledger.vftv.warp.chance_parts`: the base, per permanent, per count and the cap, from `WarpRules`); how much a Stilling Draught stills; and `ledger.vftv.warp.silenced` for a silenced Listener. Rows wrap in the text column; nothing is cut off.
   - **Right page:** the **offer card**, drawn on the 130×64 `ledger/offer_panel` sprite as its frame. Its text (the power, the cost from the offer's quote, the seconds left) is a prose viewport from y = 32 to y = 162, scrolling when long. Below it, two 54×18 buttons: **Accept** at (172, 166) and **Refuse** at (236, 166); the feedback line keeps (170, 188). With no live offer, the page shows `ledger.vftv.offer.none` in a viewport to y = 186 and no buttons.
   - **Accept** opens the confirm dialog repeating the power and the cost; confirming sends `accept_offer`. **Refuse** sends `refuse_offer` at once, since it costs nothing. Both are disabled while pending, when the offer has expired by the synced game time (`ledger.vftv.offer.expired`), and Accept also when the quote is clipped (`message.vftv.warp.offer_full` as its tooltip).
-  - **Labels** are centred in the vanilla font; a label wider than 50 px is truncated with "…", and its full text is the button's tooltip and narration.
-  - **Keyboard:** the main region's focus order is the left viewport, the right viewport, Accept, Refuse. Enter or Space activates a button; Up and Down scroll a focused viewport.
+  - **Labels** are centred in the vanilla font; a label wider than 50 px is truncated with "…", and its full text is the button's tooltip and narration. **Every 54×18 button in the book** (Learn or Buy, Abandon, Listen, the note button, Confirm and Cancel) follows the same rule (R2).
+  - **Keyboard:** the main region's focus order is the left viewport, the right viewport, Accept, Refuse, then the feedback line while it shows text. Enter or Space activates a button; Up and Down scroll a focused viewport. A disabled Accept or Refuse stays focusable and narrates why.
   - **Narration:** each button reads `narration.vftv.offer` with the power and the cost; the rows read as written.
 - **Prose viewport:** on every prose-bearing page, prose is laid out in the text column (130 wide) and drawn in a **clipped, vertically scrollable viewport**.
   - The viewport runs from y = 32, or from y = 44 on a page that carries the entry title, down to y = 186, so it ends above the feedback line. Any length of prose, in any translation, plus every overlay line fits by scrolling; nothing is cut off or paged automatically.
@@ -881,7 +884,7 @@ All sizes are **logical pixels**, and one sprite texel is one logical pixel.
 | Right-click a placement | remove it |
 | Left-drag on empty canvas or grid space | pan |
 | Mouse wheel | pan the canvas vertically (Shift: horizontally), scroll the palette, or scroll the hovered prose viewport by 3 lines (27 px) per notch |
-| Tab / Shift+Tab | cycle focus: tabs → search → bookmarks → main region (canvas entries, or page widgets → palette → grid → buttons) |
+| Tab / Shift+Tab | cycle focus: tabs → search → bookmarks → main region (canvas entries, or page widgets → palette → grid → buttons → the feedback line while it shows text). In the **confirm dialog:** focus starts on **Cancel**, then cycles body → Confirm → Cancel. The view pans or scrolls to keep the focused element visible. |
 | Arrow keys | move within a region. On the canvas: the nearest entry within a 90° cone, ties by id. On the grid: Left/Right = W/E; Up = NW if *r* is even, else NE; Down = SW if *r* is even, else SE (so the focus keeps its screen column). On a focused prose viewport: Up/Down scroll one line (9 px). |
 | Home / End | scroll the focused prose viewport to its top or bottom |
 | Enter / Space | activate: open an entry, select a palette aspect, place the brush on the focused empty cell |
@@ -889,22 +892,23 @@ All sizes are **logical pixels**, and one sprite texel is one logical pixel.
 | PageUp / PageDown | turn pages |
 | 1–9 | open a bookmark (outside the search field) |
 | Ctrl+F | focus search |
-| Esc | close the dialog, then return to the canvas, then close the book |
+| Esc | close the dialog (as Cancel), then return to the canvas, then close the book |
 
-- **Narration:** every focusable widget narrates.
-  - Entry: title, kind, state, and the clean hint.
-  - Cell: its axial position, its content (empty, silent, an anchor, or a placement with its aspect name), and its linked neighbours.
-  - Palette slot: aspect name, gloss and exact pool count.
-  - The note announces when it becomes solved.
+- **Narration:** every focusable widget narrates, with the keys under "Book UI keys".
+  - Entry: `narration.vftv.book.entry`: title, kind, state, and the clean hint.
+  - Cell: `narration.vftv.book.cell`: its axial position, its content (empty, silent, an anchor, or a placement with its aspect name), and its linked neighbours.
+  - Palette slot: `narration.vftv.book.palette`: aspect name, gloss and exact pool count.
+  - Bookmark: `narration.vftv.book.bookmark`. Tabs read their category's title (`category.<ns>.<path>`, or `book.vftv.ledger`); arrows, buttons and the search field their labels; page arrows add `book.vftv.page`.
+  - The note announces `book.vftv.action.solved` when it becomes solved.
 
   The narrator always reads the **clean** prose and the fact values, never the overlay.
-- **Feedback:** each action carries a request id, and the affected control shows a 9×9 pending glyph and ignores input until its result arrives. Inputs re-enable after 40 ticks if no result comes. A refusal shows its message on the feedback line until the next action; success plays its sound. The drawn state always comes from the attachment, never from prediction.
+- **Feedback:** each action carries a request id, and the affected control shows a 9×9 pending glyph (narrated `message.vftv.research.pending`) and ignores input until its result arrives. Inputs re-enable after 40 ticks if no result comes. A refusal shows its message on the feedback line until the next action; success plays its sound. The drawn state always comes from the attachment, never from prediction.
 
 ### Hints on locked entries
 
 Two lines, never naming a later Stage's content:
 1. **The authored hint** (`.hint`), required for every non-`free` entry and written in the first person ("The amethyst hums when struck. I should find where it grows.").
-2. **A mechanical line built from state,** naming only things the player can see:
+2. **A mechanical line built from state** (the `book.vftv.hint.*` keys), naming only things the player can see:
    - missing visible parents, by title;
    - "Something else must come first." for unmet `hidden_parents`;
    - for a note whose anchors don't connect, "I can't yet hear how [A] meets [B].", drawing unknown aspects as the unheard icon;
@@ -929,13 +933,77 @@ A secret is hinted only through its `hinted_by` entry's prose, and validation pr
 - **Determinism:** one `java.util.Random` seeded with `fold([0x4D415247 ("MARG"), uuid msb, uuid lsb] ++ idWords(entry) ++ [page index, band])`. Draws, in order:
   1. *k* struck words, each `nextInt(remaining)` over the remaining eligible words in text order;
   2. for each own note, `nextInt(remaining own pool)`, then a paragraph `nextInt(paragraphs)`, after which the note is inserted as an indented italic line;
-  3. foreign notes, the same way (in `amethyst` ink);
+  3. foreign notes, the same way (in `amethyst1` ink, 5.10:1 on the page paper; [localisation, Text contrast](accessibility.md#text-contrast));
   4. the interlinear line: pool index, paragraph, then line `nextInt(lines in it)`;
   5. each blot: a margin slot `nextInt(remaining of 6)` down the page's outer edge.
 
   **Draws are without replacement and capped by the pool.** A step draws min(configured count, items still available) times, and a pool that runs out ends that step. For example, a foreign pool of one line yields one foreign note even when the band asks for two. `nextInt(0)` is never called. An empty pool, or a page with no eligible words or no paragraphs, consumes no draws for that step. An authored `.margin.<band>` key replaces the first own-hand note on page 0. Layouts (text, positions and overlay choices) are cached per (entry, page, band, language) and rebuilt when one of them changes. Fact span values are never cached. They are re-resolved when a dependency changes (see "Prose and fact references"), and the layout is rebuilt if a value's rendered text changes.
 - **Accessibility:** the client option `book.clear_prose` (default off) hides the whole overlay. The Ledger shows exact warp either way.
 - **No custom font in v1:** the foreign hand is the vanilla font in italic plus colour.
+- **Other languages:** a locale defines a marginalia pool whole or not at all, so the draws pick the same slots in every language. The layout is left-to-right only, so no right-to-left locale ships in v1; in a script without spaces an eligible word is a whole letter run, which can strike a whole clause. It stays legible, and such a locale's band-3 screenshots are reviewed before it ships ([localisation, Locales](accessibility.md#locales)).
+
+### Book UI keys
+
+The book's interface strings are **code-defined UI keys**, as the admin commands' are: their English below is **final**, and datagen writes them into `assets/vftv/lang/en_us.json`, so no `content/` file and no production ticket is needed. Translations go in `content/lang/<lang>/research_ui.json` ([localisation, Files](accessibility.md#files)).
+
+| Key | Args | Text |
+|---|---|---|
+| `item.vftv.commonplace_book`, `item.vftv.choir_page` | 0 | "Commonplace Book", "Choir Page" |
+| `book.vftv.ledger` | 0 | "Ledger" (the tab) |
+| `book.vftv.search` | 0 | "Search my notes" (the field's hint) |
+| `book.vftv.search.none` | 0 | "Nothing in my notes by that name." |
+| `book.vftv.back`, `.page.previous`, `.page.next` | 0 | "Back", "Previous page", "Next page" |
+| `book.vftv.page` | 2 | "Page %s of %s" |
+| `book.vftv.bookmark.set`, `.bookmark.clear`, `.bookmark.empty` | 0 | "Keep my place here", "Let this place go", "empty" |
+| `book.vftv.blank` | 0 | "The pages are blank. I have heard nothing yet." |
+| `book.vftv.missing` | 0 | "Something is missing from this page." (the missing marker's tooltip and narration) |
+| `book.vftv.recipe.preview` | 0 | "Not yet within my reach" |
+| `book.vftv.kind.free`, `.kind.find`, `.kind.note`, `.kind.listen`, `.kind.opener` | 0 | "an entry", "a find", "a note", "a listening", "the way into a new chapter" |
+| `book.vftv.state.locked`, `.state.open`, `.state.learned` | 0 | "not yet open", "open", "learned" |
+| `book.vftv.hint.parents` | 1 | "First: %s." (the missing visible parents' titles, joined by ", ") |
+| `book.vftv.hint.hidden` | 0 | "Something else must come first." |
+| `book.vftv.hint.anchors` | 2 | "I can't yet hear how %s meets %s." |
+| `book.vftv.hint.price` | 1 | "I don't yet know %s." (skip mode's unknown price aspects) |
+| `book.vftv.unheard` | 0 | "something unheard" (an unknown aspect's name in hints and narration; drawn as the unheard icon) |
+| `book.vftv.action.open_note`, `.action.begin` | 0 | "Open the note", "Begin the note" |
+| `book.vftv.action.learn`, `.action.abandon`, `.action.buy`, `.action.listen` | 0 | "Learn", "Abandon", "Buy", "Listen" |
+| `book.vftv.action.learn_cost` | 1 | "Learning spends %s." (the exact total) |
+| `book.vftv.action.price` | 1 | "It costs %s." (the skip price) |
+| `book.vftv.action.warp` | 1 | "It will cost me %s." (the entry's warp preview) |
+| `book.vftv.action.solved` | 0 | "The note is solved." |
+| `book.vftv.confirm.title`, `.confirm.confirm`, `.confirm.cancel` | 0 | "Am I certain?", "Confirm", "Cancel" |
+| `ledger.vftv.pools`, `.notes`, `.known` | 0 | "What I hold", "Open notes", "What I have heard" |
+| `ledger.vftv.pool` | 2 | "%s: %s" (aspect, amount) |
+| `ledger.vftv.held` | 2 | "%s: %s held" (note title, points) |
+| `message.vftv.research.not_flat` | 0 | "This note will not lie flat in my book." |
+| `message.vftv.research.short` | 1 | "Not enough %s." (the first short leaf) |
+| `message.vftv.research.already_open` | 0 | "That note is already open in my book." |
+| `message.vftv.research.no_room` | 0 | "My book has no room for another open note." |
+| `message.vftv.research.cost_changed` | 0 | "The cost has changed." |
+| `message.vftv.research.stale` | 0 | "My notes have moved on. I look again." (a stale request, revision or echo) |
+| `message.vftv.research.not_now` | 0 | "I can't do that yet." (any other eligibility failure) |
+| `message.vftv.research.pending` | 0 | "Waiting for an answer." |
+| `message.vftv.choir_page.blank`, `.too_old`, `.already`, `.tipped` | 0 | "The page is blank to me.", "The hand is too old for me yet.", "Already in my book.", "Tipped in." |
+| `narration.vftv.book.entry` | 4 | "%s: %s, %s. %s" (title, kind, state, clean hint) |
+| `narration.vftv.book.cell` | 4 | "Cell %s, %s: %s. Linked to %s." (q, r, content, linked neighbours) |
+| `book.vftv.cell.empty`, `.cell.silent`, `.cell.no_links` | 0 | "empty", "silent", "nothing" |
+| `book.vftv.cell.anchor`, `.cell.placed`, `.cell.unanswered` | 1 | "the anchor %s", "%s, placed", "%s, unanswered" |
+| `narration.vftv.book.palette` | 3 | "%s, %s: I hold %s." (name, gloss, pool) |
+| `narration.vftv.book.bookmark` | 2 | "Bookmark %s: %s" (its number, the entry's title or `book.vftv.bookmark.empty`) |
+| `subtitles.vftv.book.page_turn`, `.place`, `.link`, `.solve`, `.learn` | 0 | "Page turns", "Note placed", "Notes link", "Note resolves", "Entry learned" |
+| `subtitles.vftv.book.stage_1` … `.stage_4` | 0 | "A new chapter opens" (each) |
+| `subtitles.vftv.book.tip_in`, `.listen` | 0 | "Page tipped in", "The silence answers" |
+
+Every refusal in `ResearchFeedback.result` names one of the `message.vftv.research.*` keys, or the [warp spec's](warp.md#lang-keys) for an offer. The grammar of every value is independent of its numbers ([localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)).
+
+**The book's sound events**, each naming its subtitle above, in the registers under "Production tickets":
+
+| Event | Variants |
+|---|---|
+| `vftv:book.page_turn`, `vftv:book.place` | 3 each |
+| `vftv:book.link`, `vftv:book.solve`, `vftv:book.learn` | 1 each |
+| `vftv:book.stage_1` … `vftv:book.stage_4` | 1 each |
+| `vftv:book.tip_in`, `vftv:book.listen` | 1 each |
 
 ## Events
 
@@ -1113,7 +1181,9 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the Ledger's warp spread matching the warp spec's state (kinds, gear, total, band, counter, chance and its parts), with an offer card, a long test translation scrolling, and truncated labels;
 - a refusal shown on the feedback line;
 - sync on join, reconnect, `/reload` (fresh quotes, notes unchanged) and a reopen;
-- the asset, lang and book-text validators: every entry has its `en_us` title, hint and pages, and every UI key exists.
+- the asset, lang and book-text validators: every entry has its `en_us` title, hint and pages, and every UI key exists;
+- under the [localisation fixtures](accessibility.md#fixtures) ("a long test translation" above means them): every button label clipped with its full tooltip, the feedback line inspected by keyboard, a confirm's long body scrolled by keyboard with focus starting on Cancel, and narration of an entry, a cell, a palette slot and a bookmark from the capture;
+- every book sound plays with its subtitle.
 
 ## Contracts on sibling specs
 
@@ -1180,8 +1250,8 @@ This spec settles every decision. Six required child tickets deliver the assets 
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Commonplace Book GUI sprites** | the generator `tools/art/book.py`, with every sprite at the sizes in "GUI contract": spread 312×208; Choir paper 142×188; tabs 24×20 (selected and unselected) with 6 tab icons at 16×16; search field 96×14 (idle and focused); bookmark ribbon 12×16 (empty and set); page and back arrows 18×10 (two states); entry frames 26×26 for free (circle), find (diamond), note (hexagon) and listen (arch) × locked/open/learned, plus an opener frame (a diamond with an outer ring) × 3; focus ring 30×30; hex cell 18×20 (empty, anchor ring, silent, hover/focus, unanswered); link bars in 3 orientations; palette slot 18×18 (normal and selected); scrollbar track 4×16 (tiled vertically) and thumb 4×12, shared by the palette and the prose viewports; buttons 54×18 (normal, hover, disabled); 9×9 warp and pending glyphs; confirm panel 160×80; blots ×4 at 12×12; a GUI-scale-2 contact sheet; provenance rows | none |
-| **Commonplace Book items and sounds** | `commonplace_book` (Stage 1 row of art-style §5) and `choir_page` (Stage 3 row) textures, models and item definitions. Sounds in **Stage-appropriate registers** (art-style §7): page turn ×3, place ×3, link, solve and learn (Stage 1); Stage reached ×4 (one per Stage, each in its own Stage's register); tip-in (Stage 3); the listen beat (Stage 3, lower and wetter). Provenance rows. | none |
+| **Commonplace Book GUI sprites** | the generator `tools/art/book.py`, with every sprite at the sizes in "GUI contract": spread 312×208; Choir paper 142×188; tabs 24×20 (selected and unselected) with 6 tab icons at 16×16; search field 96×14 (idle and focused); bookmark ribbon 12×16 (empty and set); page and back arrows 18×10 (two states); entry frames 26×26 for free (circle), find (diamond), note (hexagon) and listen (arch) × locked/open/learned, plus an opener frame (a diamond with an outer ring) × 3; focus ring 30×30; hex cell 18×20 (empty, anchor ring, silent, hover/focus, unanswered); link bars in 3 orientations; palette slot 18×18 (normal and selected); scrollbar track 4×16 (tiled vertically) and thumb 4×12, shared by the palette and the prose viewports; buttons 54×18 (normal, hover, disabled); 9×9 warp and pending glyphs; confirm panel 160×80; blots ×4 at 12×12; a GUI-scale-2 contact sheet; provenance rows. **State marks** ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)): LOCKED frames a broken outline, OPEN a solid one, LEARNED a solid one with a filled inner ring; selected and focused tabs, search, bookmarks and buttons raised 2 px or outlined in `ink1`; disabled buttons a 1-px hatch; the page paper's interior `brass5`, and every text colour on every surface at the contrast the localisation spec's table requires; the greyscale and colour-vision contact sheets of every state set | none |
+| **Commonplace Book items and sounds** | `commonplace_book` (Stage 1 row of art-style §5) and `choir_page` (Stage 3 row) textures, models and item definitions. Sounds in **Stage-appropriate registers** (art-style §7), for the events under "Book UI keys": page turn ×3, place ×3, link, solve and learn (Stage 1); Stage reached ×4 (one per Stage, each in its own Stage's register); tip-in (Stage 3); the listen beat (Stage 3, lower and wetter). `sounds.json` entries carry no overrides and name `subtitles.vftv.book.<event>`. Provenance rows. | none |
 | **Stage 1 research content** | `content/research/stage1.json` (frozen roster, edges, anchors, rewards, pages), its categories in `categories.json`, `content/lang/en_us/stage1.json` (titles, hints, pages), and `path-stage1.json` with its reviewed sources; the tutorial's Lux made known in the path; `vftv:foci` learned after `vftv:arcane_crafting` in the path; the path **ending** with the [worldgen spec's](worldgen.md#stage-2-dripstone) `vftv:find/distillation` acquired (under "World sources"); the prose of `vftv:distillation`'s `hinted_by` entry pointing at stone that weeps into stone (dripstone caves), with wandering traders as an aside, never a promised wait | [Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17), [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27), and [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the path replays its values) |
 | **Stage 2 research content** | the same for Stage 2, with the recipe ids frozen, and `path-stage2.json` learning `vftv:clearing_bell` right after `vftv:resonant_brass`, and **ending** with `vftv:find/ruins` acquired (a page from the first ruin, under "World sources"); the prose of `vftv:ruins`'s `hinted_by` entry pointing at broken bell towers over the treeline in unexplored land, and the Reliquary at their heart | [Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17), [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18), [Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26), [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) |
 | **Stage 3 research content** | the same for Stage 3, plus its Choir pages and their **narrative order** (frozen in this ticket, `vftv:choir/beneath_the_notes` first, and transcribed by the worldgen content ticket into its `sites.json`), `path-stage3.json` tipping the pages in from `{"choir_page", "site": "vftv:choir_ruin"}` sources (under "World sources") and **ending** with `vftv:find/choirs_road` acquired (the Threshold's page, under "World sources"), the last page of the narrative order being `vftv:choirs_road`'s `hinted_by`, its prose pointing at bells hung over nothing ([Eldritch tier](eldritch.md#the-threshold)), the Answerers' find entry as a leaf (never a parent, never a path source), `silence_beneath` with lasting 4, `being_heard` (temporary 3, with the `vftv:stilling_draught` recipe page) and `under_the_silence` (permanent 2, never committed in the path), as frozen in the [warp spec](warp.md#stage), the marginalia pools and `overlay.json` | [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26), [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) (`vftv:echo_golems`), [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) (the Stage 4 find) |

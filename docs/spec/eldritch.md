@@ -481,7 +481,7 @@ The Chorister's **confirmed death**, `Encounter.onConfirmedDeath` ("The split": 
 
 ### The boss bar
 
-One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`), with a fixed UUID per Step, colour `WHITE`, overlay `PROGRESS`, named by the instance's lang key. Its players are exactly the admitted participants; its progress is health ÷ the entry health (≤ `MAX_ENTRY_HEALTH`), set each tick (vanilla sends only a change).
+One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`), with a fixed UUID per Step, colour `WHITE`, overlay `PROGRESS`, named by the instance's lang key. Its players are exactly the admitted participants; its progress is health ÷ the entry health (≤ `MAX_ENTRY_HEALTH`), set each tick (vanilla sends only a change). **Not narrated:** vanilla's boss-bar overlay has no narration (`MC:client/gui/components/BossHealthOverlay.java:60–89`), an inherited limitation recorded by the [localisation spec](accessibility.md#inherited-surfaces); the fight stays readable through the Choristers' poses, marks, sounds and subtitles.
 
 ### Options considered
 
@@ -518,8 +518,9 @@ One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`),
 | the lasting Void power: the Joining bonus, `joining.amplifier_bonus` | "The Hush can't hear me: it won't wake for me, and its Hollows won't hunt me. My own spills still pool; it still wakes for anyone else, or if left to run alone." |
 | "I can never be Silenced." | "I can never Join." |
 
-- **Focus order:** the Joining button, the Silencing button, Close. Tab and Shift-Tab move, Enter and Space press, Escape closes. A panel whose text overflows scrolls with the research spec's scrollbar sprites; a long translation wraps.
-- **Each button opens a confirm** (the research spec's 160 × 80 confirm panel), repeating that panel's lines and ending "This cannot be undone in this world." Its buttons are Confirm and Cancel; focus starts on Cancel; Escape cancels.
+- **Panels:** each panel's consequence lines are a prose viewport (the [localisation spec's R1](accessibility.md#r1-viewports)) from 4 px below the panel's title to 4 px above its button, wrapping a long translation and scrolling with the research spec's scrollbar sprites. The title and the button stay outside it. Button labels follow R2: clipped at 50 px with "…", the full text as tooltip and narration.
+- **Focus order:** the Joining viewport, the Joining button, the Silencing viewport, the Silencing button, Close. Tab and Shift-Tab move, Up and Down scroll a focused viewport, Enter and Space press, Escape closes. A viewport narrates its panel's title and every line, exact numbers included.
+- **Each button opens a confirm** (the research spec's 160 × 80 confirm panel, with its body viewport; [research, GUI contract](research.md#gui-contract)), repeating that panel's lines in the body and ending "This cannot be undone in this world." Its buttons are Confirm and Cancel; focus starts on Cancel, then cycles body → Confirm → Cancel; Escape cancels. Every permanent consequence stays in the body, reachable by scrolling.
 - **Quotes:** S2C `HeartQuote(containerId, revision, status, joining, silencing)`, where `status` is `READY`, `UNREADABLE` or `CHOSEN` and each side is a full `WarpPreview` (`dT`, `dL`, `dP`, `clipped`; Silencing's is `(−T, −L, 0, false)`). It is sent when the menu opens and again, with the next `revision`, after every `WarpChangedEvent` for its owner and every warp or Road tuning reload while it is open.
 
 ### The choice
@@ -578,7 +579,7 @@ Both are **pure functions of the warp record the owner's client already holds**,
 **S2C `EndingCue(choice)`** goes to the chooser only, after the choice is written. On Silencing, `silence()` has already sent `VoiceClear` on the same connection, so it arrives first.
 
 - **Precedence:** on receipt, the client stops any Voice line playing and drops any held Voice cue. While the scene plays, every new `VoiceCue` is dropped (its server outcome stands; a Joined Listener's Voices go on afterwards).
-- **The lines:** the pool's three lines in id order (`vftv:joining_0…2` or `vftv:silencing_0…2`, the [lexicon's](warp.md#the-lexicon) ending lines), each through the [warp spec's playback](warp.md#voice-lines) on `SoundSource.VOICE` with its Voice text, honouring `voices.text`. Each next line starts 20 ticks after the previous one's sound stops, or 100 ticks after it began if it never started. A line is resolved when it starts: a missing sound still shows its text for 60 ticks.
+- **The lines:** the pool's three lines in id order (`vftv:joining_0…2` or `vftv:silencing_0…2`, the [lexicon's](warp.md#the-lexicon) ending lines), each through the [warp spec's playback](warp.md#voice-lines) on `SoundSource.VOICE` with its Voice text, honouring `voices.text`. Each next line starts 20 ticks after the later of the previous one's sound stopping (or 100 ticks after it began, if it never started) and, while `voices.text` is on, the end of its caption's hold, which the player's notification time extends ([localisation, Voice text](accessibility.md#voice-text)). So every ending caption is read whole before the next replaces it. A line is resolved when it starts: a missing sound still shows its text for 60 ticks.
 - **Joining** also runs the warp spec's colour drain at band 3's peak: in over 50 ticks at the first line, held until the last line ends, out over 50, honouring `screenEffectScale` and `voices.colour_shift`.
 - **Held while a screen is open,** with no time limit: it plays when the screen closes, and nothing replaces it.
 - **A resource reload** keeps the scene: the queued line ids survive it, each line still to come is resolved against the new resources when it starts, and a line whose clip the reload stopped counts as finished, so the next one follows after the usual 20 ticks. Nothing already played is replayed; a line now missing falls back to its text for 60 ticks.
@@ -860,6 +861,8 @@ JSON object keys are strings, so the `target` and `decay` maps key ids as decima
 | `subtitles.vftv.<event>` for every sound event above | 0 | "Hollow bell tolls", "Descends", "Returns", "Silence catches", "Step bell rings", "Step bell is still", "Heart answers", "Heart falls silent" |
 
 **Used, not declared here:** the research spec's prose keys for the seven entries (#37's), `message.vftv.warp.unreadable`, the warp spec's ending lines, aspect and player names, the Choristers' names (their spec's).
+
+**Where messages go:** every `road.vftv.*` message and every `heart.vftv.*` refusal of a use (the Hollow Bell, the Step Bells, the Heart's first-match table) goes to the [status line](accessibility.md#r5-the-status-line); inside the Heart screen, a refusal shows in the screen and its quote refreshes. The Void-tongue names above are protected text: every locale keeps them exactly ([localisation, Protected text](accessibility.md#protected-text)).
 
 **Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here; a Void-tongue name that isn't 1–2 lexicon words, capitalised as a proper item name, passing the lexicon's phonology lint.
 

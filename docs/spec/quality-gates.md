@@ -12,13 +12,14 @@ These all run inside `./gradlew check` and fail the build.
 |---|---|
 | **Formatting** | Spotless with google-java-format `1.36.1`, AOSP style (4-space indent, 100 columns). Pinned. A bump goes through its own PR that proves formatting and configuration-cache compatibility; "the fix shipped upstream" is not evidence. Datagen output is outside Spotless's target. |
 | **Compiler** | `-Xlint:all -Werror`, so every warning is an error. |
-| **Error Prone** | `2.50.0` with the warnings it finds as errors. Generated code is excluded (`disableWarningsInGeneratedCode`, `excludedPaths`). |
+| **Error Prone** | `2.50.0` with the warnings it finds as errors. Generated code is excluded (`disableWarningsInGeneratedCode`, `excludedPaths`). **`DefaultLocale`** and **`StringCaseLocaleUsage`** are enabled as errors, so every format and case fold names its locale ([localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)). |
 | **NullAway** | JSpecify mode, `OnlyNullMarked`. `RequireExplicitNullMarking` is an error on **both** the `main` and `api` source sets, so every production package needs a `package-info.java` with `@NullMarked`. Where Mojang's annotations are wrong, use a local `castToNonNull` with a one-line reason. |
 | **ArchUnit** | The rules in [architecture § Enforcement](architecture.md#enforcement), run in the separate `archTest` suite. The freeze store starts **empty**. CI never creates or refreezes a baseline, and any change to the committed store is reviewed like code. |
 | **Access transformers** | Every active line (not blank, not a comment) in `accesstransformer.cfg` carries a trailing `# why` comment. |
 | **Interface injection** | No interface-injection data files exist. |
 | **Datagen** | CI regenerates into a clean directory and fails on any added, changed **or deleted** file compared with `src/generated/resources`. |
 | **Hand-written resources** | Every hand-written JSON file in `src/main/resources` is parsed and validated by a test. |
+| **Localisation and accessibility** | The [lang validator](accessibility.md#validation) over every `content/lang` input and code-defined key, run by datagen, with its placeholder parity corpus against vanilla's `TranslatableContents`; the [flash test](accessibility.md#the-flash-test), the state-variant check and the [contrast table](accessibility.md#text-contrast) over the committed resources; subtitle coverage over `sounds.json`. Each carries self-tests proving it rejects the defects it claims to catch. |
 
 **Suppressions** are allowed only on the narrowest declaration Java supports (a local variable, method or field, never a class), must name the specific diagnostic, and must carry a one-line reason. A suppression that needs a paragraph means the code is wrong.
 
@@ -49,7 +50,8 @@ The map requires that every **system** gets all three layers. A single ticket on
 - **Each scenario asserts state**, not only that steps succeeded. A small per-scenario checker reads `protocol.jsonl` and checks the `dump` values the scenario cares about.
 - **Sync coverage:** initial sync on join, later updates, logout and reconnect, and `/reload` where it matters.
 - **Asset checks:** a resource-reference validator (every blockstate, item definition, model, texture, sound and lang key referenced resolves to a real file), plus a client resource-load check with no missing-texture or missing-sound errors from `vftv`. "Has a model" is checked against each block's declared render strategy, which allows for inherited models, invisible blocks and custom renderers.
-- **Language:** every registered item, block and entity has an `en_us` name. Dynamic UI keys exist, and placeholder counts match across lang entries.
+- **Language:** every registered item, block and entity has an `en_us` name. Dynamic UI keys exist, and every locale's placeholders cover exactly its owner's arguments ([localisation, Placeholders](accessibility.md#placeholders)).
+- **Localisation and accessibility:** the [localisation spec's](accessibility.md#tests) scenarios under its pseudo-locale and wide-font packs, keyboard-only walkthroughs, narration from the capture, captions and fallback.
 - **Screenshots** are kept and reviewed by an agent; they are never pixel-diffed.
 
 ### Harness work the build phase needs first
@@ -58,7 +60,8 @@ The assertions above can't create abilities the harness doesn't have. Before the
 - a per-scenario assertion checker over `protocol.jsonl`;
 - a persistent world that survives across launches, plus logout and reconnect within a run (today, every launch gets a fresh game directory);
 - a client resource-load inspection op;
-- hardware rendering, a backend choice (OpenGL or Vulkan) and a resolution setting. Today it hard-codes 1280×720 Xvfb and forces `LIBGL_ALWAYS_SOFTWARE=1`. Every run records which GPU and backend actually initialised.
+- hardware rendering, a backend choice (OpenGL or Vulkan) and a resolution setting. Today it hard-codes 1280×720 Xvfb and forces `LIBGL_ALWAYS_SOFTWARE=1`. Every run records which GPU and backend actually initialised;
+- for the [localisation and accessibility spec](accessibility.md#fixtures): loading test resource packs (the pseudo-locale, wide-font and partial-locale packs); setting the language, the narrator mode and `notificationDisplayTime`; the **narration capture**, recording what our narration helper **attempted** separately from what the player's narrator mode **emitted**, through a recording narrator in place of the platform one; and an op returning the text vanilla's screen narration collector builds for the focused widget.
 
 ## Coverage
 

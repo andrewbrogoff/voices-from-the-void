@@ -269,13 +269,14 @@ with one case per built-in effect (the example shows one). **`minecraft:empty`**
 | **sockets** | 3 of 20×20 | (30 + 24*s*, 41) | only *rank* sockets are drawn; the rest show the closed sprite |
 | rank pips | 3 of 5×5 | (106 + 7*k*, 48) | filled up to the focus's rank |
 | **cost panel** | 2 rows × 4 cells of 40×18 | (8, 65), cell *i* at (8 + 40·(*i* mod 4), 65 + 18·⌊*i*/4⌋) | the [shared cost-cell rule](arcane.md#the-screen); see below for what it prices |
-| **detail line** | 160×9 | (8, 103) | cooldown, ranges or radius, pulse, magnitude; clipped with "…", complete in its tooltip |
-| **Turn** button | 54×18 | (8, 114) | compose |
-| **Raise rank** button | 54×18 | (114, 114) | rank up |
-| **status line** | 160×9 | (8, 136) | one line, clipped with "…" |
+| **detail line** | 160×9 | (8, 103) | cooldown, ranges or radius, pulse, magnitude; clipped with "…", complete in its tooltip; an inspection focus target ([localisation, R2](accessibility.md#r2-one-line-fields)) |
+| **Turn** button | 54×18 | (8, 114) | compose; its label under R2 |
+| **Raise rank** button | 54×18 | (114, 114) | rank up; its label under R2 |
+| **Details** button | 18×18 | (170, 114) | opens the rank details ("The complete rank quote"); label `gui.vftv.lathe.rank_details` as its tooltip and narration |
+| **status line** | 160×9 | (8, 136) | one line, clipped with "…", complete in its tooltip; an inspection focus target while it shows text |
 | inventory label | one line | (8, 147) | vanilla `container.inventory` |
 
-**Sprites** (under `assets/vftv/textures/gui/sprites/`): `lathe/choice_idle`, `choice_hover`, `choice_selected`, `choice_disabled` (20×20); `lathe/socket_open`, `socket_closed` (20×20); `lathe/pip_full`, `pip_empty` (5×5); `lathe/button`, `button_hover`, `button_disabled` (54×18); `container/slot/focus` (16×16). The cost cells reuse `vftv:worktable/cost_cell`, `cost_cell_short` and `beyond`.
+**Sprites** (under `assets/vftv/textures/gui/sprites/`): `lathe/choice_idle`, `choice_hover`, `choice_selected`, `choice_disabled` (20×20); `lathe/socket_open`, `socket_closed` (20×20); `lathe/pip_full`, `pip_empty` (5×5); `lathe/button`, `button_hover`, `button_disabled` (54×18); `lathe/details`, `details_hover` (18×18, a lens over lines); `container/slot/focus` (16×16). The rank details panel reuses the research spec's 160×80 confirm panel sprite as a nine-slice ([research, GUI contract](research.md#gui-contract)) and its scrollbar sprites. The cost cells reuse `vftv:worktable/cost_cell`, `cost_cell_short` and `beyond`.
 
 **The draft.** The screen edits a client-side draft: the effect, the medium and the socket contents. On opening, and whenever slot 0 changes, it is reset to the focus's composition (empty for a blank).
 - **Choosing an effect** keeps the medium if it is still valid, else selects the first valid learned medium in ascending id. It then drops any socket whose modifier is no longer valid.
@@ -283,6 +284,19 @@ with one case per built-in effect (the example shows one). **`minecraft:empty`**
 - **Socket aggregation:** a modifier's level is the number of sockets holding that entry, so two Force sockets are Force 2. Socket order is display only: sockets are drawn sorted by modifier id, then empties.
 
 **What the cost panel prices** (the composition's per-cast cost, or, while **Raise rank** is hovered or focused, the rank-up's vis cost): one cell per base aspect, in ascending aspect id, from the authoritative preview with the wand in slot 1 (see "The authoritative preview"). The cost tooltip is the arcane spec's: the aspect's effective and base cost, the pool, the factors (cap, gear discount, warp, `m`), each flag that is set, and the spill when above 0. With no wand or an inert wand, the cells show the base cost and the tooltip names why. The **Raise rank** tooltip adds the experience price, `tooltip.vftv.lathe.rank_xp` (levels, the player's levels).
+
+**The complete rank quote** is too long for a tooltip under the localisation fixtures (three aspects, each with its cost, pool, factors, flags and spill, then the experience price), so it lives in a **rank details** panel ([localisation, R6](accessibility.md#r6-tooltips)), and Raise rank's tooltip stays short (`tooltip.vftv.lathe.rank_xp` only):
+- **Opened** by the Details button, with the mouse or with Enter or Space while it is focused. It stays usable while Raise rank is disabled, so a price can be read before it can be paid.
+- **Bounds:** a 200×124 panel at (44, 40) on the background; the title `gui.vftv.lathe.rank_details`, one line under R2, at (8, 6); the **body**, a prose viewport ([localisation, R1](accessibility.md#r1-viewports)) at (8, 18), 180×78, with its scrollbar at (190, 18); **Close** (`gui.vftv.lathe.close`), 54×18, at (73, 100).
+- **Body:** the rank-up's vis cost, one block per base aspect in ascending aspect id, each block the cost tooltip's lines in the arcane order; then `tooltip.vftv.lathe.rank_xp`. It is the same preview as the cost panel's, refreshed live while open; the scroll position is kept.
+- **Focus:** opening moves focus to the body; Tab cycles body → Close; Esc or Close closes the panel and returns focus to the Details button. While it is open the rest of the screen ignores input.
+- **Narration:** the title, then every line of the body, exact numbers included.
+
+Moving focus from Raise rank to the cells returns them to the per-cast cost; the rank details keep the rank quote whole. **Each cost cell is a focus target** under the arcane spec's rule ([arcane crafting, The screen](arcane.md#the-screen)): on focus it shows its tooltip, and its narration reads every line of it. The tooltips wrap at 170 px and fit 232 px tall under the localisation fixtures ([localisation, R6](accessibility.md#r6-tooltips)).
+
+**Text colours** ([localisation, Text contrast](accessibility.md#text-contrast)): `ink1` throughout; the title and inventory label strips uniform `brass4`; the detail and status lines' rectangles and the rank details' body uniform `brass5`; button faces `brass4`, `brass5` hovered or focused; the cost cells' number fields as the arcane spec's.
+
+**State marks** ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)): `choice_selected` carries a 1-px inset `ink1` outline; keyboard focus draws `choice_hover` plus a 1-px outer outline, so a focused selected choice shows both; `choice_disabled` is hatched.
 
 **The detail line** lists, for the draft: the cooldown, the ranges (Touch, Beam: `entity_range` with Reach for an `ENTITIES` effect, or `block_range` for a `BLOCKS` effect, see "The authoritative preview") or the radius (Burst), the pulse (Beam, with "per pulse" on the cost), and the magnitude now, including Force and the live Void amplifier (see "The Void tier"). For Exchange it adds `tooltip.vftv.focus.exchange_warning`.
 
@@ -295,14 +309,16 @@ with one case per built-in effect (the example shows one). **`minecraft:empty`**
 | Mouse wheel over a strip | scroll it by one |
 | Left-click **Turn** | compose the draft |
 | Left-click **Raise rank** | rank up |
-| Tab / Shift+Tab | cycle focus: effect strip → medium strip → sockets → Turn → Raise rank |
-| Arrow keys | move within the focused strip or between sockets; Left/Right scroll a strip past its ends |
+| Left-click **Details** | open the rank details |
+| Tab / Shift+Tab | cycle focus: effect strip → medium strip → sockets → cost cells → Turn → Raise rank → Details → detail line → status line (while it shows text); inside the rank details, body → Close |
+| Arrow keys | move within the focused strip, between sockets or between cost cells; Left/Right scroll a strip past its ends |
 | Enter or Space | select the focused choice; cycle the focused socket forward; activate the focused button |
+| Shift+Enter or Shift+Space | cycle the focused socket **backward**, as right-click does, without also cycling it forward |
 | Esc, inventory key | close (vanilla) |
 
 The buttons act only when the local prediction for that action is ready (see "Status and refusals"). They send **at most one `LatheAction` per client tick**.
 
-**Narration:** a choice reads `narration.vftv.lathe.choice` (name, selected or not, available or why not); a socket reads `narration.vftv.lathe.socket` (index, modifier and level, or empty); a button reads its label, then one `narration.vftv.worktable.cost` per cell of the cost it would pay (or the base cost and the availability text when unpriced), and for Raise rank the experience price; then the full status line.
+**Narration:** a choice reads `narration.vftv.lathe.choice` (name, selected or not, available or why not); a socket reads `narration.vftv.lathe.socket` (index, modifier and level, or empty); a button reads its label, then one `narration.vftv.worktable.cost` per cell of the cost it would pay (or the base cost and the availability text when unpriced), and for Raise rank the experience price; then the full status line. The Details button reads its label; the rank details read as above. A disabled button stays focusable and narrates why through the status line. A focused cost cell reads its `narration.vftv.worktable.cost`, then its full tooltip.
 
 ### The Lathe payload
 
@@ -450,7 +466,7 @@ The fourth row through the wands quote: cap 1.00, no discount, W 1.00 → `m` 10
 
 ### Checks
 
-**Before anything is spent,** in order. Each refusal returns `FAIL`, which consumes the click (so no air use follows), shows its message on the action bar, and changes nothing:
+**Before anything is spent,** in order. Each refusal returns `FAIL`, which consumes the click (so no air use follows), shows its message on the [status line](accessibility.md#r5-the-status-line), and changes nothing:
 
 | # | Check | Refusal |
 |---|---|---|
@@ -898,6 +914,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 | `item.vftv.focus`, `item.vftv.focus.blank`, `block.vftv.lathe`, `entity.vftv.focus_bolt` | 0 | "Focus", "Blank Focus", "Lathe", "Bolt" |
 | `focus_effect.<ns>.<path>`, `focus_medium.<ns>.<path>`, `focus_modifier.<ns>.<path>` (every entry) | 0 | "Kindle", "Burst", "Force" |
 | `container.vftv.lathe`; `gui.vftv.lathe.turn`, `.raise_rank` | 0 | |
+| `gui.vftv.lathe.rank_details`, `.close` | 0 | "Rank-up cost", "Close" |
 | `status.vftv.lathe.<status>` for every `LatheStatus` with its own key | as its table | |
 | `tooltip.vftv.focus.parts` | 2 | "%s by %s" (effect, medium) |
 | `tooltip.vftv.focus.modifier` | 2 | "%s %s" (modifier, level) |
@@ -908,7 +925,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 | `tooltip.vftv.focus.exchange_warning` | 0 | "If the new block can't be set, the old one is broken all the same." |
 | `tooltip.vftv.focus.blank`, `.unreadable`, `.out_of_tune` | 0 | |
 | `tooltip.vftv.focus.unknown` | 1 | "It rings in a key I don't know: %s" |
-| `tooltip.vftv.lathe.rank_xp` | 2 | "Costs %s levels (you have %s)" |
+| `tooltip.vftv.lathe.rank_xp` | 2 | "Level cost: %s (I have %s)" (number-agnostic, [localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)) |
 | `message.vftv.focus.unreadable`, `.blank`, `.out_of_tune`, `.unlearned`, `.needs_block`, `.block_effects_off`, `.nothing_answers`, `.nothing_yields`, `.too_much`, `.slipped` | 0 | the refusals above |
 | `message.vftv.focus.unknown` | 1 | |
 | `narration.vftv.lathe.choice` | 3 | |
@@ -1059,7 +1076,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- the Lathe screen in every status at **320×240**, with every slot, strip, socket, button and the hotbar on screen; keyboard-only use with narration and the focus ring on each region; long-text tooltips staying inside the view; and the worst-case mockup (8 cost cells with 4-digit amounts, a long translation);
+- the Lathe screen in every status at **320×240**, with every slot, strip, socket, button and the hotbar on screen; keyboard-only use with narration and the focus ring on each region, including Shift+Enter cycling a socket backward, each cost cell's full tooltip, the rank details opened by mouse and by keyboard on a three-aspect rank quote with flags and spill (scrolled to its experience price, closed back to the Details button, narrated whole), and the clipped detail and status lines' full text (the [localisation capture](accessibility.md#fixtures)); long-text tooltips staying inside the view; and the worst-case mockup (8 cost cells with 4-digit amounts, a long translation);
 - `focus*` fact spans in a book page re-resolving live: on a hand change, a wand's pools, a `block_interaction_range` change, a `/reload` and a reconnect;
 - tooltips for every effect, a blank, an unreadable and an out-of-tune focus;
 - the wand's third layer for every effect, blank, unknown, unreadable and none, beside the focus items' own models;

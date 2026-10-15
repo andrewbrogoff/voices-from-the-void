@@ -631,7 +631,7 @@ An Alembic holds the same pair for its base (handler and suction, side-matched) 
 
 Every number a decision rests on is shown exactly, live, and never in prose.
 
-**Status lines** are action-bar messages, built on the server from live values. They appear on a use with **both hands empty while sneaking**: vanilla skips the block when a sneaking player holds anything (`MC:server/level/ServerPlayerGameMode.java:398–399`).
+**Status lines** are messages on the [status line](accessibility.md#r5-the-status-line), built on the server from live values; it wraps, so a page naming two long block names (the alembic's ends) is always shown whole. Every refusal under "Labels" goes there too. They appear on a use with **both hands empty while sneaking**: vanilla skips the block when a sneaking player holds anything (`MC:server/level/ServerPlayerGameMode.java:398–399`).
 - **Paging:** each such use shows the **next page**, one line per use.
 - **The cursor** is per player: the block, the page and the game time. It resets to page 0 after 100 ticks, or on a different block.
 - Aspect names are masked for the viewer: `essentia.vftv.unheard` for an undiscovered aspect, and `essentia.vftv.missing` for a missing one.
@@ -645,7 +645,7 @@ Every number a decision rests on is shown exactly, live, and never in prose.
 
 - **A tube has a page 3:** `status.vftv.essentia_line.faults` (deaf arms, stalled pairs, skipped endpoints).
 - **A valve that isn't passing** has two axis ends, and may border two lines. It reports the line at **the clicked axis end**, when the clicked face is one of its axis faces. On a lateral click it reports the line at the **first occupied axis end in Direction order**. With no line at that end, it reports `.building` with zero counts.
-- **No HUD layer.** A jar's identity and fill level are visible in the world, and exact numbers are one use away. That avoids a second HUD layout ([crucible, The HUD](crucible.md#the-hud)).
+- **No HUD layer.** A jar's identity and fill level are visible in the world, and exact numbers are one use away. That avoids a second HUD layout ([crucible, The HUD](crucible.md#the-hud)). The status line is the localisation spec's shared layer, not one of essentia's.
 - **The fork's strike** on any block here reads that block's own aspects, never its contents ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)).
 - **The book:** the research spec's fact grammar has a source **`essentia`** (amended in this change), `{fact:essentia:<key>}`, over the synced `EssentiaRules` ([research, Prose and fact references](research.md#prose-and-fact-references)). So pages state capacity, ranks, throughput, the idle delay and the caps live.
 
@@ -836,7 +836,7 @@ A complete file (counts, ingredients and costs illustrative; the content ticket 
 | `essentia.vftv.label_unreadable` | 0 | "a label I can't read" |
 | `subtitles.vftv.essentia.jar_fill`, `.label_apply`, `.label_cut`, `.valve_open`, `.valve_close`, `.alembic_drip` | 0 | "Jar fills", "Label pressed on", "Label snipped", "Valve opens", "Valve closes", "Alembic drips" |
 
-**Used, not declared here:** every aspect's name belongs to the aspects spec's lang. Status lines are one action-bar line per page, so no page joins two keys.
+**Used, not declared here:** every aspect's name belongs to the aspects spec's lang. Status lines are one status-line message per page, so no page joins two keys.
 
 ```json
 {"schema": "vftv:lang/1", "strings": {

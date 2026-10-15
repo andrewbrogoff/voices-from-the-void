@@ -115,8 +115,8 @@ All 11 keys of `vftv-client.toml`. Each applies at the **next client frame or ti
 | 11 | `book.clear_prose` | bool | | `false` | the overlay is skipped from the next frame; the layout cache is untouched ([research, Prose that degrades with warp](research.md#prose-that-degrades-with-warp)) | research |
 
 - **Renamed:** `vis_hud.x` and `vis_hud.y` were the wands spec's `hud.x` and `hud.y`, namespaced before the first release.
-- **Accessibility, already covered:** text with every Voice line, on by default and independent of vanilla's subtitles ([warp, Voice lines](warp.md#voice-lines)); state carried by shape, never colour alone ([Choristers, Marks](choristers.md#marks)); screen effects follow vanilla's `screenEffectScale` and `darknessEffectScale`, and Voice volume is vanilla's Voice slider ([warp, Accessibility](warp.md#accessibility)).
-- **No further key.** HUD positions for the other HUDs, a particle cap and a "reduce motion" switch would govern nothing a spec defines: particle and motion budgets are fixed in each owner's Performance section. One is added when a spec defines what it governs.
+- **Accessibility** is the [localisation and accessibility spec's](accessibility.md) baseline: text with every Voice line, on by default and independent of vanilla's subtitles ([warp, Voice lines](warp.md#voice-lines)); state carried by shape, never colour alone ([Choristers, Marks](choristers.md#marks)); screen effects follow vanilla's `screenEffectScale` and `darknessEffectScale`, and Voice volume is vanilla's Voice slider ([warp, Accessibility](warp.md#accessibility)); transient text follows vanilla's notification time.
+- **No further key.** HUD positions for the other HUDs, a particle cap and a "reduce motion" switch would govern nothing a spec defines: particle and motion budgets are fixed in each owner's Performance section, and nothing of ours moves the camera ([localisation, Photosensitivity and motion](accessibility.md#photosensitivity-and-motion)). One is added when a spec defines what it governs.
 - **Defaults:** every option on, except `book.clear_prose` off: the degraded prose is the lore, and the Ledger shows exact warp either way.
 
 ## Lifecycle
@@ -277,11 +277,16 @@ The spec promises no warning count on either branch, only usable, corrected valu
 
 - **The client entrypoint registers NeoForge's `ConfigurationScreen`** through `IConfigScreenFactory` (`NF:client/gui/IConfigScreenFactory.java:16–26`; `NF:client/gui/ConfigurationScreen.java:98–103`), so a player changes accessibility options in game, from the mods list.
 - **Server config in the screen:** ordinary single player can edit the open world's active server file; editing is disabled on a remote server, when no server config is loaded, and when an integrated server is open to LAN (`NF:client/gui/ConfigurationScreen.java:290–301`). An edit saves when its top-level section closes and is published as under "Publishing a change".
-- **Tooltips** fall back to each key's comment (`NF:client/gui/ConfigurationScreen.java:562–575`), so there are no tooltip lang keys.
+- **Tooltips** are translated: the screen shows `<translation>.tooltip` when that key exists, and falls back to the key's comment only when it doesn't (`NF:client/gui/ConfigurationScreen.java:562–575`). Every key carries `options.vftv.<path>.tooltip` ("Lang keys"), so a translated locale never shows our English comment.
+- **Enum values display translated:** the screen shows a value through NeoForge's `TranslatableEnum` and otherwise its literal `name()` (`NF:client/gui/ConfigurationScreen.java:790–799`). `core`'s enums can't implement a NeoForge type ([architecture, Layers](architecture.md#layers)), so `neoforge.config` declares the spec's two enums as display adapters implementing `TranslatableEnum`, each value mapped one-to-one onto the `core` enum when the records are built. The TOML values and identifiers stay the English names, unchanged ("Compatibility").
 
 ## Lang keys
 
-Every key and section carries `.translation("options.vftv.<path>")`. Eight keys are owned, and already listed, by their systems' lang tables: `options.vftv.spectacles.card` and `.baffle.hud` ([armor](armor.md#lang-keys)), `.hush.muffle` and `.hush.hud` ([Hush](hush.md#lang-keys)), and `.voices.text`, `.voices.colour_shift`, `.voices.phantoms`, `.voices.phantom_sounds` ([warp](warp.md#lang-keys)). **This spec owns every other `options.vftv.*` key**, below. Its English is final, not a sense: datagen writes these as code-defined UI keys into `assets/vftv/lang/en_us.json`, as the research spec's UI keys are written, so no `content/` file and no production ticket is needed. None has a placeholder.
+Every key and section carries `.translation("options.vftv.<path>")`. Eight keys are owned, and already listed, by their systems' lang tables: `options.vftv.spectacles.card` and `.baffle.hud` ([armor](armor.md#lang-keys)), `.hush.muffle` and `.hush.hud` ([Hush](hush.md#lang-keys)), and `.voices.text`, `.voices.colour_shift`, `.voices.phantoms`, `.voices.phantom_sounds` ([warp](warp.md#lang-keys)). **This spec owns every other `options.vftv.*` key**, below. Its English is final, not a sense: datagen writes these as code-defined UI keys into `assets/vftv/lang/en_us.json`, as the research spec's UI keys are written, so no `content/` file and no production ticket is needed. None has a placeholder. Translations go in `content/lang/<lang>/config.json` ([localisation, Files](accessibility.md#files)).
+
+**Tooltips and enum values** are this spec's too, for all 31 keys, the eight owner-held ones included:
+- **`options.vftv.<path>.tooltip`** for every key: its English is the key's comment below, verbatim.
+- **Enum values:** `options.vftv.research.mode.gentle`, `.standard`, `.hard`, `.skip` ("Gentle", "Standard", "Hard", "Skip: buy research with points") and `options.vftv.nodes.starter.required`, `.best_effort`, `.off` ("Required", "Best effort", "Off").
 
 **Sections:**
 
@@ -328,7 +333,7 @@ Every key and section carries `.translation("options.vftv.<path>")`. Eight keys 
 | `options.vftv.vis_hud.y` | Vis HUD y | "Top edge of the vis HUD, in GUI pixels. Range: 0 to 4096. Default: 4." |
 | `options.vftv.book.clear_prose` | Clear prose | "Show the Commonplace Book without warp's marginalia and strikeouts. Default: false." |
 
-The eight owner-held keys get comments in the same form: `spectacles.card` "Show the Tuned Spectacles card. Default: true."; `baffle.hud` "Show the Baffle row above the hotbar. Default: true."; `hush.muffle` "Quieten sounds inside the Hush. Default: true."; `hush.hud` "Show the Clearing Bell's reading. Default: true."; `voices.text` "Show the words of every Voice line. Default: true."; `voices.colour_shift` "Let the Voices drain colour from the screen. Default: true."; `voices.phantoms` "Show phantom blocks and apparitions. Default: true."; `voices.phantom_sounds` "Play phantom sounds. Default: true." Enum values show as their names.
+The eight owner-held keys get comments in the same form: `spectacles.card` "Show the Tuned Spectacles card. Default: true."; `baffle.hud` "Show the Baffle row above the hotbar. Default: true."; `hush.muffle` "Quieten sounds inside the Hush. Default: true."; `hush.hud` "Show the Clearing Bell's reading. Default: true."; `voices.text` "Show the words of every Voice line. Default: true."; `voices.colour_shift` "Let the Voices drain colour from the screen. Default: true."; `voices.phantoms` "Show phantom blocks and apparitions. Default: true."; `voices.phantom_sounds` "Play phantom sounds. Default: true." Enum values show through their translated names (above); the comment text names the TOML values.
 
 ## Compatibility
 
@@ -373,7 +378,7 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 - two single-player worlds, one with a world override, keep their own values across a switch between them;
 - every client option toggled through the config screen applies live (screenshots and dumps; the colour drain turned off at its 65% peak reaches zero within 50 ticks with no frame-to-frame step above 1.3%); the server section is read-only on a remote server and on a LAN-opened world.
 
-**Language:** every key, section and command key above exists in `en_us`, with matching placeholder counts.
+**Language:** every key, section, tooltip, enum value and command key above exists in `en_us`, with matching placeholder counts; each `.tooltip` equals its key's comment. **E2E:** under the localisation pseudo-locale pack the config screen shows translated tooltips and enum values, never the English comment or `name()`.
 
 ## Contracts on sibling specs
 

@@ -242,7 +242,7 @@ A strike on an idle bowl creates or refreshes the striker's **arm**: one per pla
 - **Seen:** when the client's HUD takes an `ARMED` readout, it sends **`InfusionSeen(pos, revision)`** (C2S: a `BlockPos` and a VarInt; anything else is rejected at decode), once per readout it receives. The server accepts at most 4 per player per tick and drops extras; an honest client never sends more, because the server sends at most one readout per refresh or strike. The server records it as the arm's **seen revision** iff the arm exists for that dimension and position and `revision` equals the arm's current revision; otherwise it is ignored. A bump leaves the seen revision behind until the client acknowledges the new one. Seen proves only what an honest client displayed; it **authorises nothing** (see "Starting").
 - **Run subscription** (`RUN`): it refreshes on the same schedule from the bowl's frozen plan and live counters (progress, owed, upsets, stall or pause, and the abandon price under #26's current rules), **without** reassessing recipes or geometry, and sends only on a change. It ends on the run's completion, abandonment or removal (with a final `CLEARED`), and on the viewer exit conditions below. **A run subscription never authorises a start.**
 - **Either ends** on logout, death, a dimension change, the player leaving `Player#isWithinBlockInteractionRange(pos, 1.0)` (`MC:world/entity/player/Player.java:2087`), `arm.ttl` ticks after the last strike, a strike on another bowl, or the bowl's identity changing. The client is sent `CLEARED`. Ending discards the seen revision.
-- **Payload:** **`InfusionReadout`** S2C to that player only: the position, the revision, a kind (`ARMED`, `RUN` or `CLEARED`) and the readout. Bounded: ≤ 8 cost cells with costs 1–8,000 and held-now 0–99,999 (VarInts), ids ≤ 256 characters, the output through vanilla's item stream codec.
+- **Payload:** **`InfusionReadout`** S2C to that player only: the position, the revision, a kind (`ARMED`, `RUN` or `CLEARED`), **`solicited`** (a boolean) and the readout. `solicited` is true **only** for the readout that answers the player's own strike on the bowl or their commit (a start, an abandon's first or second use); every refresh, revision bump, held-now update, run-subscription update and `CLEARED` carries false. Bounded: ≤ 8 cost cells with costs 1–8,000 and held-now 0–99,999 (VarInts), ids ≤ 256 characters, the output through vanilla's item stream codec.
 
 ### The HUD
 
@@ -262,10 +262,11 @@ A strike on an idle bowl creates or refreshes the striker's **arm**: one per pla
 | 7 | `.strike_again`, or `.changed` after a `STALE` refusal | `.abandon_confirm` while abandoning is armed | |
 
 - **Numbers:** `S` as "*n*%"; per-mille values as "*n*.*d*%" (integer division by 10, then the remainder); every other number a plain ASCII integer.
-- **Wrapping, not clipping:** each line wraps to `maxInner` with the font's own `split`; no number is ever cut. The cells follow the [crucible HUD](crucible.md#the-hud)'s grid rule (the arcane spec's shared cost-cell sprites `vftv:worktable/cost_cell`, and `cost_cell_short` for an aspect held short now). Then frame, padding, position, clamp and the pose-scale fallback are the crucible's, unchanged, so every readout fits.
+- **Wrapping, not clipping:** each line wraps to `maxInner` with the font's own `split`; no number is ever cut. The cells follow the [crucible HUD](crucible.md#the-hud)'s grid rule (the arcane spec's shared cost-cell sprites `vftv:worktable/cost_cell`, and `cost_cell_short` for an aspect held short now). Then frame, padding, position, clamp, the caption band, the pose-scale fallback and **sheets** are the crucible's, unchanged, so every readout fits at a scale of at least 0.75 or pages. **Head:** line 1; **foot:** line 7; the body is lines 2–6 and the cell rows, in order.
 - **Unheard aspects** draw the unheard icon with their exact amounts ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)).
-- **Narration:** when a readout arrives and vanilla's narrator is on, lines 1 and 2 are queued as system narration. The book's fact fields carry the same values in full (see "The authoritative preview").
-- **Precomputing:** the layout is rebuilt only when a readout arrives or clears, the viewer's knowledge, the resources or the scaled screen size change. Our draw code allocates nothing per frame.
+- **Narration:** when a readout with `solicited` true arrives, lines 1 and 2 are passed once to the [localisation narration helper](accessibility.md#hud-narration), **whatever the narrator mode**: vanilla's `saySystemQueued` decides whether anything is spoken. A readout with `solicited` false (a refresh, a revision bump from changed inputs, a run update) is never narrated, nor is anything per frame. The book's fact fields carry the same values in full (see "The authoritative preview").
+- **The `status.vftv.infusion.*` keys** are this HUD's line 1, never a status-line message; refusals and the abandon prompt are `message.vftv.infusion.*` on the [status line](accessibility.md#r5-the-status-line).
+- **Precomputing:** the layout is rebuilt only when a readout arrives or clears, the viewer's knowledge, the resources, the language, the scaled screen size, the [caption band's](accessibility.md#the-caption-band) revision or the sheet change. Our draw code allocates nothing per frame.
 
 ## Starting
 
@@ -290,7 +291,7 @@ A wand use on a ringing bowl is a strike that makes a run subscription. The firs
 
 ### The commit
 
-**Checks,** on the server thread, first failure refusing on the action bar (and, where marked, sending a fresh readout):
+**Checks,** on the server thread, first failure refusing on the [status line](accessibility.md#r5-the-status-line) (and, where marked, sending a fresh readout):
 
 | # | Check | On failure |
 |---|---|---|
@@ -519,7 +520,7 @@ On an upset, `upsets + 1` **whatever its effect**, then:
 ### Abandoning
 
 **Empty-handed use on a ringing bowl:**
-1. **First use** (no abandon armed, or armed by this player and expired): arm `{player, deadline = now + abandon.window, flux-rule generation}`. **The run pauses**, so `drawn` can't change. The action bar shows `message.vftv.infusion.abandon_confirm` with the exact `essentiaFlux(drawn, ABANDONED, rules)` under #26's current rules.
+1. **First use** (no abandon armed, or armed by this player and expired): arm `{player, deadline = now + abandon.window, flux-rule generation}`. **The run pauses**, so `drawn` can't change. The status line shows `message.vftv.infusion.abandon_confirm` with the exact `essentiaFlux(drawn, ABANDONED, rules)` under #26's current rules.
 2. **Second use** by the same player before the deadline, with #26's flux rules unchanged: **abandon**. If the rules changed, step 1 runs again with the new value.
 3. **Another player's** empty-handed use while it is armed is refused: `message.vftv.infusion.abandon_pending`.
 4. **The deadline passing** disarms it; the run resumes.
@@ -925,7 +926,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **enchanting:** each condition and reason; the cost and `R` vectors; a book refused; conflict excluding the holder itself;
 - **the recipe codec:** required fields; `transmute` only with an item result and false by default; created results; per-level caps; the `StreamCodec` round trip and bounds;
 - **the item handler:** every method row; arguments first; restoration of the promised stack and refusal of a wrong one; locked taking; nested transactions with one snapshot per depth;
-- **codecs:** both block entities (every bound and invariant, raw round trip of dormant records, missing ids), the readout (held-now saturation at 99,999 from `long` totals), the seen payload, `InfusionRules`, the tuning file (the product bound) and every `content/` schema;
+- **codecs:** both block entities (every bound and invariant, raw round trip of dormant records, missing ids), the readout (held-now saturation at 99,999 from `long` totals; `solicited` true only on a strike's or commit's answer, false on every refresh, bump and run update), the seen payload, `InfusionRules`, the tuning file (the product bound) and every `content/` schema;
 - **content lints:** the chime-capacity bound; the enchantment tag and maxima; the multiblock rules; the bootstrap coverage; `void` only behind a Stage 4 gate; non-amplification (see the contracts).
 
 **GameTest:**
@@ -947,7 +948,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- the HUD in every status and during a run (progress, missing, paused, waiting, abandon armed), **at the worst case** (8 cells, 4-digit amounts, a long test translation, unheard aspects) on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD (screenshots plus a state dump);
+- the HUD in every status and during a run (progress, missing, paused, waiting, abandon armed), **at the worst case** (8 cells, 4-digit amounts, a long test translation, unheard aspects) on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD (screenshots plus a state dump); under the [localisation fixtures](accessibility.md#fixtures) the outer pose scale stays ≥ 0.75, the frame stays above a showing status line and Voice line, appearing and disappearing over an unchanged readout re-lays the card, and a readout too tall at 0.75 pages into sheets; a long refusal on the status line, whole;
+- **narration** from the localisation capture: an identical strike, in narrator modes Off, Chat, System and All, attempts lines 1 and 2 exactly once each time (emission follows the mode); a passive revision bump from changed inputs, a held-now update and a run update attempt nothing;
 - the strike pitch at stability 0 and 100; every sound and subtitle; the held items (a sword, a block) on both blocks;
 - the book's recipe and structure pages and fact fields with no altar, another recipe's altar, a short one, a ready one and **a live run of that recipe** (abandon flux shown, clean figures absent), with `checked_at` shown whenever there is a context;
 - **with JEI:** hide and unhide on grant and revoke, and after a reload; the ring at 1 and 16 components; **without JEI**, nothing breaks;

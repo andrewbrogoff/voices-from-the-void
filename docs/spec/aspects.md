@@ -189,11 +189,14 @@ Right-click with the fork in hand. Reach is vanilla interaction reach.
 - **Cooldown:** a vanilla `ItemCooldowns` cooldown, shown by the hotbar overlay and by a "ringing" item model through the native `minecraft:cooldown` property, with no code. It is a gameplay number, independent of the strike sound's 1.1 s tail.
 - **A click during cooldown is consumed** and does nothing: no readout, and no chest opens.
 - **The inventory path runs on both sides** and bypasses the ordinary use cooldown. The client callback only consumes the click; the server checks the cooldown itself, validates the input (the player has that menu open, the slot is real and accessible, the carried stack is a fork), and is the only side that grants anything.
-- **Sounds:** strike ×4 pitch and seed variants, node answer ×3, discovery chime ×1, within [art-style §7](art-style.md#7-sound-palette). Positional sound plus vanilla subtitles gives a visual cue to players who can't hear.
+- **Sounds:** strike ×4 pitch and seed variants, node answer ×3, discovery chime ×1, within [art-style §7](art-style.md#7-sound-palette): the events `vftv:fork.strike`, `vftv:fork.answer` and `vftv:fork.discover`, whose `sounds.json` entries carry no overrides and name `subtitles.vftv.fork.strike`, `.answer` and `.discover` ("Lang keys"). Positional sound plus vanilla subtitles gives a visual cue to players who can't hear.
 
 ### What a strike reveals
 
-**Instruments never lie.** A **HUD readout card** near the crosshair shows the target's name and its aspects with exact amounts. It stays readable for the readout hold after the *latest* strike, then fades. Chat is never used.
+**Instruments never lie.** A **HUD readout card** near the crosshair shows the target's name and its aspects with exact amounts. It stays readable for the readout hold after the *latest* strike, then fades: on the client, `ceil(readout_hold_ticks × max(1, notificationDisplayTime))` ticks ([localisation, How long transient text stays](accessibility.md#how-long-transient-text-stays)). Chat is never used.
+
+- **Narration:** when a strike's `ScanResult` arrives, the card's text is queued once as system narration ([localisation, HUD narration](accessibility.md#hud-narration)): the name, the state's line, and each aspect as `narration.vftv.strike.aspect` with its exact amount, an unheard one named `aspect.vftv.unheard`. Never per frame.
+- **Overflow:** the [localisation spec's R3](accessibility.md#r3-hud-text): the card wraps and never clips, in the [crucible HUD's](crucible.md#the-hud) geometry, caption band and sheets (head: the target's name; no foot). Its layout is rebuilt when a `ScanResult` arrives, the language, resources or scaled screen change, the [caption band's](accessibility.md#the-caption-band) revision changes, or the sheet turns; never per frame.
 
 - **Blocks, items, entities:** their own aspects only (never container contents), in one row.
 - **Nodes:** their aspects with current / max, plus whatever type and brightness #17 defines. Rows **wrap**; nothing is silently truncated.
@@ -202,12 +205,12 @@ Right-click with the fork in hand. Reach is vanilla interaction reach.
 
 | State | Readout |
 |---|---|
-| nothing to learn (`{}` or no entry) | "Nothing answers." |
-| first scan | aspects, points gained |
-| already scanned | aspects, "In your notes" |
-| partly scanned | known aspects, unheard ones with their hint |
+| nothing to learn (`{}` or no entry) | "Nothing answers." (`hud.vftv.strike.nothing`) |
+| first scan | aspects, points gained (`hud.vftv.strike.gained`) |
+| already scanned | aspects, "In your notes" (`hud.vftv.strike.known`) |
+| partly scanned | known aspects, unheard ones with their hint (`hud.vftv.strike.partial`) |
 | silence (a block or entity strike whose target the server does not have: a phantom) | silence: no ring, no card |
-| no answer (sounding found no node) | "No answer." |
+| no answer (sounding found no node) | "No answer." (`hud.vftv.sounding.none`) |
 
 - **Tooltips:** once a thing's key is scanned (fully or partly), its item tooltip shows its aspects while Shift is held. JEI shows aspects only once the player knows them.
 - **Teaching:** the fork's own tooltip carries the inventory-strike instruction ("Carry the fork and right-click an item to strike it"), and the first Commonplace Book entry repeats it. No external wiki is needed.
@@ -221,7 +224,8 @@ Strike air to sound. Listening stays a deliberate act; nothing hums on its own.
 - The server asks #17's node index for the **nearest node within the sounding radius**, in the player's dimension, by 3-D Euclidean distance from the player's eye position. The radius is inclusive, and ties go to the lowest stable node id. The query loads and generates no chunks.
 - **Bands:** near is `d < near`, mid is `near ≤ d < mid`, and far is `mid ≤ d ≤ radius`.
 - **Answer:** a positional answer sound always played at the answer offset along the bearing, never at the node, plus a few teal particles drifting that way. Distance is carried by the band alone.
-- **Bearing:** a HUD marker showing the direction taken at the strike (including up or down) and the distance band (near, mid, far). It stays until the next strike or until the fork leaves the hand. Only a direction and a band reach the client, never a node position.
+- **Bearing:** a HUD marker showing the direction taken at the strike (including up or down) and the distance band (near, mid, far). The band is printed beneath the marker as its word (`hud.vftv.sounding.near`, `.mid`, `.far`), never carried by colour or pitch alone. It stays until the next strike or until the fork leaves the hand. Only a direction and a band reach the client, never a node position.
+- **Narration:** when the answer arrives, `narration.vftv.sounding` is queued once as system narration: the compass direction (one of eight, `hud.vftv.sounding.dir.*`), up, down or level (`hud.vftv.sounding.up`, `.down`, `.level`), and the band; or `hud.vftv.sounding.none`.
 - **No answer:** beyond the radius the fork says so explicitly.
 - A **starter node** within the sounding radius of the bootstrap location is #17's guarantee (see the contracts), so the first sounding always answers.
 
@@ -256,9 +260,82 @@ Points are spent in #16's puzzle and in skip mode.
 Striking a **blank Book and Quill** in the inventory turns it into the Commonplace Book. This is the one built-in instance of a minimal data-defined recipe type, **`vftv:strike`** (an ingredient and a result): types in code, instances in data.
 
 - It runs through the inventory strike path, before scanning.
-- **A Book and Quill with writing is refused**, and the readout tells the player why ("The ink would be lost."). Player text is never destroyed.
+- **A Book and Quill with writing is refused**, and the readout tells the player why ("The ink would be lost.", `hud.vftv.strike.ink`). Player text is never destroyed.
 - The Commonplace Book item itself is #16's.
 - **JEI** shows strike recipes in the ungated Striking category, up to the compatibility cap; gameplay accepts every one ([compatibility, Striking](compat.md#striking)).
+
+## Lang keys
+
+This spec's keys are **code-defined UI keys**: their English below is **final**, and datagen writes them into `assets/vftv/lang/en_us.json`, as the [configuration spec's](config.md#lang-keys) are written, so no `content/` file and no production ticket is needed. Translations go in `content/lang/<lang>/aspects.json`. The **Latin names are protected text**: every locale keeps them exactly; glosses are translated ([localisation, Protected text](accessibility.md#protected-text)).
+
+| Key | Args | Text |
+|---|---|---|
+| `item.vftv.tuning_fork` | 0 | "Tuning Fork" |
+| `aspect.vftv.<path>` | 0 | the Latin name, for each of the 37 aspects below |
+| `aspect.vftv.<path>.gloss` | 0 | the gloss, for each of the 37 aspects below |
+| `aspect.vftv.unheard` | 0 | "something unheard" (an unheard aspect's name in narration) |
+| `tooltip.vftv.tuning_fork` | 0 | "Carry the fork and right-click an item to strike it." |
+| `tooltip.vftv.aspect` | 2 | "%s: %s" (name, gloss) |
+| `tooltip.vftv.aspects.entry` | 2 | "%s %s" (name, exact amount; the Shift tooltip's rows) |
+| `hud.vftv.strike.nothing` | 0 | "Nothing answers." |
+| `hud.vftv.strike.gained` | 1 | "Gained: %s" (the points, as "*Aspect* *n*" joined by ", ") |
+| `hud.vftv.strike.known` | 0 | "In your notes" |
+| `hud.vftv.strike.partial` | 0 | "Some of it I can't yet hear." |
+| `hud.vftv.strike.of` | 2 | "%s / %s" (a node aspect's current and max) |
+| `hud.vftv.strike.ink` | 0 | "The ink would be lost." |
+| `hud.vftv.sounding.none` | 0 | "No answer." |
+| `hud.vftv.sounding.near`, `.mid`, `.far` | 0 | "near", "farther", "far" |
+| `hud.vftv.sounding.dir.n`, `.ne`, `.e`, `.se`, `.s`, `.sw`, `.w`, `.nw` | 0 | "north", "north-east", "east", "south-east", "south", "south-west", "west", "north-west" |
+| `hud.vftv.sounding.up`, `.down`, `.level` | 0 | "above", "below", "level" |
+| `narration.vftv.strike.aspect` | 2 | "%s: %s" (name or `aspect.vftv.unheard`, exact amount) |
+| `narration.vftv.sounding` | 3 | "An answer: %s, %s, %s." (direction, up or down, band) |
+| `subtitles.vftv.fork.strike`, `.answer`, `.discover` | 0 | "Tuning fork rings", "A node answers", "Something is understood" |
+
+**Names and glosses** (the table under "The aspects", in order; the gloss is that table's, verbatim):
+
+| Key path | Name | Gloss |
+|---|---|---|
+| `aer` | Aer | air, breath, wind |
+| `terra` | Terra | earth, stone, soil |
+| `ignis` | Ignis | fire, heat |
+| `aqua` | Aqua | water, liquid |
+| `ordo` | Ordo | order, law, pattern |
+| `perditio` | Perditio | entropy, decay, undoing |
+| `vacuos` | Vacuos | void, emptiness |
+| `lux` | Lux | light |
+| `gelum` | Gelum | cold, ice |
+| `motus` | Motus | motion |
+| `potentia` | Potentia | power, energy |
+| `victus` | Victus | life |
+| `vitreus` | Vitreus | crystal, glass |
+| `venenum` | Venenum | poison |
+| `permutatio` | Permutatio | change, exchange |
+| `sonus` | Sonus | sound, tone |
+| `metallum` | Metallum | metal |
+| `tenebrae` | Tenebrae | darkness |
+| `herba` | Herba | plants |
+| `bestia` | Bestia | beasts |
+| `mortuus` | Mortuus | death |
+| `spiritus` | Spiritus | soul, spirit |
+| `praecantatio` | Praecantatio | magic, incantation |
+| `fames` | Fames | hunger |
+| `instrumentum` | Instrumentum | tools |
+| `silentium` | Silentium | silence |
+| `arbor` | Arbor | wood, trees |
+| `sano` | Sano | healing |
+| `corpus` | Corpus | flesh, body |
+| `exanimis` | Exanimis | undeath |
+| `cognitio` | Cognitio | mind, knowledge |
+| `humanus` | Humanus | humankind |
+| `telum` | Telum | weapons |
+| `tutamen` | Tutamen | protection |
+| `pannus` | Pannus | cloth |
+| `machina` | Machina | machines |
+| `alienis` | Alienis | the Choir, the otherworldly |
+
+**Used, not declared here:** a node's type and clarity names ([wands, Lang keys](wands.md#lang-keys)), the Striking category's title ([compatibility, Lang keys](compat.md#lang-keys)), and the target's own name component.
+
+**Rejected:** a key outside the table; an aspect key for a path not in the built-in registry; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key. An addon's aspects carry their own `aspect.<ns>.<path>` keys in their own lang files.
 
 ## Events
 
@@ -359,7 +436,9 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the sounding bearing marker;
 - **phantom targeting** on a real client: a phantom mob and a phantom block over air give silence, and a phantom block over a real block reads the real one;
 - sync on join, reconnect and `/reload` (values update, rewards do not);
-- the asset and lang validators cover icons, glosses and every feedback key.
+- the asset and lang validators cover icons, glosses and every feedback key;
+- **narration** from the [localisation capture](accessibility.md#fixtures): a strike's card and a sounding's answer are each attempted once on arrival (unheard aspects as `aspect.vftv.unheard` with exact amounts) and never per frame; the bearing marker shows its band's word;
+- the card's hold at `notificationDisplayTime` 2.0 is twice `readout_hold_ticks`; every fork sound plays with its subtitle.
 
 ## Contracts on sibling specs
 
@@ -396,4 +475,4 @@ This spec settles every decision. Three required child tickets deliver the asset
 |---|---|
 | **Aspect icons** | the generator `tools/art/aspects.py`; one 16×16 icon per aspect (37) plus the unheard icon, to the glyph briefs above and the approved palette and colour assignments above; the greyscale contact-sheet review; provenance rows |
 | **Vanilla aspect value table** | authored inputs under `content/aspects/`: the hand base table (tag- or id-keyed), semantic overrides, reversible-conversion entries and the reviewed exempt list, in a schema the future datagen reads. No code: the `VanillaRecipeProvider` capture, the derivation output in `src/generated`, and the coverage, supply, affordability and non-amplification checks are build-phase acceptance criteria |
-| **Tuning Fork final assets** | the final `tuning_fork` texture and model from the prototype, plus its "ringing" cooldown variant; strike ×4, node answer ×3 and discovery chime ×1 sounds; the HUD readout frame sprite; provenance rows |
+| **Tuning Fork final assets** | the final `tuning_fork` texture and model from the prototype, plus its "ringing" cooldown variant; strike ×4, node answer ×3 and discovery chime ×1 sounds, for the events `vftv:fork.strike`, `.answer` and `.discover`; the HUD readout frame sprite, its interior opaque `ink1` ([localisation, Text contrast](accessibility.md#text-contrast)); provenance rows |

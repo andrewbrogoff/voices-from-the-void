@@ -119,7 +119,7 @@ Otherwise the listener does nothing. An unlearned player's click opens the craft
 
 The result item is drawn at (5, 5) inside the frame. The preview's tooltip is the result's own tooltip plus `tooltip.vftv.worktable.preview`.
 
-**Cost cells** (40×18): the aspect's 16×16 icon ([aspects, icons](aspects.md#icons)) at (1, 1); the cost as text in the **number field x = 18…38**, right-aligned to x = 38 at y = 5, drawn at the scale min(1, 20 / its measured width) and centred on the unscaled line, so it never reaches the icon: 4 digits are 24 px in the vanilla font, and a resource-pack font may be wider. Only the number scales; the icon and sprite never do. The sprite is `vftv:worktable/cost_cell`, or `vftv:worktable/cost_cell_short` when the wand's pool is below the effective cost. A cost has at most 4 digits; a cost above 9,999 can only be an extreme that exceeds every rod's capacity, so the cell draws the 9×9 glyph `vftv:worktable/beyond` at (29, 4) instead. **The tooltip is always exact and unscaled.** This is the **shared cost-cell rule**: JEI's arcane category and the [crucible spec's](crucible.md#jei) JEI category draw their cells by it. With no wand or an inert wand, cells show the base cost on `cost_cell`.
+**Cost cells** (40×18): the aspect's 16×16 icon ([aspects, icons](aspects.md#icons)) at (1, 1); the cost as text in the **number field x = 18…38**, right-aligned to x = 38 at y = 5, drawn at the scale min(1, 20 / its measured width) and centred on the unscaled line, so it never reaches the icon: 4 digits are 24 px in the vanilla font, and a resource-pack font may be wider. Only the number scales; the icon and sprite never do. The sprite is `vftv:worktable/cost_cell`, or `vftv:worktable/cost_cell_short` when the wand's pool is below the effective cost; `cost_cell_short` carries a 3 × 3 `ink1` notch in its top-right corner, so the state never rests on hue ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)). Both sprites' number fields are uniform `brass5` under `ink1` numbers; the title and inventory label strips are uniform `brass4`, the status line's rectangle `brass5`, and the preview's count corner `ink1` under vanilla's white count ([localisation, Text contrast](accessibility.md#text-contrast)). A cost has at most 4 digits; a cost above 9,999 can only be an extreme that exceeds every rod's capacity, so the cell draws the 9×9 glyph `vftv:worktable/beyond` at (29, 4) instead. **The tooltip is always exact and unscaled.** This is the **shared cost-cell rule**: JEI's arcane category and the [crucible spec's](crucible.md#jei) JEI category draw their cells by it. With no wand or an inert wand, cells show the base cost on `cost_cell`.
 
 **Cost tooltip** (on any cell), in order:
 1. this aspect: `tooltip.vftv.worktable.cost` (aspect, effective, base) when priced, else `tooltip.vftv.worktable.base` (aspect, base) followed by `arcane.vftv.no_wand` or `arcane.vftv.inert_wand`;
@@ -128,9 +128,11 @@ The result item is drawn at (5, 5) inside the frame. The preview's tooltip is th
 4. each flag that is set: `tooltip.vftv.worktable.discount_capped`, `tooltip.vftv.worktable.clamped`, and `status.vftv.worktable.exceeds_capacity`;
 5. when the quote's spill is above 0: `tooltip.vftv.worktable.flux` (spill).
 
+The tooltip wraps at 170 px ([localisation, R6](accessibility.md#r6-tooltips)) and fits 232 px tall at 320 × 240 under the localisation fixtures. **Each cell is a focus target:** on keyboard focus it shows this tooltip, and its narration reads every line of it, in this order, after its `narration.vftv.worktable.cost`.
+
 **Number formats** (frozen; ASCII digits, `.` as the decimal point, in every language): costs, pools and spill as plain integers; cap, warp and `m` from per-mille *p* as *p*/1000 with 2 decimals, or 3 when the third is non-zero (850 → "0.85", 956 → "0.956", 1000 → "1.00", 10000 → "10.00"); the gear discount from per-mille *d* as *d*/10 with 0 decimals, or 1 when needed, plus "%" (300 → "30%", 125 → "12.5%").
 
-**Status line:** the text of the current status (see "Status and refusals"), clipped to 160 px with a trailing "…" when it doesn't fit. Hovering the line shows its full text as a tooltip, and narration always reads the full text.
+**Status line:** the text of the current status (see "Status and refusals"), clipped to 160 px with a trailing "…" when it doesn't fit. Hovering or focusing the line shows its full text as a tooltip, and narration always reads the full text ([localisation, R2](accessibility.md#r2-one-line-fields)). It is an inspection focus target while it shows text.
 
 **Controls:**
 
@@ -138,13 +140,14 @@ The result item is drawn at (5, 5) inside the frame. The preview's tooltip is th
 |---|---|
 | Left-click the preview | craft one |
 | Shift + left-click the preview | craft a batch |
-| Tab / Shift+Tab | focus the preview, the screen's only focusable widget |
+| Tab / Shift+Tab | cycle focus: the preview → each cost cell, in order → the status line (while it shows text) |
+| Arrow keys | move between cost cells |
 | Enter or Space, preview focused | craft one; with Shift held, a batch |
 | Esc, inventory key | close (vanilla) |
 
 The preview acts only when the local prediction is ready (see "Status and refusals": a shown refusal is feedback, not a lock), and sends **at most one `WorktableCraft` per client tick**; further activations in that tick are ignored, so the server's rate limit never drops a click the player made deliberately.
 
-**Narration:** the preview reads `narration.vftv.worktable.result` (count, name), then one `narration.vftv.worktable.cost` per cell (aspect, cost, pool, or the base cost and the availability text when unpriced), then the full status line. A hovered cell reads its own `narration.vftv.worktable.cost`.
+**Narration:** the preview reads `narration.vftv.worktable.result` (count, name), then one `narration.vftv.worktable.cost` per cell (aspect, cost, pool, or the base cost and the availability text when unpriced), then the full status line. A hovered or focused cell reads its own `narration.vftv.worktable.cost`, then its full cost tooltip (above). A disabled preview stays focusable and reads why through the status line. Vanilla's slots stay mouse-and-hotkey, as vanilla's are ([localisation, Screens](accessibility.md#screens)).
 
 ### Sound
 
@@ -595,6 +598,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every status state, the clipped status line with its full-text tooltip, and the cost tooltip (screenshots + a state dump of the menu and quote), including a **long test translation**;
 - **a 4-digit cost cell** (9,999) with the vanilla font and with a wide resource-pack font: the scaled number stays inside x = 18…38 and the tooltip is exact;
 - craft by mouse and by keyboard, one and batch;
+- **keyboard and narration** under the [localisation fixtures](accessibility.md#fixtures): Tab through the preview, each cost cell (its tooltip shown on focus, its narration holding the cost, pool, factors, flags and spill) and the clipped status line (its full text); `cost_cell_short`'s notch visible in the greyscale contact sheet;
 - turning a table on a real client (the arm swings, the block updates);
 - an integrated (single-player) world whose datapack holds 4,097 arcane recipes fails to start with the count and cap;
 - sync on join, reconnect and `/reload` (recipes re-sent, previews recomputed, a stale click refused);

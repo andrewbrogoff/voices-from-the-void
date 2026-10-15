@@ -416,7 +416,7 @@ Under the player's **operation guard**. It is taken right after rows 0 and 1 pas
 1. **The claim is written first** (row 8 only).
 2. For each id, in order: a `vftv:choir_page` stack with the `vftv:page` component. `Inventory.add`; any remainder goes to `Player.drop(stack, false)` (`MC:world/entity/player/Player.java:597–599`), which posts the cancellable `ItemTossEvent` before the item enters the world (`NF:common/CommonHooks.java:446–460`). A cancelled or failed drop loses that copy; the claim stands, and row 5 gives it back at the next use.
 3. **An exception** from a callback is caught and logged once. The claim stands, and the remaining items are still attempted.
-4. The `reliquary.give` sound, then the message, which goes to the action bar.
+4. The `reliquary.give` sound, then the message, which goes to the [status line](accessibility.md#r5-the-status-line).
 
 **The recovery promise, narrowly:**
 - A **claim** recorded in a saved player file is never lost.
@@ -862,7 +862,7 @@ No sibling needs more.
 | the "claimed anywhere" sets, the guards, the attempt counts, the resolved `#vftv:choir_sites` | memory | never |
 | tuning | `data/vftv/tuning/worldgen.json` | never; the client needs none |
 
-- **No payload of our own.** Messages use the vanilla action bar.
+- **No payload of our own.** Messages use the localisation spec's shared status line.
 - **The Reliquary's record:**
   - **The owned record** is the block entity's saved tag **minus vanilla's own keys** (`id`, `x`, `y`, `z`, and the components NeoForge and vanilla write for every block entity). Only the owned keys decide what follows.
   - **Absent or empty owned record** (a genuinely data-free placement: a creative player, or `/setblock` without data): it initializes to `{format 1, site vftv:choir_ruin}` on its first server load and calls `setChanged()`. This is the only path that initializes.
