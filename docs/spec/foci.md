@@ -756,7 +756,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
   - **one `EntityPlaceEvent` or one `EntityMultiPlaceEvent` per placement-wrapper call**;
   - vanilla's damage events for damage; `ProjectileImpactEvent` for every bolt impact; and `FocusAffectEntityEvent` for every entity a focus affects.
 
-  Callbacks inside vanilla's own mining and placing keep vanilla's limits. A claim mod that wants more needs an integration, which the mod-compatibility spec owns.
+  Callbacks inside vanilla's own mining and placing keep vanilla's limits. v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
 
 ## Rendering and sound
 

@@ -328,7 +328,7 @@ Every Hush mutation (a block converted, a node hushed or restored, a Hollow rise
 - **A Pealing Bell's restore** posts `HushSpreadEvent(RESTORE)` with origin **the bell's position** and **no actor**. It never fabricates a seep or a spiller.
 - **A Clearing Bell** acts as its player: each restored cell needs `level.mayInteract(player, pos)` (`MC:server/level/ServerLevel.java:901–902`: spawn protection and the world border) and an uncancelled `BreakBlockEvent` on the hushed block, as the [wands spec's](wands.md#moving-nodes-the-bell-jar) captures do.
 - **Deposits are not re-authorised:** each is the consequence of an action its sibling already authorised.
-- **Shared by design:** flux belongs to the chunk; anyone may ring a bell wherever they may break blocks. One player's spill can hush another's land **only within `hush.radius` of the seep**, and every such change is a claimable event and exactly reversible. Integrations for named claim mods belong to the mod-compatibility spec.
+- **Shared by design:** flux belongs to the chunk; anyone may ring a bell wherever they may break blocks. One player's spill can hush another's land **only within `hush.radius` of the seep**, and every such change is a claimable event and exactly reversible. v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
 - **Admin:** the server switches `hush.spread`, `hush.hollows` and `hush.unattended`, each proven by a GameTest.
 
 ## The Clearing Bell
@@ -491,7 +491,7 @@ content/lang/en_us/hush.json     every key under "Lang keys"
 
 | Input | Schema | Generated output |
 |---|---|---|
-| `recipes.json` | `vftv:hush_recipes/1` | `data/vftv/recipe/clearing_bell.json`, `data/vftv/recipe/pealing_bell.json`, bodies unchanged |
+| `recipes.json` | `vftv:hush_recipes/1` | `data/vftv/recipe/clearing_bell.json`, `data/vftv/recipe/pealing_bell.json`, bodies unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `node_types.json` | the wands spec's `vftv:node_types/1` | `data/vftv/vftv/node_type/hushed.json`; datagen merges node-type files and rejects an id declared twice |
 | `fixtures.json` | `vftv:hush_fixtures/1` | nothing: read by the unit tests |
 | `lang/<lang>/hush.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |

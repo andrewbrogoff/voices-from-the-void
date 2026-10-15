@@ -550,7 +550,7 @@ The book lists every loss row (see the contracts on #35).
   - **marking is a hand action:** spawn protection, `mayInteract`, `RightClickBlock` (a cancel, a denied item use, or a denied block use read from the live event's final `getUseBlock()`) guard every Baton edit, and `EntityInteract` guards the golem gestures;
   - **placing** passes vanilla's use checks and the spawn's join event;
   - **running is automatic and isn't re-authorised,** as a relay network isn't ([wands, Creation, removal and sharing](wands.md#creation-removal-and-sharing)). **Stated limitation:** capability access isn't a player action, so a golem marked on a container while its owner was allowed keeps working;
-  - **the claim-mod hook** is `GolemWorkEvent`: posted inside the operation guard, after arrival and before any capability call or spawn; a cancel makes the act REFUSED with `refuse.backoff`; after it, everything the act depends on is revalidated (see "An act"). A claim mod that wants more needs an integration, which the mod-compatibility spec owns.
+  - **the claim-mod hook** is `GolemWorkEvent`: posted inside the operation guard, after arrival and before any capability call or spawn; a cancel makes the act REFUSED with `refuse.backoff`; after it, everything the act depends on is revalidated (see "An act"). v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
 - **Offline owner:** the golem keeps working; FEED marks are ineligible (`OWNER_AWAY`).
 - **Two golems at one chest** act in think-queue order (due tick, UUID), one root each. Due-time and UUID ordering make queue service deterministic; the order of players' inputs across runs isn't promised.
 - **No custom client-to-server payload.** Every input is a vanilla use, interact or container click, validated by vanilla and by the tables above; GameTests drive each with a non-owner, the wrong level, out of range and an unloaded golem.
@@ -706,7 +706,7 @@ content/lang/en_us/golems.json    every key under "Lang keys"
 | Input | Schema | Generated output |
 |---|---|---|
 | `materials.json` | `vftv:golem_materials/1` | each material `<ns>:<path>` → `data/<ns>/vftv/golem_material/<path>.json` |
-| `recipes.json` | `vftv:golem_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged |
+| `recipes.json` | `vftv:golem_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `bootstrap.json` | `vftv:golem_bootstrap/1` | nothing: read by the review and a lint |
 | `fixtures.json` | `vftv:golem_fixtures/1` | nothing: read by the unit tests |
 | `lang/<lang>/golems.json` | `vftv:lang/1` | its `strings` merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |

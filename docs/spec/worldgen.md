@@ -518,7 +518,7 @@ A tuning change applies at the next chant for the radius and target count, and a
 ## Not in v1
 
 - **Ambient magical mobs are deferred from v1 by the owner.** The Answerers and the [Hush spec's](hush.md#hollows) Hollows are the whole creature roster. This is an owner-approved scope cut, recorded in the map's "Out of scope". The `add_spawns` biome-modifier seam (NFR §5) is there for a later spec.
-- **No TerraBlender biome.** No decision in Stages 1–3 needs a biome. One would add a climate slot, surface rules (which need TerraBlender's Java API, NFR §5), a palette checked against [art style §5](art-style.md#5-tone-ramp-by-stage) and aspect values, for no experience the player lacks. [Architecture, Soft dependencies](architecture.md#soft-dependencies) already keeps progression free of it, and `neoforge.compat.terrablender` stays empty.
+- **No TerraBlender biome.** No decision in Stages 1–3 needs a biome. One would add a climate slot, surface rules (which need TerraBlender's Java API, NFR §5), a palette checked against [art style §5](art-style.md#5-tone-ramp-by-stage) and aspect values, for no experience the player lacks. [Architecture, Soft dependencies](architecture.md#soft-dependencies) already keeps progression free of it. There is no TerraBlender integration and no `neoforge.compat.terrablender` package ([compatibility, Supported and deferred](compat.md#supported-and-deferred)).
 
 ## The Choir-site place query
 
@@ -549,7 +549,7 @@ A tuning change applies at the next chant for the radius and target count, and a
 | The Answerers | finite. A peer can clear a fight before you arrive; the pages and finds stay yours. |
 | Spawn protection | nothing special: ruins are ordinary blocks under vanilla's rules |
 
-Integrations for named claim mods belong to the mod-compatibility spec.
+v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
 
 ## Rendering and sound
 

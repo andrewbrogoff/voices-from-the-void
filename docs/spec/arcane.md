@@ -40,7 +40,7 @@ Otherwise the listener does nothing. An unlearned player's click opens the craft
 4. `setBlock(pos, vftv:worktable default state, UPDATE_ALL)`. If it returns `false`: cancel with `FAIL`; no sound.
 5. Post the vanilla game event `BLOCK_CHANGE` with the player and the new state, play `vftv:worktable.convert`, and cancel the interaction with `SUCCESS`.
 
-- **The protection promise is exactly these events:** vanilla's spawn protection and `mayInteract`, `RightClickBlock` (a cancel, or a denied use), and `BreakBlockEvent`. A claim mod that guards conversion some other way needs an integration, which the mod-compatibility spec owns.
+- **The protection promise is exactly these events:** vanilla's spawn protection and `mayInteract`, `RightClickBlock` (a cancel, or a denied use), and `BreakBlockEvent`. v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)); a claim mod answers through these events.
 - **The client** mirrors checks 1–5 from synced state and cancels with `SUCCESS`, so the arm swings and the table's own use doesn't run. The server decides; the block change arrives as an ordinary block update.
 
 ### The block
@@ -362,7 +362,15 @@ A soft dependency ([architecture, Soft dependencies](architecture.md#soft-depend
 
 - **One category** for `vftv:arcane`, 160×104: the grid at (0, 0) with 18-px slots; the result at (106, 18); the cost panel at (0, 58), 4 × 2 cells of 40×18 drawn exactly as the station's, priced through `ArcanePreview` with the reference wand (short aspects on `cost_cell_short`); `arcane.vftv.priced_with` or the absent text at (0, 96). Title `jei.vftv.category.arcane`. The Worktable item is its catalyst. **No transfer handler**: there is no "+" placement path.
 - **API used** (verified in the JEI 30.38 common API sources): `IRecipeManager.addRecipes`, `hideRecipes` and `unhideRecipes`, and `IModPlugin.onRuntimeAvailable` and `onRuntimeUnavailable`. Ordering of runtime start against recipe arrival was not exercised; it is the build's E2E obligation below.
-- **Reconcile, order-independent.** One function computes the desired state from whatever is present now: the runtime, the client's recipe snapshot and the learned set. Recipe objects from the current snapshot not yet added are added; every added object not in the current snapshot (removed or replaced by a reload) is hidden for good; current ones are unhidden iff learned, hidden otherwise. It runs **whenever the runtime, recipes or research arrives, in any order**: on `onRuntimeAvailable` it first hides every arcane recipe JEI holds, then reconciles at once against the **current** learned set (not waiting for a later delta); on each `RecipesReceivedEvent`; on each research baseline and delta (learn, grant, revoke). Logout clears the runtime, recipe and learned caches. **The function is shared:** it is generic over the recipe type and its snapshot, and the [crucible spec](crucible.md#jei) reuses it unchanged for `vftv:crucible`, with no lifecycle of its own.
+- **Reconcile, order-independent.** One function, **`GatedRecipeDiff`** in `core.research.model`, computes the desired state from whatever is present now: the runtime, the client's recipe snapshot and the learned set.
+  - Recipe objects from the current snapshot not yet added are added.
+  - Every added object not in the current snapshot (removed, or replaced by a reload even at the same id, since identity is the object) is hidden for good.
+  - Current ones are unhidden iff learned, hidden otherwise.
+- **When it runs:** whenever the runtime, recipes or research arrives, in any order. On `onRuntimeAvailable` it first hides every arcane recipe JEI holds, then reconciles at once against the **current** snapshot and learned set, not waiting for a later delta. It also runs on each `RecipesReceivedEvent`, and on each research baseline and delta (learn, grant, revoke).
+- **What clears what:**
+  - **losing JEI's runtime** (`onRuntimeUnavailable`, which JEI's restart on a recipe sync or resource reload causes) clears only the plugin's runtime state, never the recipe snapshot or the learned set;
+  - **logout** clears both.
+- **The function is shared:** it is generic over the recipe object and its snapshot, and the [crucible spec](crucible.md#jei) reuses it unchanged for `vftv:crucible`, with no lifecycle of its own. The plugin and this lifecycle are the [compatibility spec's](compat.md#lifecycle).
 - **Affordability** is marked per recipe from the reference wand: short cells, and the absent text for no wand or an inert one. Open JEI views refresh on the preview's live dependencies.
 
 ## Multiplayer and automation
@@ -383,7 +391,7 @@ content/lang/en_us/arcane.json    every key under "Lang keys"
 
 | Input | Schema | Generated output |
 |---|---|---|
-| `recipes.json` | `vftv:arcane_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged |
+| `recipes.json` | `vftv:arcane_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `lang/<lang>/arcane.json` | `vftv:lang/1` | its `strings` object merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
 
 Other specs' arcane recipes live in their own content files (for example `content/wands/recipes.json`) with this body.
@@ -563,7 +571,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **Stage 1 affordability:** every recipe gated by a Stage 1 entry, across all `content/` recipe files, has base ≤ the Wellspring's per-aspect amount for every aspect and is `ordinary`;
 - **content lints:** `void` only behind a Stage 4 entry; no built-in remainder-bearing ingredient; every `content/` rejection rule above;
 - **the snapshot:** sorting, the 4,096 cap (start refusal, reload emptying);
-- **JEI reconcile** as a pure diff over every arrival order of runtime, recipes and research, and over a replaced recipe.
+- **JEI reconcile:** `GatedRecipeDiff` as a pure diff over every arrival order of runtime, recipes and research, and over a same-id replaced recipe ([compatibility, Tests](compat.md#tests)).
 
 **GameTest:**
 - **turning a table:** learned; unlearned opens the crafting table; sneaking; spectator; adventure mode; a cancelled `BreakBlockEvent` changes nothing; a listener on `RightClickBlock` denying the item or block use; **a `BreakBlockEvent` listener that replaces the block** (the recheck refuses); a tagged block with a block entity untouched; a focused wand converts; a failed `setBlock` plays no sound;
@@ -591,7 +599,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - an integrated (single-player) world whose datapack holds 4,097 arcane recipes fails to start with the count and cap;
 - sync on join, reconnect and `/reload` (recipes re-sent, previews recomputed, a stale click refused);
 - a book recipe page and fact fields with a wand in hand, in the offhand, only inert, and none;
-- **with JEI:** hide and unhide on grant and revoke, on join with research already learned, with recipes arriving before and after the runtime, and after a recipe reload; **without JEI**, nothing breaks;
+- **with JEI:** hide and unhide on grant and revoke, on join with research already learned, with recipes arriving before and after the runtime, and after a recipe reload; a resource reload with no new recipe or research event; logout and a join to another server ([compatibility, Tests](compat.md#tests)); **without JEI**, nothing breaks;
 - the first-session flow: assemble a wand, learn `vftv:tapping`, fill at the Wellspring, learn `vftv:arcane_crafting`, turn a table, craft the Bell (a state dump at each step);
 - the asset, lang and model validators: every key under "Lang keys", both sounds and subtitles, the block's model, blockstate and item definition, every sprite.
 

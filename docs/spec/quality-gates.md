@@ -72,7 +72,10 @@ JaCoCo `0.8.15` merges the unit and GameTest execution data, filtered to `com.an
 
 - A test checks the distributable jar: it contains the API classes and every resource, and no test, harness or dev-only dependency.
 - **The packaged jar** (not the dev classpath) boots on a dedicated server with no soft dependency installed.
-- Integration tests for Curios, JEI and TerraBlender run when code in their `neoforge.compat.<mod>` package changes.
+- **Integration runs, on every PR** ([compatibility, Tests](compat.md#tests)): owner logic changes behaviour under an integration without touching its package, so no run is selective.
+  - **Absent:** every ordinary run, with no soft dependency installed.
+  - **Curios present:** `runCuriosGameTestServer`, a dedicated GameTest server with Curios at its pinned version, with its own discovery guard; and a Curios-present client scenario.
+  - **JEI present:** the JEI client scenarios, with JEI (and Curios, for the wearable-dependent previews) at their pinned versions.
 - **API** ([API spec](api.md)):
   - Javadoc for the `api` source set runs with `-Xdoclint:all -Werror` over the API, Minecraft and NeoForge classpath.
   - The `api` jar holds only `META-INF/MANIFEST.MF`, directory entries, `LICENSE-API` and the API classes, and the `api-sources` jar the same with sources. Both manifests carry `Vftv-Version` and `Vftv-NeoForge-Version`.
@@ -95,8 +98,8 @@ GitHub Actions on hosted `ubuntu-24.04`.
 - **Pinning:** every dependency and plugin version, and every action by full commit SHA. Upgrades come in reviewed PRs that pass every gate. No automatic upgrades of the formatter or the platform.
 - **The harness** is checked out with `actions/checkout` (its `repository` and a full commit SHA kept in a committed version file) in **every job that configures Gradle**, `build` included, because `settings.gradle` loads its plugin. The job writes the ignored `local.properties` with an absolute `harness.dir`. No submodule.
 - **Jobs:**
-  1. `build`: the API baseline step (picks and downloads the baseline release's `api` and `compat` jars, fail-closed), `spotlessCheck`, `check` (compile with EP + NullAway, unit tests including the binary replay, `archTest` including the API rules, `apiCompat`, `apiGateSelfTest`, coverage gate, AT check), `runGameTestServer` with the discovery guard, `runCompatGameTestServer` with its own discovery guard, the datagen check, the shipping-jar checks, the Javadoc build, the `testAddon` and `testCompat` builds, and the corpus freeze check.
-  2. `e2e` (needs `build`): every harness scenario under xvfb with software GL, plus the assertion checker.
+  1. `build`: the API baseline step (picks and downloads the baseline release's `api` and `compat` jars, fail-closed), `spotlessCheck`, `check` (compile with EP + NullAway, unit tests including the binary replay, `archTest` including the API rules, `apiCompat`, `apiGateSelfTest`, coverage gate, AT check), `runGameTestServer` with the discovery guard, `runCompatGameTestServer` and `runCuriosGameTestServer`, each with its own discovery guard, the datagen check, the shipping-jar checks, the Javadoc build, the `testAddon` and `testCompat` builds, and the corpus freeze check.
+  2. `e2e` (needs `build`): every harness scenario under xvfb with software GL, plus the assertion checker; then the JEI-present and Curios-present client scenarios ([compatibility, Tests](compat.md#tests)).
   3. `bench` (nightly only, never gating): JMH ns/op and `gc.alloc.rate.norm` trends for the `model` tier.
 - **Artifacts:** screenshots, `protocol.jsonl`, assertion results, GameTest logs and coverage reports are uploaded on **every** run, not only on failure, because the definition of done reviews them.
 - **Releases** link the corresponding source for that version (MPL §3.2): a tag in the public repo.
@@ -107,6 +110,7 @@ GitHub Actions on hosted `ubuntu-24.04`.
 
 - **OpenGL is the gate.** Shaders follow the std140 and named-sampler conventions in the architecture spec.
 - **Vulkan:** first qualify Mesa lavapipe on CI, recording the backend that actually initialised. Once that works, run a small non-blocking nightly rendering smoke test with `--graphicsBackend vulkan`. A red nightly is triaged within a week by whoever drives the build phase; it is never ignored indefinitely.
+- **Rendering mods:** two more non-blocking nightly configurations under the same triage rule, each running every rendering scenario with its state assertions and reviewed screenshots: **Sodium**, and **Sodium with Iris and no shader pack enabled**, at the versions [the compatibility spec](compat.md#rendering-mods) pins. Shader packs are not promised.
 - **Real GPU:** an agent runs the rendering scenarios and client profiling locally on the reference machine for any change that affects rendering or performance, and at each release checkpoint. There is no persistent self-hosted runner. Adding one is a separate decision for the owner, and would need isolation from the workstation's credentials and execution limited to reviewed revisions.
 - **Minimum graphics requirement:** no feature may raise the client's requirement above vanilla 26.2's. The build phase proves one known-working CI driver and backend, and checks any graphics feature we use that vanilla doesn't against vanilla's baseline. We set no numeric minimum of our own.
 

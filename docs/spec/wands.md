@@ -50,7 +50,10 @@ One special crafting recipe type, **`vftv:wand_assembly`**, with one instance at
 - **Matches** a 3×3 crafting grid holding exactly three items, in one column and three consecutive rows: a cap item on top, a rod item in the middle and a cap item at the bottom. Both caps must be the same cap entry. Any rod goes with any cap.
 - **Result:** one `vftv:wand` with `vftv:wand_rod` and `vftv:wand_cap` set and an empty `vftv:vis`. Each ingredient slot gives up one item and leaves no remainder. A new wand always starts empty: there is no disassembly and no upgrade in place.
 - **Every vanilla crafting path behaves the same:** a click, a shift-click (crafts as many as the grid allows) and the vanilla Crafter block all take the same result, because nothing about the recipe depends on a player. Special recipes don't appear in the recipe book.
-- **Display:** the instance supplies a shaped `RecipeDisplay` (cap, rod, cap in one column, each slot listing every registered part item of its kind), so the book's recipe page and JEI can draw it.
+- **Display:** the instance supplies a shaped `RecipeDisplay`, so the book's recipe page and JEI can draw it.
+  - **Slots:** cap, rod, cap in one column, each listing every registered part item of its kind in ascending part id.
+  - **Result:** the **representative wand**: rod `vftv:wooden`, cap `vftv:copper` and an empty `vftv:vis`. Both are required built-ins, so it always exists.
+- **In JEI** it is a special recipe in vanilla's `RecipeType.CRAFTING`, not a category of its own. JEI's crafting category rejects special recipes, so `neoforge.compat.jei.client` registers a crafting-category extension for it, and JEI shows it once, with no duplicate ([compatibility, Wand assembly](compat.md#wand-assembly)).
 
 ### Components
 
@@ -499,7 +502,7 @@ The Node Tap (see "Relays") exposes the architecture's essentia capability, **in
   Each tombstones the id and posts `NodeEvent(REMOVED)` once.
 - **No survival mechanic destroys a node.** Qualified: an anchorless node can be captured by anyone allowed to interact there, and a jar can be lost, so a node can be stolen or lost, never broken in place.
 - **Sharing.** Nodes, taps, relays and cradles have **no owner**, and first-strike rewards are per player per node ([aspects, aspect points](aspects.md#aspect-points)). A relay network charges any wand set in its cradles, whether or not that player could tap by hand.
-- **Protection covers what a player does by hand, when they do it:** tap starts, captures, releases and the placement of relay members pass through vanilla's `useItemOn` checks, `RightClickBlock`, `BreakBlockEvent` and `EntityPlaceEvent`, and every tap pulse rechecks `mayInteract` and spawn protection. Relay flow and cultivation are automatic and aren't re-authorised: a network built where its builder was allowed keeps running. A claim mod that wants more needs an integration, which the mod-compatibility spec owns.
+- **Protection covers what a player does by hand, when they do it:** tap starts, captures, releases and the placement of relay members pass through vanilla's `useItemOn` checks, `RightClickBlock`, `BreakBlockEvent` and `EntityPlaceEvent`, and every tap pulse rechecks `mayInteract` and spawn protection. Relay flow and cultivation are automatic and aren't re-authorised: a network built where its builder was allowed keeps running. v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
 
 ## Relays
 

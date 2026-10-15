@@ -218,13 +218,16 @@ Then, once the server is up, place the Wellspring with `/vftv node starter <pos>
 | `road get <player>` | | online | [Eldritch tier](eldritch.md#commands) |
 | `road progress <player> <progress>` | integer 0–3 | online | Eldritch tier |
 | `road evacuate` | | online players in Vuulas | Eldritch tier |
+| `aspects derive` | none; **level 4** | none: it reads server data, not positions | [compatibility](compat.md#the-derivation-export) |
 
 - **`<player>`** is `EntityArgument.player()`: exactly one **online** player; selectors are available at level 2 (`MC:server/permissions/LevelBasedPermissionSet.java:15–18`). No command reaches an offline player. **`<pos>`** is `BlockPosArgument.blockPos()`, in the source's level (`execute in` picks another).
 - **An out-of-bound integer fails at parse** with Brigadier's own error, so no handler sees one.
 - **Feedback:** a query uses `sendSuccess(…, false)`; every mutation uses `sendSuccess(…, true)`, which also informs operators (`MC:commands/CommandSourceStack.java:466–479`). The result is the count changed (entries, restores, players) or 1.
-- **All are level 2,** like `/fill` and `/tp`; none changes server settings, so none needs 3 or 4. No NeoForge permission nodes in v1: the vanilla predicate keeps vanilla's permission model, which permission mods already map.
+- **All are level 2,** like `/fill` and `/tp`: none changes server settings, so none needs 3 or 4.
+- **The one exception is the leaf `aspects derive`,** which also requires `Commands.LEVEL_OWNERS` (4), because it writes files. Vanilla's file-writing `/perf` and `/jfr` require the same (`MC:server/commands/PerfCommand.java:38`; `MC:server/commands/JfrCommand.java:31`). The root stays level 2, so a level-2 source sees the tree without that leaf.
+- **No NeoForge permission nodes in v1:** the vanilla predicate keeps vanilla's permission model, which permission mods already map.
 
-**Lang ownership of command keys:** each key belongs to the lang input of the system whose subtree holds the command, never to this spec's: `commands.vftv.research.*` to research's code-defined UI keys ([research, Admin commands](research.md#admin-commands)); `commands.vftv.warp.*` to `content/lang/<lang>/warp.json`; `commands.vftv.flux.*` and `.hush.*` to `hush.json`; `commands.vftv.node.*` to `wands.json`; `commands.vftv.road.*` to `eldritch.json`. Each owner's lang table lists them.
+**Lang ownership of command keys:** each key belongs to the lang input of the system whose subtree holds the command, never to this spec's: `commands.vftv.research.*` to research's code-defined UI keys ([research, Admin commands](research.md#admin-commands)); `commands.vftv.warp.*` to `content/lang/<lang>/warp.json`; `commands.vftv.flux.*` and `.hush.*` to `hush.json`; `commands.vftv.node.*` to `wands.json`; `commands.vftv.road.*` to `eldritch.json`; `commands.vftv.aspects.*` to the [compatibility spec's](compat.md#lang-keys) code-defined keys, written by datagen. Each owner's lang table lists them.
 
 ## Validation
 
@@ -361,7 +364,7 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 - every server key **off and on**, owned and already required by its owner: [warp](warp.md#tests) (every switch), [Hush](hush.md#tests) (spread, Hollows, unattended spread, and a **Pealing Bell with no player near it** idle with `hush.unattended` off and pealing with it on), [foci](foci.md#tests) (`foci.block_effects` off refuses Delve and **ends a running Delve Beam at its next pulse with the paid pulses kept**), [golems](golems.md#tests) (placement up to the cap; a lowered cap removes no golem), [research](research.md#tests) (each preset and skip; a mode switch mid-note keeps the snapshot);
 - **the starter modes**, with an impossible candidate set: `required` fails with the three remedies and the active file's path; `best_effort` starts with one WARN and no starter, and retries at the next start; `off` is silent; an existing starter is untouched by every mode;
 - **`/vftv node starter`:** places a Wellspring with one `NodeEvent(CREATED, COMMAND)` and the starter, index and dirty state set before it; refuses a second; refuses a nether source, an unloaded and an out-of-world position, a dormant `vftv_nodes`, a non-air block, a position outside the border, a full cell and a node within spacing, each with its message, reserving no id;
-- **commands:** a level-0 source can neither run nor see `/vftv`; a level-2 source runs every command; every bounded argument rejects its neighbours (stage 5, progress 4, amount 0 and 1,000,001, radius 5 and 17, `add` ±1,001, `set` 10,001); `flux clear` with radius 4 beside unloaded chunks loads none of them; `hush restore` across an unloaded chunk loads none and reports the continuation index;
+- **commands:** a level-0 source can neither run nor see `/vftv`; a level-2 source runs every command except `aspects derive`, which it can neither run nor see, and a level-4 source runs that too; every bounded argument rejects its neighbours (stage 5, progress 4, amount 0 and 1,000,001, radius 5 and 17, `add` ±1,001, `set` 10,001); `flux clear` with radius 4 beside unloaded chunks loads none of them; `hush restore` across an unloaded chunk loads none and reports the continuation index;
 - each test id in the discovery guard.
 
 **E2E** ([quality gates, E2E](quality-gates.md#e2e-mc-agent-harness)):

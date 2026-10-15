@@ -143,7 +143,7 @@ A hand **base table** plus **recipe derivation at datagen**, committed to `src/g
 
 - **Base table:** raw materials, natural blocks and mobs, keyed by vanilla or `c:` tag wherever one exists.
 - **Capture:** a small subclass of vanilla's `VanillaRecipeProvider` feeds recipes into a capturing output inside datagen.
-- **Derivation** (in `core.aspect.model`: Minecraft-free, unit-tested, reusable for runtime derivation later) is an authoring aid, not the authority:
+- **Derivation** (in `core.aspect.model`: Minecraft-free, unit-tested, and reused by the derivation export below) is an authoring aid, not the authority:
   1. **Each ingredient contributes** its values minus the values of its returned remainder (the bucket of a milk bucket, the bottle of a potion), clamped at zero per aspect.
   2. For a tag or alternative ingredient, use the alternative with the lowest total (ties by item id).
   3. Sum the contributions, multiply by the derivation factor, and divide by the output count.
@@ -156,7 +156,11 @@ A hand **base table** plus **recipe derivation at datagen**, committed to `src/g
 - **Reversible conversions** (nugget ↔ ingot ↔ storage block, and the like) are hand-entered as exact multiples of each other; derivation never applies to them. That is the only way minimum-1 rounding and non-amplification hold together, and the scan-once rule bounds the large values storage blocks get.
 - **Value scale:** small integers. A common raw block totals 2–5, a rare material 8–16, a mob 4–12. These are authoring targets, not caps.
 
-**Unknown and modded content** gets the `c:` tag defaults in v1, and otherwise nothing. Runtime derivation is deferred to the mod-compatibility spec; the algorithm is ready for it.
+**Unknown and modded content** gets the `c:` tag defaults in v1, and otherwise nothing. **There is no runtime derivation in v1**, and the lookup above is the same with or without other mods ([compatibility, In play](compat.md#in-play)).
+- **The derivation export:** an operator's `/vftv aspects derive` runs this derivation over the live server's data and writes **reviewable datapacks** that the operator installs by hand ([compatibility, The derivation export](compat.md#the-derivation-export), which owns its rules).
+- **What it derives over:** only items with **neither** a `vftv:aspects` entry **nor** a default. An explicit `{}` is authored suppression and is never derived over.
+- **Conservation:** it excludes every item on a conversion cycle of the recipes it accepts.
+- **Shared adapter:** the adapter from a recipe to the model's input is one class in `core.aspect`, `DerivationRecipes`. Datagen's capture and the export both use it, and it accepts exactly vanilla's recipe classes, as that section lists.
 
 ### Coverage and supply
 
@@ -254,6 +258,7 @@ Striking a **blank Book and Quill** in the inventory turns it into the Commonpla
 - It runs through the inventory strike path, before scanning.
 - **A Book and Quill with writing is refused**, and the readout tells the player why ("The ink would be lost."). Player text is never destroyed.
 - The Commonplace Book item itself is #16's.
+- **JEI** shows strike recipes in the ungated Striking category, up to the compatibility cap; gameplay accepts every one ([compatibility, Striking](compat.md#striking)).
 
 ## Events
 
@@ -296,7 +301,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 | `sounding.near`, `sounding.mid` | 16, 64 | band edges; far runs to the radius. Valid only if 0 < `near` < `mid` ≤ `radius` |
 | `sounding.answer_offset` | 6 | blocks along the bearing |
 | `sounding.particles` | 3 | |
-| `derivation.factor` | 0.75 | used by datagen today; a pack override takes effect only once runtime derivation exists |
+| `derivation.factor` | 0.75 | used by datagen, and by the [derivation export](compat.md#the-derivation-export), which reads the loaded value; nothing reads it in play |
 | `derivation.smelt_bonus` | `{"vftv:ignis": 1}` | as above |
 
 **Validation:** a `sounding.radius` outside 1–256, or band edges that break 0 < `near` < `mid` ≤ `radius`, makes the file invalid. An invalid file refuses the world at open; on `/reload` the previous record is kept and an error logged.
@@ -307,7 +312,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 
 **Heavy-base workload:** one player striking on every cooldown, alternating block, entity, inventory and sounding strikes, with 2,000 known scan keys, the HUD card up, and a 36-slot inventory hovered with Shift. The sounding runs in an area at #17's maximum node density with moved nodes; one strike reads a node with #17's maximum aspect count; one partial completion pays several aspects at once; and one join sends the full baseline.
 
-**Share:** server ≤ 0.02 ms mean, ≤ 0.1 ms p99; client ≤ 0.02 ms p50.
+**Share:** server ≤ 0.02 ms mean, ≤ 0.1 ms p99; client ≤ 0.02 ms p50, which also covers the JEI Striking category's drawing while it is open ([compatibility, Performance](compat.md#performance)). The derivation export is an operator load scenario there, outside this share.
 
 **Hot paths:**
 - **Server, per tick:** none.
@@ -323,7 +328,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **Unit (`model` tier and codecs):**
 - the graph validator on both views: every rule, the reveal, and the shipped table;
 - derivation: alternatives and tie-breaking, remainders, cycles, minimum-1 rounding, top 5, smelting bonus;
-- **non-amplification** across every reversible conversion in the generated table;
+- **non-amplification** across every reversible conversion in the generated table, replayed over the recipes as datagen writes them, with their ingredients widened to `c:` tags ([compatibility, Consumed](compat.md#consumed));
 - the knowledge ledger: first scan, partial then completed, repeat pays 0, discovery bonus, **same-strike discovery order** (one result for any map iteration order), taught prerequisites for Vacuos;
 - **reload reward conservation:** values change between a partial scan and its completion, and the payout follows the snapshot;
 - **mixed-map ordering:** block entry over item entry over defaults; `{}` versus no entry;

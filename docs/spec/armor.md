@@ -308,6 +308,11 @@ One bounded enumerator in `neoforge.compat.curios`, **`CuriosWorn.collect(entity
 - **Budget:** it stops after `budget` entries and returns how many it gave. A sink may also stop it early.
 - **Cost:** the budget bounds what it **emits**, not what it **inspects**. Empty positions are walked and skipped, and the slot types are ordered first, so a full walk is **O(S + T log T)** for *S* slot positions over *T* slot types. *S* is set by Curios and the pack, with no ceiling of ours (`CU:common/slot/SlotType.java:210–218`), so this is **a native term, disclosed** wherever a caller may walk it all.
 
+**Wiring:** the callers sit outside `neoforge.compat.curios`, so none references `CuriosWorn` ([compatibility, Wiring the collector](compat.md#wiring-the-collector)).
+- `CuriosWorn` implements **`WornSlots`**, a loader-free interface in `neoforge.armor`: `collect` is the enumerator above, and `forEachWearableModifier` is the reload refresh's full Curios query.
+- The entry method `static WornSlots init(IEventBus modBus)` on `CuriosCompat` returns it, typed as the interface, and the `@Mod` constructor passes it, or **`WornSlots.NONE`** without Curios, to each caller.
+- `NONE` emits nothing, so each caller reads only its vanilla slots ("Without Curios").
+
 Its three callers, all in `neoforge`:
 
 | Caller | Takes | Budget | Walk |
@@ -329,7 +334,7 @@ Its three callers, all in `neoforge`:
 - **`core.armor.model`** (Minecraft-free): `baffle_max`, absorbing, the recharge step, the wearable-to-modifier conversion (as plain records), the spectacles' card selection and masking over loader-free inputs, the HUD pip layout. Every vector above is a unit test against it.
 - **`core.armor`**: the attachment record and codec, `ArmorRules`, the wearables' validated view, the services the listeners call. It imports `core.warp` (for `amplifier_warp`) and `core.aspect` (for the readout); neither imports it.
 - **`core.armor.client`**: the card and the Baffle HUD renderers.
-- **`neoforge.armor`**: thin listeners: `ItemAttributeModifierEvent`, `LivingDamageEvent.Pre`, `PlayerTickEvent.Post`, `DataMapsUpdatedEvent` and the queued refresh, attribute registration (`PercentageAttribute` construction stays here). **`neoforge.armor.client`**: layer registration. **`neoforge.compat.curios`**: as above.
+- **`neoforge.armor`**: thin listeners: `ItemAttributeModifierEvent`, `LivingDamageEvent.Pre`, `PlayerTickEvent.Post`, `DataMapsUpdatedEvent` and the queued refresh, attribute registration (`PercentageAttribute` construction stays here); `WornSlots` and `WornSink`. **`neoforge.armor.client`**: layer registration, and the worn check through the `WornSlots` it is given. **`neoforge.compat.curios`**: as above, entered only through `CuriosCompat.init`.
 - **No `DamageContainer`, Curios or `PercentageAttribute` type reaches `core`.** No seam is needed: discount and Baffle ride attributes, which vanilla and Curios apply, and every other Curios caller is already in `neoforge`.
 
 ## In the Commonplace Book
@@ -360,7 +365,7 @@ content/lang/en_us/armor_void.json the four Void names
 | Input | Schema | Generated output |
 |---|---|---|
 | `wearables.json` | `vftv:wearables/1` | `data/vftv/data_maps/item/wearable.json`, merged with `void.json`'s; an item in both fails datagen |
-| `recipes.json` | `vftv:armor_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged |
+| `recipes.json` | `vftv:armor_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `enchantments.json` | `vftv:enchantments/1` | `data/vftv/enchantment/baffling.json` |
 | `tags.json` | `vftv:armor_tags/1` | each tag's file under `data/<ns>/tags/{item,damage_type}/` |
 | `curios.json` | `vftv:curios_slots/1` | `data/vftv/curios/entities/vftv.json` and `data/curios/tags/item/{head,necklace,ring}.json` |
@@ -610,7 +615,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the packaged jar without Curios;
 - every test id in the discovery guard.
 
-**Curios integration** (run when `neoforge.compat.curios` changes): a ring and a pendant in their slots add modifiers with Curios's derived ids and remove them; a cosmetic slot adds none; the spectacles in a functional head slot enable the card, in a cosmetic one they don't; the collector's order and shared budget; the gear sample counts Curios stacks; the reload refresh removes and rebuilds Curios-derived ids after Curios's own reconciliation; **a player wearing more than 128 Curios items, a Baffle Ring last in the order, keeps its Baffle through a `/reload`**; a pack with thousands of empty Curios positions, its worn-check and sample work measured.
+**Curios integration** (in `runCuriosGameTestServer` with Curios present, on every PR; [compatibility, Tests](compat.md#tests)): a ring and a pendant in their slots add modifiers with Curios's derived ids and remove them; a cosmetic slot adds none; the spectacles in a functional head slot enable the card, in a cosmetic one they don't; the collector's order and shared budget; the gear sample counts Curios stacks; the reload refresh removes and rebuilds Curios-derived ids after Curios's own reconciliation; **a player wearing more than 128 Curios items, a Baffle Ring last in the order, keeps its Baffle through a `/reload`**; a pack with thousands of empty Curios positions, its worn-check and sample work measured.
 
 **E2E:**
 - **the card:** struck, partial (an unheard icon with its amount), unstruck, nothing-to-learn, a node regenerating in place, a disguise (the real block), an apparition (no card), with dumps; yielding to the strike card, the crucible HUD and the infusion HUD; `spectacles.card` off; cleared on a dimension change;
@@ -618,6 +623,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the Baffle row** equals the dump through a hit, a break and a recharge, at capacities 12, 28 and 40, hidden at 0 and in creative; at the pinned coordinates, with absorption hearts and full armour below it, nothing overlaps, and vanilla's air row stays on the right; `hud.leftHeight` raised by 10 × rows only while drawn; `baffle.hud` off;
 - "+3% Vis Discount" in a tooltip; each set rendered on the player and a small armour stand (screenshots);
 - sync on join, reconnect, dimension change and `/reload`;
+- **with Curios present on the client:** the spectacles in a functional Curios head slot show the card, in a cosmetic one they don't; after a `/reload` that changes `vftv:wearable`, a ring in a Curios slot keeps the right Baffle row;
 - the asset, lang, equipment-asset and sound validators.
 
 ## Contracts on sibling specs

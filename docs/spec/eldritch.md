@@ -692,7 +692,7 @@ content/lang/en_us/eldritch.json         every key under "Lang keys"
 | `threshold.json` | `vftv:threshold/1` | `data/vftv/worldgen/structure/threshold.json`, `worldgen/structure_set/threshold.json`, `worldgen/template_pool/threshold/start.json`, `tags/worldgen/biome/has_structure/threshold.json` |
 | `sites.json` | `vftv:eldritch_sites/1` | `data/vftv/vftv/choir_site/threshold.json`, `…/road.json` |
 | `vuulas.json` | `vftv:vuulas/1` | the colour and light fields of `data/vftv/dimension_type/vuulas.json` |
-| `recipes.json` | `vftv:eldritch_recipes/1` | `data/vftv/recipe/<path>.json`, bodies unchanged |
+| `recipes.json` | `vftv:eldritch_recipes/1` | `data/vftv/recipe/<path>.json`, bodies unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `wand_parts.json` | the wands spec's `vftv:wand_parts/1` | `data/vftv/vftv/wand_rod/void.json`, `…/wand_cap/void.json`; merged with every parts file, a duplicate id or item rejected |
 | `bootstrap.json` | `vftv:eldritch_bootstrap/1` | nothing: read by the review |
 | `tags.json` | `vftv:eldritch_tags/1` | `data/vftv/tags/item/usable_on_the_road.json`, `…/item/forbidden_on_the_road.json`, `data/vftv/tags/block/unsafe_return.json` |

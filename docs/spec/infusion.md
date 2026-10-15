@@ -674,7 +674,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 
 | Input | Schema | Generated output |
 |---|---|---|
-| `recipes.json` | `vftv:infusion_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged |
+| `recipes.json` | `vftv:infusion_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `wand_parts.json` | `vftv:wand_parts/1` (the [wands schema](wands.md#parts)) | `data/vftv/vftv/wand_rod/echo.json` and `data/vftv/vftv/wand_cap/echo.json`; a part id declared in two `content/` files fails datagen |
 | `multiblock.json` | `vftv:multiblocks/1` | each multiblock `<ns>:<path>` → `assets/<ns>/multiblock/<path>.json` (format below) |
 | `echo_bootstrap.json` | `vftv:echo_bootstrap/1` | nothing: read by the review and a lint |

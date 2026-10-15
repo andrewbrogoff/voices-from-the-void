@@ -721,7 +721,7 @@ content/lang/en_us/essentia.json    every key under "Lang keys"
 
 | Input | Schema | Generated output |
 |---|---|---|
-| `recipes.json` | `vftv:essentia_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged |
+| `recipes.json` | `vftv:essentia_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `client.json` | `vftv:essentia_client/1` | `assets/vftv/essentia/client.json` |
 | `lang/<lang>/essentia.json` | `vftv:lang/1` | its `strings` object merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
 

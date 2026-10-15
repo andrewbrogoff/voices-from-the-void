@@ -181,6 +181,8 @@ For **Stable** declarations:
 
 ## What addons may extend
 
+The mechanics a pack maker needs (how to add, override, remove or disable each surface), the scripting-tool stance and the `c:` tag policy are the [compatibility spec's](compat.md#datapacks-and-scripting-tools). This section stays authoritative for the formats.
+
 ### Datapack registries
 
 All 14 are Stable formats. Each is fixed when a world opens: changing one needs the world reopened.
@@ -443,7 +445,7 @@ Every API type, by feature. Tier: `S` Stable, `X` `@Experimental`, `I` `@Interna
 | research ([research](research.md)) | `Research`, `ResearchCategory`; `ResearchKeys` (both registries; the required keys under [Registry format](research.md#registry-format); the `vftv:page` component id; the `vftv:research` attachment id); `ResearchLimits` (anchors 2–5, grid radius 7, synthesis depth 3, 8 actions and 1 commit per tick, 16 notes, 9 bookmarks); `ResearchSource`, `ResearchLearnedPayload`, `StageReachedPayload`, `ResearchView`; nf `ResearchLearnedEvent`, `StageReachedEvent`, `ResearchCapabilities` | S |
 | vis ([wands](wands.md)) | `WandRod`, `WandCap`, `NodeType`; `VisKeys` (3 registries, the `vftv:vis_discount` attribute, the component ids `vftv:vis`, `vftv:wand_rod`, `vftv:wand_cap`, `vftv:wand_focus`, `vftv:captured_node`); `WandPartKeys` (the rods `vftv:wooden`, `vftv:chime`, `vftv:echo`, `vftv:void`; the caps `vftv:copper`, `vftv:resonant_brass`, `vftv:echo`, `vftv:void`); `NodeTypeKeys` (`vftv:wellspring`); `VisLimits` (the wands spec's fixed limits); `VisKind`, `VisContext`, `VisQuote`, `NodeRef`, `NodeEventKind`, `NodeCause`, `VisSpentPayload`, `NodePayload`; nf `VisSpentEvent`, `NodeEvent` | S |
 | arcane ([arcane](arcane.md)) | `ArcaneKeys` (`#vftv:converts_to_worktable`); `ArcaneLimits` | S |
-| crucible ([crucible](crucible.md)) | `CrucibleKeys` (`#vftv:crucible_heat`, `#vftv:crucible_refuses`, the attachment ids `vftv:crucible_dissolve`, `vftv:crucible_refused`); `CrucibleLimits`; `CruciblePayload`; nf `CrucibleEvent` | S |
+| crucible ([crucible](crucible.md)) | `CrucibleKeys` (`#vftv:crucible_heat`, `#vftv:crucible_refuses`, `RESONANT_BRASS_INGOTS` for `#c:ingots/resonant_brass` ([compatibility, Published](compat.md#published)), the attachment ids `vftv:crucible_dissolve`, `vftv:crucible_refused`); `CrucibleLimits`; `CruciblePayload`; nf `CrucibleEvent` | S |
 | essentia ([essentia](essentia.md)) | `EssentiaKeys` (`#vftv:essentia_endpoints`, `#vftv:alembic_bases`, the capability ids, the component ids `vftv:jar_contents`, `vftv:label`); `EssentiaLimits`; `EssentiaSuction`; `SpillCause`; `EssentiaPayload`; nf `EssentiaResource`, `EssentiaCapabilities`, `EssentiaEvent` | S |
 | infusion ([infusion](infusion.md)) | `InfusionKeys` (`#vftv:infusion_stabilisers`, `#vftv:infusion_unenchantable`); `InfusionLimits`; `InfusionPayload`, `InfusionPlan`, `InfusionCost`, `UpsetEffect`, `AbandonCause`; nf `InfusionEvent` | S (`InfusionEvent.fluxRules()` X) |
 | focus ([foci](foci.md)) | `FocusEffect`, `FocusMedium`, `FocusModifier`; `FocusKeys` (3 registries, the 15 required built-ins, `#vftv:focus_immune`, the component id `vftv:focus`); `FocusLimits`; `FocusEventKind`, `FocusGesture`, `FocusPayload`, `FocusAffectEntityPayload`; nf `FocusEvent`, `FocusAffectEntityEvent` | S |
@@ -474,6 +476,7 @@ Every API type, by feature. Tier: `S` Stable, `X` `@Experimental`, `I` `@Interna
 ## Known limitations
 
 - **Client resource composition.** An addon's wand part needs its own model case in the shared `assets/vftv/items/wand.json`, and so does an addon focus effect's look in `items/focus.json` and `items/wand.json`. Otherwise it draws the `unknown` fallback ([wands, Components](wands.md#components); [foci, On the wand](foci.md#on-the-wand)). Two addons that override one file conflict, and the last resource pack wins. A classifier jar can't solve that, and v1 offers no merge.
+- **v1 ships a JEI integration only** ([compatibility, Supported and deferred](compat.md#supported-and-deferred)). It is internal, in `neoforge.compat.jei.client`: no recipe-viewer surface is public.
 - **No client extension hooks.** v1 has no hook for rendering, the HUD or screens. **Reading on a client** is supported where the data is synced: the synced registries, the data maps and vanilla-facing records. Server-only registries, the views and every event are server-side.
 - **A Fabric port** is an aim, not a promise: `api` is loader-free so it could carry over, and `api.neoforge` would be mirrored ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). It would follow the Minecraft-major rule, and no identical platform types are promised.
 
