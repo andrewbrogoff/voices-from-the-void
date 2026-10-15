@@ -509,7 +509,7 @@ A soft dependency ([architecture, Soft dependencies](architecture.md#soft-depend
 |---|---|
 | Players, droppers, anything that makes item entities | can feed the crucible. A dropper's items have no thrower, so they always dissolve. |
 | Recipes | only for a resolved thrower who has learned the recipe: **no vanilla dropper or hopper crafting** |
-| [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) | **golem-assisted crafting**: a golem drops items as its online, same-level owner (see the contracts), plus automatic dissolving and extraction |
+| [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) | **golem-assisted crafting**: a Feed mark drops items as the golem's online, same-level owner; a Tip mark drops them with no thrower, so they always dissolve (see the contracts); extraction through "Essentia out" |
 | Hoppers, pipes | cannot insert: there is no item capability |
 | Extraction | through Essentia logistics, under "Essentia out" |
 | Thaumatorium-style auto-crafting | none in v1 |
@@ -626,7 +626,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 |---|---|
 | `DISSOLVED` | level and position; the thrower or none; a copy of the item whose count is the number dissolved; the aspects added |
 | `CRAFTED` | level and position; the player; the recipe id; a count-one copy of the catalyst; a copy of the result; the aspects spent |
-| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` (the enum's other values are posted only by other events: `DESTROYED` by the [essentia spec's](essentia.md#events) `EssentiaEvent`, and `UPSET` and `ABANDONED` by the [infusion spec's](infusion.md#events) `InfusionEvent`, which also posts `REMOVED`) |
+| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` (the enum's other values are posted only by other events: `DESTROYED` by the [essentia spec's](essentia.md#events) `EssentiaEvent`, `UPSET` and `ABANDONED` by the [infusion spec's](infusion.md#events) `InfusionEvent`, which also posts `REMOVED`, and `DIED` by the [golems spec's](golems.md#events) `GolemEvent`) |
 
 - **Once per commit:** one `DISSOLVED` per dissolve action, one `CRAFTED` per craft, one `SPILLED` per non-empty spill.
 - **Nothing fires** for a refusal, an extraction, a fill, a refresh or a step.
@@ -809,7 +809,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - **Bounds:** a spill's input is a valid format-1 pool, ≤ 10,000 in total; dormant records are never inputs.
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- A golem that drops items into a crucible sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online, alive and in the same level, with the research learned. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.
+- A golem that drops items into a crucible **as crafting input** sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online, alive and in the same level, with the research learned. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.
+- **Exempt** (amended by the [golems spec](golems.md#feed-and-tip)): a deliberate **Tip** drop has no thrower, exactly as a dropper's, so its items always dissolve. It is the golem's explicit dissolve path, not crafting input. This changes no crucible behaviour.
+- `api`'s `SpillCause` gains **`DIED`**, posted only by the golems spec's `GolemEvent(SPILLED)`. The crucible's own spills, producers and bounds are unchanged.
 - Golems touch the pool only through the capability under "Essentia out". Their own crucible recipes, if any, live in their own content files with the recipe type's body.
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**

@@ -298,8 +298,28 @@ The Stage 3 cap, infused from a Resonant Brass cap.
 _Avoid_: thaumium cap, charged cap
 
 **Golem**:
-A crafted servant that carries out jobs it has been marked for.
-_Avoid_: construct, automaton
+A crafted servant, made of a body and fitted with a core, that its owner places in the world. It carries items or essentia between the blocks it has been marked for, within range of its home, and never acts on the world beyond that.
+_Avoid_: construct, automaton, copper golem (vanilla's own mob)
+
+**Golem core**:
+The small bell fitted into a golem that decides its job: carrying items, or decanting essentia. It belongs to a golem, never to a wand: a wand's shaft is its rod, and a rod is never called a core.
+_Avoid_: animation core, brain, rod
+
+**Baton**:
+The conductor's baton that attunes to one golem its holder owns, and sets that golem's marks, their roles and filters, and its home.
+_Avoid_: bell, Golemancer's Bell, wand
+
+**Mark**:
+A face of a block that a golem has been told to work at, with a role and, optionally, a filter naming the one item or aspect it works with there.
+_Avoid_: seal, waypoint, anchor (an anchor is printed on a note)
+
+**Home**:
+The block space a golem returns to and stands in when it has nothing to do. A new mark must lie within the golem's range of it; a mark left out of range by a later move is kept, but not worked until it is back in range.
+_Avoid_: base, spawn point
+
+**Role**:
+What a golem does at a mark: Take, Give, Feed (drop as its owner, for a crucible to craft with), Tip (drop with no thrower, to dissolve) or Collect (pick up loose items).
+_Avoid_: mode, job (a core's job is what roles it may use)
 
 **Eldritch**:
 An adjective only, for things of the Void's deepest tier. Never a proper noun.

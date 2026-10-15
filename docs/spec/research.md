@@ -538,6 +538,9 @@ focus_medium  : <ns> ":" <path> ":" <key>    a medium context
 focus_modifier: <ns> ":" <path> ":" <key>    a modifier context
 focus_rank    : <n> ":" <key>                a rank context, n 1–3
 focus_rules   : <FociRules key>              exactly one of the foci spec's listed FociRules keys
+golem  : <GolemRules key>                    exactly one of the keys listed under "golem keys" below
+golem_material: <ns> ":" <path> ":" <field>  a golem material and one of the fields listed under
+                                             "golem_material fields" below
 ```
 
 **`focus*` keys** ([foci spec, The authoritative preview](foci.md#the-authoritative-preview)). Each source is a **typed context**, and its keys, formats and absent texts are that spec's tables, resolved through its `FocusPreview`:
@@ -584,8 +587,39 @@ focus_rules   : <FociRules key>              exactly one of the foci spec's list
 - A key outside this table is a malformed span, rejected by the validator.
 - **Until the first `InfusionRules` arrives,** an `infusion` span renders as `[?]` without logging. Every player receives `InfusionRules` on join.
 
+**`golem` keys** ([golems spec, Tuning and limits](golems.md#tuning-and-limits)). Arity 1. Plain ASCII digits with no separators or units, except `interact.reach`; prose supplies the unit.
+
+| Key | Value | Format |
+|---|---|---|
+| `think.interval` | ticks between a golem's thinks | integer |
+| `range`, `range_vertical` | blocks across and up or down from home, before a material's bonus | integer |
+| `path.max_length` | the path length; a search visits at most 16 × max(this, 16) nodes | integer |
+| `path.backoff`, `refuse.backoff`, `travel.max_ticks` | ticks a mark rests after `UNREACHABLE` or `UNLOADED`; after `REFUSED`; before a journey is given up | integer |
+| `interact.reach` | derived: `interact.reach_tenths` / 10, the arrival distance in blocks | decimal, one place, trimmed ("2.5", "2") |
+| `collect.radius` | blocks around a Collect mark | integer |
+| `regen.quiet` | ticks unhurt before regenerating | integer |
+| `limits.max_marks`, `limits.max_handler_slots`, `limits.max_collect` | 16, 256, 16 | integer |
+| `limits.max_per_chunk` | the admin placement cap in force | integer |
+
+**`golem_material` fields** ([golems spec, Materials](golems.md#materials)). Arity 3: the material's namespace, path and the field.
+
+| Field | Value | Format |
+|---|---|---|
+| `health` | max health, in health points | integer |
+| `speed` | the movement speed value, which the material data holds in exact hundredths | decimal, two places, trailing zeros trimmed ("0.3", "0.26"): exact, since the data has no third place |
+| `carry_items`, `carry_essentia` | most items, most essentia units | integer |
+| `armor` | armor points | integer |
+| `regen` | ticks per health point regained | integer |
+| `range_bonus` | blocks added to `range` | integer |
+| `range` | derived: `GolemRules` `range` + `range_bonus` | integer |
+| `fire_immune` | | `golem.vftv.fact.yes` or `golem.vftv.fact.no` |
+
+- A key or field outside these tables is a malformed span, rejected by the validator.
+- **Until the first `GolemRules` arrives,** a `golem` span and a `golem_material` `range` span render as `[?]` without logging. Every player receives `GolemRules` on join; the material registry arrives with the world's registries before any book can open.
+- A material the registry doesn't hold is an unresolvable span: `[?]`, logged once.
+
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`), and for `infusion` spans the arrival of a new `InfusionRules` ([infusion spec, Sync and state](infusion.md#sync-and-state): on join and after `/reload`), and for `focus*` spans any input of the [foci spec's preview](foci.md#the-authoritative-preview): the reference focus and the pricing wand (hand, off hand or inventory contents, including the wand's pools), the learned set, the focus registries, `FociRules`, `VisRules`, the discount attribute, the reader's `block_interaction_range` attribute, #25's factor and amplifier inputs, or a disconnect (every cache cleared). Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`), and for `infusion` spans the arrival of a new `InfusionRules` ([infusion spec, Sync and state](infusion.md#sync-and-state): on join and after `/reload`), and for `golem` and `golem_material` spans the arrival of a new `GolemRules` ([golems spec, Sync and state](golems.md#sync-and-state): on join and after `/reload`; the material registry is fixed while a world is open), and for `focus*` spans any input of the [foci spec's preview](foci.md#the-authoritative-preview): the reference focus and the pricing wand (hand, off hand or inventory contents, including the wand's pools), the learned set, the focus registries, `FociRules`, `VisRules`, the discount attribute, the reader's `block_interaction_range` attribute, #25's factor and amplifier inputs, or a disconnect (every cache cleared). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.
@@ -650,8 +684,8 @@ Each content ticket freezes its Stage's roster: ids, kinds, dependency edges, an
 | Stage | Entries |
 |---|---|
 | 1 Resonance | `resonance` (opener) → `commonplace_book` (free; teaches the inventory strike), `notes_of_things` (free; aspects and the unheard), `sounding` (free) → `taking_notes` (the tutorial note: Aer and Ignis, joined through **Lux**, which the path makes known first) → `knots_in_the_air` (find: `scanned` with `node: true`) → `first_wand` (`free` or `note`: teaches the **ungated** wand recipe `vftv:wand_assembly` and gates nothing), `tapping` (note: no recipe; gates the server-checked tap action), `arcane_crafting` (note) → [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s Stage 1 recipe entries, and `foci` (note; [Foci](foci.md#stage): the Lathe, the blank focus, Kindle, Gust, Bolt and Touch) |
-| 2 Distillation | `distillation` (opener), then the crucible, Resonant Brass, essentia and jars, tubes, cultivating nodes, relays and first golems; `focus_ranks` (note, after `foci` and `resonant_brass`) and `delving` (note, after `foci` and `distillation`) |
-| 3 Ruins | `ruins` (opener), the Choir pages, the Answerers (find: an advancement for killing one), infusion, `being_heard` (warp and its treatment), the Hush, `silence_beneath`; `far_workings` (note, after `focus_ranks` and `ruins`) |
+| 2 Distillation | `distillation` (opener), then the crucible, Resonant Brass, essentia and jars, tubes, cultivating nodes, relays and first golems (`golems`, note, after `resonant_brass`; `golem_decanting`, note, after `golems` and `essentia_jars`; [Golems](golems.md#stage): their prose teaches the Feed handoff warning and every carry-loss row, [golems spec, Contracts](golems.md#contracts-on-sibling-specs)); `focus_ranks` (note, after `foci` and `resonant_brass`) and `delving` (note, after `foci` and `distillation`) |
+| 3 Ruins | `ruins` (opener), the Choir pages, the Answerers (find: an advancement for killing one), infusion, `being_heard` (warp and its treatment), the Hush, `silence_beneath`; `far_workings` (note, after `focus_ranks` and `ruins`); `echo_golems` (note, after `golems` and `infusion`; [Golems](golems.md#stage)) |
 | 4 The Choir's Road | `choirs_road` (opener), Void-tier crafting (warp-gated through `warp_at_least` reveals), the road, and pages on Joining and Silencing; `void_foci` (note, after `far_workings` and `choirs_road`). The choice itself is made in the world (#28), never in the book. |
 
 ## The Commonplace Book
@@ -1009,7 +1043,7 @@ This spec settles every decision. Six required child tickets deliver the assets 
 | **Commonplace Book items and sounds** | `commonplace_book` (Stage 1 row of art-style §5) and `choir_page` (Stage 3 row) textures, models and item definitions. Sounds in **Stage-appropriate registers** (art-style §7): page turn ×3, place ×3, link, solve and learn (Stage 1); Stage reached ×4 (one per Stage, each in its own Stage's register); tip-in (Stage 3); the listen beat (Stage 3, lower and wetter). Provenance rows. | none |
 | **Stage 1 research content** | `content/research/stage1.json` (frozen roster, edges, anchors, rewards, pages), its categories in `categories.json`, `content/lang/en_us/stage1.json` (titles, hints, pages), and `path-stage1.json` with its reviewed sources; the tutorial's Lux made known in the path; `vftv:foci` learned after `vftv:arcane_crafting` in the path | [Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17), [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), and [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the path replays its values) |
 | **Stage 2 research content** | the same for Stage 2, with the recipe ids frozen | [Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17), [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18), [Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) |
-| **Stage 3 research content** | the same for Stage 3, plus its Choir pages, `silence_beneath` with #25's lasting amount, `being_heard`, the marginalia pools and `overlay.json` | [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26), [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) |
+| **Stage 3 research content** | the same for Stage 3, plus its Choir pages, `silence_beneath` with #25's lasting amount, `being_heard`, the marginalia pools and `overlay.json` | [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26), [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) (`vftv:echo_golems`) |
 | **Stage 4 research content** | the same for Stage 4, plus its Choir pages and the Joining and Silencing pages (documentation only) | [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) |
 
 The Stage 2, 3 and 4 content tickets are also blocked by [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22) and [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), whose recipes can land in any of those Stages. Foci's entries reach every Stage, so the Stage 1 ticket consumes it too ([foci spec, Stage](foci.md#stage)).
