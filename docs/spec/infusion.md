@@ -402,7 +402,7 @@ An enchanting recipe is a `vftv:infusion` body with the enchantment result. Ench
 - **Cost:** `essentia[a] × (L + 1)` for each aspect. **Instability:** `R = min(100, instability + enchant.instability_per_level × Σ levels already on the item)`. **No XP:** essentia is this mod's currency.
 - **Vectors** (reference implementation): per level {Praecantatio 4, Telum 6}, `instability` 10: at `L` 0 the cost is {4, 6} for level 1 and `R` 10; at `L` 2 with 3 levels on the item in all, {12, 18} for level 3 and `R` 25.
 - `supportsEnchantment` is an item callback, so it runs in the assessment and again in the commit's recheck, never inside the commit.
-- **Built-in lint:** every built-in enchanting recipe's enchantment is in `#minecraft:in_enchanting_table` (`MC:tags/EnchantmentTags.java:18`), so no treasure or curse. Packs are free. No enchantment of our own in v1.
+- **Built-in lint:** every built-in enchanting recipe's enchantment is in `#minecraft:in_enchanting_table` (`MC:tags/EnchantmentTags.java:18`), so no treasure or curse, with **exactly one exemption**: `vftv:baffling`, the [armor spec's](armor.md#baffling) infusion-only enchantment, which is deliberately in no enchantment tag. Packs are free. **One enchantment of our own in v1:** Baffling, applied only through the armor spec's recipe `vftv:armor/baffling` on this type's enchantment form.
 - **Options considered:** XP costs (as TC4 did); levels beyond vanilla's maxima. **Why not:** XP is vanilla's economy and essentia is ours; vanilla's maxima keep the anvil and the table coherent.
 
 ## The run
@@ -1012,7 +1012,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - It adds no flux for drawing, absorbing, stalls, pauses or finishing.
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Their infusion recipes (`vftv:infusion/hollow_bell` among them) use this body with their own `research`, in their own content files. `kind: void` built-ins need a Stage 4 gate. #24 may use `transmute` for upgrades. Runic augments, Void-tier stability rules or anything else is an extension they propose.
+- Their infusion recipes (`vftv:infusion/hollow_bell` among them) use this body with their own `research`, in their own content files. `kind: void` built-ins need a Stage 4 gate. #24 may use `transmute` for upgrades. Runic augments, Void-tier stability rules or anything else is an extension they propose. *Met by the [armor spec](armor.md#contracts-on-sibling-specs) for #24: its recipes live in `content/armor/recipes.json` and `void.json`; its runic-augmentation equivalent, Baffling, uses this type's enchantment form with no extension, needing only the lint exemption above (amended here); its Void pieces are `kind: void` transmutes behind the Stage 4 gate `vftv:void_armor`.*
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
 - Golems may load pedestals and bowls and restore promised stacks through the item capability or the container path, under its rules. No golem starts an infusion in v1: a start needs a player's second permitted strike against an acknowledged readout.

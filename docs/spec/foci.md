@@ -1136,6 +1136,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
 - Cast discounts come only from `vftv:vis_discount`. No gear changes a focus's magnitude in v1.
+- *Met by the [armor spec](armor.md#vis-discount): every discount is a `vftv:wearable` modifier on that attribute, and the Void set's warp amplifier scales only its Baffle.*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
 - `vftv:void_foci` follows its opener `vftv:choirs_road`. Scaling stays #25's.

@@ -179,6 +179,22 @@ _Avoid_: pinging, locating
 The first magical metal, made by attuning copper.
 _Avoid_: Thaumium, magic brass
 
+**Brass armour**:
+The Stage 2 armour of Resonant Brass: protection, with no vis discount.
+_Avoid_: Thaumium armour
+
+**Tuned Spectacles**:
+Amethyst lenses ground to the fork's pitch. Worn, they show what the wearer has already struck about whatever they look at. They never strike, so they teach nothing new.
+_Avoid_: goggles, Goggles of Revealing
+
+**Trinket**:
+A small worn item, a ring or a pendant. It counts in a Curios slot when Curios is installed, and in the off hand otherwise.
+_Avoid_: bauble, curio (in player-facing text)
+
+**Baffle**:
+A layer of resonance worn on gear that soaks up blows before health, and comes back on its own after a quiet spell.
+_Avoid_: runic shield, shielding, ward
+
 **Wand**:
 The hand-held instrument that holds vis and spends it on arcane work.
 _Avoid_: staff (unless it is a distinct tier), rod (which is a wand part)

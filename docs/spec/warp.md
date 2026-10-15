@@ -209,8 +209,8 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 ## Gear warp
 
 - **Data map `vftv:gear_warp`** on items: an integer 1–10 per carried **stack** (not multiplied by its count), synced, with the tooltip `tooltip.vftv.gear_warp`.
-- **Carried** means the player's inventory, armour and off hand, plus their Curios slots when Curios is loaded: `neoforge.compat.curios` collects those stacks and passes them in, so progression never needs Curios ([architecture, Soft dependencies](architecture.md#soft-dependencies)).
-- **A sample** (see "Schedule") reads at most `MAX_GEAR_SLOTS` (128) stacks and sums their values, capped at `gear.max` (**12**); with the server switch `warp.gear` off it is 0. A changed sum is written under the guard (a held guard skips that sample; the next comes 20 ticks later), synced, and posts `WarpChangedEvent(GEAR)`. A sample also runs in the same tick as a login, a respawn and a dimension change.
+- **Carried** means the player's inventory, armour and off hand, plus their Curios slots when Curios is loaded, functional and cosmetic alike: `neoforge.compat.curios` collects those stacks and passes them in, so progression never needs Curios ([architecture, Soft dependencies](architecture.md#soft-dependencies)).
+- **A sample** (see "Schedule") reads at most `MAX_GEAR_SLOTS` (128) stacks **in all**, in a fixed order: the player's vanilla inventory first, in container index order (main, armour, off hand), then Curios entries from the [armor spec's collector](armor.md#the-collector) `CuriosWorn.collect` (slot ids ascending; functional, then cosmetic, by index), whose budget is what remains of the one allowance. Empty stacks don't count. It sums their values, capped at `gear.max` (**12**); with the server switch `warp.gear` off it is 0. A changed sum is written under the guard (a held guard skips that sample; the next comes 20 ticks later), synced, and posts `WarpChangedEvent(GEAR)`. A sample also runs in the same tick as a login, a respawn and a dimension change.
 - **The dials read the latest sample,** at most 20 ticks old. An inventory change not yet sampled is not yet in any quote; the next sample changes the price inputs, which the [arcane](arcane.md#preview-revision) and [infusion](infusion.md#the-authoritative-preview) previews already watch.
 - **Void foci are not gear warp.** A Void focus already scales with warp; adding warp for carrying it would compound. That is a balance choice: should it change, the platform collector could read `FocusService.kind` and pass a contribution in, with no import of `core.focus` here.
 - This spec ships no `vftv:gear_warp` values. Void-tier armour and weapons ([#24](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [#28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)) add them.
@@ -915,6 +915,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
 - Void-tier gear carries warp only through the `vftv:gear_warp` data map. Its Curios compat passes carried Curios stacks to the gear sample.
+- *Met by the [armor spec](armor.md#contracts-on-sibling-specs): the Void set's 2/3/2/2 in `content/armor/void.json`, and `CuriosWorn.collect`'s ordered entries within the one shared allowance under "Gear warp" (amended here).*
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
 - It registers a place query for hushed ground under "Context": pure, loaded-only, bounded. It adds no warp.

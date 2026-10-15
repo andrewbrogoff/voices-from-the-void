@@ -125,7 +125,7 @@ Every quote and spend carries a **`VisContext`** (a record in `api`):
 - **Inputs,** resolved once into `QuoteInputs`:
   - `base`: a map from vis aspect to an integer 0–1000, at most 8 entries. A key that isn't a vis aspect or a value out of range is a data error: consumers reject such data when it loads, and `quote` throws.
   - `cap = Math.round(cost_multiplier × 1000)`.
-  - **Discount:** the attribute `vftv:vis_discount` (#24's). `discount_capped` iff its value > `quote.max_discount`. `d = Math.round(clamp(value, 0, quote.max_discount) × 1000)`.
+  - **Discount:** the attribute `vftv:vis_discount` (#24's). `discount_capped` iff `Math.round(value × 1000) > Math.round(quote.max_discount × 1000)`: per mille, like `d`, because the attribute sums its modifiers in `double` (`MC:world/entity/ai/attributes/AttributeInstance.java:148–165`), so 0.10 + 0.20 is 0.30000000000000004, which a raw `>` would flag although `d` is 300 either way. `d = Math.round(clamp(value, 0, quote.max_discount) × 1000)`.
   - **Warp factor:** `W = vis_factor(player, ctx)` from [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), 1.0 until #25 lands. A non-finite `W` counts as 1.0 and is logged once. `w = Math.round(clamp(W, 0, 10) × 1000)`.
 - **Multiplier:** `raw = cap × (1000 − d) × w` in `long` arithmetic (at most 2 × 10¹⁰). `m₀ = (raw + 500,000) / 1,000,000`, which rounds half up. `m = clamp(m₀, Math.round(quote.min_multiplier × 1000), Math.round(quote.max_multiplier × 1000))`, and `clamped` iff `m ≠ m₀`.
 - **Effective cost:** `effective[a] = base[a] == 0 ? 0 : max(1, ceilDiv(base[a] × m, 1000))`.
@@ -143,6 +143,7 @@ Every quote and spend carries a **`VisContext`** (a record in `api`):
 | 0.85 | 0.10 | 0.30 | 1.25 | Aer 32, Terra 7 | 850, 100, 1250 | 956 | Aer 31, Terra 7 | none |
 | 2.00 | 0 | 0.30 | 10.00 | Aer 1000 | 2000, 0, 10000 | 4000 | Aer 4000 | `clamped` |
 | 0.25 | 0.90 | 0.90 | 1.00 | Aer 5 | 250, 900, 1000 | 500 | Aer 3 | `clamped` |
+| 0.85 | 0.10 + 0.20, summed as `double` (0.30000000000000004) | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 850, 300, 1000 | 595 | Aer 6, Ignis 2, Ordo 1 | none |
 
 The modifier flags are `discount_capped` and `clamped`. The capacity flags depend on the wand: the 4000-cost row is `exceeds_capacity` for every supported rod (capacity ≤ 1000), and the others are not for the built-in rods.
 
@@ -744,7 +745,9 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
  "coverage": [{"biome": "minecraft:plains", "must_include": ["vftv:windward", "vftv:wild"]}]}
 ```
 
-**Every `long`-typed value** (`seed`, `h`, `tick`, `now`, `game_time`, and `tick` in `expect`) is a hex string, so JSON never rounds it; every other number is a JSON integer. **Rejected:** a section missing; a row of a vector table missing or altered; a `coverage` biome that isn't a vanilla overworld biome; a vanilla overworld biome missing from `coverage`.
+**A `quote` row** gives its discount as exactly one of `discount` (one number) or `discount_modifiers` (a list, summed in order as `double`, as the attribute sums its modifiers), e.g. `{"cap": 0.85, "discount_modifiers": [0.10, 0.20], "max_discount": 0.30, "w": 1.00, …, "expect": {…, "discount": 300, "discount_capped": false}}`.
+
+**Every `long`-typed value** (`seed`, `h`, `tick`, `now`, `game_time`, and `tick` in `expect`) is a hex string, so JSON never rounds it. The `quote` inputs `cap`, `discount`, `discount_modifiers` (each element), `max_discount` and `w` are finite JSON numbers, read as `double`; every other number is a JSON integer. **Rejected:** a section missing; a row of a vector table missing or altered; a `coverage` biome that isn't a vanilla overworld biome; a vanilla overworld biome missing from `coverage`.
 
 ### Lang keys
 
@@ -838,7 +841,7 @@ Whether these are exposed in `api` is the API spec's call.
 | components, spatial hash, chunk → members lookup, membership queue, active sinks | memory | never |
 | cradle wand | cradle block entity | trackers: initial data, then on insert and take only (charging changes no packet) |
 | tap sessions | transient per-player memory | never |
-| `vftv:vis_discount` | a syncable attribute (default 0, range 0–1) | the owner, as vanilla syncs attributes |
+| `vftv:vis_discount` | a syncable attribute (default 0, range 0–1), registered as NeoForge's `PercentageAttribute` (`NF:common/PercentageAttribute.java:34–54`), so a tooltip shows an `add_value` of 0.03 as "+3%" | tracking players and self, as vanilla syncs syncable attributes (`MC:server/level/ServerEntity.java:287–290,352–355`) |
 | vis rules | the tuning record and the fixed limits | **`VisRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
 
 - **Coalesced updates:** tap pulses, relay pulses and cultivation mark node block entities dirty in a per-level set, which is flushed once per tick, after the level ticks: **at most one update packet per node per tick**, however many players and networks touched it. Hand-tap pulses are aligned on the global clock, so a node tapped by any number of players sends at most one update per `tap.interval` from tapping.
@@ -1011,8 +1014,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - *Met by the [foci spec](foci.md#contracts-on-sibling-specs): `vftv:wand_focus` and the appended third model member (`vftv:none` → `minecraft:empty`, `unknown` as the fallback); every cast through `spend` with the effect id as `source` and the effect's kind; a short cast refused before anything is applied; the Beam spending every `pulse` ticks with no double payment at its start; no node or charging path; main-hand gestures separated from target domains, every refusal consuming the click; and its failures after the spend stated per medium. Amended here in the same change: the experience change in the spend's prepared state, the one-session dispatch with its exposed kind, and the harvesting answer.*
 
 **[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Vis discounts exist **only** as modifiers on the attribute `vftv:vis_discount` (registered here: default 0, range 0–1, syncable), which the quote caps at `quote.max_discount` and flags. GameTest: gear past the cap shows `discount_capped` and the capped cost, identically on client and server.
+- Vis discounts exist **only** as modifiers on the attribute `vftv:vis_discount` (registered here: default 0, range 0–1, syncable, a `PercentageAttribute`), which the quote caps at `quote.max_discount` and flags (per mille). GameTest: gear past the cap shows `discount_capped` and the capped cost, identically on client and server.
 - **No vis-storing trinket in v1.** Nodes are the only source and rods set capacity; a trinket that stores vis would need its own proposal of a conserved transfer and capacity rule, as an extension to this spec. Everything works without Curios.
+- *Met by the [armor spec](armor.md#vis-discount): every discount is a `vftv:wearable` data-map modifier on this attribute; the flag now compares per mille, and the attribute is a `PercentageAttribute` (both amended here); a test-pack value of 0.40 drives the GameTest and an E2E client quote equal to the server's; no trinket stores vis, and trinkets count in the off hand without Curios.*
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
 - It supplies `vis_factor(player, ctx)`, a finite pure function of the owner's synced warp state and `ctx.kind`: ≥ 1.0 for `ORDINARY`, and whatever it states for `VOID` (which may be below 1.0). Client and server compute the same value.
