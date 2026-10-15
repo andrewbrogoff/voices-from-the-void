@@ -203,7 +203,12 @@ The station for arcane crafting: a crafting table turned with a wand. The vis is
 _Avoid_: Arcane Worktable, arcane workbench
 
 **Crucible**:
-A vessel that dissolves items into their aspects and recombines them.
+A vessel of boiling water that dissolves thrown items into essentia and spends that essentia to transform a catalyst. Essentia never combines in it.
+_Avoid_: cauldron (the vanilla block it is made from)
+
+**Catalyst**:
+The item thrown into a crucible that a recipe the thrower has learned transforms, paid for from the crucible's dissolved essentia.
+_Avoid_: reagent, base item
 
 **Infusion**:
 Altar crafting that drives essentia into a central item.

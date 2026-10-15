@@ -391,7 +391,7 @@ Every file is one JSON object with a `"schema"` string. Datagen rejects an unkno
   "rewards": {"points": {"vftv:aqua": 4}},
   "pages": [
     {"type": "vftv:text"},
-    {"type": "vftv:recipe", "recipe": "vftv:crucible"},        // id frozen once #19 lands
+    {"type": "vftv:recipe", "recipe": "vftv:crucible"},        // id frozen by the crucible spec
     {"type": "vftv:action"}
   ]
 }
@@ -470,7 +470,7 @@ A code registry, **`vftv:page_type`**. Page *i* (0-based) of entry `<ns>:<path>`
 | Type | Fields | Prose | Draws |
 |---|---|---|---|
 | `vftv:text` | none | required | the prose |
-| `vftv:recipe` | `recipe` (any synced recipe id, ours or vanilla); `preview` (default `false`) | optional caption | the recipe from synced recipe data through `SlotDisplay`, with costs from the owning spec's preview. With `preview: true` it is a **locked preview** ("Not yet within my reach") that implies no craftability. |
+| `vftv:recipe` | `recipe` (any synced recipe id, ours or vanilla); `preview` (default `false`) | optional caption | the recipe from synced recipe data through `SlotDisplay`, with costs from the owning spec's preview. When that preview takes a **context** (the arcane spec's reference wand, the [crucible spec](crucible.md#the-authoritative-preview)'s targeted crucible), the page names the context and its availability, and never shows a value for a context that isn't there. With `preview: true` it is a **locked preview** ("Not yet within my reach") that implies no craftability. |
 | `vftv:aspects` | `of` (a scan key) | optional caption | the thing's aspects: known ones exact, unheard ones as the unheard icon with the exact amount |
 | `vftv:structure` | `multiblock` (an id in the owning spec's data) | optional caption | a rotatable preview through `PictureInPictureRenderer` |
 | `vftv:image` | `sprite` (a GUI sprite id, at most 130×120) | optional caption | the sprite |
@@ -519,7 +519,8 @@ A code registry, **`vftv:page_type`**. Page *i* (0-based) of entry `<ns>:<path>`
 span   = "{fact:" source ":" args "}"        args are split on ":"; the arity is fixed per source
 recipe : <ns> ":" <path> ":" <field>         field from the owning spec's preview: at least
                                              output, inputs, and every decision cost it returns
-                                             (e.g. vis, vis_effective, flux; stability for infusion)
+                                             (e.g. vis, vis_effective, flux; stability for infusion;
+                                             aspects and status for the crucible)
 aspects: <kind> ":" <ns> ":" <path>          a scan key of kind item, block or entity
 entry  : <ns> ":" <path> ":" ("warp" | "skip_cost" | "rewards" | "held")
 pool   : <ns> ":" <path>                     the player's points of that aspect
@@ -530,7 +531,7 @@ vis    : <VisRules key>                      a tuning key or limits.* key of the
 ```
 
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand, or the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.
