@@ -192,8 +192,28 @@ A stand that holds one wand and charges it from its relay network.
 _Avoid_: charger, pedestal
 
 **Focus**:
-An attachment that gives a wand a spell to cast. Plural: foci.
+An attachment that gives a wand something to cast: one effect, delivered by one medium and changed by modifiers. Plural: foci.
 _Avoid_: spell, glyph
+
+**Blank focus**:
+A focus with no effect or medium set yet. It can be ranked but not cast.
+_Avoid_: empty focus
+
+**Medium**:
+How a focus delivers its effect: a **Bolt** (a thrown mote), a **Touch** (at arm's reach), a **Burst** (all around a point) or a **Beam** (held, paid in pulses). Plural: media.
+_Avoid_: shape, form, delivery
+
+**Modifier**:
+A change set into a focus, such as more force or a wider burst. Each level of a modifier takes one of the focus's ranks.
+_Avoid_: augment, upgrade (a rank is the upgrade)
+
+**Rank**:
+How many modifier levels a focus can hold, raised at the Lathe for experience and vis. It never falls.
+_Avoid_: tier (aspects have tiers), level (of a focus)
+
+**Lathe**:
+A bellfounder's tuning lathe, where a focus is turned: its effect, medium and modifiers set for free, and its rank raised.
+_Avoid_: focal manipulator, focus table
 
 **Arcane crafting**:
 Crafting that costs vis as well as materials.

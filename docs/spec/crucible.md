@@ -45,7 +45,7 @@ Resolved in [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from
 - its `vis` uses only the six built-in primals, each ≤ the Wellspring's per-aspect amount in `content/nodes/types.json` (32 today), so a wooden-rod, copper-cap wand filled at the Wellspring pays it at zero warp. The chime rod needs Resonant Brass ([wands, Parts](wands.md#parts)), so no better wand can exist yet;
 - its research `vftv:crucible` is learned in [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)'s affordability path (see the contracts).
 
-**Options considered:** a wand-on-cauldron conversion (as TC4 did); a vanilla-grid recipe. **Recommend** the arcane recipe: it gives the server-side research gate, the recipe page and JEI for free ([arcane crafting, Arcane recipes](arcane.md#arcane-recipes)), the research spec's example already names a `vftv:recipe` page `vftv:crucible`, which a conversion can't supply, and a second conversion listener would repeat the Worktable's whole `BreakEvent` commit for no gain.
+**Options considered:** a wand-on-cauldron conversion (as TC4 did); a vanilla-grid recipe. **Recommend** the arcane recipe: it gives the server-side research gate, the recipe page and JEI for free ([arcane crafting, Arcane recipes](arcane.md#arcane-recipes)), the research spec's example already names a `vftv:recipe` page `vftv:crucible`, which a conversion can't supply, and a second conversion listener would repeat the Worktable's whole `BreakBlockEvent` commit for no gain.
 
 ### Heat
 
@@ -502,7 +502,7 @@ A soft dependency ([architecture, Soft dependencies](architecture.md#soft-depend
 ## Multiplayer and automation
 
 - **The crucible is unowned.** The research gate belongs to the thrower, and anyone can read the HUD.
-- **The protection promise is exactly** vanilla's spawn protection and `mayInteract` and `RightClickBlock` for filling and emptying, and `BreakEvent` for mining. Claim mods don't guard thrown items, so **another player can dissolve junk into your crucible**, or feed it a catalyst they have learned. This is a stated limitation: the owner extracts the junk into storage, or empties it at its price.
+- **The protection promise is exactly** vanilla's spawn protection and `mayInteract` and `RightClickBlock` for filling and emptying, and `BreakBlockEvent` for mining. Claim mods don't guard thrown items, so **another player can dissolve junk into your crucible**, or feed it a catalyst they have learned. This is a stated limitation: the owner extracts the junk into storage, or empties it at its price.
 - **Two players throwing in one step** are ordered by entity id (see "Admission").
 
 | Path | Behaviour |

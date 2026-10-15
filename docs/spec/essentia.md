@@ -613,7 +613,7 @@ An Alembic holds the same pair for its base (handler and suction, side-matched) 
 ## Multiplayer and automation
 
 - **Lines are unowned.** The research gates belong to recipes, and anyone can read a status line.
-- **The protection promise is exactly** vanilla's spawn protection, `mayInteract` and `RightClickBlock` for every hand path (labels, shears, faces, valves, status), plus vanilla's placement and `BreakEvent`. A cancelled event or a denied use changes nothing.
+- **The protection promise is exactly** vanilla's spawn protection, `mayInteract` and `RightClickBlock` for every hand path (labels, shears, faces, valves, status), plus vanilla's placement and `BreakBlockEvent`. A cancelled event or a denied use changes nothing.
 - **Stated limitation:** capability access isn't a player action. A line built against someone's exposed jar or crucible can draw from it, just as a hopper draws from a chest.
 
 | Path | Behaviour |

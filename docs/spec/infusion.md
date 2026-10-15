@@ -620,7 +620,7 @@ A soft dependency, never on the progression path. Every JEI class lives in `…n
 
 ## Multiplayer and automation
 
-- **Unowned.** The gate belongs to whoever starts; any permitted player can strike, load, abandon or break. Claim mods guard every hand path through `RightClickBlock` and breaking through `BreakEvent`, and **both strikes** pass through vanilla's use.
+- **Unowned.** The gate belongs to whoever starts; any permitted player can strike, load, abandon or break. Claim mods guard every hand path through `RightClickBlock` and breaking through `BreakBlockEvent`, and **both strikes** pass through vanilla's use.
 - **Untrusted input:** one C2S payload, `InfusionSeen`, bounded at decode; it records an acknowledgement and authorises nothing. Starting happens only inside a permitted vanilla use (see "Starting"). Each check has a GameTest that sends bad input.
 
 | Path | Behaviour |

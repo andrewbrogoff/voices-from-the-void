@@ -35,12 +35,12 @@ Otherwise the listener does nothing. An unlearned player's click opens the craft
 
 **Commit,** on the server thread, in order:
 1. Record the block state `original` at the position.
-2. Post `BlockEvent.BreakEvent` for `original` with the player. **Cancelled:** cancel the interaction with `FAIL`; nothing has changed, and the claim mod speaks.
+2. Post `BreakBlockEvent` for `original` with the player. **Cancelled:** cancel the interaction with `FAIL`; nothing has changed, and the claim mod speaks.
 3. **Recheck,** since a listener may have changed the world: the state at the position is still `original`, there is still no block entity, the hand still holds a `vftv:wand`, and checks 3 and 5 still hold. Any failure: cancel with `FAIL`, nothing changed.
 4. `setBlock(pos, vftv:worktable default state, UPDATE_ALL)`. If it returns `false`: cancel with `FAIL`; no sound.
 5. Post the vanilla game event `BLOCK_CHANGE` with the player and the new state, play `vftv:worktable.convert`, and cancel the interaction with `SUCCESS`.
 
-- **The protection promise is exactly these events:** vanilla's spawn protection and `mayInteract`, `RightClickBlock` (a cancel, or a denied use), and `BreakEvent`. A claim mod that guards conversion some other way needs an integration, which the mod-compatibility spec owns.
+- **The protection promise is exactly these events:** vanilla's spawn protection and `mayInteract`, `RightClickBlock` (a cancel, or a denied use), and `BreakBlockEvent`. A claim mod that guards conversion some other way needs an integration, which the mod-compatibility spec owns.
 - **The client** mirrors checks 1–5 from synced state and cancels with `SUCCESS`, so the arm swings and the table's own use doesn't run. The server decides; the block change arrives as an ordinary block update.
 
 ### The block
@@ -470,7 +470,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `PlayerEvent.ItemCraftedEvent` (NeoForge) | `EventHooks.firePlayerCraftingEvent`, through the platform seam | player; a copy of the result; a defensive `Container` snapshot of the grid before the commit |
 | `RECIPE_CRAFTED` criterion | `CriteriaTriggers.RECIPE_CRAFTED.trigger` | player; recipe key; copies of the consumed stacks |
 
-Nothing fires for a turned table (beyond the vanilla `BreakEvent` it asks and the game event it posts), a refusal, a batch that stops, or the taking of committed output.
+Nothing fires for a turned table (beyond the vanilla `BreakBlockEvent` it asks and the game event it posts), a refusal, a batch that stops, or the taking of committed output.
 
 **Plain `core` services:** `ArcanePreview.of`; `ArcaneRecipes.select(player, grid)` over the current snapshot. Whether they are exposed in `api` is the API spec's call.
 
@@ -566,7 +566,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **JEI reconcile** as a pure diff over every arrival order of runtime, recipes and research, and over a replaced recipe.
 
 **GameTest:**
-- **turning a table:** learned; unlearned opens the crafting table; sneaking; spectator; adventure mode; a cancelled `BreakEvent` changes nothing; a listener on `RightClickBlock` denying the item or block use; **a `BreakEvent` listener that replaces the block** (the recheck refuses); a tagged block with a block entity untouched; a focused wand converts; a failed `setBlock` plays no sound;
+- **turning a table:** learned; unlearned opens the crafting table; sneaking; spectator; adventure mode; a cancelled `BreakBlockEvent` changes nothing; a listener on `RightClickBlock` denying the item or block use; **a `BreakBlockEvent` listener that replaces the block** (the recheck refuses); a tagged block with a block entity untouched; a focused wand converts; a failed `setBlock` plays no sound;
 - **a craft end to end**, and the Bell recipe crafting in-world;
 - **hostile `WorktableCraft`:** no menu; a wrong `containerId`; a spectator; out-of-range and oversized fields; the block broken; an unlearned recipe; a stale id; a stale echo; **a stale revision**; a flood past the rate. **Every refusal leaves grid, wand vis and output unchanged and posts no event**, and each in-menu refusal sets its code;
 - **same-id, same-price replacement:** `/reload` changes `vftv:bell`'s result at the same id and cost; the old echo is refused as `STALE`;
@@ -608,7 +608,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 | Stage 1 affordability: every Stage 1 arcane recipe ≤ 32 per aspect (a unit test over recipe data); the first craft's materials and research reachable before it | The Stage 1 affordability unit test, reading the bound from the Wellspring's data and requiring `ordinary`; the Bell's pre-iron ingredients; and a named artifact on [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34): its `path-stage1.json` learns `vftv:tapping` and then `vftv:arcane_crafting` (see below). The E2E first-session flow proves it in-world. |
 | The arcane type carries the Stage 2 recipes at the wands spec's ids and gates; its schema is their body | "The recipe type": the body, now frozen as `"type": "vftv:arcane"` in the wands spec's "Authored content, Recipes" (amended in the same change) |
 | Base vis costs validated at load: vis aspects only, 0–1000 | Registry-aware decode: vis aspects only, 1–1000 (a subset of 0–1000: a zero-cost aspect is simply left out), and created results checked too. There is no second validation pass. |
-| The wand slot accepts only `vftv:wand` and never charges it; turning a block is its own right-click listener, working with a focused wand; the wand passes on non-node blocks | "The menu" (slot 0), "Turning a table" (before `onItemUseFirst`, any wand, not sneaking, so the focus path is untouched; denied uses honoured; the target rechecked after `BreakEvent`) |
+| The wand slot accepts only `vftv:wand` and never charges it; turning a block is its own right-click listener, working with a focused wand; the wand passes on non-node blocks | "The menu" (slot 0), "Turning a table" (before `onItemUseFirst`, any wand, not sneaking, so the focus path is untouched; denied uses honoured; the target rechecked after `BreakBlockEvent`) |
 
 **Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
 
