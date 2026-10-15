@@ -93,7 +93,7 @@ The complete list for v1:
 | Reader | Reads | Why |
 |---|---|---|
 | the vis factor and the infusion penalty | `total` | "the more you sound like the Void, the more your resonant magic costs" ([progression, Warp](progression.md#warp)): carrying Void gear or a fresh Bargain dose is sounding like it |
-| the amplifier | `total` | the same dial from the other side; a Bargain's temporary dose buys Void power, which is what a Bargain is |
+| the amplifier | `total`, plus the **Joining bonus** for a Joined Listener ("The dials") | the same dial from the other side; a Bargain's temporary dose buys Void power, which is what a Bargain is. The bonus is Joining's "lasting Void power" ([progression, Endgame](progression.md#endgame)), added, never a floor |
 | the bands, Voice event eligibility, the chance, the book overlay | `total` | one number, which the Ledger shows |
 | research `warp_at_least` with `kind: total` | `total` | [research, Triggers](research.md#triggers) |
 | research `warp_at_least` with `kind: lasting_plus_permanent` | `L + P` | **every built-in gate uses this kind** (validated): a key is turned only by warp that stays, never by a spike or a carried item. Once latched, a gate stays turned, so stilling later never locks content again. |
@@ -121,19 +121,22 @@ Because 20 divides 400 divides 1200 and the phases come from one hash, all three
 
 ## The dials
 
-Three pure functions of the owner's synced `(T, L, P, G)`, the synced `WarpRules` and the context kind, so client and server compute the same value. All arithmetic is integer.
+Three pure functions of the owner's synced `(T, L, P, G)` and `milestones_paid`, the synced `WarpRules` and the context kind, so client and server compute the same value. All arithmetic is integer.
 
 ```
 vis_factor(player, ctx)        = ORDINARY and tax on ? (1000 + min(tax.max_pm, total × tax.per_warp_pm)) / 1000.0 : 1.0
 infusion_penalty(player, kind) = ORDINARY and tax on ? min(infusion.max_penalty, floorDiv(total × infusion.per_warp_pm, 1000)) : 0
-amplifier_warp(player)         = amplifier on ? total : 0
+amplifier_warp(player)         = amplifier on ? total + (joined ? joining.amplifier_bonus : 0) : 0
 ```
+
+`joined` ⇔ `vftv:joining ∈ milestones_paid`, which is written even when the cap clipped the milestone to 0, because the choice was made ("The commit").
 
 - **The warp tax:** +1% per warp, at most +50% (`tax.per_warp_pm` 10, `tax.max_pm` 500). The [wands quote](wands.md#the-quote) converts with `Math.round(clamp(W, 0, 10) × 1000)`. Each value here is meant as the rational *k*/1000; a `double` division doesn't always hold it exactly, but the rounding recovers *k* (a unit test over every `total` from 0 to 2,200), so the station shows the per mille exactly.
 - **The infusion penalty:** 1 stability point per 4 warp, at most 20 (`infusion.per_warp_pm` 250, `infusion.max_penalty` 20), within the [infusion spec's](infusion.md#stability) 0–100.
-- **The amplifier:** `total` in warp points. The [foci spec's](foci.md#the-void-tier) `void.per_warp_pm` default is **20** (amended in this change), so a Void working doubles at 50 warp, just past band 3. That is this spec's scale decision, not proven balance.
+- **The amplifier:** `total` in warp points, plus the Joining bonus for a Joined Listener. The [foci spec's](foci.md#the-void-tier) `void.per_warp_pm` default is **20** (amended in this change), so a Void working doubles at 50 warp, just past band 3. That is this spec's scale decision, not proven balance.
+- **The Joining bonus:** a Joined Listener's amplifier adds `joining.amplifier_bonus` (**10**, 0–50) warp points to `total`, so `amplifier_warp` is an `int` of at most 2,250. It is **additive, never a floor**: current warp still scales Void power, so stilling still costs power ("Stilling"). It changes no band, chance, tax or penalty, and `warp.amplifier` off still zeroes the whole amplifier. Owned by the [Eldritch tier spec](eldritch.md#the-capstones), whose references give the vectors: `total` 37 → 37 unjoined, 47 Joined; 5 Joined → 15; 0 Joined → 10; 40 Joined at bonus 0 → 40; 2,200 Joined at bonus 50 → 2,250; 37 Joined with the switch off → 0.
 - **`VOID` is neutral:** factor 1.0, penalty 0. Void power has one lever, the amplifier's magnitude; Void costs stay predictable.
-- **Unreadable warp** reads as `total` 0 for every dial.
+- **Unreadable warp** reads as `total` 0 for every dial, with no Joining bonus.
 
 **Vectors** (`total` → band, factor `ORDINARY`/`VOID` in per mille, penalty `ORDINARY`/`VOID`): 0 → 0, 1000/1000, 0/0; 3 → 0, 1030/1000, 0/0; 7 → 0, 1070/1000, 1/0; 8 → 1, 1080/1000, 2/0; 19 → 1, 1190/1000, 4/0; 20 → 2, 1200/1000, 5/0; 37 → 2, 1370/1000, 9/0; 40 → 3, 1400/1000, 10/0; 49 → 3, 1490/1000, 12/0; 50 → 3, 1500/1000, 12/0; 80 → 3, 1500/1000, 20/0; 2,200 → 3, 1500/1000, 20/0. With the tax off, `total` 40 → 1000, 0.
 
@@ -183,7 +186,7 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 - **Starting to drink** is refused on both sides, consuming nothing, when the synced `L` is 0: `message.vftv.warp.nothing_to_still`.
 - **On finishing** (server): `L` is read again; if it is 0 now, the same refusal and nothing is consumed. Otherwise `apply((0, −min(still.amount, L), 0), STILLING)`; `BUSY` refuses (`message.vftv.warp.busy`) and consumes nothing; `OK` consumes one draught (none for a player with infinite materials) and returns a glass bottle the way vanilla's potions do.
 - **Always works:** no chance. `still.amount` is **4**, and the tooltip states it beside the player's current lasting warp.
-- **Always costs:** the recipe (below), and every point stilled also lowers the amplifier, so going quiet weakens Void tools ([progression, Warp](progression.md#warp)).
+- **Always costs:** the recipe (below), and every point stilled also lowers the amplifier, so going quiet weakens Void tools ([progression, Warp](progression.md#warp)). A Joined Listener's Joining bonus is never stilled, but everything else is: stilling from 37 to 5 takes their amplifier from 47 to 15.
 - **The recipe** `vftv:stilling_draught` (the shipped body): `{"type": "vftv:crucible", "research": "vftv:being_heard", "catalyst": "minecraft:glass_bottle", "aspects": {"vftv:silentium": 6, "vftv:ordo": 4, "vftv:aqua": 4}, "result": {"id": "vftv:stilling_draught", "count": 1}}`. Silentium is a compound, and the [crucible never combines](crucible.md#the-recipe-type), so it must come from matter: wool (see the contract on [#30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)), named in the content's reviewed bootstrap.
 - **Options considered:** a soap with a hidden chance; a ward that only delays events (both TC4's). **Why not:** the lore says treatment "always works but always costs something", and the pain points ask for a visible price.
 
@@ -200,7 +203,8 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 **Validated** when the world opens **and** when tuning reloads (a failure refuses the world at open, and on `/reload` keeps the previous record with an error):
 - the listed amounts sum to ≤ `permanent.cap`, so built-ins never clip;
 - every research entry with `permanent` > 0 is a listed milestone with exactly that amount, carries no `temporary` or `lasting`, and is nobody's parent;
-- every listed milestone except `vftv:joining` names an existing `listen` entry.
+- every listed milestone except `vftv:joining` names an existing `listen` entry;
+- **`vftv:joining` is listed** (any amount in range): the [Eldritch tier's Heart](eldritch.md#the-choice) reads its current amount for every quote and commit, so a retuning changes what Joining costs and never disables it.
 
 **No built-in gate needs permanent warp, and none waits on a Bargain.** The proof is ordered, through the research spec's affordability paths ([research, Affordability and recovery](research.md#affordability-and-recovery), amended): a path never commits a milestone entry, Bargains are not steps, and every built-in `warp_at_least` gate must latch during its Stage's replay from the `lasting` committed **before** it, so warp behind the very gate being tested can't pay for it.
 
@@ -317,8 +321,10 @@ The built-in `vftv:pressing_dark`: Darkness 0 and Slowness 0 for 100 ticks each.
 
 A player is **in context** iff any of:
 1. **Void work:** `g < void_work_until`, which is set to `g + context.window` (600 ticks) when that player's `VisSpentEvent` carries `kind` `VOID` ([wands, Events](wands.md#events)). The `neoforge.warp` listener calls `WarpService.noteVoidWork(player)`; `core.warp` never imports `core.vis`.
-2. **A Void-touched dimension:** the player's level is in tuning `context.dimensions`.
-3. **A Void-touched place:** any **place query** registered with `WarpService.registerPlaceQuery(VoidPlaceQuery)` answers true for the player's level and block position. A query is a plain interface in `core.warp`, registered at init by the feature that owns the place ([Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) for the Hush, [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) for Choir sites, [Eldritch tier](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for the road). It must be pure, read only loaded data, never load a chunk, and do work bounded by what is indexed for that position's chunk. Until those specs land, none is registered.
+2. **A Void-touched dimension:** the player's level is in tuning `context.dimensions` (by default the [Eldritch tier's](eldritch.md#vuulas) `vftv:vuulas`).
+3. **A Void-touched place:** any **place query** registered with `WarpService.registerPlaceQuery(VoidPlaceQuery)` answers true for the player's level and block position. A query is a plain interface in `core.warp`, registered at init by the feature that owns the place ([Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) for the Hush, [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) for Choir sites, [Eldritch tier](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for the Road: its `RoadPlaceQuery`, true iff the level is Vuulas and the position is in the Road's column, O(1) over `RoadLayout` with no chunk read; its Thresholds are Choir sites). It must be pure, read only loaded data, never load a chunk, and do work bounded by what is indexed for that position's chunk.
+
+**`WarpService.inVoidTouchedPlace(level, pos)`** is clause 3 alone, as a pure read: any registered query answers true. The [Eldritch tier's Hollow Bell](eldritch.md#ringing-the-hollow-bell) descends only where it holds, so recent Void work or a listed dimension never counts there.
 
 - **Why a query and not a structure lookup:** `StructureManager.getStructureWithPieceAt` follows structure references through other chunks with loading `getChunk` calls, then scans pieces (`MC:world/level/StructureManager.java:50–80,109–148`), so it can't promise bounded, loaded-only work.
 
@@ -434,15 +440,16 @@ Everything in this section runs on the owner's client and never touches server s
 ## In the Commonplace Book
 
 The [research spec](research.md#structure) owns the book. This spec supplies its numbers (amended there in this change):
-- **The Ledger's warp spread** ([research, GUI contract](research.md#gui-contract)): on the left page, the kinds, gear, `total`, the band and the next threshold, the counter, and the **chance per eligible check** with the check's interval in seconds and every part of the formula; on the right page, the offer card with **Accept** and **Refuse**.
+- **The Ledger's warp spread** ([research, GUI contract](research.md#gui-contract)): on the left page, the kinds, gear, `total` (and, for a Joined Listener, the Joining bonus the amplifier adds, `ledger.vftv.warp.joined`), the band and the next threshold, the counter, and the **chance per eligible check** with the check's interval in seconds and every part of the formula; on the right page, the offer card with **Accept** and **Refuse**.
 - **Fact spans:** the existing `warp:<kind|total>` grows `band`, `counter` and `chance`; `entry:<ns>:<path>:warp` shows the reader's own preview; a new `warp_rules` source states every tuning number.
 - **Two actions,** `accept_offer` and `refuse_offer`, each counted as a commit under the research spec's one-commit-per-tick rule; the offer's preview travels in its quotes.
 
 ## Joining and Silencing
 
 [Eldritch tier #28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) owns the choice and keeps it in the world. This spec never imports #28; #28 calls `core.warp`:
-- **Silencing:** `WarpService.silence(player)`, one guarded compound operation: `T` and `L` to 0, `silenced` set, the offer deleted and the counter to 0, all written before one `WarpChangedEvent(SILENCING)` is posted with the deltas; then `VoiceClear`. A silenced Listener is never checked again, so the Voices stop for them. Permanent and gear warp stay, the dials still read `total`, and later gains still apply, taxed and visible, so nothing silently stops working.
-- **Joining:** #28 shows `preview((0, 0, 5), MILESTONE(vftv:joining))` and calls `commit` with it, at most once (`milestones_paid`). The Voices continue for a Joined Listener. No event field distinguishes Joined Listeners in v1.
+- **Silencing:** `WarpService.silence(player, expected)`, one guarded compound operation, checked like a commit. First match: the guard is held → `BUSY`; the record is unreadable → `UNREADABLE`; already silenced, or `expected` isn't the current `(−T, −L, 0)` preview → `STALE` with the current one. Otherwise `T` and `L` to 0, `silenced` set, the offer deleted and the counter to 0, all written before one `WarpChangedEvent(SILENCING)` is posted with the deltas, while the guard is held; then `VoiceClear`; the guard released in `finally`; `OK`. A throwing listener is logged once and the silencing stands, `VoiceClear` included. A silenced Listener is never checked again, so the Voices stop for them. Permanent and gear warp stay, the dials still read `total`, and later gains still apply, taxed and visible, so nothing silently stops working.
+- **Joining:** #28 shows `preview((0, 0, J), MILESTONE(vftv:joining))`, with J the milestone's current amount in `permanent.milestones` (5 as shipped), and calls `commit` with it, at most once (`milestones_paid`). The Voices continue for a Joined Listener, and their amplifier gains the Joining bonus ("The dials"). No event field distinguishes Joined Listeners in v1.
+- **The record is the ending's only authority:** Joined ⇔ `vftv:joining ∈ milestones_paid`; Silenced ⇔ `silenced`. #28 writes no ending of its own and derives everything from these ([Eldritch tier, The ending authority](eldritch.md#the-ending-authority)). **`WarpService.isSilenced(player)`** is a pure read of the flag (false for an unreadable record), for the [Hush spec's](hush.md#where-it-begins) attendance and Hollows without a dependency on #28.
 
 ## Commands
 
@@ -620,7 +627,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 
 ### Fixtures
 
-`{"schema": "vftv:warp_fixtures/1", "phase": [...], "dials": [...], "magnitude": [...], "preview": [...], "checks": [...], "background": [...], "schedule": [...], "reconcile": [...]}`. **All eight sections are required**, and together they transcribe every vector table in this spec exactly. The unit tests replay them against the `model` code; that consumer is build work. Every field is required unless a default is given.
+`{"schema": "vftv:warp_fixtures/1", "phase": [...], "dials": [...], "magnitude": [...], "preview": [...], "checks": [...], "background": [...], "schedule": [...], "reconcile": [...], "amplifier": [...]}`. **All nine sections are required**, and together they transcribe every vector table in this spec exactly; `amplifier` transcribes the [Eldritch tier spec's](eldritch.md#fixtures) seven rows of the same name, whose references computed them. The unit tests replay them against the `model` code; that consumer is build work. Every field is required unless a default is given.
 
 | Record | Fields |
 |---|---|
@@ -632,6 +639,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `background` | `total`; `permanent`; `counter`; `expect_pm` |
 | `schedule` | `uuid`; `start` `{T, L, P, gear, counter}`; `gear_held` `{from, to, value}`; `until` (the last tick); `expect`: the ordered operations, each `{tick, op}` and by `op`: **`decay`:** `T`, `total` after it; **`gear`:** `gear`, `total` after it; **`check`:** `total`, `band`, `index`, and the check's `expect` as in `checks` |
 | `reconcile` | `counter`; `counter_max`; `total`; `permanent`; `expect` `{pm, after_fire, after_gain_2}` |
+| `amplifier` | `total` 0–2,200; `joined` boolean; `bonus` 0–50 (default 10); `on` boolean (default true); `expect` `{w, amp_pm, out}` for a base-4000 Void working at the foci defaults |
 
 ```json
 {"schema": "vftv:warp_fixtures/1",
@@ -658,7 +666,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `warp.vftv.kind.temporary`, `.lasting`, `.permanent` | 1 | "%s temporary", "%s lasting", "%s permanent" |
 | `warp.vftv.fact.none`, `.clipped`, `.on`, `.off` | 0 | "no warp", "(less, at the limit)", "on", "off" |
 | `ledger.vftv.warp.title`, `.silenced` | 0 | "Warp", "I have silenced them." |
-| `ledger.vftv.warp.temporary`, `.lasting`, `.gear`, `.total`, `.next_band`, `.still` | 1 | "Temporary: %s", "Lasting: %s", "Gear: %s", "In all: %s", "The next band begins at %s.", "A Stilling Draught stills %s lasting." |
+| `ledger.vftv.warp.temporary`, `.lasting`, `.gear`, `.total`, `.next_band`, `.still`, `.joined` | 1 | "Temporary: %s", "Lasting: %s", "Gear: %s", "In all: %s", "The next band begins at %s.", "A Stilling Draught stills %s lasting.", "Joined: my Void workings hear %s more." |
 | `ledger.vftv.warp.permanent`, `.band`, `.counter` | 2 | "Permanent: %s of %s", "Band %s of %s", "Counter: %s of %s" |
 | `ledger.vftv.warp.chance` | 2 | "Chance at each check, every %s seconds: %s" |
 | `ledger.vftv.warp.chance_parts` | 4 | "%s, plus %s for each permanent, plus %s for each count, at most %s" |
@@ -687,7 +695,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **One post per change,** never per check or cue. The [research spec's](research.md#triggers) `warp_at_least` latches on it.
 - **A throwing listener** is logged once; the change stands.
 
-**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.silence`, `.noteVoidWork`, `.registerPlaceQuery`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.silence`, `.isSilenced`, `.noteVoidWork`, `.registerPlaceQuery`, `.inVoidTouchedPlace`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. Whether they are exposed in `api` is the API spec's call.
 
 ## Sync and state
 
@@ -732,7 +740,8 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `chance.base_pm`, `chance.per_permanent_pm`, `chance.per_counter_pm`, `chance.max_pm` | 15, 5, 1, 250 | 0–1,000 each | |
 | `grace` | 600 ticks | 0–6,000 | |
 | `context.window` | 600 ticks | 0–6,000 | |
-| `context.dimensions` | [] | ≤ 16 level keys | |
+| `context.dimensions` | [`vftv:vuulas`] | ≤ 16 level keys | the [Eldritch tier's](eldritch.md#vuulas) dimension; a pack may replace the list |
+| `joining.amplifier_bonus` | 10 | 0–50 | warp points a Joined Listener's amplifier adds ("The dials") |
 | `gear.max` | 12 | 0–100 | |
 | `bargain.ttl` | 12,000 ticks | 1,200–168,000 | |
 | `still.amount` | 4 | 1–100 | |
@@ -800,7 +809,7 @@ On the client: one band-3 player with the colour drain, 4 disguises, an appariti
 All three layers ([quality gates](quality-gates.md#test-layers)).
 
 **Unit (`model` tier and codecs):**
-- **every vector** in this spec, replayed from `content/warp/fixtures.json`: phases, dials, bands, previews (milestone authorisation, already paid, clipping, a lowered cap), checks (the arithmetic and draw outcomes `QUIET`, `NONE` and `FIRED`, per-type parameter draws, empty eligibility, zero known aspects, a single eligible bargain), the background chance, the 20‰ amplifier rows, the coincident schedule, and reconciling a lowered `counter.max`. `SKIPPED`, `FAILED`, native failures and the service's source-kind and negative-permanent rejections are not in the references; they are the GameTests below;
+- **every vector** in this spec, replayed from `content/warp/fixtures.json`: phases, dials, bands, previews (milestone authorisation, already paid, clipping, a lowered cap), checks (the arithmetic and draw outcomes `QUIET`, `NONE` and `FIRED`, per-type parameter draws, empty eligibility, zero known aspects, a single eligible bargain), the background chance, the 20‰ amplifier rows, the Joining bonus rows (the `amplifier` section), the coincident schedule, and reconciling a lowered `counter.max`. `SKIPPED`, `FAILED`, native failures and the service's source-kind and negative-permanent rejections are not in the references; they are the GameTests below;
 - the per-mille recovery of the vis factor over every `total` from 0 to 2,200;
 - the counter under gains, fires and a lowered maximum; the background floor; `total` 0 skipping;
 - the gear sum, its cap and the slot bound;
@@ -820,7 +829,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **every server switch,** off and on;
 - **context and danger:** status only in context; a status whose every effect is refused settles `FAILED` with the counter unchanged; a test-pack `spawn` lands ≥ 8 blocks from every player; all attempts failing settles `FAILED`; a cancelled join; partial success (1 of 3); the 16-attempt budget shared across all 3 entities; unloaded cells never loaded; a place query that would need an unloaded chunk answers false;
 - **danger callbacks:** a first effect's callback that teleports the Listener out of context in the same level, opens a menu, sets `quiet` or silences them: the second effect never runs; a join listener that moves our entity onto a player, into a wall or out of its cell: discarded, not counted; a callback that silences the Listener after one success: the counter falls, but **no cue** is sent (the outcome exception);
-- **Silencing** writes everything before its one event and stops checks; **Joining** through `commit` once;
+- **Silencing** writes everything before its one event and stops checks; it returns `STALE` on a stale or repeated echo, `BUSY` under the guard and `UNREADABLE` on an unreadable record, changing nothing; **Joining** through `commit` once, after which the amplifier carries the bonus, and `warp.amplifier` off zeroes it; `isSilenced` and `inVoidTouchedPlace` against each registered query, and recent Void work alone answering false;
 - persistence through save and reload, death, dimension change and the End credits respawn; the offer gone after logout;
 - two-player privacy: cues reach only the owner;
 - every command; every test id in the discovery guard.
@@ -925,9 +934,10 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - *Met by the [worldgen spec](worldgen.md#the-choir-site-place-query): `ChoirSitePlaceQuery` reads whether a loaded chunk's vanilla structure-reference set for `#vftv:choir_sites` is non-empty (written per chunk at generation, never followed), at most 8 lookups with zero allocation; it adds no mob to `vftv:voice_spawnable`, and `#vftv:answerers` is disjoint from it (tested).*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- **Silencing** calls `silence(player)`; **Joining** commits the `vftv:joining` milestone through `commit` with the preview it shows, once.
+- **Silencing** calls the checked `silence(player, expected)`; **Joining** commits the `vftv:joining` milestone, at its current amount, through `commit` with the preview it shows, once.
 - Its dimension goes in `context.dimensions`, and its road registers a place query; Void gear adds `vftv:gear_warp` values.
 - It plays the `joining` and `silencing` pools at the choice. Its eldritch names use the lexicon's words, adding any it needs in its own spec.
+- *Met by the [Eldritch tier spec](eldritch.md#contracts-on-sibling-specs): the Heart's checked Joining commit and `silence(player, expected)` (amended here to be checked and to report its status), with this record as the ending's only authority; `vftv:vuulas` in `context.dimensions` (amended here) and `RoadPlaceQuery` registered; no gear warp on its items, with the reason; all six ending lines played in id order at the choice; names from existing lexicon words. Amended here too: the Joining bonus on the amplifier, `inVoidTouchedPlace` and `isSilenced`.*
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
 - Every `#minecraft:wool` item carries **Silentium 2**, so a Stage 3 Listener can dissolve the draught's Silentium from matter.

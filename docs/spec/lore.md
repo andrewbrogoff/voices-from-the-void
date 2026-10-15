@@ -87,4 +87,4 @@ The language should sound like breath through glass. Hard stops are what the liv
 - **Stress** falls on the first long vowel; if a word has none, on the first syllable.
 - **Romanisation** is lowercase in prose and capitalised only when used as a proper item name.
 
-The lexicon of about 20 words and the list of Voice lines are not yet specified. They are written once the warp and eldritch specs know which names and lines they need.
+The lexicon and the Voice lines are settled: the 23 words, the eldritch names and the six ending lines are in [`content/lexicon/void_tongue.json`](../../content/lexicon/void_tongue.json), under the [warp spec's lexicon rules](warp.md#the-lexicon), and the Voice line script under its ["Voice lines"](warp.md#voice-lines).

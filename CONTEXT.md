@@ -34,6 +34,48 @@ _Avoid_: temple, dungeon, obelisk
 The block at the heart of a Choir ruin that gives each Listener their own Choir pages, once per Listener per ruin, and gives back any of those pages they lose.
 _Avoid_: vault, loot chest, lectern
 
+**Threshold**:
+A Choir site on the overworld where the Choir went in: a ring of broken bell frames over a shaft, with a stair down to a sunken Reliquary. Its page is the find that opens the Choir's Road.
+_Avoid_: portal, obelisk, gate
+
+**Vuulas**:
+The dimension where the Choir went: silence, with the Road hanging in it. Its name is Void-tongue for "home; where we are".
+_Avoid_: the Outer Lands, the eldritch dimension, the Void (which is beneath every place, not a place)
+
+**The Road**:
+The four stations stacked down one open well in Vuulas: three Steps and the Heart at the bottom. "The Choir's Road" names the Stage; "the Road" names this place.
+_Avoid_: maze, dungeon, labyrinth
+
+**Step**:
+One of the Road's three stations above the Heart, each a ring of masonry around the well, where a Chorister rises and where a Listener is heard before going further down.
+_Avoid_: level, floor, room
+
+**Road progress**:
+How many Steps a Listener has passed, from 0 to 3. It is theirs alone; helping someone else never spends it.
+
+**Step Bell**:
+The bell at each station of the Road (named Shohrel in play). Rung, it starts the Step's encounter or carries the Listener down; rung while crouching, it carries them up; rung while sprinting at a Step already passed, it calls its Chorister for a rematch.
+_Avoid_: portal, teleporter
+
+**Hollow Bell**:
+The Stage 4 instrument (named Thahvis in play), infused from a bell. Rung in a Void-touched place, it carries its Listener down to the Road; rung on the Road, it brings them back. Not to be confused with a Hollow, the Hush's creature.
+_Avoid_: portal key, eye
+
+**Chorister**:
+What remains of one of the Choir's scholars: the guardian who rises at a Step when its bell is rung. There are three, each with a Void-tongue name.
+_Avoid_: guardian (vanilla has one), boss (in player-facing text), warden
+
+**Keepsake**:
+What a defeated Chorister leaves each Listener who stood in its ring at the end (named Yoorel in play). It pays for the Void rod and cap.
+_Avoid_: pearl, void metal
+
+**The catch**:
+What happens to a Listener who falls down the well: the silence gives them back to the last station they stood on.
+
+**The Heart**:
+The block at the bottom of the Road (named Lehvuun in play) where each Listener makes the final choice, Joining or Silencing.
+_Avoid_: altar, throne
+
 **Answerers**:
 A living faction who speak back to the Voices without understanding them. Hostile, and found at Choir sites.
 _Avoid_: cultists, the Cult
@@ -407,9 +449,9 @@ One of the four steps of the Listener's progression. A Stage is entered by findi
 _Avoid_: tier (aspects have tiers), era, chapter
 
 **Joining**:
-One of the two ways a Listener can end their story: answering the Choir and going in after them. It is chosen per player and cannot be undone.
+One of the two ways a Listener can end their story: answering the Choir and going in after them. It adds permanent warp and a lasting bonus to Void power, and the Voices go on. It is chosen per player, at the Heart, and cannot be undone.
 _Avoid_: ending (as a proper noun), ascension, good/bad ending
 
 **Silencing**:
-The other way to end the story: ending the Choir's voice for yourself. It removes temporary and lasting warp, but permanent warp stays. It is chosen per player and cannot be undone.
+The other way to end the story: ending the Choir's voice for yourself. It removes temporary and lasting warp, but permanent warp stays; the Voices end, and the Hush can no longer hear the Listener. It is chosen per player, at the Heart, and cannot be undone.
 _Avoid_: ending (as a proper noun), banishing, good/bad ending

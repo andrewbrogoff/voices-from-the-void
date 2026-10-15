@@ -636,7 +636,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 ```
 
 - **Bounds before multiplying:** `base` ≤ 20,000 (every scaled param's range), `power_pm` ≤ 4000 and `amp_pm` ≤ 5000, so the product is at most 4 × 10¹¹, well inside a `long`. The **caps** (`FocusLimits`) apply after: 40,000 for damage and heal (40.0 health), 3000 for push and pull (3.0 blocks per tick), 1200 ticks for durations.
-- **`w = amplifier_warp(player)`** is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' input: pure, finite and synced to the owner, so both sides compute the same figure. It is the player's **total warp** in warp points (temporary, lasting, permanent and gear together; [warp spec, Total warp](warp.md#total-warp)), or 0 with the warp server switch `warp.amplifier` off. Until #25 lands it is 0, so Void effects work at their base magnitude.
+- **`w = amplifier_warp(player)`** is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' input: pure, finite and synced to the owner, so both sides compute the same figure. It is the player's **total warp** in warp points (temporary, lasting, permanent and gear together; [warp spec, Total warp](warp.md#total-warp)), plus the warp spec's **Joining bonus** (`joining.amplifier_bonus`, default 10) for a Joined Listener ([Eldritch tier, The capstones](eldritch.md#the-capstones)), or 0 with the warp server switch `warp.amplifier` off. It is at most 2,250, inside the clamp. Until #25 lands it is 0, so Void effects work at their base magnitude.
 - **The scale:** at the default `per_warp_pm` of 20, each warp point adds 2%, and a Void working doubles at 50 warp, just past the warp spec's third band (40). That is a scale decision made with the warp spec's bands, not proven balance.
 - **Snapshots:** a Bolt freezes its magnitudes at launch; Touch and Burst resolve them at the cast; a Beam resolves them at every pulse.
 - **Units:** health is `out / 1000f`; movement is `out / 1000` blocks per tick; ticks are `out`.
@@ -650,6 +650,9 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | 4000 | 0 | 0 | yes | 1000 | 1000 | 40,000 | 4000 |
 | 4000 | 0 | 37 | yes | 1000 | 1740 | 40,000 | 6960 |
 | 4000 | 0 | 50 | yes | 1000 | 2000 | 40,000 | 8000 |
+| 4000, Joined at `total` 37 (bonus 10) | 0 | 47 | yes | 1000 | 1940 | 40,000 | 7760 |
+| 4000, Joined at `total` 5 (bonus 10) | 0 | 15 | yes | 1000 | 1300 | 40,000 | 5200 |
+| 4000, Joined at `total` 37, `warp.amplifier` off | 0 | 0 | yes | 1000 | 1000 | 40,000 | 4000 |
 | 4000, a regression at `per_warp_pm` 10 | 0 | 37 | yes | 1000 | 1370 | 40,000 | 5480 |
 | 4000 | 3 | 250 | yes | 1750 | 2000 (bonus capped) | 40,000 | 14,000 |
 | 4000 | 1 | 10,001 | yes | 1250 | 2000 (w clamped) | 40,000 | 10,000 |
@@ -658,6 +661,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | 20,000 | 3 | 10,000 | yes | 1750 | 2000 | 40,000 | 40,000 (capped) |
 | 20,000, at the tuning extremes (`per_warp_pm` 1000, `max_bonus_pm` 4000, step 1000) | 3 | 10,000 | yes | 4000 | 5000 | 40,000 | 40,000; the raw product is 400,000,000,000 |
 
+- **The three Joined rows** come from the [Eldritch tier spec's](eldritch.md#the-capstones) references (the Joining bonus is added before this function sees `w`); the magnitude fixtures transcribe them with the rest.
 - **No warp is applied by casting.** Warp is only ever applied by an explicit commit through #25 ([research, Warp on entries](research.md#warp-on-entries)), and a cast is not one. **A carried Void focus is not gear warp** ([warp spec, Gear warp](warp.md#gear-warp)): it already grows with warp, and adding warp for carrying it would compound.
 - **Options considered:** scaling radius or target count; scaling cost down. **Why magnitude only:** it keeps every performance bound fixed, and cost already has #25's `VOID` factor as its own lever (neutral, 1.0, in the warp spec).
 
@@ -1128,7 +1132,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `vis_factor(player, VOID)` is as already contracted.
 - It decides whether a carried Void focus is gear warp.
 - Casting applies no warp. Warp on a cast would need #25 to propose a previewed, echoed extension.
-- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), with the scale tested at the amended default of 20 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
+- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), plus the Joining bonus for a Joined Listener (amended with the [Eldritch tier](eldritch.md#the-capstones)), with the scale tested at the amended default of 20 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
 - Foci add **no direct flux producer** of their own: their flux is the `spill` applied on `VisSpentEvent`.
@@ -1141,6 +1145,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
 - `vftv:void_foci` follows its opener `vftv:choirs_road`. Scaling stays #25's.
 - The names of `vftv:unmaking` and `vftv:undertow` (`focus_effect.vftv.unmaking`, `.undertow`) come from the **Void-tongue lexicon** ticket ([warp spec, Production tickets](warp.md#production-tickets)), which delivers them ahead of #28's own completion; #28 builds its eldritch names on the same lexicon.
+- *Met by the [Eldritch tier spec](eldritch.md#stage): `vftv:void_foci` hangs off `vftv:choirs_road`, which it ships; scaling stays the warp spec's, whose amplifier now adds the Joining bonus (amended above); every eldritch name of its own uses existing lexicon words.*
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
 - No golem casts or uses the Lathe in v1. Golems may move foci and wands as items.

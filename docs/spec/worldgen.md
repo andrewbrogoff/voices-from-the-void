@@ -135,7 +135,7 @@ is `vftv:find/answerers`.
 **Fixed** here means written by datagen from code and part of this spec's invariants (the topology, the piece count and the place query's extent depend on them). A datapack may override the generated files. The bounds below are promised only for the shipped values.
 
 **Tags:**
-- `#vftv:choir_sites`: a structure tag holding `vftv:choir_ruin`. #28 may add to it.
+- `#vftv:choir_sites`: a structure tag holding `vftv:choir_ruin` and the [Eldritch tier's](eldritch.md#the-threshold) `vftv:threshold` (its datagen writes that member). The query's eight-structure bound and expanded-column semantics apply to both unchanged.
 - `#vftv:has_structure/choir_ruin`: a biome tag, generated from content.
 
 ### Placement
@@ -343,8 +343,8 @@ A **server-only datapack registry, `vftv:choir_site`** (`data/<ns>/vftv/choir_si
 
 - **The required built-in key** (`WorldgenKeys` in `api`) is `vftv:choir_ruin`. Its `pages` are every Stage 3 entry in `vftv:choir_pages`, with **`vftv:choir/beneath_the_notes` first** and the rest in the narrative order the [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) freezes. `pages_per_claim` is **3**.
 - **Load validation**, after the research registry. It refuses the world with a clear error naming the entry on: an id that isn't a `find` entry in `vftv:choir_pages`; a duplicate id; a range broken; the built-in key missing.
-  - **For built-ins** (a test failure): a page outside Stage 3; `beneath_the_notes` not first; a Stage 3 Choir page missing.
-- #28 adds its own kinds for Stage 4 pages.
+  - **For the built-in `vftv:choir_ruin` only** (a test failure): a page outside Stage 3; `beneath_the_notes` not first; a Stage 3 Choir page missing.
+- #28 adds its own kinds for Stage 4 pages, `vftv:threshold` and `vftv:road`, under its [own rules](eldritch.md#sites); the rules above that aren't scoped to `vftv:choir_ruin` apply to them too.
 
 ### Claims
 
@@ -628,7 +628,9 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 
 ### Templates
 
-`{"schema": "vftv:template/1", "size", "palette", "layers", "block_entities", "entities"}`. Exactly eight files: `chancel_a`, `chancel_b`, `cloister`, `bell_pit`, `scriptorium`, `fallen_nave`, `rubble_a`, `rubble_b`.
+`{"schema": "vftv:template/1", "size", "palette", "layers", "block_entities", "entities"}`.
+
+**Families.** Each template belongs to one **family**, which sets its file list, sizes, roles and counts, its allowed `vftv:` blocks, block-entity forms and entities. This spec's family is **`choir_ruin`**: exactly eight files, `chancel_a`, `chancel_b`, `cloister`, `bell_pit`, `scriptorium`, `fallen_nave`, `rubble_a`, `rubble_b`, under the rules below. The [Eldritch tier spec](eldritch.md#templates) owns the families `threshold` and `road`, under its own family rules. **Every family** shares the format rules, the `minecraft` and `vftv` namespaces only, no `minecraft:structure_block`, spawner or vault, the Hush and attachment rules, and the datagen-phase parsed-NBT no-Hush test. The size limit is 48 per side (`MAX_TEMPLATE_SIDE`) for every family.
 
 | Field | Required | Type and range |
 |---|---|---|
@@ -638,7 +640,7 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 | `block_entities` | no, default `{}` | key `"x,y,z"` (ints inside `size`), value exactly one of `{"jigsaw": {…}}` (the connector table's fields, `placement_priority` and `selection_priority` 0–100, default 0), `{"chest": {"loot_table": "vftv:chests/choir_ruin"}}`, `{"reliquary": {"site": <vftv:choir_site id>}}` or `{"node": {"type": <node type id>}}` (a shorthand: the converter writes the complete record under "Processors, The saved template record") |
 | `entities` | no, default `[]` | `{"pos": [x, y, z], "type": "vftv:answerer" \| "vftv:answerer_cantor"}`, ints inside `size`, positions unique. `pos` is the **standing cell** the entity occupies; the converter writes its feet at `(x + 0.5, y, z + 0.5)` (the template's entity position) and its block position `(x, y, z)`. So the standing-cell check and the placed entity describe the same space. |
 
-**Rejected:**
+**Rejected** (in the `choir_ruin` family; the format, namespace, Hush and attachment rules in every family):
 - **Format:** an unknown or missing field; a layer, row or string of the wrong length; a character not in the palette; a block state that doesn't parse or omits or adds a property.
 - **Block entities:** one on a block of another kind, or a block that needs one without it (`minecraft:jigsaw`, `minecraft:chest`, `vftv:reliquary`, `vftv:node`); a jigsaw whose fields differ from its connector's row, or whose position or facing differs from its role's.
 - **Blocks and namespaces:** any namespace other than `minecraft` and `vftv`; `minecraft:structure_block`, any container other than a chest, any spawner or vault; any `vftv:` block other than `vftv:reliquary` and `vftv:node`.
@@ -1097,6 +1099,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - It may add `vftv:choir_site` kinds, place Reliquaries for Stage 4 pages, add structures to `#vftv:choir_sites` and reuse `#vftv:answerers`. It publishes its own Stage 4 sources and reachability.
 - Its structure nodes share the wands spec's two structure places per cell with ruins, reserve nothing, and follow the rules under "Processors". Its templates meet the parsed-NBT no-Hush check, which covers every generated template.
 - It owns the progression spec's stale-dimension note.
+- *Met by the [Eldritch tier spec](eldritch.md#contracts-on-sibling-specs): the site kinds `vftv:threshold` and `vftv:road` on this spec's Reliquary, the Threshold in `#vftv:choir_sites` (amended here) defended by Answerers, and its Stage 4 sources and reachability; no node in any of its templates, so no quota is claimed; its `threshold` and `road` template families under the family scoping amended here, with the no-Hush test over every one; its "Existing worlds and removing the mod". Amended here too: the built-in site checks scoped to `vftv:choir_ruin`.*
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
 - Hand values for the entities `vftv:answerer` and `vftv:answerer_cantor`, and a block value or a reviewed exemption for `vftv:reliquary`. No new item or recipe adds a conversion to prove.
