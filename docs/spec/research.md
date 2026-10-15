@@ -528,10 +528,29 @@ warp   : "temporary" | "lasting" | "permanent" | "gear" | "total"
 key    : <key mapping name>                  e.g. key.use
 vis    : <VisRules key>                      a tuning key or limits.* key of the wands spec's synced
                                              VisRules, e.g. tap.amount, relay.range, limits.network_members
+essentia: <EssentiaRules key>                exactly one of the keys listed under "essentia keys" below
 ```
 
+**`essentia` keys** ([essentia spec, Tuning and limits](essentia.md#tuning-and-limits)). Arity 1; the key is a dotted name, so it contains no `:`. Every value is a non-negative integer, rendered in plain ASCII digits with no separators or units. Prose supplies the unit ("every {fact:essentia:tube.pulse} ticks").
+
+| Key | Value |
+|---|---|
+| `jar.capacity` | units per Essentia Jar |
+| `suction.jar`, `suction.jar_labelled` | the two jar ranks |
+| `tube.pulse` | ticks between a line's pulses |
+| `tube.rate` | most units per move |
+| `tube.idle_every` | pulses between a sleeping line's checks |
+| `tube.idle_ticks` | derived: `tube.pulse × tube.idle_every` |
+| `alembic.interval`, `alembic.rate` | ticks between pours; most units per pour |
+| `limits.max_members`, `limits.max_endpoints` | a line's caps on tubes and valves, and on vessels |
+| `limits.max_suction`, `limits.storage_max` | the top of the scale; the top of the storage band |
+| `limits.max_handler_slots` | the most slots a vessel's handler may have and still be read by a line or alembic |
+
+- A key outside this table is a malformed span, rejected by the validator.
+- **Until the first `EssentiaRules` arrives,** an `essentia` span renders as `[?]` without logging. Every player receives `EssentiaRules` on join, before any book can open.
+
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand, or the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand, or the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.

@@ -422,7 +422,7 @@ Then the node is settled, and for each vis aspect of the node in ascending id it
 
 **Stage 2: feed a node essentia through a Node Tap.** Stage 2 is essentia, so the cultivating input is the new Stage's resource, and a clearer ring from Sonus is the lore in the mechanic. TC4's draining hazards are dropped.
 
-The Node Tap (see "Relays") exposes the architecture's essentia capability, **insert-only**, on every face but the one facing its node, inside the transfer transaction ([architecture, essentia](architecture.md#essentia-and-capabilities)).
+The Node Tap (see "Relays") exposes the architecture's essentia capability, **insert-only**, on every face but the one facing its node, and for the null side, inside the transfer transaction ([architecture, essentia](architecture.md#essentia-and-capabilities)). It exposes the [essentia spec's suction capability](essentia.md#suction) `vftv:essentia_suction` on **exactly the same faces**. The block `vftv:node_tap` is in the block tag `vftv:essentia_endpoints`, so Essentia Tubes connect to it.
 
 - **Snapshot and settle:** the first insert in a transaction snapshots the **node's state** through the transfer API's snapshot journal and settles regeneration first. An aborted transaction restores the snapshot exactly.
 - **A vis aspect `A`** (an exposed primal): the room is the units left before `max_A` reaches `cultivate.max_capacity`, that is `(cultivate.max_capacity − max_A) × cultivate.per_max − c_A`, or 0 if `max_A` is already there. Inserting *k* ≤ room units adds *k* to `c_A`, then `max_A += c_A / per_max` and `c_A %= per_max`. At the cap, `c_A` becomes 0. **A missing `A`** is added with max 0 and current 0 when its first unit is accepted, if the node holds fewer than 6 aspects, and that reserves its slot inside the transaction; it is drawn and tappable once its max reaches 1.
@@ -431,7 +431,7 @@ The Node Tap (see "Relays") exposes the architecture's essentia capability, **in
 - **Partial acceptance:** a bulk insert accepts `min(amount, room)` and returns that count.
 - **On the root commit only:** the block entity is marked changed and dirty for sync, `NodeEvent(CULTIVATED)` is posted, and the absorb sound plays (at most one per node per 20 ticks, a fixed feedback constant), plus the clarity sound if clarity rose.
 - **Tuning changes:** a lowered `per_max` or `clarity_cost` carries any counter at or over the new threshold into steps at the next settlement. A lowered `max_capacity` never shrinks a node; it only stops accepting.
-- **Suction:** the tap offers `cultivate.suction` for any aspect it would accept now and 0 for anything else. Its meaning and ordering are [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)'s (see the contracts).
+- **Suction:** the tap's `suction(X)` is `cultivate.suction` for an aspect it would accept now, and 0 for anything else. A positive value always means the tap would accept at least one unit of X; the converse isn't promised. Its `hold` is 0 for every aspect, since it keeps nothing that can be extracted. **`cultivate.suction` = 0 disables automatic pulling** by lines and alembics, but never insertion: a direct insert is still accepted. Values 1–15 put the tap in the essentia spec's storage band, where it **loses guaranteed consumer precedence**: its ordering against each jar depends on the configured ranks, with ties rotated. For example, at the default jar ranks a tap at 15 still outranks a labelled jar at 8, and a tap at 8 ties with it. The default of 16 is the bottom of the consumer band and outranks every store ([essentia spec, Suction](essentia.md#suction)).
 
 ## Moving nodes: the Bell Jar
 
@@ -859,7 +859,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 | `cultivate.per_max` | 4 essentia | 1–64 | per +1 max |
 | `cultivate.clarity_cost` | 48 Sonus | 1–4096 | per clarity step |
 | `cultivate.max_capacity` | 250 | 1–1000 | |
-| `cultivate.suction` | 16 | 0–128 | on #20's scale |
+| `cultivate.suction` | 16 | 0–128 | on the [essentia scale](essentia.md#suction): 0 disables automatic pulling (never insertion), 1–15 is the storage band, 16–128 the consumer band |
 | `node.min_spacing` | 3.0 blocks | 1.0–16.0 | Bell Jar releases and the starter |
 | `quote.max_discount` | 0.30 | 0.0–0.9 | |
 | `quote.min_multiplier`, `quote.max_multiplier` | 0.50, 4.00 | 0.1–1.0, 1.0–10.0 | |
@@ -932,7 +932,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **reconciliation:** a lazily loaded chunk whose node block entities are still saved data; a ghost; a duplicate removed while the original keeps its entry; a rolled-back chunk against a carried id; removal of an unloaded id, then its chunk loading;
 - **structures:** two copies of one template get two distinct ids; a third structure node in one cell is removed;
 - **relays:** a pulse through an unloaded intermediate relay; an unloaded source skipped; no chunk tickets created; the rotating start reaching every cradle; a merge refused at 33; a cancelled member placement leaving no membership; a range `/reload` that would exceed 32 rejected, and the same range at world open refusing the world with the actionable error; a **ghost member** (persisted, block gone after an interrupted save) removed when its chunk loads; members made by `/setblock` and `/clone` admitted, or broken when over the cap; a member replaced by another kind updated;
-- **cultivation:** through a transaction that rolls back (node state identical) and one that commits (one event, one sync);
+- **cultivation:** through a transaction that rolls back (node state identical) and one that commits (one event, one sync); the suction capability is present on exactly the handler's faces and absent on the node's; `cultivate.suction` = 0 stops an essentia line pulling while a direct insert still succeeds;
 - **packets:** three staggered players tapping one node send at most one update per node per tick;
 - save and reload of every block entity, component and SavedData, with dirty marking;
 - every test id in the discovery guard.
@@ -985,7 +985,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)**
 - Tubes and jars feed a Node Tap only through the essentia capability, inside a transaction whose rollback they honour.
-- It reads the tap's suction as `cultivate.suction` for an aspect the tap would accept and 0 otherwise. If #20's suction scale differs, #20 states the mapping and this spec's default follows it.
+- It reads the tap's suction as `cultivate.suction` for an aspect the tap would accept and 0 otherwise. If #20's suction scale differs, #20 states the mapping and this spec's default follows it. *Met by the [essentia spec](essentia.md#suction): the scale is 0–128, so no mapping is needed, and 16 is the bottom of its consumer band. The tap exposes suction on its handler's faces, is in `vftv:essentia_endpoints`, and holds at rank 0 (amended under "Cultivation").*
 
 **[Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)**
 - A focus is its own component on `vftv:wand`; #22 adds the third `select` layer to `items/wand.json` and its assets.

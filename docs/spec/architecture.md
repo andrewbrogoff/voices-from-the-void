@@ -60,7 +60,7 @@ A **seam** is a small interface in `core`, with a NeoForge implementation in `ne
 | **Events** | Plain methods on feature services, e.g. `WarpService.onPlayerTick(ServerPlayer)` | None. One listener class per feature in `neoforge.<feature>` subscribes to NeoForge events and calls `core` in one line. There is **no cross-loader event bus**. A listener that holds logic fails review. |
 | **Networking** | Payload records, their `StreamCodec`s, and their handlers (client handlers in `.client`) | A sender (`toPlayer`, `toTracking(chunk / entity)`, `toServer`) and a handler registrar, backed by `PayloadRegistrar` and `PacketDistributor` |
 | **Persistent state** | The data records and their codecs | `DataSlot<H, T>` with `get`, `set` and `update`, for player, chunk and level holders (see "State and sync") |
-| **Essentia transfer** | `core.essentia.model`: amounts, suction and network solving | An adapter onto the transfer API (see "Essentia and capabilities") |
+| **Essentia transfer** | `core.essentia.model`: amounts, jar contents and their snapshots, suction ranks, reachability and the pulse's selection. It works over loader-free inputs (positions as `long`, aspects as `int` indices in ascending id, endpoint records) and returns a plan of moves. It never sees a `ResourceKey`, `BlockPos`, capability or transaction. | Adapters in `neoforge.essentia` own everything loader-specific: the capabilities, `BlockCapabilityCache`, `ResourceHandler` calls, `SnapshotJournal`s and `Transaction`s. They execute the plan and report what moved, and each jar's transaction-busy state, back to `core` (see "Essentia and capabilities"). |
 | **Config** | Immutable records, e.g. `WarpConfig(boolean whispers, …)` | `neoforge` fills them from `ModConfigSpec` and pushes fresh copies when the config reloads. No `ModConfigSpec` type reaches `core`. |
 | **Client registration** | Renderers, pipelines, shaders, particles, screens, GUI layers, item-model properties | **No seam.** One `neoforge.<feature>.client` listener per feature registers them directly, one line each. Fabric's client APIs are shaped too differently for a seam to hold. |
 
@@ -98,7 +98,8 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 
 ## Essentia and capabilities
 
-- `EssentiaResource(Holder<Aspect>)` implements the transfer API's `Resource`. It is exposed as `BlockCapability<ResourceHandler<EssentiaResource>, Direction>`. Jars and alembics build on `ResourceStacksResourceHandler`.
+- `EssentiaResource(Holder<Aspect>)` implements the transfer API's `Resource`. It is exposed as `BlockCapability<ResourceHandler<EssentiaResource>, Direction>`.
+- **Essentia Jars** implement that handler through an explicit adapter with its own journal. They don't inherit it unmodified: the stock `ResourceStacksResourceHandler` keeps its journal private and checks indices before arguments ([essentia spec, Contents and the handler](essentia.md#contents-and-the-handler)). **The Alembic** stores nothing and exposes no handler.
 - **Transactions:** a multi-hop tube transfer runs inside one `Transaction`, so a failed transfer rolls back.
 - **Suction** is a separate, small capability. It never overloads the essentia handler.
 - **Items and fluids** use the stock `Capabilities.Item` and `Capabilities.Fluid`. The deprecated `IItemHandler` and `IFluidHandler` are never used.

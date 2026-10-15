@@ -38,7 +38,7 @@ Resolved in [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from
 | Piston push | none: vanilla's piston refuses any block with a block entity |
 | Comparator, redstone, random ticks, entity damage | none |
 
-**Build-phase data** (datagen from code, not production deliverables). Copying the cauldron's properties copies **no tag membership**, so the crucible declares its own: `vftv:crucible` in `minecraft:mineable/pickaxe`; the loot table `vftv:blocks/crucible` dropping itself (the vanilla `dropSelf` shape, explosion survival included); the block tag `vftv:crucible_heat` and the item tag `vftv:crucible_refuses`, with the defaults below. The crucible's aspect values are [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)'s hand entry (see the contracts).
+**Build-phase data** (datagen from code, not production deliverables). Copying the cauldron's properties copies **no tag membership**, so the crucible declares its own: `vftv:crucible` in `minecraft:mineable/pickaxe`; the loot table `vftv:blocks/crucible` dropping itself (the vanilla `dropSelf` shape, explosion survival included); the block tag `vftv:crucible_heat` and the item tag `vftv:crucible_refuses`, with the defaults below; and membership of the [essentia spec's](essentia.md#tags) block tags `vftv:essentia_endpoints` (Essentia Tubes connect to it) and `vftv:alembic_bases` (an Alembic may hang on it), whose defaults include `vftv:crucible`. The crucible's aspect values are [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)'s hand entry (see the contracts).
 
 **It is crafted, not converted.** The arcane recipe **`vftv:crucible`** (`kind: ordinary`, `research: vftv:crucible`), made at the Worktable. Its content rules ("Authored content, Recipes"):
 - its ingredients include `minecraft:cauldron`, and **every ingredient is a `minecraft:` item or tag**, so the path to it never needs Resonant Brass, which needs this crucible;
@@ -152,7 +152,7 @@ Protection runs **before both** crafting and dissolving, so a container or book 
 
 ### Protection
 
-An item is **protected** iff it is in the item tag **`vftv:crucible_refuses`** (default: `vftv:wand`, `vftv:bell_jar` and `vftv:commonplace_book`), or its stack carries any of: a non-empty `minecraft:container`; a non-empty `minecraft:bundle_contents`; a non-empty `minecraft:writable_book_content`; any `minecraft:written_book_content`. The aspect lookup ignores components ([aspects, Coverage and supply](aspects.md#coverage-and-supply)), so dissolving these would silently destroy contents, a captured node or a player's writing.
+An item is **protected** iff it is in the item tag **`vftv:crucible_refuses`** (default: `vftv:wand`, `vftv:bell_jar`, `vftv:commonplace_book` and `vftv:essentia_jar`, empty or filled), or its stack carries any of: a non-empty `minecraft:container`; a non-empty `minecraft:bundle_contents`; a non-empty `minecraft:writable_book_content`; any `minecraft:written_book_content`. The aspect lookup ignores components ([aspects, Coverage and supply](aspects.md#coverage-and-supply)), so dissolving these would silently destroy contents, a captured node, a jar's essentia ([essentia spec, The jar as an item](essentia.md#the-jar-as-an-item)) or a player's writing.
 
 ### Dissolving
 
@@ -378,7 +378,7 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 - **On the root commit:** the block entity is marked changed and dirty for the coalesced sync, unless it has been removed. This is publication only, separate from correctness: the debit happened in `extract`, and busy-state release and any pending removal run on close whichever way it ends. No event, no flux and no sound.
 - **Suction:** the crucible offers **0** for every aspect: it never pulls.
 
-**Options considered:** insert-capable (piped dosing); no capability. **Recommend** extract-only: it makes the crucible the Stage 2 source for jars and the flux-free way to clear leftovers. Piped dosing would need its own capacity and suction rule, which is [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)' to propose.
+**Options considered:** insert-capable (piped dosing); no capability. **Recommend** extract-only: it makes the crucible the Stage 2 source for jars and the flux-free way to clear leftovers. Piped dosing would need its own capacity and suction rule, which is [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)' to propose. The [essentia spec](essentia.md#contracts-on-sibling-specs) declines it: lines and Alembics only ever extract from a crucible.
 
 ## Resonant Brass
 
@@ -626,7 +626,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 |---|---|
 | `DISSOLVED` | level and position; the thrower or none; a copy of the item whose count is the number dissolved; the aspects added |
 | `CRAFTED` | level and position; the player; the recipe id; a count-one copy of the catalyst; a copy of the result; the aspects spent |
-| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` |
+| `SPILLED` | level and position; the player or none; the aspects spilled, as `ResourceKey` → amount, missing ids included; the cause, `api`'s `SpillCause.EMPTIED` or `REMOVED` (the enum's third value, `DESTROYED`, is posted only by the [essentia spec's](essentia.md#events) `EssentiaEvent`) |
 
 - **Once per commit:** one `DISSOLVED` per dissolve action, one `CRAFTED` per craft, one `SPILLED` per non-empty spill.
 - **Nothing fires** for a refusal, an extraction, a fill, a refresh or a step.
@@ -738,7 +738,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **GameTest:**
 - **filling and boiling:** fill and empty; a second fill and an empty on a dry crucible change nothing; creative buckets and a full inventory; heat on and off (fire, a campfire unlit then lit, lava, magma); a cold crucible ignores items until it boils; **a heat-tag `/reload`** that adds and removes a source, with the queued crucible processing nothing until refreshed; a sneaking bucket click;
 - **admission:** stationary items resting inside when the crucible comes to the boil are processed; **a 500-entity flood** processes ≤ 16 per step in id order;
-- **dissolving:** a stack dissolves; `FULL` partial; the **65th id** refused whole; `NOTHING`; `PROTECTED` (a filled Bell Jar, a shulker box with contents, a written book, and a **protected item that matches a recipe catalyst**) comes out unchanged and marked;
+- **dissolving:** a stack dissolves; `FULL` partial; the **65th id** refused whole; `NOTHING`; `PROTECTED` (a filled Bell Jar, a filled and an empty Essentia Jar, a shulker box with contents, a written book, and a **protected item that matches a recipe catalyst**) comes out unchanged and marked;
 - **the gate:** an unlearned thrower's catalyst dissolves while a learned one crafts; a thrower offline, in another dimension, or a dropper means dissolve; `SHORT` is refused with its message; **a sneak-dropped learned catalyst dissolves**, and a sneak-drop captured at the toss survives the thrower standing up;
 - **crafting:** one craft per step; a marked result never reprocessed; the merge behaviour as stated, including the equal-count case;
 - **the provisional spawn:** a cancelling `EntityJoinLevelEvent` listener; a listener that **changes the pool**, **removes the catalyst**, **revokes the research**, **replaces the result's stack** or **removes the crucible** during the spawn: each leaves no debit, our result gone, the catalyst refused `ERROR`, and the listener's own changes in place (the removal spills once);

@@ -210,6 +210,38 @@ _Avoid_: cauldron (the vanilla block it is made from)
 The item thrown into a crucible that a recipe the thrower has learned transforms, paid for from the crucible's dissolved essentia.
 _Avoid_: reagent, base item
 
+**Essentia Jar**:
+A glass jar that stores one aspect of essentia, keeps it when broken and carried, and shows that aspect's glyph on its face.
+_Avoid_: warded jar, jar (alone, in player-facing text, where it could mean the Bell Jar)
+
+**Label**:
+A paper tag naming one aspect. On an Essentia Jar it locks the jar to that aspect; on an Essentia Tube it lets only that aspect pass.
+_Avoid_: filter, tag
+
+**Alembic**:
+A still-head hung on a crucible's side that pours one aspect from the crucible into the vessel beneath its spout. It holds nothing itself.
+_Avoid_: arcane alembic, distiller
+
+**Essentia Tube**:
+A brass-and-glass pipe that joins vessels into a line. It holds no essentia.
+_Avoid_: pipe, conduit
+
+**Valve**:
+A tube fitting that closes a line by hand or under a redstone signal.
+_Avoid_: tap (a Node Tap is something else), shutoff
+
+**Tube network**:
+Essentia Tubes and open Valves joined face to face, carrying essentia between the vessels they touch, one aspect into one vessel at a time. Player-facing text calls one a **line**, which is distinct from a vis **chord**.
+_Avoid_: pipe network, grid
+
+**Suction**:
+How strongly a vessel pulls an aspect along a line right now. Essentia moves only toward a stronger suction than the rank it is held at.
+_Avoid_: pressure, priority
+
+**Hold**:
+The rank at which a vessel keeps the essentia it already has. It does not change as the vessel fills, which is why a full jar never drains into an empty one beside it.
+_Avoid_: retention, lock
+
 **Infusion**:
 Altar crafting that drives essentia into a central item.
 
