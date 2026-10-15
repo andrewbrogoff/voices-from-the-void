@@ -128,37 +128,39 @@ Every quote and spend carries a **`VisContext`** (a record in `api`):
 - **Multiplier:** `raw = cap × (1000 − d) × w` in `long` arithmetic (at most 2 × 10¹⁰). `m₀ = (raw + 500,000) / 1,000,000`, which rounds half up. `m = clamp(m₀, Math.round(quote.min_multiplier × 1000), Math.round(quote.max_multiplier × 1000))`, and `clamped` iff `m ≠ m₀`.
 - **Effective cost:** `effective[a] = base[a] == 0 ? 0 : max(1, ceilDiv(base[a] × m, 1000))`.
 - **Spill:** [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)'s `spill(inputs, ctx)`, a pure function of the resolved inputs and `effective` (never of a quote, which would be circular); 0 until #26 lands.
-- **`VisQuote`** (a record in `api`): `base`, `effective`, `m`, `spill`, and the flags `discount_capped`, `clamped`, `exceeds_capacity` (some effective cost > the rod's capacity), `inert`, `affordable` (not inert, and every pool ≥ its effective cost) and `short` (the aspects whose pool is below their cost, in ascending id).
-- **Echo equality:** two quotes are the same cost iff `base`, `effective`, `m`, `spill`, `discount_capped`, `clamped` and `exceeds_capacity` are all equal.
+- **`VisQuote`** (a record in `api`): `base`, `effective`, `m`, `spill`; the **resolved factors** `cap`, `discount` (`d`) and `warp` (`w`), the per-mille integers above (so a station can show how much of `m` is warp, [arcane crafting, The screen](arcane.md#the-screen)); and the flags `discount_capped`, `clamped`, `exceeds_capacity` (some effective cost > the rod's capacity), `inert`, `affordable` (not inert, and every pool ≥ its effective cost) and `short` (the aspects whose pool is below their cost, in ascending id).
+- **Echo equality:** two quotes are the same cost iff `base`, `effective`, `m`, `spill`, `discount_capped`, `clamped` and `exceeds_capacity` are all equal. The factors explain `m` and are not compared: `m` already covers them.
 
 **Vectors** (computed by a reference implementation and cross-checked against the JDK; `quote.min_multiplier` 0.50, `quote.max_multiplier` 4.00):
 
-| cap | discount | `max_discount` | W | base | `m` | effective | modifier flags |
-|---|---|---|---|---|---|---|---|
-| 1.00 | 0 | 0.30 | 1.00 | Aer 10, Ignis 0, Ordo 1 | 1000 | Aer 10, Ignis 0, Ordo 1 | none |
-| 0.85 | 0 | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 850 | Aer 9, Ignis 3, Ordo 1 | none |
-| 0.85 | 0.40 | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 595 | Aer 6, Ignis 2, Ordo 1 | `discount_capped` |
-| 0.85 | 0.10 | 0.30 | 1.25 | Aer 32, Terra 7 | 956 | Aer 31, Terra 7 | none |
-| 2.00 | 0 | 0.30 | 10.00 | Aer 1000 | 4000 | Aer 4000 | `clamped` |
-| 0.25 | 0.90 | 0.90 | 1.00 | Aer 5 | 500 | Aer 3 | `clamped` |
+| cap | discount | `max_discount` | W | base | factors (`cap`, `d`, `w`) | `m` | effective | modifier flags |
+|---|---|---|---|---|---|---|---|---|
+| 1.00 | 0 | 0.30 | 1.00 | Aer 10, Ignis 0, Ordo 1 | 1000, 0, 1000 | 1000 | Aer 10, Ignis 0, Ordo 1 | none |
+| 0.85 | 0 | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 850, 0, 1000 | 850 | Aer 9, Ignis 3, Ordo 1 | none |
+| 0.85 | 0.40 | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 850, 300, 1000 | 595 | Aer 6, Ignis 2, Ordo 1 | `discount_capped` |
+| 0.85 | 0.10 | 0.30 | 1.25 | Aer 32, Terra 7 | 850, 100, 1250 | 956 | Aer 31, Terra 7 | none |
+| 2.00 | 0 | 0.30 | 10.00 | Aer 1000 | 2000, 0, 10000 | 4000 | Aer 4000 | `clamped` |
+| 0.25 | 0.90 | 0.90 | 1.00 | Aer 5 | 250, 900, 1000 | 500 | Aer 3 | `clamped` |
 
 The modifier flags are `discount_capped` and `clamped`. The capacity flags depend on the wand: the 4000-cost row is `exceeds_capacity` for every supported rod (capacity ≤ 1000), and the others are not for the built-in rods.
 
 ### The spend
 
-`VisService.spend(player, wand, base, ctx, expected, effect) → SpendResult`, on the server thread only. It is **one checked commit over vis, materials and output**, so they are taken together or not at all.
+`VisService.spend(player, wand, base, ctx, expected, effect, boundary) → SpendResult`, on the server thread only. It is **one checked commit over vis, materials and output**, so they are taken together or not at all.
 
 - **`effect` is a prepared state swap, not a callback.** It is an immutable list of at most 64 **slot changes** `(container, slot, expectedBefore, after)`, one per material slot it consumes and output slot it fills. `spend` applies them itself; no consumer code runs inside the commit, so a consumer can't leave a half-applied change behind. Two changes may not name the same slot.
+- **`boundary`** (optional) is the consumer's **apply boundary**: `applied(committed)` is called **exactly once** when step 6 has finished, after every write (`committed` true) or after the rollback has restored every snapshot (`committed` false), and **before** step 7. It lets a consumer that suppressed its own change notifications during the swap end that suppression and record the swap as its own, so anything a `VisSpentEvent` listener changes afterwards is seen as a separate, external change. It may only update the consumer's own bookkeeping: no world, slot or vis change. An exception from it after a commit is handled like a step-7 failure; after a rollback the original error is rethrown, with the boundary's suppressed onto it.
 - **Steps,** the first failure refusing with its message and changing nothing:
   1. the stack is a `vftv:wand` and not inert ("This wand is missing a part.");
   2. `ctx.research`, if set, is learned;
   3. the quote is recomputed. If `expected` is given and is not the same cost, refuse with "The cost has changed." UI paths (#18) always pass `expected`; same-tick paths (a cast) may pass none;
   4. `affordable`, else "Not enough …" naming every `short` aspect;
   5. every slot still holds exactly its `expectedBefore` (`ItemStack.matches`), else "The cost has changed.";
-  6. **commit under a rollback scope:** snapshot the wand's `vftv:vis` and every named slot; write the debited `vftv:vis` in place; set each slot to its `after` in list order. If anything throws, every snapshot is restored (vis, materials and output), no event is posted, and the error is rethrown and logged;
-  7. after the commit, post `VisSpentEvent` through the platform publisher. #26 applies its flux on that event.
-- Nothing can run between steps 5 and 7: the server thread runs them in one call, and the consumer posts its own events only after `spend` returns.
-- **Effects that aren't slot changes** (a focus's work in the world) run after `spend` returns success. The consumer checks they can happen before it spends; the spend's atomicity covers vis and slots only, and #22 states what its casts do on a later failure.
+  6. **commit under a rollback scope:** snapshot the wand's `vftv:vis` and every named slot; write the debited `vftv:vis` in place; set each slot to its `after` in list order. If anything throws, every snapshot is restored (vis, materials and output), the boundary is told `applied(false)`, no event is posted, and the error is rethrown and logged. Otherwise the boundary is told `applied(true)`;
+  7. after the commit, post `VisSpentEvent` through the platform publisher. #26 applies its flux on that event. **If posting throws** (a listener failed), the commit stands: nothing is rolled back, the error is logged once with the `source`, and `spend` returns **`COMMITTED_NOTIFY_FAILED`** instead of rethrowing.
+- **Outcomes:** `SPENT` and `COMMITTED_NOTIFY_FAILED` both mean vis, materials and output were committed; each refusal of steps 1–5 is a refusal outcome naming its message (inert, unlearned, stale, short) and changed nothing; only a step-6 failure throws, and it changed nothing either. A consumer never treats `COMMITTED_NOTIFY_FAILED` as a refusal or a rollback.
+- Nothing but the boundary can run between steps 5 and 7: the server thread runs them in one call, and the consumer posts its own events only after `spend` returns.
+- **Effects that aren't slot changes** (a focus's work in the world) run after `spend` returns either committed outcome. The consumer checks they can happen before it spends; the spend's atomicity covers vis and slots only, and #22 states what its casts do on a later failure.
 
 ## Nodes
 
@@ -619,29 +621,29 @@ content/lang/en_us/wands.json   every key under "Lang keys"
 
 ### Recipes
 
-`{"schema": "vftv:wand_recipes/1", "recipes": {<id>: <recipe>}}`. The ids and gates are frozen here; the arcane recipes' bodies (ingredients, counts, vis costs) use [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s recipe schema verbatim, which is why this file is blocked on #18.
+`{"schema": "vftv:wand_recipes/1", "recipes": {<id>: <recipe>}}`. The ids and gates are frozen here; the arcane recipes' bodies (ingredients, counts, vis costs) use the [arcane recipe type](arcane.md#the-recipe-type)'s format verbatim.
 
 | Id | Type | `research` | Stage |
 |---|---|---|---|
 | `vftv:wand_assembly` | `vftv:wand_assembly` | none (ungated) | 1 |
-| `vftv:chime_rod`, `vftv:resonant_brass_cap` | #18's arcane type | `vftv:singing_wands` | 2 |
-| `vftv:node_tap` | #18's arcane type | `vftv:cultivating_nodes` | 2 |
-| `vftv:vis_relay`, `vftv:wand_cradle` | #18's arcane type | `vftv:vis_relays` | 2 |
-| `vftv:bell_jar` | #18's arcane type | `vftv:moving_nodes` | 2 |
+| `vftv:chime_rod`, `vftv:resonant_brass_cap` | `vftv:arcane` | `vftv:singing_wands` | 2 |
+| `vftv:node_tap` | `vftv:arcane` | `vftv:cultivating_nodes` | 2 |
+| `vftv:vis_relay`, `vftv:wand_cradle` | `vftv:arcane` | `vftv:vis_relays` | 2 |
+| `vftv:bell_jar` | `vftv:arcane` | `vftv:moving_nodes` | 2 |
 
 ```jsonc
 {"schema": "vftv:wand_recipes/1", "recipes": {
   "vftv:wand_assembly": {"type": "vftv:wand_assembly", "category": "equipment"},
   "vftv:bell_jar": {
-    "type": "vftv:arcane",                 // #18's type id, frozen once #18 lands
+    "type": "vftv:arcane",
     "research": "vftv:moving_nodes",
-    // … the rest of #18's schema: pattern, ingredients, result, base vis cost
+    // … the rest of the arcane body: pattern and key (or ingredients), result, vis
   }
   // … and the other five
 }}
 ```
 
-**Rejected:** an id outside the table, or one missing from it; a `research` other than the table's; any field on `vftv:wand_assembly` other than `category` (default `equipment`); a body that fails #18's schema.
+**Rejected:** an id outside the table, or one missing from it; a `research` other than the table's; any field on `vftv:wand_assembly` other than `category` (default `equipment`); a body that fails the arcane recipe type's rules.
 
 ### Node types
 
@@ -716,7 +718,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
                         "type": "vftv:windward", "clarity": "faint", "maxes": {"vftv:aer": 36, "vftv:terra": 22}}}],
  "ring":   [{"seed": "0x0123456789ABCDEF", "k": 8, "start": 27, "first": [8, 3], "second": [8, 4]}],
  "quote":  [{"cap": 0.85, "discount": 0.40, "max_discount": 0.30, "w": 1.00, "base": {"vftv:aer": 10, "vftv:ignis": 3, "vftv:ordo": 1},
-             "expect": {"m": 595, "effective": {"vftv:aer": 6, "vftv:ignis": 2, "vftv:ordo": 1}, "discount_capped": true, "clamped": false}}],
+             "expect": {"cap": 850, "discount": 300, "warp": 1000, "m": 595, "effective": {"vftv:aer": 6, "vftv:ignis": 2, "vftv:ordo": 1}, "discount_capped": true, "clamped": false}}],
  "regen":  [{"max": 40, "current": 10, "tick": "0x3E8", "now": "0x625", "interval": 80, "divisor": 20, "expect": {"current": 24, "tick": "0x618"}}],
  "pulse":  [{"game_time": "0x14", "period": 20, "rate": 4,
              "sources": [{"vftv:aer": 5, "vftv:terra": 2}, {"vftv:aer": 9}],
@@ -782,7 +784,7 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 
 | Event | Payload |
 |---|---|
-| `VisSpentEvent` | player; level and position; the `VisContext`; the `VisQuote` (base, effective, `m`, flags, spill) |
+| `VisSpentEvent` | player; level and position; the `VisContext`; the `VisQuote` (base, effective, `m`, the factors `cap`, `discount` and `warp`, flags, spill) |
 | `NodeEvent` | kind; id; dimension and position (absent while carried); cause `WORLDGEN \| STRUCTURE \| STARTER \| PLAYER \| COMMAND \| RECONCILE \| API` |
 
 **Kinds:**
@@ -901,8 +903,8 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 All three layers ([quality gates](quality-gates.md#test-layers)).
 
 **Unit (`model` tier and codecs):**
-- **the quote:** every vector above; half-up rounding at the per-mille boundary; clamps and flags; zero base; `exceeds_capacity`; the maximum-factor case without overflow; a non-finite factor; `ORDINARY` against `VOID` contexts through a stub factor; echo equality on each cost field;
-- **the spend:** all or nothing at every step; a slot whose contents no longer match `expectedBefore` refuses; **a deliberately partial, throwing commit** (the second of three slot changes throws) restores the wand's vis, the material slots and the output slot, and posts no event; duplicate slots and more than 64 changes are rejected;
+- **the quote:** every vector above, factors included; half-up rounding at the per-mille boundary; clamps and flags; zero base; `exceeds_capacity`; the maximum-factor case without overflow; a non-finite factor; `ORDINARY` against `VOID` contexts through a stub factor; echo equality on each cost field;
+- **the spend:** all or nothing at every step; a slot whose contents no longer match `expectedBefore` refuses; **a deliberately partial, throwing commit** (the second of three slot changes throws) restores the wand's vis, the material slots and the output slot, tells the boundary `applied(false)` once, and posts no event; duplicate slots and more than 64 changes are rejected; **the boundary** is called exactly once, after the last write and before `VisSpentEvent`, on commit and on rollback, and never on a step 1–5 refusal; **a throwing `VisSpentEvent` listener** leaves the commit in place and returns `COMMITTED_NOTIFY_FAILED`;
 - **pools:** clamping on a lowered capacity; dormant entries kept through writes; both inert cases untouched;
 - **regeneration:** every vector above; remainders kept; every clarity; a long carry; a clock going backwards; rebase after a tuning change prices the past at the old parameters;
 - **natural spread:** every region vector; the stream order; weighted picks at every boundary; cell keys for negative coordinates; the spawn rate over a large sample;
@@ -922,7 +924,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the registries and tuning load, and each bad entry and file is refused with a clear error; the `vftv:wellspring` rules;
 - **wand assembly:** caps must match; click, shift-click and crafter paths; an unlearned player crafts it but cannot tap; no vanilla recipe matches the built-in parts' pattern;
 - **tapping:** each refusal (and that it is consumed, so no air use follows); pulse amounts on aligned ticks; every stop condition, including a revoked entry, **switching to another, otherwise identical wand**, changing the selected hotbar slot, a lost raycast, spawn protection and a node swapped for another id; the tap's own in-place writes never stop it; two players on one node;
-- **spending:** refused spends leave wand, materials and output unchanged; a stale `expected` refused; a failing output (a full output slot) refused; a throwing slot change mid-commit leaves vis, materials and output as they were with no event; ordinary against Void quotes;
+- **spending:** refused spends leave wand, materials and output unchanged; a stale `expected` refused; a failing output (a full output slot) refused; a throwing slot change mid-commit leaves vis, materials and output as they were with no event; a `VisSpentEvent` listener that changes a named slot sees the commit complete and the boundary already called; a throwing `VisSpentEvent` listener leaves vis, materials and output committed and returns `COMMITTED_NOTIFY_FAILED`; ordinary against Void quotes;
 - **starter placement:** a fresh world; an existing world; **active** spawn protection 0, 16 and 120 (operators present), with a **non-op player striking it with the fork and tapping it**; startup failure at active protection 180 with the actionable error; configured protection 180 with **no operators** succeeding on suitable terrain; the later-start warning after an operator is added; no duplicate when the starter's chunk is unloaded; re-placement after `/vftv node remove`;
 - **sounding loads 0 chunks** at full density, after moves and removals;
 - **identity:** capture then release keeps the id and pays no second first-strike reward; anchored refusal; cell-full and spacing refusals, including spacing equality; a copied jar refused after the original is released and again after a recapture; an unknown id refused in survival and recovered in creative;
@@ -1014,6 +1016,6 @@ This spec settles every decision. Three required child tickets deliver the asset
 |---|---|---|
 | **Wand assets** | The generator `tools/art/wands.py`. **Layer textures**, 16×16 at `assets/vftv/textures/item/wand/rod/{wooden,chime,unknown}.png` and `…/wand/cap/{copper,resonant_brass,unknown}.png` (the cap layer carries both caps and the teal tick), with their layer models `vftv:item/wand/rod/<id>` and `vftv:item/wand/cap/<id>`. **Item icons** `chime_rod` and `resonant_brass_cap` (16×16, Stage 2 row), with models and item definitions. `assets/vftv/items/wand.json` exactly as under "Components". The **HUD frame** `assets/vftv/textures/gui/sprites/hud/vis_frame.png` (16×16, nine-slice border 4, in its `.mcmeta`). **Sounds:** `wand.tap_start` ×3, `wand.tap_stop` ×3, `wand.full` ×3, and `wand.tap_drone` ×3 at 3.0 s with the standard faded tail, with their `sounds.json` entries naming the subtitle keys under "Lang keys". A contact sheet at GUI scale 2 with all 4 rod × cap wands and the unknown fallbacks beside vanilla; provenance rows. | none |
 | **Node, jar and relay assets** | The generator `tools/art/nodes.py`. The **node core strip** `assets/vftv/textures/block/node_core.png`, 16×128 (8 frames, teal ramp, cutout), and the node's blockstate and particle-only model. The **glint** particle: 4 frames at 8×8 (`textures/particle/node_glint_0…3.png`) and `particles/node_glint.json`. The **Bell Jar** item, empty and filled at 16×16, with an item definition selecting on `minecraft:has_component` for `vftv:captured_node`. **Block models** of at most 6 cuboids each ([art style §6](art-style.md#6-blocks-and-models)), textures, blockstates and item forms for `node_tap` (an ear-trumpet; six facings by blockstate rotation), `vis_relay` (a fork on a stand) and `wand_cradle`. **Sounds**, with the cadences under "Rendering and sound": `node.hum` ×3, `node.absorb` ×3, `node.clarity_rise` ×1, `relay.link` ×1, `cradle.charge` ×3, `bell_jar.capture` ×1, `bell_jar.release` ×1, with `sounds.json` entries naming the subtitle keys under "Lang keys". Blender renders of every non-cube model; provenance rows. **No mote sprite**: motes reuse the aspect icons. | none |
-| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in #18's schema), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" | [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18) (its recipe schema, for the Stage 2 recipes) |
+| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
 
 The Stage 1 and Stage 2 research content tickets ([#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [#35](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)) consume this spec's entry ids, gates and the recorded change to the research contract.

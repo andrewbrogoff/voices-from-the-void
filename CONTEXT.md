@@ -198,6 +198,10 @@ _Avoid_: spell, glyph
 **Arcane crafting**:
 Crafting that costs vis as well as materials.
 
+**Worktable**:
+The station for arcane crafting: a crafting table turned with a wand. The vis is paid from the wand set in it.
+_Avoid_: Arcane Worktable, arcane workbench
+
 **Crucible**:
 A vessel that dissolves items into their aspects and recombines them.
 
