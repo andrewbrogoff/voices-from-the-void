@@ -101,6 +101,26 @@ _Avoid_: taint, corruption, blight
 A naturally occurring knot of vis in the world, which can be found, tapped and cultivated.
 _Avoid_: aura node, ley point
 
+**Vis aspect**:
+An aspect whose vis a wand can hold: each exposed primal. Six are built in (Aer, Terra, Ignis, Aqua, Ordo and Perditio), and an addon may add up to two more. Vacuos is not one.
+_Avoid_: vis type, element
+
+**Clarity**:
+How cleanly a node rings: *faint*, *steady* or *clear*. A clearer node refills faster.
+_Avoid_: brightness, purity
+
+**Wellspring**:
+The starter node: an anchored node holding the six built-in vis aspects, placed near spawn in every world so the first wand can be filled.
+_Avoid_: spawn node, home node
+
+**Tapping**:
+Drawing vis from a node into a wand, by holding a wand to it or through a Node Tap. It never harms the node.
+_Avoid_: draining, siphoning
+
+**Cultivation**:
+Feeding a node essentia through a Node Tap. A vis aspect's essentia raises the node's capacity for that aspect, and Sonus raises its clarity.
+_Avoid_: node bullying, node feeding
+
 ### Craft
 
 **Commonplace Book**:
@@ -138,6 +158,38 @@ _Avoid_: Thaumium, magic brass
 **Wand**:
 The hand-held instrument that holds vis and spends it on arcane work.
 _Avoid_: staff (unless it is a distinct tier), rod (which is a wand part)
+
+**Rod**:
+The shaft of a wand. It sets how much vis each of the wand's pools holds.
+_Avoid_: core, staff
+
+**Chime rod**:
+The Stage 2 rod: a hollow tube of Resonant Brass.
+_Avoid_: Greatwood, Silverwood
+
+**Cap**:
+One of the matching pair of fittings on a wand's ends. It sets how much the wand's work costs in vis.
+_Avoid_: tip, ferrule
+
+**Bell Jar**:
+A glass dome that takes up a whole node, so it can be carried and set down elsewhere unchanged.
+_Avoid_: node jar
+
+**Node Tap**:
+An ear-trumpet set against a node. A relay network draws vis through it, and essentia fed into it cultivates the node.
+_Avoid_: node siphon, drain
+
+**Vis Relay**:
+A block that links Node Taps and Wand Cradles within its range into a relay network.
+_Avoid_: pylon, transmitter
+
+**Relay network**:
+Node Taps, Vis Relays and Wand Cradles linked by range, carrying vis from nodes to wands. Player-facing text calls one a **chord**.
+_Avoid_: grid, vis net
+
+**Wand Cradle**:
+A stand that holds one wand and charges it from its relay network.
+_Avoid_: charger, pedestal
 
 **Focus**:
 An attachment that gives a wand a spell to cast. Plural: foci.

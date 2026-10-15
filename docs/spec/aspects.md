@@ -289,14 +289,16 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 | `readout_hold_ticks` | 60 | after the latest strike; sent in `ScanResult` |
 | `discovery_bonus` | 4 | default; an aspect's own `discovery_bonus` field overrides it |
 | `node_reward_divisor` | 8 | default; a node type's own field in #17's data overrides it |
-| `sounding.radius` | 192 | the performance bound below assumes this value |
-| `sounding.near`, `sounding.mid` | 16, 64 | band edges; far runs to the radius |
+| `sounding.radius` | 192 | 1–256, the largest radius [#17's node index](wands.md#the-index) supports; the performance bound below assumes 192 |
+| `sounding.near`, `sounding.mid` | 16, 64 | band edges; far runs to the radius. Valid only if 0 < `near` < `mid` ≤ `radius` |
 | `sounding.answer_offset` | 6 | blocks along the bearing |
 | `sounding.particles` | 3 | |
 | `derivation.factor` | 0.75 | used by datagen today; a pack override takes effect only once runtime derivation exists |
 | `derivation.smelt_bonus` | `{"vftv:ignis": 1}` | as above |
 
-**Fixed limits, in code** (formats and validator rules, not balance): at most 5 aspects per material entry; depth ≤ 3; compound fan-out ≤ 5; ≥ 2 tier-1 children per exposed primal. **Test thresholds:** ≥ 3 sources per aspect. **Authoring targets:** the value-scale totals above.
+**Validation:** a `sounding.radius` outside 1–256, or band edges that break 0 < `near` < `mid` ≤ `radius`, makes the file invalid. An invalid file refuses the world at open; on `/reload` the previous record is kept and an error logged.
+
+**Fixed limits, in code** (formats and validator rules, not balance): at most 5 aspects per material entry; depth ≤ 3; compound fan-out ≤ 5; ≥ 2 tier-1 children per exposed primal; the sounding radius ≤ 256. **Test thresholds:** ≥ 3 sources per aspect. **Authoring targets:** the value-scale totals above.
 
 ## Performance
 
@@ -323,6 +325,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **reload reward conservation:** values change between a partial scan and its completion, and the payout follows the snapshot;
 - **mixed-map ordering:** block entry over item entry over defaults; `{}` versus no entry;
 - nearest-node selection and band and bearing maths, including exact band and radius edges and ties by id;
+- tuning validation: a radius of 257, and band edges out of order or beyond the radius, are rejected;
 - codecs: the aspect entry, both data-map values, the tuning file, the knowledge attachment with its baseline and delta `StreamCodec`s, `ScanResult`, the strike recipe.
 
 **Datagen and unit gates:** coverage, supply, Stage 1 affordability, no two built-in entries in one map covering the same object, and palette membership of built-in colours.

@@ -525,10 +525,12 @@ entry  : <ns> ":" <path> ":" ("warp" | "skip_cost" | "rewards" | "held")
 pool   : <ns> ":" <path>                     the player's points of that aspect
 warp   : "temporary" | "lasting" | "permanent" | "gear" | "total"
 key    : <key mapping name>                  e.g. key.use
+vis    : <VisRules key>                      a tuning key or limits.* key of the wands spec's synced
+                                             VisRules, e.g. tap.amount, relay.range, limits.network_members
 ```
 
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, or a recipe or data reload. Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, a note's receipts, warp, quotes, a recipe or data reload, or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`). Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no ASCII digits** outside fact spans.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive. Lists for other languages come with the localisation spec, and until then other languages get the digit lint only.
@@ -542,7 +544,7 @@ key    : <key mapping name>                  e.g. key.use
 
 - **A source** has exactly one of:
   - `scan` (a scan key);
-  - `node` (a node guarantee id #17 declares, e.g. `"starter"`);
+  - `node` (a node guarantee id #17 declares, written in full: `"vftv:starter"`);
   - `advancement` (an advancement id);
   - `choir_page` (a page entry id), with `site` (a site id #27 or #28 publishes).
 
@@ -556,7 +558,7 @@ key    : <key mapping name>                  e.g. key.use
    "geode":   {"advancement": "vftv:find/resonance", "count": 1, "why": "geodes generate in every overworld; holding a shard grants it"},
    "shard":   {"scan": "item:minecraft:amethyst_shard", "count": 1, "why": "mined from the same geode"},
    "torch":   {"scan": "item:minecraft:torch", "count": 1, "why": "craftable from starting wood and coal"},
-   "starter": {"node": "starter", "count": 1, "requires": {"research": ["vftv:sounding"]}, "why": "#17's starter-node guarantee"}
+   "starter": {"node": "vftv:starter", "count": 1, "requires": {"research": ["vftv:sounding"]}, "why": "#17's starter-node guarantee"}
  },
  "steps": [
    {"use": "geode"},                  // opens Stage 1; free entries learn themselves
@@ -592,7 +594,7 @@ Each content ticket freezes its Stage's roster: ids, kinds, dependency edges, an
 
 | Stage | Entries |
 |---|---|
-| 1 Resonance | `resonance` (opener) → `commonplace_book` (free; teaches the inventory strike), `notes_of_things` (free; aspects and the unheard), `sounding` (free) → `taking_notes` (the tutorial note: Aer and Ignis, joined through **Lux**, which the path makes known first) → `knots_in_the_air` (find: `scanned` with `node: true`) → `first_wand`, `tapping`, `arcane_crafting` (notes) → [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s Stage 1 recipe entries |
+| 1 Resonance | `resonance` (opener) → `commonplace_book` (free; teaches the inventory strike), `notes_of_things` (free; aspects and the unheard), `sounding` (free) → `taking_notes` (the tutorial note: Aer and Ignis, joined through **Lux**, which the path makes known first) → `knots_in_the_air` (find: `scanned` with `node: true`) → `first_wand` (`free` or `note`: teaches the **ungated** wand recipe `vftv:wand_assembly` and gates nothing), `tapping` (note: no recipe; gates the server-checked tap action), `arcane_crafting` (note) → [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s Stage 1 recipe entries |
 | 2 Distillation | `distillation` (opener), then the crucible, Resonant Brass, essentia and jars, tubes, cultivating nodes, relays and first golems |
 | 3 Ruins | `ruins` (opener), the Choir pages, the Answerers (find: an advancement for killing one), infusion, `being_heard` (warp and its treatment), the Hush, `silence_beneath` |
 | 4 The Choir's Road | `choirs_road` (opener), Void-tier crafting (warp-gated through `warp_at_least` reveals), the road, and pages on Joining and Silencing. The choice itself is made in the world (#28), never in the book. |
@@ -905,8 +907,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)**
 - The node types that generate in **Stage 1** terrain together carry all 6 exposed primals (a unit test over node-type data), and first-strike rewards are per player per node. This is recovery layer 2.
-- It declares **node guarantee ids** (at least `starter`), each with its guaranteed composition, capacity and how many distinct nodes it guarantees in which Stage, which the affordability paths replay.
-- It names stable recipe ids for the wand and tapping entries, and those recipes carry `research`.
+- It declares **node guarantee ids** (at least `vftv:starter`), each with its guaranteed composition, capacity and how many distinct nodes it guarantees in which Stage, which the affordability paths replay.
+- It names a **stable, ungated recipe id for the wand** and a **server-checked action gate for tapping**. *Reconciled with the wands spec:* no hook proves a research gate on the vanilla crafting grid, so the wand recipe `vftv:wand_assembly` carries no `research`; `vftv:first_wand` teaches it and gates nothing, and `vftv:tapping` has no recipe but gates the tap action on the server at its start and at every pulse ([wands spec, Stage](wands.md#stage)).
 - Node scan keys stay `node:<stable id>` through moves, so `scanned` triggers with `node: true` work.
 
 **[Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)** (the recipe-gate contracts also bind [Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20), [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) and [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for their own recipe types)
