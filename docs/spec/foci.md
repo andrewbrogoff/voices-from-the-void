@@ -154,7 +154,7 @@ The built-ins: 8 effects, 4 media, 3 modifiers. Depth comes from combining them,
 | `vftv:reach` | 1150 | 2 | `step` 2.0 | `vftv:focus_ranks` |
 | `vftv:breadth` | 1500 | 2 | `radius_step` 1.0, `block_step_sq` 3 | `vftv:focus_ranks` |
 
-- **Names** follow the [lore spec's](lore.md#vocabulary-policy) policy: plain English, none of them TC4's (Kindle rather than Fire, Rime rather than Frost, Delve rather than Excavation, Exchange rather than Equal Trade, Force rather than Potency, Breadth rather than Enlarge). The two Void effects are named in Void-tongue by #28's lexicon, through their lang keys; their ids stay English.
+- **Names** follow the [lore spec's](lore.md#vocabulary-policy) policy: plain English, none of them TC4's (Kindle rather than Fire, Rime rather than Frost, Delve rather than Excavation, Exchange rather than Equal Trade, Force rather than Potency, Breadth rather than Enlarge). The two Void effects are named in Void-tongue by the [Void-tongue lexicon](warp.md#production-tickets) ticket, through their lang keys; their ids stay English.
 - **Cut from v1:** a temporary passage through walls (it needs a persistent restore queue across chunk unloads and its own suffocation rules) and a ward that makes blocks unbreakable (it needs a per-block owner store and break overrides). Each is a separate system; either is a later proposal. Packs and addons add effects through the registries.
 - **Options considered:** fixed foci, one item per spell (TC4); a free-form glyph language. **Why parts on a simple screen:** the progression asks for composable foci on a simple GUI ([progression, TC4 systems](progression.md#tc4-systems-kept-redesigned-cut)), and the pain-points research found that a programmer-style GUI was resented while composition was loved.
 
@@ -636,18 +636,21 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 ```
 
 - **Bounds before multiplying:** `base` ≤ 20,000 (every scaled param's range), `power_pm` ≤ 4000 and `amp_pm` ≤ 5000, so the product is at most 4 × 10¹¹, well inside a `long`. The **caps** (`FocusLimits`) apply after: 40,000 for damage and heal (40.0 health), 3000 for push and pull (3.0 blocks per tick), 1200 ticks for durations.
-- **`w = amplifier_warp(player)`** is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' input: pure, finite and synced to the owner, so both sides compute the same figure. #25 decides its unit and which kinds of warp count toward it. Until #25 lands it is 0, so Void effects work at their base magnitude.
+- **`w = amplifier_warp(player)`** is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' input: pure, finite and synced to the owner, so both sides compute the same figure. It is the player's **total warp** in warp points (temporary, lasting, permanent and gear together; [warp spec, Total warp](warp.md#total-warp)), or 0 with the warp server switch `warp.amplifier` off. Until #25 lands it is 0, so Void effects work at their base magnitude.
+- **The scale:** at the default `per_warp_pm` of 20, each warp point adds 2%, and a Void working doubles at 50 warp, just past the warp spec's third band (40). That is a scale decision made with the warp spec's bands, not proven balance.
 - **Snapshots:** a Bolt freezes its magnitudes at launch; Touch and Burst resolve them at the cast; a Beam resolves them at every pulse.
 - **Units:** health is `out / 1000f`; movement is `out / 1000` blocks per tick; ticks are `out`.
 
-**Vectors** (reference implementation, cross-checked against the JDK; Force step 250; `per_warp_pm` 10 and `max_bonus_pm` 1000 unless stated):
+**Vectors** (reference implementation, cross-checked against the JDK; Force step 250; `per_warp_pm` 20 and `max_bonus_pm` 1000 unless stated; the 10 per mille row is a labelled regression, run by the same references):
 
 | base | Force | w | Void | `power_pm` | `amp_pm` | cap | out |
 |---|---|---|---|---|---|---|---|
 | 3000 | 0 | 0 | no | 1000 | 1000 | 40,000 | 3000 |
 | 3000 | 2 | 40 | no | 1500 | 1000 | 40,000 | 4500 (warp ignored) |
 | 4000 | 0 | 0 | yes | 1000 | 1000 | 40,000 | 4000 |
-| 4000 | 0 | 37 | yes | 1000 | 1370 | 40,000 | 5480 |
+| 4000 | 0 | 37 | yes | 1000 | 1740 | 40,000 | 6960 |
+| 4000 | 0 | 50 | yes | 1000 | 2000 | 40,000 | 8000 |
+| 4000, a regression at `per_warp_pm` 10 | 0 | 37 | yes | 1000 | 1370 | 40,000 | 5480 |
 | 4000 | 3 | 250 | yes | 1750 | 2000 (bonus capped) | 40,000 | 14,000 |
 | 4000 | 1 | 10,001 | yes | 1250 | 2000 (w clamped) | 40,000 | 10,000 |
 | 60 (ticks) | 1 | 0 | no | 1250 | 1000 | 1200 | 75 |
@@ -655,8 +658,8 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | 20,000 | 3 | 10,000 | yes | 1750 | 2000 | 40,000 | 40,000 (capped) |
 | 20,000, at the tuning extremes (`per_warp_pm` 1000, `max_bonus_pm` 4000, step 1000) | 3 | 10,000 | yes | 4000 | 5000 | 40,000 | 40,000; the raw product is 400,000,000,000 |
 
-- **No warp is applied by casting.** Warp is only ever applied by an explicit commit through #25 ([research, Warp on entries](research.md#warp-on-entries)), and a cast is not one. Whether a carried Void focus counts as **gear warp** is #25's call; it reads `FocusService.kind(stack)`.
-- **Options considered:** scaling radius or target count; scaling cost down. **Why magnitude only:** it keeps every performance bound fixed, and cost already has #25's `VOID` factor as its own lever.
+- **No warp is applied by casting.** Warp is only ever applied by an explicit commit through #25 ([research, Warp on entries](research.md#warp-on-entries)), and a cast is not one. **A carried Void focus is not gear warp** ([warp spec, Gear warp](warp.md#gear-warp)): it already grows with warp, and adding warp for carrying it would compound.
+- **Options considered:** scaling radius or target count; scaling cost down. **Why magnitude only:** it keeps every performance bound fixed, and cost already has #25's `VOID` factor as its own lever (neutral, 1.0, in the warp spec).
 
 ## The authoritative preview
 
@@ -722,7 +725,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | `discount_capped`, `clamped`, `exceeds_capacity` | `focus.vftv.fact.yes` or `.no` |
 | `availability`, `castable` | `arcane.vftv.no_wand`, `arcane.vftv.inert_wand` or `focus.vftv.fact.priced`; `focus.vftv.fact.ready` or the failing check's own `message.vftv.*` text |
 | `wand` | the pricing wand's name and the arcane spec's `arcane.vftv.where.*` text, or the absent text |
-| **`focus_rules`** `void.per_warp_pm`, `void.max_bonus_pm` | per mille as the percentage format (10 → "1%", 1000 → "100%") |
+| **`focus_rules`** `void.per_warp_pm`, `void.max_bonus_pm` | per mille as the percentage format (20 → "2%", 1000 → "100%") |
 | **`focus_rules`** `limits.max_rank`, `limits.burst_entities`, `limits.burst_blocks`, `limits.live_bolts` | an integer: 3, 16, 27, 8 |
 
 - A key outside its context's list, a `focus_rules` key outside the last two rows, or any key outside this table is a malformed span, rejected by the validator.
@@ -871,7 +874,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
  "quote":     [{"base": {"vftv:aqua": 30, "vftv:ordo": 16}, "cap": 850, "discount": 0, "w": 1250,
                 "expect": {"m": 1063, "effective": {"vftv:aqua": 32, "vftv:ordo": 18}}}],
  "magnitude": [{"base": 4000, "force": 3, "step_pm": 250, "w": 250, "void": true,
-                "per_warp_pm": 10, "max_bonus_pm": 1000, "cap": 40000,
+                "per_warp_pm": 20, "max_bonus_pm": 1000, "cap": 40000,
                 "expect": {"power_pm": 1750, "amp_pm": 2000, "out": 14000}}],
  "burst":     [{"centre": [-1, -60, 1], "r2": 4, "expect": {"count": 33, "first": [[-1, -60, 1], [-2, -60, 1]], "last": [0, -59, 2]}}],
  "beam":      [{"start": 103, "pulse": 10, "ticks": [103, 124], "expect": [103, 113, 123]}],
@@ -884,7 +887,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content tickets write the final text. The two Void effects' `focus_effect.*` keys live only in `foci_void.json`, in Void-tongue from #28's lexicon, with no provisional English.
+`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content tickets write the final text. The two Void effects' `focus_effect.*` keys live only in `foci_void.json`, in Void-tongue, copied from the lexicon's `names` ([warp spec, The lexicon](warp.md#the-lexicon)), with no provisional English.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -978,7 +981,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 
 | Key | Value | Range | Notes |
 |---|---|---|---|
-| `void.per_warp_pm` | 10 | 0–1000 | amplifier per unit of `amplifier_warp`, per mille: a **proposed default**, to be checked against #25's accepted unit |
+| `void.per_warp_pm` | 20 | 0–1000 | amplifier per warp point of `amplifier_warp`, per mille: 2% each, so ×2.00 at 50 warp, just past the warp spec's third band (the scale the warp spec set; not proven balance) |
 | `void.max_bonus_pm` | 1000 | 0–4000 | the amplifier's ceiling above 1000 (×2.00 at the default) |
 | `ranks.1`, `ranks.2`, `ranks.3` | the "Ranks" table | `xp` 0–100; `vis` 1–8 vis aspects of 1–1000; `research` an existing entry | |
 
@@ -1123,8 +1126,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
 - It supplies **`amplifier_warp(player)`**: a pure, finite, non-negative integer, synced to the owner and identical on both sides, that measures the warp counting toward Void power. It decides the unit and which kinds of warp count, and tests its accepted scale against `void.per_warp_pm`. It is 0 until it lands.
 - `vis_factor(player, VOID)` is as already contracted.
-- It decides whether a carried Void focus is gear warp, reading `FocusService.kind(stack)`.
+- It decides whether a carried Void focus is gear warp.
 - Casting applies no warp. Warp on a cast would need #25 to propose a previewed, echoed extension.
+- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), with the scale tested at the amended default of 20 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
 - Foci add **no direct flux producer** of their own: their flux is the `spill` applied on `VisSpentEvent`.
@@ -1134,7 +1138,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Cast discounts come only from `vftv:vis_discount`. No gear changes a focus's magnitude in v1.
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Its Void-tongue lexicon names `vftv:unmaking` and `vftv:undertow` (`focus_effect.vftv.unmaking`, `.undertow`). `vftv:void_foci` follows its opener `vftv:choirs_road`. Scaling stays #25's.
+- `vftv:void_foci` follows its opener `vftv:choirs_road`. Scaling stays #25's.
+- The names of `vftv:unmaking` and `vftv:undertow` (`focus_effect.vftv.unmaking`, `.undertow`) come from the **Void-tongue lexicon** ticket ([warp spec, Production tickets](warp.md#production-tickets)), which delivers them ahead of #28's own completion; #28 builds its eldritch names on the same lexicon.
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
 - No golem casts or uses the Lathe in v1. Golems may move foci and wands as items.
@@ -1156,6 +1161,6 @@ This spec settles every decision. Three required child tickets deliver the asset
 |---|---|---|
 | **Foci assets** | **Generator:** `tools/art/foci.py`.<br>**Focus items** (16×16): `assets/vftv/textures/item/focus/blank.png`, `unknown.png` and one per built-in effect (`kindle`, `gust`, `rime`, `delve`, `mend`, `exchange`, `unmaking`, `undertow`). Each is a small brass bell-disc carrying an essentia bead tinted by its effect's aspect family ([art style §2](art-style.md#2-palette-locked-project-wide-48-colours) allows aspect families on essentia tints), in the Stage row of its research ([art style §5](art-style.md#5-tone-ramp-by-stage)); the two Void foci in the Stage 4 row, teal inside void ink. With item models `vftv:item/focus/<id>` (parent `minecraft:item/generated`) and **`assets/vftv/items/focus.json`** exactly as under "On the wand".<br>**Wand layers:** `assets/vftv/textures/item/wand/focus/<id>.png` for the same ten ids, the focus seated above the top cap, with layer models `vftv:item/wand/focus/<id>` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (the third member, every existing case kept).<br>**The Lathe:** `assets/vftv/models/block/lathe.json` with at most 6 pixel-aligned cuboids and no rotations ([art style §6](art-style.md#6-blocks-and-models)): a base [1,0,2]–[15,4,14], a headstock [2,4,5]–[5,12,11], a tailstock [11,4,6]–[14,10,10], a spindle [5,7,7]–[11,9,9], a bell blank on it [7,6,6]–[9,10,10] and a tool rest [6,4,11]–[10,6,13]. Textures `lathe_side.png`, `lathe_top.png`, `lathe_bottom.png`, `lathe_front.png` (Stage 1 row; the teal tick on the bell blank's top); a blockstate with 4 horizontal facings by rotation; the item definition `assets/vftv/items/lathe.json`.<br>**GUI:** `assets/vftv/textures/gui/container/lathe.png` (288×234 used on a 512×256 sheet, every well, strip, socket row and panel at the positions under "The screen"), and every sprite listed there.<br>**Entity:** `assets/vftv/textures/entity/focus_bolt.png` (16×64, 4 frames, cutout, greyscale for tinting) and `focus_beam.png` (16×16, tiling, greyscale).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound", with its category, volume, pitch and subtitle rules, ≤ 3 s with faded tails.<br>**Review:** a contact sheet at GUI scale 2 beside vanilla's blaze rod, ender pearl and stonecutter, with every focus item and the 10 focused wand layers on a wooden-and-copper wand; a Blender render of the Lathe; **worst-case Lathe mockups** composed from the sprites and the vanilla font: 8 cost cells with 4-digit amounts and a short cell, the beyond glyph, an inert and a missing wand, an unlearned socket choice, `XP_SHORT` and `STALE`, the keyboard focus ring on each region, a long test translation and a long-text tooltip, all as the full 288×234 screen inside a 320×240 view with every slot, control and the hotbar visible. Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) and [Infusion assets #47](https://github.com/andrewbrogoff/voices-from-the-void/issues/47): both write `items/wand.json` first, so the three appends are serialised |
 | **Foci content** (Stages 1–3) | `content/foci/effects.json` (`vftv:focus_effects/1`, the six ordinary effects exactly as the roster), `content/foci/media.json` (`vftv:focus_media/1`), `content/foci/modifiers.json` (`vftv:focus_modifiers/1`), `content/foci/recipes.json` (`vftv:foci_recipes/1`: the two arcane bodies, with materials from the reviewed pre-iron list and costs ≤ 32 per aspect), `content/foci/damage_types.json` (`vftv:damage_types/1`), `content/foci/fixtures.json` (`vftv:foci_fixtures/1`, the vector tables transcribed), and `content/lang/en_us/foci.json` (`vftv:lang/1`) with every key under "Lang keys" except the Void effects' names. Its review checks that the messages teach the two gestures, the free Lathe, the experience price and the Exchange warning. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
-| **Void foci content** (Stage 4) | `content/foci/effects_void.json` (`vftv:focus_effects/1`, exactly `vftv:unmaking` and `vftv:undertow` as the roster, under the same merge rules) and `content/lang/en_us/foci_void.json` (`vftv:lang/1`: their `focus_effect.*` names in Void-tongue, with no provisional English) | [Eldritch tier and the Choir's Road #28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) (the Void-tongue lexicon) |
+| **Void foci content** (Stage 4) | `content/foci/effects_void.json` (`vftv:focus_effects/1`, exactly `vftv:unmaking` and `vftv:undertow` as the roster, under the same merge rules) and `content/lang/en_us/foci_void.json` (`vftv:lang/1`: their `focus_effect.*` names in Void-tongue, with no provisional English) | the **Void-tongue lexicon** ticket ([warp spec, Production tickets](warp.md#production-tickets)) |
 
 The research content tickets [#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34)–[#37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37) consume the entry ids, recipe ids and fact sources frozen here.

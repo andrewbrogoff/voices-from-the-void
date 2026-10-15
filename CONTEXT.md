@@ -42,19 +42,43 @@ _Avoid_: sanity, corruption, madness
 Warp that fades on its own within minutes.
 
 **Lasting warp**:
-Warp that stays until the Listener treats it. Treatment always works but always costs something.
+Warp that stays until the Listener stills it. Stilling always works but always costs something.
 _Avoid_: sticky warp, normal warp
 
 **Permanent warp**:
 The small share of warp that can never be removed, gained only from a few named milestone choices that show their exact cost beforehand.
 
 **Gear warp**:
-Warp that counts only while its item is carried, and goes when the item is put down.
+Warp that counts only while its item is carried, and goes when the item is put down. Each item's amount is set in data, and what a Listener carries is checked about once a second.
 _Avoid_: item warp
+
+**Warp band**:
+One of four steps, 0 to 3, of a Listener's total warp (all four kinds together). The band sets how far the notebook's prose slips and which Voice events can happen.
+_Avoid_: sanity level, warp tier
+
+**Voice event**:
+Something the Voices do to one Listener: a whisper, a phantom, an offer, or in Void-touched places a danger. Voice events are rationed by a counter that rises as warp is gained.
+_Avoid_: warp event, insanity event
+
+**Voice line**:
+One recorded phrase of the Voices, heard by one Listener with its words shown on screen.
+_Avoid_: whisper (as a proper noun), voice clip (in player-facing text)
 
 **Bargain**:
 An offer from the Voices of power in exchange for more warp. It can always be refused at no cost.
 _Avoid_: pact, deal
+
+**Stilling**:
+Treating lasting warp. It always works and always costs something. Distinct from Silencing, which is an ending.
+_Avoid_: curing, purifying, cleansing
+
+**Stilling Draught**:
+The crucible-made drink that stills a fixed amount of lasting warp.
+_Avoid_: sanity potion, purifying salts
+
+**Apparition**:
+A glimpse of a Choir figure that only one Listener sees. It is never there, and vanishes when touched.
+_Avoid_: phantom (vanilla has a Phantom mob), ghost
 
 ### Aspects and energy
 

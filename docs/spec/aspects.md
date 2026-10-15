@@ -241,8 +241,11 @@ Per player. **A scan always succeeds**: there is no wall of "you don't have the 
 | Discovering an aspect | its `discovery_bonus` of that aspect |
 | First strike on a node, per player per node | ceil(max capacity ÷ node reward divisor) of each of its aspects, using the max capacity at that first strike |
 | Choir pages, research rewards | #16's |
+| The Voices: insight events and `points` Bargains | [#25](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)'s ([warp spec, Event types](warp.md#event-types), [Bargains](warp.md#bargains)): points of aspects the player **already knows**, credited through the knowledge service |
 
 Points are spent in #16's puzzle and in skip mode.
+
+- **Voice credits never teach.** An insight draws only from the known aspects, and a `points` Bargain is offered and accepted only while every one of its aspects is known. Neither runs discovery, pays a discovery bonus or fires `AspectDiscoveredEvent`, so the Voices can never name an unheard aspect.
 
 ### The Commonplace Book
 
@@ -378,7 +381,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Jars and tubes carry labels as well as tint.
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- Phantom mobs have no server identity, and phantom blocks vanish when struck, so the fork's readout always names what is really there.
+- Phantom mobs have no server identity, and phantom blocks vanish when struck, so the fork's readout always names what is really there. *Met by the [warp spec](warp.md#phantoms): apparitions are client-only entities under negative ids, and a strike at one is cancelled on the client with its swing turned off, so nothing is sent and the fork stays silent rather than sounding; phantom blocks are only ever disguises over real blocks, so every strike reaches the real block, and the disguise vanishes. A phantom over air never arises.*
 
 ## Production tickets
 
