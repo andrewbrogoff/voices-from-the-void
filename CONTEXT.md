@@ -65,6 +65,14 @@ _Avoid_: portal key, eye
 What remains of one of the Choir's scholars: the guardian who rises at a Step when its bell is rung. There are three, each with a Void-tongue name.
 _Avoid_: guardian (vanilla has one), boss (in player-facing text), warden
 
+**Knell**:
+A Chorister's ring of sound that rolls out along everything standing in its Step: whoever is on the ground when it passes is struck, so it is jumped.
+_Avoid_: shockwave, toll (the Hollow Bell tolls)
+
+**Choir walk**:
+The circle around each Step's well along which its Chorister moves, kept clear of masonry.
+_Avoid_: path, patrol
+
 **Keepsake**:
 What a defeated Chorister leaves each Listener who stood in its ring at the end (named Yoorel in play). It pays for the Void rod and cap.
 _Avoid_: pearl, void metal

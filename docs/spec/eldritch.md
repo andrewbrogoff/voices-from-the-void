@@ -78,10 +78,12 @@ Combat is specified in its own spec, **[Choristers of the Road](https://github.c
 - `ChoristerFactory.create(level, instance, risePos, maxHealth)` → a configured, not yet added Chorister, or none. This spec adds it and checks the insertion.
 - `Encounter.targetFor(chorister)` → the current target ("Threat and target"), or none. The creature never chooses its own target.
 - `Encounter.isParticipant(player)` and `Encounter.arena()`. The creature never acts on anyone else, and never leaves the arena.
+- **`Encounter.isEligibleParticipant(player)`**: the player is a participant **and** eligible now ("Admission"), read at the call. It is **the one predicate** for `targetFor`'s candidates, the credited at a defeat, every Chorister hit, and incoming damage a player causes ([Choristers, Who can hurt it](choristers.md#who-can-hurt-it)).
+- **`int Encounter.eligibleParticipants(int[] out)`**: fills `out` (capacity at least `MAX_PARTICIPANTS`) with the entity ids of the players for whom `isEligibleParticipant` holds, ascending, and returns the count (≤ 16). A pure read with zero allocation, so the creature never scans the level's players.
 - **`Encounter.onConfirmedDeath(chorister)`**, the creature's only report: its `die(source)` override calls `super.die(source)` and then, **only if** the protected `dead` flag went from false to true across that call, calls this once. `LivingDeathEvent` can't be the signal: it is cancellable (`NF:event/entity/living/LivingDeathEvent.java:27–32`) and is posted **before** vanilla accepts the death (`MC:world/entity/LivingEntity.java:1526–1529`), so a later subscriber could cancel or heal after credit was paid. Health at or below 0 alone isn't enough either. This spec reads the creature's damage through `LivingDamageEvent.Post`.
 
 **Contracts on the Choristers spec** (each is a criterion in that ticket):
-- The type is allowed in peaceful, built with `noSave()`, persistence-required while it lives, with knockback resistance 1.0; it changes no blocks, summons nothing, never heals, is never invulnerable and draws no randomness.
+- The type is allowed in peaceful, built with `noSave()`, persistence-required while it lives, with knockback resistance 1.0; it changes no blocks, summons nothing, never heals and draws no randomness. It **has no invulnerable phase**: it takes damage at every tick from every source, except damage caused by a player (directly or through a projectile they own) who isn't in creative mode and fails `isEligibleParticipant` at that moment, so nobody outside the arena hurts it without risk.
 - Every move's damage type uses a **difficulty-scaled** `scaling` (so it is zero in peaceful, `NF:common/damagesource/IScalingFunction.java:24–38`), is outside `#minecraft:bypasses_armor` and the [armor spec's](armor.md#the-baffle) `#vftv:baffle_ignores`, and is telegraphed.
 - It targets only `targetFor`'s answer, every tick, and returns to its rise cell when below the floor − 8 or outside the arena.
 - **Its bounding box fits the rise box** ("The layout": 3 × 5 × 3 cells) at every instance's scale, and its maximum-health attribute accepts the entry health it is given (≤ 1024).
@@ -335,6 +337,7 @@ Each template is exactly **47 × 40 × 47** with origin (−23, floor − 8, −
 | **landing** | the standing cell (0, 1, −17); the player arrives at (0.5, floor + 1, −16.5) facing the well (`yRot` 0) |
 | **Step Bell** `vftv:step_bell` | (0, 1, 17) at Steps 1–3; (17, 1, 0) at the Heart |
 | **rise cell** (Steps 1–3) | the standing cell (0, 1, 12), rise point (0.5, floor + 1, 12.5); the **rise box**, x −1 to 1, y 1 to 5, z 11 to 13, is all air |
+| **choir walk** (Steps 1–3) | every cell with 81 ≤ d² ≤ 225 at y 1 to 5 is air: the Chorister's path, the circle of radius 12 through the rise point ([Choristers, The choir walk](choristers.md#the-choir-walk)). It holds the rise box and meets no other role |
 | **Reliquary** (Steps 1–3) | (−17, 1, 0), facing east, site `vftv:road`; its front cell (−16, 1, 0) is a standing cell |
 | **the Heart** `vftv:heart` | the Heart station only, at (0, 1, 17) |
 | **arena** (Steps 1–3) | a player is in it iff `(px − 0.5)² + (pz − 0.5)² ≤ 22²` and `floor − 2 ≤ py < floor + 12` |
@@ -452,14 +455,14 @@ A player is **eligible** at Step *k* iff they are online, alive, in Vuulas, insi
 
 - **Threat** is kept per participant, in **tenths of health**: each `LivingDamageEvent.Post` on the Chorister (`NF:event/entity/living/LivingDamageEvent.java:35–44`) whose `DamageSource.getEntity()` is a participant adds `floor(amount × 10)` of the damage actually dealt, saturating at `THREAT_MAX` (1,000,000). Damage from anyone else adds nothing.
 - **Decay:** every `threat.interval` (**20**) ticks after the rise, each threat becomes `floorDiv(threat × threat.keep_pm, 1000)` (**900**), before that tick's hits.
-- **`targetFor(chorister)`:** among participants who are eligible **now**, the highest threat; ties go to the smaller squared distance to the Chorister (`double`), then the lower entity id. With no participant, none. A participant who leaves loses their threat.
+- **`targetFor(chorister)`:** among participants for whom `isEligibleParticipant` holds (eligible **now**), the highest threat; ties go to the smaller squared distance to the Chorister (`double`), then the lower entity id. With no participant, none. A participant who leaves loses their threat.
 
 **Vectors:** threats 60 and 45 at squared distances 100 and 4 → the 60; 50 and 50 at 100 and 4 → the nearer; 50 and 50 at 9 and 9 → the lower id; all 0 at 16, 25 and 16 → the lower id of the two nearest; 1,000,000 at 400 against 999,999 at 1 → the 1,000,000. **Decay**, hits of 60 (player 1) at tick 0, 45 (player 2) at 25, 10 (1) at 41 and 30 (2) at 55: ticks 0, 20, 25, 40, 41, 55, 60 read 60/0, 54/0, 54/45, 48/40, 58/40, 58/70, 52/63.
 
 ### Defeat and credit
 
 The Chorister's **confirmed death**, `Encounter.onConfirmedDeath` ("The split": called only after vanilla has accepted the death), ends the encounter **once**: under the station guard, if the slot is `ACTIVE` with that Chorister, it becomes `IDLE` before anything else, so a repeated notification does nothing. A `LivingDeathEvent` that a later subscriber cancels, or a heal before death, pays nothing. Then, in order:
-1. **The credited** are the participants eligible at that moment. One who died to the same blow, or logged out, is not.
+1. **The credited** are the participants eligible at that moment (`isEligibleParticipant`). One who died to the same blow, or logged out, is not.
 2. **Progress, all first:** for each credited player in ascending entity id, under their road guard, `progress` becomes *k* if it was *k* − 1. An unreadable record is skipped, logged once.
 3. **`RoadStepPassedEvent`** for each player who advanced, in the same order.
 4. **One keepsake** to each credited player, whoever already passed: `Inventory.add`, any remainder through `Player.drop(stack, false)` (the [worldgen hand-out](worldgen.md#handing-out)). A cancelled drop loses that copy; an exception is caught and logged once, and the rest go on.
@@ -707,7 +710,7 @@ The worldgen spec's `vftv:template/1` format, its format, block-state, namespace
 | `threshold` | exactly `threshold` | exactly 33 × 44 × 33 | `vftv:reliquary` (exactly 1, site `vftv:threshold`) | `reliquary` only | exactly 2 `vftv:answerer` and 1 `vftv:answerer_cantor` |
 | `road` | exactly `step_1`, `step_2`, `step_3`, `heart` | exactly 47 × 40 × 47 | `vftv:reliquary` (exactly 1 in each Step, site `vftv:road`; none in `heart`), `vftv:step_bell` (exactly 1 each), `vftv:heart` (exactly 1, in `heart` only) | `reliquary` only | none |
 
-**Rejected,** besides the worldgen spec's format rules: a role, count or position other than "The template" or "The layout" states; a well cell that isn't air; a ring floor cell that isn't a full block with a sturdy top face; a rise box with any non-air cell; a path rule broken; a shaft or stair headroom cell that is structure void; any `minecraft:jigsaw`, chest, spawner, vault or container; any `vftv:node`; any block in `#vftv:hushed` or in the [Hush spec's](hush.md#the-forms) source states on the Road; the key `neoforge:attachments` anywhere. The datagen-phase **parsed-NBT no-Hush test** covers all five generated files, as it covers every template.
+**Rejected,** besides the worldgen spec's format rules: a role, count or position other than "The template" or "The layout" states; a well cell that isn't air; a ring floor cell that isn't a full block with a sturdy top face; a rise box with any non-air cell; a choir-walk cell that isn't air; a path rule broken; a shaft or stair headroom cell that is structure void; any `minecraft:jigsaw`, chest, spawner, vault or container; any `vftv:node`; any block in `#vftv:hushed` or in the [Hush spec's](hush.md#the-forms) source states on the Road; the key `neoforge:attachments` anywhere. The datagen-phase **parsed-NBT no-Hush test** covers all five generated files, as it covers every template.
 
 ### The Threshold
 
@@ -872,7 +875,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 - **A throwing listener** is logged once; the change stands, and the remaining steps run.
 - **Travel** uses NeoForge's own `EntityTravelToDimensionEvent` and `PlayerChangedDimensionEvent`; same-level travel posts nothing of ours.
-- **Plain `core` services:** `RoadService` (descent, return, the bells, the Heart, the catch), `RoadLayout`, `RoadPlaceQuery`, `ChoristerFactory` (the Choristers spec's), `Encounter`. Whether any is exposed in `api` is the API spec's call.
+- **Plain `core` services:** `RoadService` (descent, return, the bells, the Heart, the catch), `RoadLayout`, `RoadPlaceQuery`, `ChoristerFactory` and the `Chorister` entity (the Choristers spec's), `Encounter`. **All live in the one feature `core.road`**, with the Minecraft-free encounter and Chorister rules in `core.road.model`, so the frame and the creature never form a feature cycle ([architecture, Enforcement](architecture.md#enforcement)). Whether any is exposed in `api` is the API spec's call.
 
 ## Sync and state
 
@@ -1010,7 +1013,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the allocation budgets of the catch, the index pass without a change, a refresh, the threat add and `targetFor`.
 
 **Datagen-phase:**
-- the five templates against "The template" and "The layout" (roles, positions, the well, the ring, the rise box, paths, the Threshold's way down and out); the parsed-NBT no-Hush test over all five;
+- the five templates against "The template" and "The layout" (roles, positions, the well, the ring, the rise box, the choir walk, paths, the Threshold's way down and out); the parsed-NBT no-Hush test over all five;
 - the dimension type, biome and stem JSON exactly as specified; the advancements decode, and `vftv:find/choirs_road` matches only its page (another page and a plain `vftv:choir_page` don't).
 
 **GameTest:**
@@ -1089,7 +1092,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with fixed limits at every allowed tuning, allocation budgets, disclosed native terms, and generation time accounted separately.
 
-**[Choristers of the Road](#the-split)** (the new spec ticket): every contract under "The split".
+**[Choristers of the Road](#the-split)** (the new spec ticket): every contract under "The split". *Met by the [Choristers spec](choristers.md#contracts-on-sibling-specs), which amended "The split" (`isEligibleParticipant`, `eligibleParticipants`, "no invulnerable phase"), "The layout" (the choir walk) and the code placement under "Events".*
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)** (amended in this change)
 - `context.dimensions` defaults to `["vftv:vuulas"]`.
@@ -1107,7 +1110,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - **The fact source `road`** over `RoadRules`, and the `warp_rules` key `joining.amplifier_bonus`.
 - **Sources:** `path-stage3.json` ends by acquiring `vftv:find/choirs_road`; `path-stage4.json` uses the Threshold page and the first two Road pages; no Stage 4 note may need pages 3–5's rewards. #37 freezes the five Road pages' narrative order.
 - **#36's hint:** the last Stage 3 page in its narrative order is `vftv:choirs_road`'s `hinted_by`, and its prose points at bells hung over nothing.
-- **Prose** (#37) teaches the descent and where it works, the Steps and their bells (use to go down, crouch to go up, sprint to ring a rematch at a Step already passed), that nobody is stranded, the catch, no building, the encounters (anyone may help; credit only for those in the ring at the end), and both endings with every consequence in a `warp`, `warp_rules`, `entry` or `road` span.
+- **Prose** (#37) teaches the descent and where it works, the Steps and their bells (use to go down, crouch to go up, sprint to ring a rematch at a Step already passed), that nobody is stranded, the catch, no building, the encounters (anyone may help; credit only for those in the ring at the end; only those in the ring can hurt a Chorister; a knell is jumped, an inhale fled and an exhale met close or far; a lock fixes the aim, and a strike can break a shield, with no Chorister number in the prose: [Choristers, Contracts](choristers.md#contracts-on-sibling-specs)), and both endings with every consequence in a `warp`, `warp_rules`, `entry` or `road` span.
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)** (amended in this change)
 - `#vftv:choir_sites` holds `vftv:threshold` too.
@@ -1130,7 +1133,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - No server switch of ours: peaceful and the warp and Hush switches suffice.
 
 **API**
-- In `api`: `RoadLayout`, `RoadLimits`, the `RoadRules` record, `EldritchKeys` (the dimension, level, biome, generator, structure, site, tag, advancement and attachment keys, and the `vftv:chorister` registry key), and the payload and event records.
+- In `api`: `RoadLayout`, `RoadLimits`, the `RoadRules` record, `EldritchKeys` (the dimension, level, biome, generator, structure, site, tag, advancement and attachment keys, and the `vftv:chorister` registry key with its three instance keys), and the payload and event records. The [Choristers spec](choristers.md#contracts-on-sibling-specs) adds `ChoristerLimits` and its registry entry records.
 - In `api.neoforge`: the `vftv:road` `AttachmentType` handle and the three event classes.
 - Services stay implementations; which are public is the API spec's call.
 
@@ -1140,10 +1143,10 @@ This spec settles every decision for its own content. Five required child ticket
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Road and Threshold templates** | **Generator:** `tools/art/road.py`, seeded and byte-identical on re-run, writing `content/eldritch/templates/threshold.json`, `step_1.json`, `step_2.json`, `step_3.json` and `heart.json` in `vftv:template/1` at the sizes, roles, positions and paths under "The template" and "The layout": the Threshold's ring of broken bell frames (one reaching 16 above the surface), its carved shaft and stair with headroom, its chancel with the Reliquary and three defenders; each ring around its open well with the landing, the Step Bell, the rise cell and its clear box, the Reliquary, and the Heart at the bottom. Stage 4 masonry (tuff family, calcite, deepslate tiles, waxed copper, soul lanterns), never a hushed block or a Hush source on the Road. **Review:** an isometric preview of each template with its standing cells, entry cells, paths and rise box marked; Blender renders of the stacked Road from Step 1 looking down the well and from the Heart looking up, and of the Threshold at dusk. Provenance rows. | none |
+| **Road and Threshold templates** | **Generator:** `tools/art/road.py`, seeded and byte-identical on re-run, writing `content/eldritch/templates/threshold.json`, `step_1.json`, `step_2.json`, `step_3.json` and `heart.json` in `vftv:template/1` at the sizes, roles, positions and paths under "The template" and "The layout": the Threshold's ring of broken bell frames (one reaching 16 above the surface), its carved shaft and stair with headroom, its chancel with the Reliquary and three defenders; each ring around its open well with the landing, the Step Bell, the rise cell and its clear box, the clear choir walk at Steps 1–3, the Reliquary, and the Heart at the bottom. Stage 4 masonry (tuff family, calcite, deepslate tiles, waxed copper, soul lanterns), never a hushed block or a Hush source on the Road. **Review:** an isometric preview of each template with its standing cells, entry cells, paths, rise box and choir walk marked; Blender renders of the stacked Road from Step 1 looking down the well and from the Heart looking up, and of the Threshold at dusk. Provenance rows. | none |
 | **Eldritch assets** | **Generator:** `tools/art/eldritch.py`. **Items** (16 × 16, Stage 4 row): `hollow_bell`, `void_rod`, `void_cap`, `keepsake`, with item models (parent `minecraft:item/generated`) and `assets/vftv/items/<id>.json`. **Wand layers:** `assets/vftv/textures/item/wand/rod/void.png` and `…/cap/void.png` with their layer models, and the **appended** `assets/vftv/items/wand.json` (a `vftv:void` case in each select, every existing case, fallback and the foci member kept). **Blocks:** `step_bell` and `heart` models exactly as under "Models", textures, blockstates (the Step Bell's four facings) and item definitions. **GUI:** `assets/vftv/textures/gui/heart.png` (the 248 × 166 screen with its two 116 × 120 panels); buttons, the confirm panel and scrollbars reuse the research spec's sprites. **Sounds:** every file and `sounds.json` entry under "Sound", naming its subtitle key, no overrides. **Review:** a contact sheet at GUI scale 2 beside a vanilla bell, blaze rod and lodestone, with the five Void-part wand combinations; Blender renders of both blocks; **the Heart screen mockup** at 320 × 240 from the sprites and the vanilla font, at the layout and focus order under "The block and the screen": both panels with a clipped Joining preview, the confirm over each, a long test translation scrolling. Provenance rows. | [Foci assets #49](https://github.com/andrewbrogoff/voices-from-the-void/issues/49) (`items/wand.json` order) |
 | **Eldritch content** | `content/eldritch/threshold.json` (as shipped, the ruin's biome lists transcribed), `sites.json` (#37's five Road pages transcribed), `vuulas.json` (as shipped), `recipes.json` (the three bodies within "Recipes"' rules), `wand_parts.json` (as shipped), `bootstrap.json` (every `why` reviewed), `tags.json` (as shipped), `fixtures.json` (the file above), `content/lang/en_us/eldritch.json` (every key under "Lang keys"), and the lexicon's four `uses` additions in `content/lexicon/void_tongue.json`. Its review checks the bootstrap, the names against the lexicon, and that the Heart's lines state every consequence and the Silencing scope. | [Stage 4 research content #37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37), only for its frozen page order; [#30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
-| **Chorister assets** | the Choristers spec's generator, editable model, three textures, poses, particles and sounds, as that spec freezes them | the **[Choristers of the Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/69)** |
-| **Chorister content** | `content/eldritch/choristers.json` (the three instances), its fixtures and lang, in that spec's schemas | the **[Choristers of the Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/69)** |
+| **Chorister assets** | the Choristers spec's generator, editable model, three textures, mark atlas, poses (as review renders) and sounds, as [that spec's "Production tickets"](choristers.md#production-tickets) freezes them | the **[Choristers of the Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/69)** |
+| **Chorister content** | `content/eldritch/choristers.json` (the three instances and four damage types), `chorister_fixtures.json` and `content/lang/en_us/choristers.json`, in that spec's schemas | the **[Choristers of the Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/69)** |
 
 **Handed off, not children of ours:** [#36](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) and [#37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37) consume the entries, amounts, sources, hint and fact keys frozen here; [#30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) gives the new items, blocks and the Chorister their values; the [Voice line script #57](https://github.com/andrewbrogoff/voices-from-the-void/issues/57) and [recordings #58](https://github.com/andrewbrogoff/voices-from-the-void/issues/58) already hold the six ending lines, so nothing new is recorded.
