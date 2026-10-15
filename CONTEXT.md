@@ -118,8 +118,24 @@ The spilled residue of careless or unstable magic.
 _Avoid_: pollution, miasma
 
 **The Hush**:
-Land or creatures where pooled flux has thinned the world until the Void seeps through. They are quiet, drained of colour, and hollowed.
+Land or creatures where pooled flux has thinned the world until the Void seeps through. They are quiet, drained of colour, and hollowed. It is caused only by flux a player spilled, and never spreads on its own.
 _Avoid_: taint, corruption, blight
+
+**Seep**:
+The position in a chunk where its pooled flux last landed, and where the Hush grows from. A place, not a block or a source of its own.
+_Avoid_: anchor (an anchor is printed on a note), taint source
+
+**Hushed block**:
+A natural block the Hush has drained of colour and sound: the same shape, inert, and restored exactly when cleared.
+_Avoid_: tainted soil, crusted taint
+
+**Hollow**:
+The one creature the Hush raises: a silent husk of ash and plaster, risen from deep Hush and keeping near it.
+_Avoid_: tainted animal, taint crawler, Taintacle
+
+**Hush Ash**:
+What a Hollow leaves behind: crucible fodder rich in Silentium and Vacuos.
+_Avoid_: taint goo, tainted tendril
 
 **Node**:
 A naturally occurring knot of vis in the world, which can be found, tapped and cultivated.
@@ -336,6 +352,14 @@ _Avoid_: silverwood, greatwood
 **Echo cap**:
 The Stage 3 cap, infused from a Resonant Brass cap.
 _Avoid_: thaumium cap, charged cap
+
+**Clearing Bell**:
+The Stage 2 handbell that reads the flux pooled underfoot and, rung, clears some of it and restores nearby hushed blocks. It wears with use.
+_Avoid_: ethereal bloom, purifier, cleanser
+
+**Pealing Bell**:
+The Stage 3 hung bell, fed Sonus essentia, that peals on its own to clear flux and restore the Hush around it.
+_Avoid_: flux scrubber, purifier
 
 **Golem**:
 A crafted servant, made of a body and fitted with a core, that its owner places in the world. It carries items or essentia between the blocks it has been marked for, within range of its home, and never acts on the world beyond that.

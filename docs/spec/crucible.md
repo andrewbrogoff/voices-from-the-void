@@ -345,10 +345,10 @@ At most **one operation** is open on a crucible at a time. While it is open, the
 
 ### The boundary with Flux and the Hush
 
-- This spec posts **`CrucibleEvent(SPILLED)`** after the pool is cleared. [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) converts it to flux through its pure function **`essentiaFlux(spilled, cause)`** and applies that amount **once**, on that event.
+- This spec posts **`CrucibleEvent(SPILLED)`** after the pool is cleared. [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) converts it to flux through its pure function **`essentiaFlux(spilled, cause)`** and generates that amount **once**, on that event. What the chunk's aura retains is at most that; any difference at a store's bound is reported as overflow ([Hush spec, Generated, retained and overflow](hush.md#generated-retained-and-overflow)).
 - **Until #26 lands,** `essentiaFlux` is the **typed zero**: it returns 0, never an absent value, and a spill makes sound and particles only.
 - **Bounds:** `essentiaFlux` returns an integer 0–1,000,000 (`MAX_SPILL_FLUX`). Its input is a valid format-1 pool, whose total is at most 10,000; a dormant record is never an input.
-- **Explicit, synced inputs:** it is a pure function of the spilled map, the cause and #26's synced rule record, nothing else. The HUD previews `essentiaFlux(pool, EMPTIED)` on the client from the same synced inputs, so the preview equals the application, and the cost of emptying is never hidden ([lore, Listening and warp](lore.md#listening-and-warp): never a hidden tax).
+- **Explicit, synced inputs:** it is a pure function of the spilled map, the cause and #26's synced rule record, nothing else. The HUD previews `essentiaFlux(pool, EMPTIED)` on the client from the same synced inputs, so the preview equals the flux generated (by emptying or by removal alike, since one rate covers every cause), and the cost of emptying is never hidden ([lore, Listening and warp](lore.md#listening-and-warp): never a hidden tax).
 
 ## Essentia out
 
@@ -804,9 +804,10 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - **Extensions need explicit proposals.** Any insert path into a crucible, and any essentia combiner, is #20's to propose: it counts toward `pool.capacity` and the 64-entry bound, and treats Vacuos as a true primal (never made from Aer + Perditio).
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- It supplies the pure **`essentiaFlux(spilled, cause)`**: integer 0–1,000,000, a function only of the spilled map, the cause and its synced rule record, with the typed zero as the fallback until it lands. It applies flux equal to it **once** on `CrucibleEvent(SPILLED)`, and owns no second crucible spill producer. GameTest: the HUD's previewed spill equals the applied flux.
+- It supplies the pure **`essentiaFlux(spilled, cause)`**: integer 0–1,000,000, a function only of the spilled map, the cause and its synced rule record, with the typed zero as the fallback until it lands. It generates flux equal to it **once** on `CrucibleEvent(SPILLED)`, and owns no second crucible spill producer. GameTest: the HUD's previewed spill equals the generated flux (amended from "applied": retention is reported separately).
 - It adds no flux from dissolving, crafting, refusing or extraction.
 - **Bounds:** a spill's input is a valid format-1 pool, ≤ 10,000 in total; dormant records are never inputs.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate for every cause, so the `EMPTIED` preview is also what removal generates; one `HIGHEST` listener; the equality is of generated flux, with retained, pending and overflow reported (amended above).*
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
 - A golem that drops items into a crucible **as crafting input** sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online, alive and in the same level, with the research learned. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.

@@ -43,6 +43,7 @@ Generated resources are committed to `src/generated/resources` (see "Datagen").
 - **Allowed access:** `neoforge` may use `core` and `api` (including `api.neoforge`). `core` may use `api` but not `api.neoforge`. Nothing may use `neoforge`.
 - **`core` is loader-free.** It never touches `net.neoforged..` or `org.spongepowered..`.
 - **Organised by feature:** each feature is one `core.<feature>` package, and features have no import cycles between them.
+- **`core.flux` is a leaf feature** ([Hush spec, The pinned functions](hush.md#the-pinned-functions)): it imports only `api` and the JDK, never another `core` feature, so `core.vis`, `core.crucible`, `core.infusion` and `core.hush` can all price flux without a cycle.
 - **The `model` tier** holds the heavy logic: the essentia network solver, validation of the research puzzle, the Voice event counter, infusion stability, golem job planning. It may not use `net.minecraft..`, so it gets millisecond unit tests without booting FML, and JMH benchmarks. It is thread-agnostic (immutable inputs, no shared mutable state).
 - **Client separation:** nothing outside a `..client..` package may use `net.minecraft.client..` or `com.mojang.blaze3d..`. This prevents dedicated-server class-loading crashes.
 
@@ -155,6 +156,8 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | `FEATURES_ACYCLIC` | `core.(*)..` slices have no import cycles between them |
 | `MIXINS_CONFINED` | only `neoforge.mixin..` uses `org.spongepowered..`, and every class there carries `@WhyMixin("<one line>")` (class retention) |
 | `COMPAT_CONFINED` | `curios`, `jei` and `terrablender` types are used only in their own `neoforge.compat.<mod>` package |
+| `FLUX_LEAF` | `core.flux..` uses no other `core.(*)..` package |
+| `FLUX_ENTRY_POINTS` | a package allowlist: only classes in `neoforge.hush..` and `core.hush..` call `FluxService.deposit` (review keeps them to the Hush spec's named entry points). A static caller check: once-only delivery and conservation are proved by the Hush spec's GameTests |
 
 **Other checks:**
 - A Gradle check fails if any active line (not blank, not a comment) in `META-INF/accesstransformer.cfg` lacks a trailing `# why` comment.

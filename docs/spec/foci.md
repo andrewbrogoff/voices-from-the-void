@@ -937,7 +937,7 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 | `FocusAffectEntityEvent` (cancellable) | before each entity is affected (at most 16 per Burst, 1 per Touch, pulse or bolt impact) | caster; target; effect id; harmful |
 
 - **`CAST` reports a paid attempt, not what was affected.** A bolt hits later, if at all, and an Exchange can fail after its break. No sibling needs a post-impact event, so none is posted.
-- `VisSpentEvent` comes from `spend`, and [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) applies its flux on it.
+- `VisSpentEvent` comes from `spend`, and [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) generates its flux on it ([Hush spec, Sources](hush.md#sources)).
 - Nothing fires for a refusal, an attach or detach, a fizzle or a beam that pays nothing.
 
 **Plain `core` services,** implemented in `core`: `FocusService.kind(stack)`, `FocusService.composition(stack)`, `FocusCost.base`, `FocusMagnitude.of`, `FocusRules.valid`, `FocusPreview.of`. `api` cannot depend on `core` or hold implementations ([architecture, Public API](architecture.md#public-api)), so any public facade is an interface in `api` that `core` implements. Whether there is one is the API spec's call.

@@ -1087,9 +1087,10 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Its contract on golems now exempts a deliberate **TIP** drop, which has no thrower and always dissolves. Crucible behaviour is unchanged.
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- `essentiaFlux(spilled, DIED)` is applied **once** on `GolemEvent(SPILLED)`, at the level and death position the event carries; the typed zero until #26 lands.
+- `essentiaFlux(spilled, DIED)` is generated **once** on `GolemEvent(SPILLED)`, at the level and death position the event carries (amended from "applied": what an aura retains is reported separately); the typed zero until #26 lands.
 - **Bounds:** a golem spill is one aspect, ≤ 1,000 units, within the crucible contract's ≤ 10,000 input and 0–1,000,000 output.
 - No other golem flux.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one `HIGHEST` listener depositing at the event's death position; generated, retained, pending and overflow reported.*
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
 - Hand entries (or reviewed exemptions) for the `vftv:golem` entity type and item, the three cores and the Baton.

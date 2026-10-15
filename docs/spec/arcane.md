@@ -579,7 +579,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **no vanilla path extracts or crafts:** click, shift-click, number key, offhand swap, drag and double-click collect on output and grid; the place-recipe packet; the crafting table and the Crafter with an arcane pattern; taking committed output posts no event and spends nothing;
 - hoppers can't reach it; close returns items; **death and disconnect** drop or return grid, wand and output exactly once; breaking the table returns them;
 - two players at one table;
-- `ORDINARY` against `VOID` through a stub factor; previewed spill = applied flux through #26's stub;
+- `ORDINARY` against `VOID` through a stub factor; previewed spill = generated flux through #26's stub;
 - recipes sent to the client on join and reload; the 4,096 cap on reload; **over-cap startup with zero players** fails in `ServerStartingEvent` on the dedicated GameTest server (the integrated case is in E2E);
 - every test id in the discovery guard.
 
@@ -643,7 +643,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `vis_factor` as already contracted in the wands spec; the station displays its resolved per-mille part and the `clamped` flag. Its synced inputs are among the preview's live dependencies.
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- `spill` as already contracted in the wands spec, applied once on `VisSpentEvent`; no second arcane flux publisher. **A quote's spill is at most 1,000,000**, the craft echo's wire bound.
+- `spill` as already contracted in the wands spec, generated once on `VisSpentEvent` (amended from "applied": what an aura retains is reported separately); no second arcane flux publisher. **A quote's spill is at most 1,000,000**, the craft echo's wire bound.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one listener generating the event's own `spill`; at most 80,000 by construction, clipped at 1,000,000.*
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
 - Hand entries (or reviewed exemptions) for `vftv:worktable` and `minecraft:bell`. The **round-trip** non-amplification checks include every built-in `vftv:arcane` recipe, counting vis as no material input, and the crafting table → Worktable conversion.

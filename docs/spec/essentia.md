@@ -1110,10 +1110,11 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The essentia seam's model works on loader-free inputs and returns a plan; `neoforge.essentia` owns the capabilities, caches, handlers, journals and transactions.
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- It applies `essentiaFlux(spilled, cause)` **once** on `EssentiaEvent(SPILLED)`, as on `CrucibleEvent(SPILLED)`, for the causes `DESTROYED` and `REMOVED`.
+- It generates `essentiaFlux(spilled, cause)` **once** on `EssentiaEvent(SPILLED)`, as on `CrucibleEvent(SPILLED)`, for the causes `DESTROYED` and `REMOVED` (amended from "applies": what an aura retains is reported separately).
 - **The input bound for this event is a total of 640,000** (`MAX_ESSENTIA_SPILL`), computed in `long`; the output is still an integer 0–1,000,000. It is a pure function of the spilled map, the cause and its synced rule record, with the typed zero as the fallback until it lands.
 - **No other essentia flux:** moving, pouring, labelling, valves, stalls and caps spill nothing.
-- GameTest: a destroyed stack applies its flux once.
+- GameTest: a destroyed stack generates its flux once.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one `HIGHEST` listener; the input summed in `long` up to 640,000; one rate for every cause; generated, retained, pending and overflow reported.*
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)
 - **The fact source `essentia`:** its grammar, every key, the value format, the `EssentiaRules` arrival and reload invalidation, and `[?]` before the first arrival. All of it is in the research spec's "Prose and fact references".

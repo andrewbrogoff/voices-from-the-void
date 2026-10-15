@@ -129,7 +129,8 @@ Every quote and spend carries a **`VisContext`** (a record in `api`):
   - **Warp factor:** `W = vis_factor(player, ctx)` from [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25), 1.0 until #25 lands. A non-finite `W` counts as 1.0 and is logged once. `w = Math.round(clamp(W, 0, 10) × 1000)`.
 - **Multiplier:** `raw = cap × (1000 − d) × w` in `long` arithmetic (at most 2 × 10¹⁰). `m₀ = (raw + 500,000) / 1,000,000`, which rounds half up. `m = clamp(m₀, Math.round(quote.min_multiplier × 1000), Math.round(quote.max_multiplier × 1000))`, and `clamped` iff `m ≠ m₀`.
 - **Effective cost:** `effective[a] = base[a] == 0 ? 0 : max(1, ceilDiv(base[a] × m, 1000))`.
-- **Spill:** [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)'s `spill(inputs, ctx)`, a pure function of the resolved inputs and `effective` (never of a quote, which would be circular); 0 until #26 lands.
+- **Neutral cost:** `neutral[a]` is `effective[a]` recomputed with `w = 1000`: the same `raw`, rounding and clamp to `m_neutral`, then the same ceiling. It is the cost the same wand and gear would charge with no warp, and it is never shown; it exists only so the spill can price the vis warp actually added.
+- **Spill:** [the Hush spec's](hush.md#the-pinned-functions) `visSpill(ctx.kind, effective, neutral, rules)`, a pure function of the resolved inputs (never of a quote, which would be circular): `ORDINARY` spills `ceilDiv(Σ max(0, effective − neutral) × flux.tax_pm, 1000)`, `VOID` spills `ceilDiv(Σ effective × flux.void_pm, 1000)`, each at most 1,000,000. `QuoteInputs` carries `flux.tax_pm` and `flux.void_pm` from the synced `FluxRules`; while `FluxRules` is absent the spill is the typed zero.
 - **`VisQuote`** (a record in `api`): `base`, `effective`, `m`, `spill`; the **resolved factors** `cap`, `discount` (`d`) and `warp` (`w`), the per-mille integers above (so a station can show how much of `m` is warp, [arcane crafting, The screen](arcane.md#the-screen)); and the flags `discount_capped`, `clamped`, `exceeds_capacity` (some effective cost > the rod's capacity), `inert`, `affordable` (not inert, and every pool ≥ its effective cost) and `short` (the aspects whose pool is below their cost, in ascending id).
 - **Echo equality:** two quotes are the same cost iff `base`, `effective`, `m`, `spill`, `discount_capped`, `clamped` and `exceeds_capacity` are all equal. The factors explain `m` and are not compared: `m` already covers them.
 
@@ -146,6 +147,8 @@ Every quote and spend carries a **`VisContext`** (a record in `api`):
 | 0.85 | 0.10 + 0.20, summed as `double` (0.30000000000000004) | 0.30 | 1.00 | Aer 10, Ignis 3, Ordo 1 | 850, 300, 1000 | 595 | Aer 6, Ignis 2, Ordo 1 | none |
 
 The modifier flags are `discount_capped` and `clamped`. The capacity flags depend on the wand: the 4000-cost row is `exceeds_capacity` for every supported rod (capacity ≤ 1000), and the others are not for the built-in rods.
+
+**Spill** at the Hush spec's default rates (`tax_pm` 1000, `void_pm` 250), from the same reference and its JDK cross-check (both compute `neutral` and the spill), every row above in `ORDINARY`: rows 1, 2, 3, 6 and 7 spill **0** (W 1.00, so `neutral` = `effective`); row 4 spills **7** (neutral Aer 25, Terra 6); row 5 spills **2,000** (neutral Aer 2000: the clamp at 4.00 halves what the factor of 10 asked for). Two more: cap 0.25, discount 0.90, W 1.50, Aer 100 → effective and neutral both 50 (both clamped to 500), spill **0**; `VOID`, cap 1.00, Aer 40 → spill **10**. The full table is the [Hush spec's](hush.md#the-pinned-functions).
 
 ### The spend
 
@@ -216,6 +219,7 @@ A **synced datapack registry, `vftv:node_type`** (`data/<ns>/vftv/node_type/<pat
 | `greenwood` | Terra [16, 40], Ordo [8, 24] | Terra | yes | forests |
 | `stillness` | Ordo [16, 40], Aqua [8, 24] | Ordo | yes | snowy land |
 | `wild` | the six built-in primals [4, 12] | Aer | yes, low weight | `#minecraft:is_overworld`, so every overworld column has an eligible type |
+| `hushed` | Silentium [1, 1] (unused: only ever assigned) | Silentium | no; clarity weights faint only | never: [the Hush spec](hush.md#hushed-nodes) assigns it through `update`, journaling the original. Authored, with its name, **only** in that spec's `content/hush/node_types.json` and `content/lang/en_us/hush.json`, never in this spec's content files; datagen merges node-type files and rejects an id declared twice |
 
 ### Node state
 
@@ -286,7 +290,7 @@ regen.tick += n × regen.interval             // ≤ e, so no overflow; the rema
 
 **Reconciliation** settles what the chunks hold against the registry.
 
-- **Queued, never immediate.** `ChunkEvent.Load` on a server level, and a node block entity's `onLoad` (which also covers `/setblock`, `/clone` and structures placed into loaded chunks), add the chunk to a per-level pending set. NeoForge requires level interaction to wait for a later tick, so the set is processed at the start of the next server tick, in ascending `ChunkPos.toLong()` order.
+- **Queued, never immediate.** `ChunkEvent.Load` on a server level, and a node block entity's `onLoad` (which also covers `/setblock`, `/clone` and structures placed into loaded chunks), add the chunk to a per-level pending set. NeoForge requires level interaction to wait for a later tick, so the set is processed at the start of the next server tick, in ascending `ChunkPos.pack()` order.
 - For each pending chunk: if `ServerChunkCache#getChunkNow` no longer returns it, it is dropped (it will be queued again when it loads). Otherwise its node positions are `ChunkAccess#getBlockEntitiesPos()` (saved **and** instantiated block entities) whose block is `vftv:node`, visited in ascending `BlockPos.asLong()` order, each resolved through `level.getBlockEntity`.
 
 | Block entity | Registry | Action |
@@ -527,7 +531,7 @@ Membership changes only through one per-level queue, processed at the **end of e
 - **What queues work:**
   - **chunks:** `ChunkEvent.Load` on a server level;
   - **positions:** a member block's placement callback, a member block entity's `onLoad` (which also covers commands and structures placed into loaded chunks) and its removal (`preRemoveSideEffects`), and any state change of a member block.
-- **Processing order:** pending chunks first, in ascending `ChunkPos.toLong()`, then pending positions, in ascending `BlockPos.asLong()`. A chunk or position whose chunk `getChunkNow` no longer returns is dropped; it is queued again when it loads.
+- **Processing order:** pending chunks first, in ascending `ChunkPos.pack()`, then pending positions, in ascending `BlockPos.asLong()`. A chunk or position whose chunk `getChunkNow` no longer returns is dropped; it is queued again when it loads.
 - **A chunk:** compare its persisted members (from the chunk → members lookup) with its actual ones (`getBlockEntitiesPos()` whose block is a member kind), and treat every position in the union as a pending position, in ascending `BlockPos.asLong()`.
 - **A position:**
 
@@ -687,7 +691,7 @@ content/lang/en_us/wands.json   every key under "Lang keys"
 }
 ```
 
-**Rejected:** anything that fails the node-type load validation; a built-in type's aspects or ranges differing from the table under "Node types".
+**Rejected:** anything that fails the node-type load validation; a built-in type's aspects or ranges differing from the table under "Node types"; **`vftv:hushed` in this file**: the [Hush spec](hush.md#the-node-type) owns that entry in `content/hush/node_types.json`. **After merging** every node-type file, datagen requires every built-in type of the table exactly once across all files and rejects any id declared twice.
 
 ### Placement
 
@@ -757,7 +761,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 |---|---|---|
 | `item.vftv.wand`, `item.vftv.chime_rod`, `item.vftv.resonant_brass_cap`, `item.vftv.bell_jar` | 0 | names |
 | `block.vftv.node`, `block.vftv.node_tap`, `block.vftv.vis_relay`, `block.vftv.wand_cradle` | 0 | names |
-| `wand_rod.<ns>.<path>`, `wand_cap.<ns>.<path>` (every part), `node_type.<ns>.<path>` (every type) | 0 | "Wooden", "Copper", "Wellspring" |
+| `wand_rod.<ns>.<path>`, `wand_cap.<ns>.<path>` (every part), `node_type.<ns>.<path>` (every type except `vftv:hushed`, whose name is the Hush spec's lang file's) | 0 | "Wooden", "Copper", "Wellspring" |
 | `node.vftv.clarity.faint`, `.steady`, `.clear`; `node.vftv.unknown_type` | 0 | |
 | `attribute.name.vftv.vis_discount` | 0 | "Vis Discount" |
 | `tooltip.vftv.wand.parts` | 2 | "%s rod, %s caps" |
@@ -796,7 +800,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 }}
 ```
 
-**Rejected:** a key outside the table's patterns; a part or type key with no matching entry; a required key missing in `en_us`; a placeholder count that differs from the table; an empty string; a duplicate key.
+**Rejected:** a key outside the table's patterns; a part or type key with no matching entry; `node_type.vftv.hushed` in this file; a required key missing in `en_us` (checked **after** every `content/lang` file is merged, so the Hush spec's `node_type.vftv.hushed` covers that type); a placeholder count that differs from the table; an empty string; a duplicate key.
 
 ## Events
 
@@ -822,7 +826,7 @@ No event fires for a tap or relay pulse, regeneration, a duplicate's removal, or
 - `readout(level, pos)` (loaded nodes only, settled);
 - `nearest(dimension, point, r)` (memory only);
 - `remove(id, cause)` (works on unloaded ids; the block is removed at reconciliation);
-- `update(id, change, cause)`: loaded nodes only, otherwise refused as `NOT_LOADED`. The change may set a new type (registered), new aspects (at most 6, maxes 1–1000) or a new clarity. It settles first and rebases after; it keeps the id, position and the counters of aspects that remain; `current` clamps to a lowered max, and an added aspect starts at current 0.
+- `update(id, change, cause, boundary?) → UpdateResult`: loaded nodes only, otherwise refused as `NOT_LOADED`. The change may set a new type (registered), new aspects (at most 6, maxes 1–1000) or a new clarity. It settles first and rebases after; it keeps the id, position and the counters of aspects that remain; `current` clamps to a lowered max, and an added aspect starts at current 0. **Order** (amended for [the Hush spec](hush.md#hushed-nodes)): validate; write the node block entity and mark it for sync; call the optional **apply boundary** `applied(before, after)` **exactly once**, after the write and **before** `NodeEvent(CHANGED)`, with no foreign code between the write and it (the boundary may only update its caller's own bookkeeping: no node, world or registry change); then post `NodeEvent(CHANGED)`. **Outcomes:** `UPDATED`; `NOT_LOADED` and the other refusals, which changed nothing and never call the boundary; and **`COMMITTED_NOTIFY_FAILED`**, when posting `CHANGED` threw: the write and the boundary stand, nothing is rolled back, the error is logged once, and the caller must never treat it as a refusal or retry it. An exception from the boundary itself is logged once, the write stands, `CHANGED` is still posted, and the result is `COMMITTED_NOTIFY_FAILED`.
 
 Whether these are exposed in `api` is the API spec's call.
 
@@ -846,7 +850,7 @@ Whether these are exposed in `api` is the API spec's call.
 
 - **Coalesced updates:** tap pulses, relay pulses and cultivation mark node block entities dirty in a per-level set, which is flushed once per tick, after the level ticks: **at most one update packet per node per tick**, however many players and networks touched it. Hand-tap pulses are aligned on the global clock, so a node tapped by any number of players sends at most one update per `tap.interval` from tapping.
 - **One custom payload,** `VisRules`, server to client, carrying everything the client's quote, regeneration preview and book facts need. **No client-to-server payload:** every input arrives through vanilla use, interact and placement packets, validated as such (reach, held item, research, protection).
-- **Client caches** (HUD layout, tooltips, book facts) are invalidated when `VisRules` arrives, when the discount attribute changes and on resource reload.
+- **Client caches** (HUD layout, tooltips, book facts) are invalidated when `VisRules` arrives, when the discount attribute changes and on resource reload. **Client quotes** are also invalidated when the Hush spec's `FluxRules` arrives, since its two spill rates are quote inputs; a quote echoed against older rates is refused by the echo check.
 - **Formats:** every persisted record (block entities, the `vftv:vis` and `vftv:captured_node` components, SavedData) carries `format: 1`. The exception is the scalar `vftv:wand_rod` and `vftv:wand_cap` components: they are bare ids in their native `ResourceKey` codec, which the item model selects on, and an unknown id is already handled as a missing part. A record with an unknown format, or one that fails its bounds, is **kept as its raw tag and written back unchanged**, with one log line: the node or jar is dormant rather than deleted, so a newer save opened by an older build loses nothing. Reconciliation leaves a dormant node block entity alone; it is neither minted nor counted as a ghost.
 - **Bounded codecs:** node aspects ≤ 6; `vftv:vis` ≤ 16 entries; amounts and maxes 0–1000; counters below 64 and Sonus below 4,096; ids and tokens ≥ 0; relay members per SavedData record ≤ 2²⁰; `VisRules` a fixed record. Decoding checks the **format bounds**, never current tuning; changed tuning is reconciled afterwards (settlement, rebase and counter carry), so a lowered threshold never invalidates a saved node.
 
@@ -951,6 +955,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **cancellation:** a cancelled `BreakBlockEvent` on capture and a cancelled `EntityPlaceEvent` on release each change nothing: block, jar, registry, index and events. A listener on the release event sees **the node as the placed block and air as the replaced snapshot**, with the real player. A creative recovery refused by the event, or by a later check (spacing, border), leaves the registry, `next_id` and `next_token` unchanged and posts no `CREATED`;
 - **reconciliation:** a lazily loaded chunk whose node block entities are still saved data; a ghost; a duplicate removed while the original keeps its entry; a rolled-back chunk against a carried id; removal of an unloaded id, then its chunk loading;
 - **structures:** two copies of one template get two distinct ids; a third structure node in one cell is removed;
+- **`update`:** the boundary runs once, after the write and before `NodeEvent(CHANGED)`, and never on a refusal; a throwing `CHANGED` listener leaves the write and the boundary's bookkeeping in place and returns `COMMITTED_NOTIFY_FAILED`; a throwing boundary still posts `CHANGED`;
 - **relays:** a pulse through an unloaded intermediate relay; an unloaded source skipped; no chunk tickets created; the rotating start reaching every cradle; a merge refused at 33; a cancelled member placement leaving no membership; a range `/reload` that would exceed 32 rejected, and the same range at world open refusing the world with the actionable error; a **ghost member** (persisted, block gone after an interrupted save) removed when its chunk loads; members made by `/setblock` and `/clone` admitted, or broken when over the cap; a member replaced by another kind updated;
 - **cultivation:** through a transaction that rolls back (node state identical) and one that commits (one event, one sync); the suction capability is present on exactly the handler's faces and absent on the node's; `cultivate.suction` = 0 stops an essentia line pulling while a direct insert still succeeds;
 - **packets:** three staggered players tapping one node send at most one update per node per tick;
@@ -1022,9 +1027,10 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - It supplies `vis_factor(player, ctx)`, a finite pure function of the owner's synced warp state and `ctx.kind`: ≥ 1.0 for `ORDINARY`, and whatever it states for `VOID` (which may be below 1.0). Client and server compute the same value.
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- It supplies `spill(inputs, ctx)`, a pure function used inside the quote, and applies flux on `VisSpentEvent` equal to that event's `spill`. GameTest: previewed spill = applied flux.
+- It supplies `spill(inputs, ctx)`, a pure function used inside the quote, and on `VisSpentEvent` generates flux equal to that event's `spill` (amended: **generated**; what an aura retains may be less at its format bound, and the difference is reported as overflow). GameTest: previewed spill = generated flux.
 - It adds no flux inside this system: tapping, relays, regeneration, cultivation and capture.
 - **Hush node types** are `vftv:node_type` entries with `natural: false`. Hush changes nodes only through `NodeService.update` and `remove`, and relay members only by ordinary block removal; it never rewrites a node's id, and there is no autonomous natural Hush source.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): `visSpill` over `effective` and the quote's own `neutral` (amended under "The quote"), so only the vis warp actually added spills, plus `VOID`'s fixed share; one `HIGHEST` listener generating the event's own `spill`; the built-in `vftv:hushed` type (amended under "Node types"), assigned and restored only through `update` with a journal written first, never `remove`; relay members never targets; deposits only through checked entry points.*
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
 - Structure templates save node blocks with the id **unset**, `origin: structure` and a valid type. At most 2 structure nodes per 64×64 cell are minted, **across every template copy**, and any surplus is removed with a warning, so its templates place at most one node-bearing piece per cell. GameTests: two copies of one template get two distinct ids; a third structure node in one cell is removed.
@@ -1038,6 +1044,6 @@ This spec settles every decision. Three required child tickets deliver the asset
 |---|---|---|
 | **Wand assets** | The generator `tools/art/wands.py`. **Layer textures**, 16×16 at `assets/vftv/textures/item/wand/rod/{wooden,chime,unknown}.png` and `…/wand/cap/{copper,resonant_brass,unknown}.png` (the cap layer carries both caps and the teal tick), with their layer models `vftv:item/wand/rod/<id>` and `vftv:item/wand/cap/<id>`. **Item icons** `chime_rod` and `resonant_brass_cap` (16×16, Stage 2 row), with models and item definitions. `assets/vftv/items/wand.json` exactly as under "Components". The **HUD frame** `assets/vftv/textures/gui/sprites/hud/vis_frame.png` (16×16, nine-slice border 4, in its `.mcmeta`). **Sounds:** `wand.tap_start` ×3, `wand.tap_stop` ×3, `wand.full` ×3, and `wand.tap_drone` ×3 at 3.0 s with the standard faded tail, with their `sounds.json` entries naming the subtitle keys under "Lang keys". A contact sheet at GUI scale 2 with all 4 rod × cap wands and the unknown fallbacks beside vanilla; provenance rows. | none |
 | **Node, jar and relay assets** | The generator `tools/art/nodes.py`. The **node core strip** `assets/vftv/textures/block/node_core.png`, 16×128 (8 frames, teal ramp, cutout), and the node's blockstate and particle-only model. The **glint** particle: 4 frames at 8×8 (`textures/particle/node_glint_0…3.png`) and `particles/node_glint.json`. The **Bell Jar** item, empty and filled at 16×16, with an item definition selecting on `minecraft:has_component` for `vftv:captured_node`. **Block models** of at most 6 cuboids each ([art style §6](art-style.md#6-blocks-and-models)), textures, blockstates and item forms for `node_tap` (an ear-trumpet; six facings by blockstate rotation), `vis_relay` (a fork on a stand) and `wand_cradle`. **Sounds**, with the cadences under "Rendering and sound": `node.hum` ×3, `node.absorb` ×3, `node.clarity_rise` ×1, `relay.link` ×1, `cradle.charge` ×3, `bell_jar.capture` ×1, `bell_jar.release` ×1, with `sounds.json` entries naming the subtitle keys under "Lang keys". Blender renders of every non-cube model; provenance rows. **No mote sprite**: motes reuse the aspect icons. | none |
-| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
+| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins, **excluding `vftv:hushed`**, which the Hush content ticket delivers with its name), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" (not `node_type.vftv.hushed`) | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
 
 The Stage 1 and Stage 2 research content tickets ([#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [#35](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)) consume this spec's entry ids, gates and the recorded change to the research contract.
