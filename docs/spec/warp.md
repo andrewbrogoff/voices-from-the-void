@@ -411,7 +411,7 @@ Everything in this section runs on the owner's client and never touches server s
 **The colour drain** is a fullscreen desaturation (the Hush's subtraction, [lore, The Hush](lore.md#the-hush-replaces-taint)), drawn by our own pass with a per-frame uniform, as the [architecture spec](architecture.md#rendering) plans for warp intensity:
 - **Peak:** 25%, 45% and 65% at bands 1, 2 and 3; nothing at band 0. It ramps in linearly over 50 ticks, holds for 200 and ramps out over 50.
 - **Photosensitivity:** desaturation only, with luminance preserved (Rec. 709 weights), no flash, no oscillation, and at most 1.3% change per tick.
-- **Scaled** by vanilla's `screenEffectScale` (`MC:client/Options.java:1419`), and off entirely with `voices.colour_shift` off.
+- **Scaled** by vanilla's `screenEffectScale` (`MC:client/Options.java:1419`), and off entirely with `voices.colour_shift` off. Turning the option off mid-drain ramps it out: `intensity = max(0, intensity − 0.013)` each tick, with frames interpolated, so even the 65% peak reaches zero within 50 ticks and never steps.
 - **A new colour cue** while one is active ramps from the current intensity to the new peak.
 
 ### Phantoms
@@ -435,7 +435,7 @@ Everything in this section runs on the owner's client and never touches server s
 
 ### Accessibility
 
-**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; disguises and apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`, and Darkness follows `darknessEffectScale`.
+**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; disguises and apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. On the client it takes effect at the next frame or tick: `voices.text` off hides a line already on screen while its sound plays on; `voices.colour_shift` off ramps out within 50 ticks (see "Perception effects"); `voices.phantoms` off removes existing apparitions and disguises silently; `voices.phantom_sounds` off starts no new phantom sound, and one playing finishes. Files, ranges and comments are the [configuration spec's](config.md#client-keys). The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`, and Darkness follows `darknessEffectScale`.
 
 ## In the Commonplace Book
 
@@ -453,12 +453,12 @@ The [research spec](research.md#structure) owns the book. This spec supplies its
 
 ## Commands
 
-`/vftv warp …`, permission level 2. Every change goes through `apply` with source `COMMAND`.
+`/vftv warp …`, permission level 2, under the [configuration spec's](config.md#commands) root; `<player>` is one online player. Every change goes through `apply` with source `COMMAND`. `add` and `clear` report through `commands.vftv.warp.set` with the new value.
 
 | Command | Effect |
 |---|---|
 | `get <player>` | prints `T`, `L`, `P`, gear, `total`, band, counter, `p` and the offer |
-| `set <player> <temporary\|lasting\|permanent\|counter> <n>` | sets that value, clamped to its format bounds; a permanent gain also to the cap |
+| `set <player> <temporary\|lasting\|permanent\|counter> <n>` | sets that value (`n` 0–10,000), clamped to its format bounds; a permanent gain also to the cap |
 | `add <player> <temporary\|lasting\|permanent> <n>` | adds `n` (−1,000–1,000), clamped the same way |
 | `clear <player>` | `T`, `L`, `P` and the counter to 0; `milestones_paid` is kept |
 | `fire <player> <event>` | runs that event's server part and cue, skipping the roll and eligibility but **not** the suppression rows, and settles its outcome |
@@ -704,7 +704,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | State | Storage | Synced to |
 |---|---|---|
 | the warp record and the offer | the `vftv:warp` attachment (transient fields marked above) | the owner, through `AttachmentSyncHandler` filtered to the owner (`NF:attachment/AttachmentSyncHandler.java:28–40`) |
-| warp rules | the tuning record and the dial switches of server config | **`WarpRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`), and again when server config reloads **[build verifies the config reload event]** |
+| warp rules | the tuning record and exactly four server switches: `warp.voices.enabled`, `warp.tax`, `warp.amplifier` and `warp.gear` (the dials and the book's `switch.*` facts). The nine event-type switches are server-only and never sent. | **`WarpRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`), and again when a server config change alters one of the four (`FML:event/config/ModConfigEvent.java:23–42`; [configuration spec, Publishing a change](config.md#publishing-a-change)) |
 | the gear map | the `vftv:gear_warp` data map | every player, as synced data maps are |
 | cues | none | **`VoiceCue`** and **`VoiceClear`**, S2C, to the owner only |
 | screen state | the transient `quiet` flag | **`VoiceQuiet`**, C2S |
@@ -721,7 +721,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | Change | Effect |
 |---|---|
 | Tuning (`/reload`) | a new record, validated with the milestone rules; `WarpRules` re-sent; phases recomputed; records reconciled on read (see "Kinds and the record") |
-| Server config | the switches apply at the next check, quote and sample; `WarpRules` re-sent |
+| Server config | `warp.voices.*` at the next check; `warp.tax` at the next vis quote and the next infusion assessment and start (a running infusion keeps its frozen `Wp`); `warp.amplifier` at the next quote and cast, and in a live Baffle capacity at once; `warp.gear` at the next sample. Nothing already committed is reversed: a standing offer, an applied effect, a spawned mob or a shown phantom stays. `WarpRules` re-sent if one of its four switches changed. |
 | The event, bargain and research registries | need the world reopened, so no live offer survives |
 | Resource reload | the `phantoms` and `lines` resources, revalidated |
 
@@ -755,7 +755,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 - gear values: the `vftv:gear_warp` data map, added by #24 and #28;
 - disguises and phantom sounds: the `phantoms` client resource;
 - the overlay counts: the research spec's `overlay.json`;
-- **server config** (admin switches, [architecture, Data and code](architecture.md#data-and-code)), each default on and **each proven by a GameTest**: `warp.voices.enabled` (every check); one per event type, `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_block`, `.phantom_mob`, `.bargain`, `.status`, `.spawn` (a type that is off is never eligible, so it never fires and the counter is untouched); `warp.tax` (the vis factor and the infusion penalty go neutral); `warp.amplifier` (`amplifier_warp` is 0); `warp.gear` (the gear sample is 0);
+- **server config** (admin switches; files, validation and sync are the [configuration spec's](config.md#server-keys)), each default on and **each proven by a GameTest**: `warp.voices.enabled` (every check); one per event type, `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_block`, `.phantom_mob`, `.bargain`, `.status`, `.spawn` (a type that is off is never eligible, so it never fires and the counter is untouched); `warp.tax` (the vis factor and the infusion penalty go neutral); `warp.amplifier` (`amplifier_warp` is 0); `warp.gear` (the gear sample is 0);
 - **client config:** `voices.text`, `voices.colour_shift`, `voices.phantoms`, `voices.phantom_sounds` (see "Accessibility").
 
 **Fixed limits, in code** (formats and invariants, not balance), as constants in **`WarpLimits`** in `api`:
@@ -840,7 +840,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the colour drain at bands 1–3 (screenshots, plus a dump of per-frame intensity proving the ramp and peak bounds); with `voices.colour_shift` off and with `screenEffectScale` 0;
 - a disguise struck by the fork reads the real block;
 - an apparition vanishing when approached and when struck: **no attack, interact or swing packet** in the protocol dump, the fork silent, no sounding;
-- client options off; `VoiceClear` on Silencing; cleanup on a level change;
+- client options off, including `voices.colour_shift` turned off at the 65% peak reaching zero within 50 ticks; `VoiceClear` on Silencing; cleanup on a level change;
 - sync on join, reconnect, dimension change and `/reload`;
 - the asset, lang and sound validators.
 

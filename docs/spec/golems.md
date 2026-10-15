@@ -885,7 +885,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | the attunement | the `vftv:baton_attunement` component `{golem: <UUID>, dimension: <level key>}` | as items are |
 | the think and search queues, operation guards, targets, resume points, overlay subscriptions, the per-player click record (one event reference, consumed by the next Baton use or replaced by the next click) | per-level or per-player memory | never |
 | the marks overlay | built from the record | **`GolemMarks`** and **`GolemMarksClear`**, S2C, to subscribers only |
-| golem rules | the tuning record, the admin cap and the fixed limits | **`GolemRules`** S2C to every player through `OnDatapackSyncEvent` (join and `/reload`; `NF:event/OnDatapackSyncEvent.java:64–81`) |
+| golem rules | the tuning record, the admin cap and the fixed limits | **`GolemRules`** S2C to every player through `OnDatapackSyncEvent` (join and `/reload`; `NF:event/OnDatapackSyncEvent.java:64–81`), and again when a server config change alters the cap ([configuration spec, Publishing a change](config.md#publishing-a-change)) |
 | materials | the `vftv:golem_material` registry | every player, through its network codec |
 
 **The record:** `{"format": 1, "body": <material id>, "core": <item id>, "home": [x, y, z], "marks": [<mark>, …], "generation": 0–2³¹−1, "carry"?: <carry>, "cursor": −1–15, "backoff": [{"mark": 0–15, "until": <long>}, …], "faults": [<fault>, …], "owner_name": <string>}`.
@@ -909,6 +909,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 |---|---|
 | Tuning (`/reload`) | a new record; `GolemRules` re-sent; resume points cleared; `think.interval` applies at each golem's next schedule; `range` at its next eligibility check; `path.max_length` at its next search; backoffs already set keep their end ticks |
 | Tags and recipes (`/reload`) | nothing of ours: the recipe types' own rules apply |
+| Server config (`golems.max_per_chunk`) | the cap applies at the next placement only: no golem is removed and no schedule reset; `GolemRules` re-sent |
 | The material, item or aspect registries | need the world reopened |
 | Resource reload | models, sprites, the card's layout and names rebuild |
 
@@ -932,7 +933,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 **Other homes:**
 - material stats: the `vftv:golem_material` registry (`content/golems/materials.json`);
 - costs and gates: each recipe's data (`content/golems/recipes.json`);
-- **`golems.max_per_chunk`** (16, range 1–256): server config, an admin performance cap ([architecture, Data and code](architecture.md#data-and-code)), applied at placement only.
+- **`golems.max_per_chunk`** (16, range 1–256, an out-of-range value clamped): server config, an admin performance cap ([configuration spec, Server keys](config.md#server-keys)), applied at placement only.
 
 **Fixed limits, in code** (formats and invariants, not balance), as constants in **`GolemLimits`** in `api`:
 

@@ -339,7 +339,7 @@ Stage 3 and 4 `find` entries in the `vftv:choir_pages` category, each carried by
 
 ### Admin commands
 
-`/vftv research …`, permission level 2. Each change runs resolution and fires events with source `COMMAND`.
+`/vftv research …`, permission level 2, under the [configuration spec's](config.md#commands) root. Each change runs resolution and fires events with source `COMMAND`. `<player>` is one online player; `<entry>` is a `vftv:research` id or `all`.
 
 | Command | Effect |
 |---|---|
@@ -347,6 +347,8 @@ Stage 3 and 4 `find` entries in the `vftv:choir_pages` category, each carried by
 | `revoke <player> <entry \| all>` | Removes the learned flag only: no cascade, no refund, no warp change, and the Stage is never lowered. Fires **no** learned event. Revoking a reveal entry returns the taught view; open notes keep their snapshot links. |
 | `stage <player> <0–4>` | Sets the Stage. Learns nothing and clears no latch. |
 | `reset <player>` | Abandons every note with a full refund, then clears the Stage, learned, revealed, latches, attempts and bookmarks, and revokes the player's `vftv:find/*` advancements. **Keeps** `rewarded`, warp and the Joining or Silencing choice. Finds whose evidence lives in knowledge (scans, discoveries) or in current warp re-latch at the next login catch-up, by design. |
+
+**Feedback,** code-defined UI keys with this text: `commands.vftv.research.granted` (2) "%s: learned %s.", `.revoked` (2) "%s: forgot %s.", `.stage` (2) "%s: Stage %s.", `.reset` (1) "%s: research reset.", `.unknown` (1) "No research entry %s." (the player's name, then the entry id, `all` or the Stage).
 
 ## Authored content
 
@@ -974,7 +976,7 @@ No event fires for a reveal, a placement, an abandon or a revocation, since no s
   - `bookmark(entry, on)`
   - `accept_offer(offerSeq, echoedWarp)` and `refuse_offer(offerSeq)`: the [warp spec's Bargains](warp.md#bargains), decided on the Ledger's warp spread
 - **S2C `ResearchFeedback`,** to the owner only:
-  - `quotes`: the skip price and #25's warp preview for every non-HIDDEN `note`/`listen` entry, and the **live offer's** `seq` and warp preview (with `clipped`). Sent when the menu opens. While it is open, re-sent **after any resolution** (whether from an action, an event or a command), after a tuning `/reload`, and after **any change to the player's warp record or offer** (a `WarpChangedEvent`, an offer created, accepted, refused or deleted, including a lazy expiry), whenever the set of non-HIDDEN `note`/`listen` entries, the offer, or any price or preview has changed. For example, a reward that reveals a secret listen sends its preview at once. Expiry is also shown without a quote, from the offer's `expires` and the synced game time.
+  - `quotes`: the server's **`mode`** (`research.mode` as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`), which decides whether the book offers a note or **Buy**; the skip price and #25's warp preview for every non-HIDDEN `note`/`listen` entry; and the **live offer's** `seq` and warp preview (with `clipped`). Sent when the menu opens. While it is open, also re-sent when a server config change alters `research.mode`, even if no price changed ([configuration spec, Publishing a change](config.md#publishing-a-change)). While it is open, re-sent **after any resolution** (whether from an action, an event or a command), after a tuning `/reload`, and after **any change to the player's warp record or offer** (a `WarpChangedEvent`, an offer created, accepted, refused or deleted, including a lazy expiry), whenever the set of non-HIDDEN `note`/`listen` entries, the offer, or any price or preview has changed. For example, a reward that reveals a secret listen sends its preview at once. Expiry is also shown without a quote, from the offer's `expires` and the synced game time.
   - `result(requestId, OK | REFUSED, reason key, up to 4 args)`. Attachments alone can't report a refusal that changes no state.
 - **Server checks, in this order,** with the first failure refusing:
   1. **Rate:** at most 8 actions per player per tick, of which at most 1 is a commit (`begin`, `abandon`, `learn`, `buy`, `listen`, `accept_offer`, `refuse_offer`), checked **before** any generation or resolution. Excess is dropped with no reply.
@@ -1002,7 +1004,8 @@ No event fires for a reveal, a placement, an abandon or a revocation, since no s
 - **Bounded codecs:**
   - ids ≤ 4,096 per set, notes ≤ 16, cells ≤ 169, receipt entries ≤ 15, link pairs ≤ 4,096, synthesis-parent map ≤ 4,096, anchors ≤ 5, bookmarks ≤ 9, triggers ≤ 16, pages ≤ 32;
   - **echoed price** ≤ 64 entries, each 1–4,096; **echoed warp** three values, each 0–100; **`offerSeq`** a positive `long`;
-  - reason args ≤ 4 strings of ≤ 256 chars.
+  - reason args ≤ 4 strings of ≤ 256 chars;
+  - `quotes.mode` 0–3; any other byte is rejected at decode.
 
   Oversized or out-of-range input is rejected at decode, before any planning.
 - **Reload behaviour:**
@@ -1011,6 +1014,7 @@ No event fires for a reveal, a placement, an abandon or a revocation, since no s
   |---|---|
   | Tuning (`/reload`) | Prices rebuild and fresh quotes are pushed. Open notes are untouched. |
   | Recipes or data (`/reload`) | Recipe pages and every fact span re-resolve. |
+  | Server config (`research.mode`) | The next `begin` and `buy`'s recheck use the new mode; open notes keep their snapshot; fresh quotes, with the new `mode`, go to every open book. `/reload` never touches config. |
   | Resource reload | Prose, overlay and layout caches rebuild. |
   | Registries | Need the world reopened; reconciliation runs at login. |
 
@@ -1036,7 +1040,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 - the warp bands: the warp spec's tuning `bands` ([warp spec, Bands](warp.md#bands));
 - each entry's `warp`, `skip_cost`, `rewards` and anchors: entry data;
 - `research.mode`: server config;
-- `book.clear_prose`: client config.
+- `book.clear_prose`: client config. Both are the [configuration spec's](config.md#server-keys) to file, name and validate.
 
 **Fixed limits, in code** (formats and validator rules, not balance), as constants in **`ResearchLimits`** in `api`: anchors 2–5; grid radius ≤ 7 (169 cells); synthesis depth ≤ 3; 8 actions and 1 commit per player per tick; 16 open notes; 9 bookmarks; the codec bounds above; the 40-tick pending timeout; the GUI layout. **Test threshold:** `affordability.margin` 1.5.
 

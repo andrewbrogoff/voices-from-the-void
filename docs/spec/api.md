@@ -169,6 +169,7 @@ For **Stable** declarations:
 
 - **Record components are frozen within a major,** because record patterns must name every component, even in a switch with a `default` arm ([JLS 25 §14.30.1](https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.30.1)). New information arrives as a **new accessor on the event class**, a new sealed variant, or a new record type.
 - **Enums and sealed payloads grow in minors.** Their Javadoc says so, and an addon's `switch` over one needs a `default` arm.
+- **Config keys** are an operator surface with their own table of the same shape ([configuration spec, Compatibility](config.md#compatibility)); nothing here checks them.
 - **"japicmp passed" is evidence, not proof,** of source compatibility. The corpus, the gate self-tests and review cover what it can't see.
 
 ### Deprecation

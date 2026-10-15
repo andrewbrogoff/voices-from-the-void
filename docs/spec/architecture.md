@@ -45,7 +45,7 @@ Generated resources are committed to `src/generated/resources` (see "Datagen").
 - **Allowed access:** `neoforge` may use `core` and `api` (including `api.neoforge`). `core` may use `api` but not `api.neoforge`. Nothing may use `neoforge`.
 - **`core` is loader-free.** It never touches `net.neoforged..` or `org.spongepowered..`.
 - **Organised by feature:** each feature is one `core.<feature>` package, and features have no import cycles between them.
-- **`core.flux` is a leaf feature** ([Hush spec, The pinned functions](hush.md#the-pinned-functions)): it imports only `api` and the JDK, never another `core` feature, so `core.vis`, `core.crucible`, `core.infusion` and `core.hush` can all price flux without a cycle.
+- **`core.flux` is a leaf feature** ([Hush spec, The pinned functions](hush.md#the-pinned-functions)): it imports only `api` and the JDK, never another `core` feature, so `core.vis`, `core.crucible`, `core.infusion` and `core.hush` can all price flux without a cycle. The Hush's server-config record `HushConfig` lives there too, so `FluxRules` can carry it.
 - **The `model` tier** holds the heavy logic: the essentia network solver, validation of the research puzzle, the Voice event counter, infusion stability, golem job planning. It may not use `net.minecraft..`, so it gets millisecond unit tests without booting FML, and JMH benchmarks. It is thread-agnostic (immutable inputs, no shared mutable state).
 - **Client separation:** nothing outside a `..client..` package may use `net.minecraft.client..` or `com.mojang.blaze3d..`. This prevents dedicated-server class-loading crashes.
 
@@ -64,7 +64,7 @@ A **seam** is a small interface in `core`, with a NeoForge implementation in `ne
 | **Networking** | Payload records, their `StreamCodec`s, and their handlers (client handlers in `.client`) | A sender (`toPlayer`, `toTracking(chunk / entity)`, `toServer`) and a handler registrar, backed by `PayloadRegistrar` and `PacketDistributor` |
 | **Persistent state** | The data records and their codecs | `DataSlot<H, T>` with `get`, `set` and `update`, for player, chunk and level holders (see "State and sync") |
 | **Essentia transfer** | `core.essentia.model`: amounts, jar contents and their snapshots, suction ranks, reachability and the pulse's selection. It works over loader-free inputs (positions as `long`, aspects as `int` indices in ascending id, endpoint records) and returns a plan of moves. It never sees a `ResourceKey`, `BlockPos`, capability or transaction. | Adapters in `neoforge.essentia` own everything loader-specific: the capabilities, `BlockCapabilityCache`, `ResourceHandler` calls, `SnapshotJournal`s and `Transaction`s. They execute the plan and report what moved, and each jar's transaction-busy state, back to `core` (see "Essentia and capabilities"). |
-| **Config** | Immutable records, e.g. `WarpConfig(boolean whispers, …)` | `neoforge` fills them from `ModConfigSpec` and pushes fresh copies when the config reloads. No `ModConfigSpec` type reaches `core`. |
+| **Config** | Immutable records, one per feature and side, e.g. `WarpConfig(boolean voices, …)` in `core.warp` and `WarpClientConfig` in `core.warp.client` | `neoforge.config` (server) and `neoforge.config.client` (client) fill them from `ModConfigSpec` and publish fresh copies when the config loads or reloads: server records only for the live local server, through a runnable that checks that server is still running on its own thread, followed by the owners' re-sends of any rules record that changed ([configuration spec, Publishing a change](config.md#publishing-a-change)). No `ModConfigSpec` type reaches `core`. |
 | **Client registration** | Renderers, pipelines, shaders, particles, screens, GUI layers, item-model properties | **No seam.** One `neoforge.<feature>.client` listener per feature registers them directly, one line each. Fabric's client APIs are shaped too differently for a seam to hold. |
 
 ## Data and code
@@ -80,7 +80,7 @@ A **seam** is a small interface in `core`, with a NeoForge implementation in `ne
   - worldgen, structures and loot
 - **The aspect set is a synced datapack registry** ([ADR 0003](../adr/0003-aspects-as-datapack-registry.md)). Code refers to the built-in aspects through `ResourceKey` constants in `api`. Vacuos being a hidden primal is a property in its data, not a special case in code.
 - **Balance numbers** (costs, rates, chances, thresholds) live in the data next to their content, so a datapack can override them.
-- **Server config** holds only admin switches: research presets and skip mode, a toggle per Voice effect, performance caps. Which options exist is left to the configuration spec.
+- **Server config** holds only admin switches: research presets and skip mode, a toggle per Voice effect, performance caps, and the starter opt-out. **Client config** holds only presentation and accessibility. Neither side reads the other's config, and no balance number lives in either. Every key is the [configuration spec's](config.md#config-data-and-resources).
 
 ## State and sync
 
@@ -142,7 +142,7 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 
 ## Threading
 
-- **No off-thread game logic in v1.** All game state is changed on the server thread, and payload handlers use `enqueueWork`.
+- **No off-thread game logic in v1.** All game state is changed on the server thread, and payload handlers use `enqueueWork`. A config `Reloading` event may arrive on any thread, so its records are published through the server's (or client's) own executor ([configuration spec, Lifecycle](config.md#lifecycle)).
 - The `model` tier stays thread-agnostic, so a hot path (essentia solving, Hush spread) can move off-thread later if its budget demands it.
 
 ## Enforcement
@@ -157,6 +157,7 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | `API_IS_PURE` | `api` (outside `api.neoforge`) uses only `java..`, `net.minecraft..`, `com.mojang..` and `org.jspecify..` |
 | `MODEL_IS_MINECRAFT_FREE` | `..model..` packages never use `net.minecraft..` or `com.mojang..` |
 | `CLIENT_SEPARATION` | only `..client..` packages use `net.minecraft.client..` or `com.mojang.blaze3d..` |
+| `CONFIG_SIDES` | within `com.andrewbrogoff.vftv..`: `*ClientConfig` types and `neoforge.config.client..` are declared in and used only from `..client..` packages; no `..client..` class uses a server `*Config` record or a `neoforge.config` class outside `.client` ([configuration spec, Code layout](config.md#code-layout)) |
 | `FEATURES_ACYCLIC` | `core.(*)..` slices have no import cycles between them |
 | `MIXINS_CONFINED` | only `neoforge.mixin..` uses `org.spongepowered..`, and every class there carries `@WhyMixin("<one line>")` (class retention) |
 | `COMPAT_CONFINED` | `curios`, `jei` and `terrablender` types are used only in their own `neoforge.compat.<mod>` package |

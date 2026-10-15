@@ -431,15 +431,15 @@ The Hush is never natural, and that is tested:
 
 ## Commands
 
-`/vftv flux …` and `/vftv hush …`, permission level 2. A target must be in a loaded chunk; otherwise `commands.vftv.flux.not_loaded` and nothing changes.
+`/vftv flux …` and `/vftv hush …`, permission level 2, under the [configuration spec's](config.md#commands) root. A target must be in a loaded chunk; otherwise `commands.vftv.flux.not_loaded` and nothing changes. **No command loads a chunk:** around a loaded target, `flux clear` skips every unloaded chunk in its square, and `hush restore` skips the cells of unloaded chunks, counting them as examined (as a peal's scan does), so its continuation index still advances. Dormant auras and stores are never changed except by `flux repair`.
 
 | Command | Effect |
 |---|---|
 | `flux get [<pos>]` | the aura at `pos` (default the executor's position): status, flux, seep, spiller, `steps`, `taken`, saturation, and the level's pending count and overflow total |
 | `flux add <pos> <amount 1–1,000,000>` | `deposit(level, pos, amount, COMMAND, executor-or-none)`, reporting the four amounts |
-| `flux clear <pos> [<radius 0–4>]` | clears every readable aura within Chebyshev `radius` chunks (default 0); `FluxEvent(CLEARED, COMMAND)` per chunk |
+| `flux clear <pos> [<radius 0–4>]` | clears every readable aura in a loaded chunk within Chebyshev `radius` **chunks** (default 0); `FluxEvent(CLEARED, COMMAND)` per chunk |
 | `flux repair <pos>` | a dormant aura becomes an empty readable one (the raw tag logged), and its pending entry merges |
-| `hush restore <pos> <radius 0–16> [<from>]` | walks the ball of `radius` around `pos` in the ball tables' order (ascending `(d², dy, dz, dx)`), starting at index `from` (default 0), examining at most 4,096 cells and making at most 64 restores of hushed blocks and journaled nodes; it reports the restores and **the next index** to pass as `from` (or "done" at the ball's end), so repeated calls finish the ball. No claim events: it is the operator's act |
+| `hush restore <pos> <radius 0–16> [<from>]` | walks the ball of `radius` **blocks** around `pos` in the ball tables' order (ascending `(d², dy, dz, dx)`), starting at index `from` (default 0), examining at most 4,096 cells and making at most 64 restores of hushed blocks and journaled nodes; it reports the restores and **the next index** to pass as `from` (or "done" at the ball's end), so repeated calls finish the ball. No claim events: it is the operator's act |
 
 ## Rendering and sound
 
@@ -661,7 +661,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 |---|---|---|
 | the aura | `vftv:aura` chunk attachment | players tracking the chunk, through an `AttachmentSyncHandler` (`NF:attachment/AttachmentType.java:263–266`; `AttachmentSyncHandler.java:57,67`) writing **`{status: NONE \| READABLE \| DORMANT, flux: 0–1,000,000, seep?: long}`** only, for every later change of an existing aura; NeoForge's own initial send on `ChunkWatchEvent.Sent` (`NF:attachment/AttachmentSync.java:162–180,203–207`) covers **existing** attachments only |
 | the chunk's status at watch | none (derived) | S2C **`HushChunkStatus`** `{chunk: long, status, flux, seep?}`, the same envelope plus the chunk's identity, sent to the watching player on `ChunkWatchEvent.Sent` for **every** chunk, including one with no aura (`NONE`, flux 0), so pristine ground reads "nothing pools here" rather than "unknown" |
-| `FluxRules` | the tuning record, the server switches and the fixed limits | S2C to every player through `OnDatapackSyncEvent` (`NF:event/OnDatapackSyncEvent.java:20–22,50–51`: join and `/reload`), and again when server config reloads **[build verifies the config reload event]** |
+| `FluxRules` | the tuning record, the server switches and the fixed limits | S2C to every player through `OnDatapackSyncEvent` (`NF:event/OnDatapackSyncEvent.java:20–22,50–51`: join and `/reload`), and again when a server config change alters a Hush switch (`FML:event/config/ModConfigEvent.java:23–42`; [configuration spec, Publishing a change](config.md#publishing-a-change)) |
 | hushed blocks, Hollows | blocks, entities | vanilla's |
 | the Pealing Bell | its block entity | trackers: initial data, then on a change of `sonus` (the status line is built on the server; the client draws nothing from it) |
 | pending deposits, the overflow total | `vftv_flux_pending` (per level) | never |
@@ -681,7 +681,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | Change | Effect |
 |---|---|
 | Tuning (`/reload`) | a new record (a new generation if any value changed), re-sent; due queues rebuilt and saturation cleared; quotes re-resolve, so stale echoes are refused; infusion runs keep their frozen record |
-| Server config | the switches apply at the next service, ring and rise; `FluxRules` re-sent |
+| Server config | `hush.spread` at the next service (off keeps the backlog; on resumes it in due order); `hush.hollows` at the next rise; `hush.unattended` at the next spread service and the next Pealing Bell service, with no wake. Nothing already converted, restored or risen is reversed. `FluxRules` re-sent if a switch changed. |
 | Resource reload | the HUD and models rebuild |
 
 ## Tuning and limits
@@ -714,7 +714,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 **Other homes:**
 - the hushed-form table, the Hollow's stats and the Clearing Bell's durability 64: code, fixed at registration and asserted by unit tests;
 - the recipes: `content/hush/recipes.json`;
-- **server config** (admin switches, [architecture, Data and code](architecture.md#data-and-code)), each proven by a GameTest: `hush.spread` (on; off means no attempt is made at all), `hush.hollows` (on; off means no rise), `hush.unattended` (off; on lets unattended chunks and bells run);
+- **server config** (admin switches; files, validation and sync are the [configuration spec's](config.md#server-keys)), each proven by a GameTest: `hush.spread` (on; off means no attempt is made at all), `hush.hollows` (on; off means no rise), `hush.unattended` (off; on lets unattended chunks spread and unattended Pealing Bells peal; bells run whether `hush.spread` is on or off, and a Silenced player attends a bell);
 - **client config:** `hush.muffle` (on), `hush.hud` (on).
 
 **Fixed limits, in code** (formats and invariants, not balance), as constants in **`HushLimits`** in `api`:
