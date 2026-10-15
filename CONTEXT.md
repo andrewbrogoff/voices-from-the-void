@@ -107,6 +107,18 @@ _Avoid_: aura node, ley point
 The Listener's own research notebook, which serves as the in-game codex. Its prose grows less reliable as warp rises, but its recipes and numbers are always accurate. Choir pages found in ruins are tipped into it.
 _Avoid_: codex (in player-facing text), Thaumonomicon, guidebook
 
+**Note**:
+A research puzzle in progress on a page of the Commonplace Book: a hex grid whose anchors the Listener joins with chains of linked aspects. It never uses ink and can never be unsolvable.
+_Avoid_: research paper, theory
+
+**Anchor**:
+An aspect printed on a note before work begins. A note is solved when all its anchors are joined.
+_Avoid_: key aspect, node (a node is a knot of vis)
+
+**Choir page**:
+A page from a Choir scholar's journal, found in ruins and tipped into the Commonplace Book. It is lucid where the Listener's own notes slip, and warp never degrades it.
+_Avoid_: fragment, lost knowledge, lore page
+
 **Tuning Fork**:
 The first listening instrument. Striking it against a thing reveals that thing's aspects.
 _Avoid_: scanner, Thaumometer

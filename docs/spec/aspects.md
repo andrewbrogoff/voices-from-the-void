@@ -384,5 +384,5 @@ This spec settles every decision. Three required child tickets deliver the asset
 | Ticket | Delivers |
 |---|---|
 | **Aspect icons** | the generator `tools/art/aspects.py`; one 16×16 icon per aspect (37) plus the unheard icon, to the glyph briefs above and the approved palette and colour assignments above; the greyscale contact-sheet review; provenance rows |
-| **Vanilla aspect value table** | the hand base table; the capturing `VanillaRecipeProvider` subclass and derivation output in `src/generated`; semantic overrides and reversible-conversion entries; the reviewed exempt list; the coverage, supply, affordability and non-amplification checks passing |
+| **Vanilla aspect value table** | authored inputs under `content/aspects/`: the hand base table (tag- or id-keyed), semantic overrides, reversible-conversion entries and the reviewed exempt list, in a schema the future datagen reads. No code: the `VanillaRecipeProvider` capture, the derivation output in `src/generated`, and the coverage, supply, affordability and non-amplification checks are build-phase acceptance criteria |
 | **Tuning Fork final assets** | the final `tuning_fork` texture and model from the prototype, plus its "ringing" cooldown variant; strike ×4, node answer ×3 and discovery chime ×1 sounds; the HUD readout frame sprite; provenance rows |

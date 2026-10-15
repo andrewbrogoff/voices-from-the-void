@@ -30,6 +30,7 @@ Apply the first rule that matches.
 5. **`CC-BY-4.0`:** creative and declarative content, including generated copies:
    - client resources: `src/*/resources/assets/**` (textures, models, blockstates, item definitions, sounds, particles, lang), except the code in rule 4
    - datapack content: `src/*/resources/data/**` (recipes, aspect data maps, research entries, Voice events, worldgen, loot), except the code in rule 4
+   - authored content inputs that datagen reads: `content/**` (research entries, page descriptors, book prose, aspect tables), except the code in rule 4
    - editable asset sources (`art/**`: `.blend`, `.bbmodel`, palettes), except scripts
    - documentation: `docs/**` (specs, ADRs, research, provenance), `CONTEXT.md`, `README.md`, this file
 6. **Anything else** owned by the project: `MPL-2.0`.
