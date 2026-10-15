@@ -1020,6 +1020,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
 - No advancement it ships for progression requires an infusion craft criterion.
+- *Met by the [worldgen spec](worldgen.md#the-advancements): every criterion of its three advancements is `inventory_changed` or `player_killed_entity`, checked by a datagen test.*
 
 **[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
 - Hand entries (or reviewed exemptions) for `vftv:singing_bowl`, `vftv:pedestal`, `vftv:echo_rod` and `vftv:echo_cap`.

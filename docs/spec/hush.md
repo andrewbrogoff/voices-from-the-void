@@ -876,6 +876,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
 - No feature, structure, processor or loot places a hushed block, a `vftv:hushed` node, a Hollow or an aura, checked by parsing its generated files **and** its structure templates' NBT palettes and embedded block-entity and entity data. Its Choir-site place query is independent of ours.
+- *Met by the [worldgen spec](worldgen.md#templates): a datagen-phase test parses every generated template's NBT (palette, block-entity and entity data, rejecting any `neoforge:attachments`) and every generated worldgen, processor and loot file; its template and loot rejection rules and `vftv:roll_node` never produce a hushed block, node type or item, Hush Ash or a Hollow; its place query reads structure references only.*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
 - Its Void work's flux is `VisSpentEvent`'s spill at `flux.void_pm`, nothing else; any other Hush interaction is an extension it must propose.

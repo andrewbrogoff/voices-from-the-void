@@ -922,6 +922,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
 - It registers a place query for Choir sites, backed by site metadata it indexes per chunk at generation, so the query never follows structure references. Any Void-touched mob it adds to `vftv:voice_spawnable` meets "Danger"'s rules. The Answerers are never Voice spawns.
+- *Met by the [worldgen spec](worldgen.md#the-choir-site-place-query): `ChoirSitePlaceQuery` reads whether a loaded chunk's vanilla structure-reference set for `#vftv:choir_sites` is non-empty (written per chunk at generation, never followed), at most 8 lookups with zero allocation; it adds no mob to `vftv:voice_spawnable`, and `#vftv:answerers` is disjoint from it (tested).*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
 - **Silencing** calls `silence(player)`; **Joining** commits the `vftv:joining` milestone through `commit` with the preview it shows, once.

@@ -220,6 +220,7 @@ A **synced datapack registry, `vftv:node_type`** (`data/<ns>/vftv/node_type/<pat
 | `stillness` | Ordo [16, 40], Aqua [8, 24] | Ordo | yes | snowy land |
 | `wild` | the six built-in primals [4, 12] | Aer | yes, low weight | `#minecraft:is_overworld`, so every overworld column has an eligible type |
 | `hushed` | Silentium [1, 1] (unused: only ever assigned) | Silentium | no; clarity weights faint only | never: [the Hush spec](hush.md#hushed-nodes) assigns it through `update`, journaling the original. Authored, with its name, **only** in that spec's `content/hush/node_types.json` and `content/lang/en_us/hush.json`, never in this spec's content files; datagen merges node-type files and rejects an id declared twice |
+| `choir` | Aer [16, 32], Ordo [24, 48], Sonus [4, 12], Vacuos [4, 12] | Ordo | no; not anchored; clarity weights steady and clear only | never: [the worldgen spec](worldgen.md#structure-nodes) places one in each Choir ruin's start piece, with `origin: structure`. Authored, with its name, **only** in that spec's `content/worldgen/node_types.json` and `content/lang/en_us/worldgen.json`, never in this spec's content files |
 
 ### Node state
 
@@ -691,7 +692,7 @@ content/lang/en_us/wands.json   every key under "Lang keys"
 }
 ```
 
-**Rejected:** anything that fails the node-type load validation; a built-in type's aspects or ranges differing from the table under "Node types"; **`vftv:hushed` in this file**: the [Hush spec](hush.md#the-node-type) owns that entry in `content/hush/node_types.json`. **After merging** every node-type file, datagen requires every built-in type of the table exactly once across all files and rejects any id declared twice.
+**Rejected:** anything that fails the node-type load validation; a built-in type's aspects or ranges differing from the table under "Node types"; **`vftv:hushed` in this file**: the [Hush spec](hush.md#the-node-type) owns that entry in `content/hush/node_types.json`; **`vftv:choir` in this file**: the [worldgen spec](worldgen.md#the-node-type) owns that entry in `content/worldgen/node_types.json`. **After merging** every node-type file, datagen requires every built-in type of the table exactly once across all files and rejects any id declared twice.
 
 ### Placement
 
@@ -761,7 +762,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 |---|---|---|
 | `item.vftv.wand`, `item.vftv.chime_rod`, `item.vftv.resonant_brass_cap`, `item.vftv.bell_jar` | 0 | names |
 | `block.vftv.node`, `block.vftv.node_tap`, `block.vftv.vis_relay`, `block.vftv.wand_cradle` | 0 | names |
-| `wand_rod.<ns>.<path>`, `wand_cap.<ns>.<path>` (every part), `node_type.<ns>.<path>` (every type except `vftv:hushed`, whose name is the Hush spec's lang file's) | 0 | "Wooden", "Copper", "Wellspring" |
+| `wand_rod.<ns>.<path>`, `wand_cap.<ns>.<path>` (every part), `node_type.<ns>.<path>` (every type except `vftv:hushed` and `vftv:choir`, whose names are the Hush and worldgen specs' lang files') | 0 | "Wooden", "Copper", "Wellspring" |
 | `node.vftv.clarity.faint`, `.steady`, `.clear`; `node.vftv.unknown_type` | 0 | |
 | `attribute.name.vftv.vis_discount` | 0 | "Vis Discount" |
 | `tooltip.vftv.wand.parts` | 2 | "%s rod, %s caps" |
@@ -800,7 +801,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 }}
 ```
 
-**Rejected:** a key outside the table's patterns; a part or type key with no matching entry; `node_type.vftv.hushed` in this file; a required key missing in `en_us` (checked **after** every `content/lang` file is merged, so the Hush spec's `node_type.vftv.hushed` covers that type); a placeholder count that differs from the table; an empty string; a duplicate key.
+**Rejected:** a key outside the table's patterns; a part or type key with no matching entry; `node_type.vftv.hushed` or `node_type.vftv.choir` in this file; a required key missing in `en_us` (checked **after** every `content/lang` file is merged, so the Hush spec's `node_type.vftv.hushed` and the worldgen spec's `node_type.vftv.choir` cover those types); a placeholder count that differs from the table; an empty string; a duplicate key.
 
 ## Events
 
@@ -1035,6 +1036,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
 - Structure templates save node blocks with the id **unset**, `origin: structure` and a valid type. At most 2 structure nodes per 64×64 cell are minted, **across every template copy**, and any surplus is removed with a warning, so its templates place at most one node-bearing piece per cell. GameTests: two copies of one template get two distinct ids; a third structure node in one cell is removed.
 - It places no natural nodes and doesn't remove the `vftv:add_nodes` biome modifier; its processors never replace node blocks.
+- *Met by the [worldgen spec](worldgen.md#processors): its converter saves every template node as a complete node record with id 0 and `origin: structure` (pinned for `vftv:choir`); `vftv:roll_node` replaces only the clarity, maxes and currents, and drops a template node whose target isn't air; `minecraft:protected_blocks` comes first, so no template overwrites a node; one authored node per Choir ruin, in its start piece only, so two ruins never share a cell; no natural placement; and the built-in type `vftv:choir` (amended under "Node types", "Lang keys" and "Production tickets"), authored only in the worldgen content.*
 
 ## Production tickets
 
@@ -1044,6 +1046,6 @@ This spec settles every decision. Three required child tickets deliver the asset
 |---|---|---|
 | **Wand assets** | The generator `tools/art/wands.py`. **Layer textures**, 16×16 at `assets/vftv/textures/item/wand/rod/{wooden,chime,unknown}.png` and `…/wand/cap/{copper,resonant_brass,unknown}.png` (the cap layer carries both caps and the teal tick), with their layer models `vftv:item/wand/rod/<id>` and `vftv:item/wand/cap/<id>`. **Item icons** `chime_rod` and `resonant_brass_cap` (16×16, Stage 2 row), with models and item definitions. `assets/vftv/items/wand.json` exactly as under "Components". The **HUD frame** `assets/vftv/textures/gui/sprites/hud/vis_frame.png` (16×16, nine-slice border 4, in its `.mcmeta`). **Sounds:** `wand.tap_start` ×3, `wand.tap_stop` ×3, `wand.full` ×3, and `wand.tap_drone` ×3 at 3.0 s with the standard faded tail, with their `sounds.json` entries naming the subtitle keys under "Lang keys". A contact sheet at GUI scale 2 with all 4 rod × cap wands and the unknown fallbacks beside vanilla; provenance rows. | none |
 | **Node, jar and relay assets** | The generator `tools/art/nodes.py`. The **node core strip** `assets/vftv/textures/block/node_core.png`, 16×128 (8 frames, teal ramp, cutout), and the node's blockstate and particle-only model. The **glint** particle: 4 frames at 8×8 (`textures/particle/node_glint_0…3.png`) and `particles/node_glint.json`. The **Bell Jar** item, empty and filled at 16×16, with an item definition selecting on `minecraft:has_component` for `vftv:captured_node`. **Block models** of at most 6 cuboids each ([art style §6](art-style.md#6-blocks-and-models)), textures, blockstates and item forms for `node_tap` (an ear-trumpet; six facings by blockstate rotation), `vis_relay` (a fork on a stand) and `wand_cradle`. **Sounds**, with the cadences under "Rendering and sound": `node.hum` ×3, `node.absorb` ×3, `node.clarity_rise` ×1, `relay.link` ×1, `cradle.charge` ×3, `bell_jar.capture` ×1, `bell_jar.release` ×1, with `sounds.json` entries naming the subtitle keys under "Lang keys". Blender renders of every non-cube model; provenance rows. **No mote sprite**: motes reuse the aspect icons. | none |
-| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins, **excluding `vftv:hushed`**, which the Hush content ticket delivers with its name), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" (not `node_type.vftv.hushed`) | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
+| **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins, **excluding `vftv:hushed` and `vftv:choir`**, which the Hush and worldgen content tickets deliver with their names), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" (not `node_type.vftv.hushed` or `node_type.vftv.choir`) | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
 
 The Stage 1 and Stage 2 research content tickets ([#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [#35](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)) consume this spec's entry ids, gates and the recorded change to the research contract.

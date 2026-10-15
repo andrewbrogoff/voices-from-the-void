@@ -26,9 +26,21 @@ _Avoid_: thaumaturge, mage, wizard
 The earlier order of scholars who listened too long and went into the Void; the Voices are what the Choir became. Its ruins and journal pages remain in the world.
 _Avoid_: the Ancients, the Precursors
 
+**Choir ruin**:
+A ruined Choir building on the overworld's land, marked by a broken bell tower. Getting a Choir page from one is the find that opens the Ruins Stage.
+_Avoid_: temple, dungeon, obelisk
+
+**Reliquary**:
+The block at the heart of a Choir ruin that gives each Listener their own Choir pages, once per Listener per ruin, and gives back any of those pages they lose.
+_Avoid_: vault, loot chest, lectern
+
 **Answerers**:
 A living faction who speak back to the Voices without understanding them. Hostile, and found at Choir sites.
 _Avoid_: cultists, the Cult
+
+**Cantor**:
+An Answerer who leads the others' chant, steadying them in a fight.
+_Avoid_: cleric, priest, shaman
 
 **Void-tongue**:
 The invented language of the Voices, used only for eldritch-tier names and late Voice lines. It is breathy and liquid, with no hard stops.
