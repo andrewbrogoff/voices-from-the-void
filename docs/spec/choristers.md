@@ -867,8 +867,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30):** the `vftv:chorister` entity's values or reviewed exemption, already handed off by the Eldritch tier; nothing new.
 
 **API**
-- In `api`: `ChoristerLimits`, and the registry entry record with its move records; the registry and instance keys stay in `EldritchKeys`.
-- No event of ours; which services are public is the API spec's call.
+- In `api`: `ChoristerLimits` and the marker interface `Chorister`, the registry's element type. The registry and instance keys stay in `EldritchKeys`. The entry record and its move records live in `core.road`, behind the marker ([API spec, Registry element types](api.md#registry-element-types)).
+- The registry is **override-only** for packs, as "The registry" says; its JSON, move types included, is a public data format.
+- No event of ours, and no public service.
 
 ## Production tickets
 

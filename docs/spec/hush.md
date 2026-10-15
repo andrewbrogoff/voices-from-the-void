@@ -55,7 +55,7 @@ Flux enters the world **only** through **`FluxService.deposit`** (see "Depositin
 | a vis spend | `VisSpentEvent` ([wands, Events](wands.md#events)) | **that event's `quote.spill`**, never recomputed | 3 (the warp tax), 4 (Void work) |
 | a crucible emptied or removed | `CrucibleEvent(SPILLED)`, cause `EMPTIED` or `REMOVED` ([crucible, Events](crucible.md#events)) | `essentiaFlux(spilled, cause)` under the current rules | 2 |
 | a filled jar item destroyed; a jar's unsettled excess | `EssentiaEvent(SPILLED)`, cause `DESTROYED` or `REMOVED` ([essentia, Events](essentia.md#events)) | likewise | 2 |
-| an infusion upset, abandon or bowl removal | `InfusionEvent(SPILLED)`, cause `UPSET`, `ABANDONED` or `REMOVED` ([infusion, Events](infusion.md#events)) | `essentiaFlux(spilled, cause, rules)` with **the rules the event carries**: a run's frozen ones for `UPSET`, the current ones otherwise. An `UPSET` from a run frozen before this spec landed carries none and generates **0**, matching the bound its readout showed | 3 |
+| an infusion upset, abandon or bowl removal | `InfusionEvent(SPILLED)`, cause `UPSET`, `ABANDONED` or `REMOVED` ([infusion, Events](infusion.md#events)) | `essentiaFlux(spilled, cause, rules)` with **the rules the event carries** in `InfusionEvent.fluxRules()` (on the event, not in its payload: [API spec, The events](api.md#the-events)): a run's frozen ones for `UPSET`, the current ones otherwise. An `UPSET` from a run frozen before this spec landed carries none and generates **0**, matching the bound its readout showed | 3 |
 | a golem's death with claimed essentia | `GolemEvent(SPILLED)`, cause `DIED`, at its death position ([golems, Events](golems.md#events)) | `essentiaFlux(spilled, DIED)` | 2 |
 | a Pealing Bell removed holding Sonus | its own removal hook (see "The Pealing Bell") | `essentiaFlux({Sonus: n}, REMOVED)` | 3 |
 | an operator | `/vftv flux add` | as typed | |
@@ -641,7 +641,7 @@ The tuning file `data/vftv/tuning/hush.json` is written by datagen from the reco
 
 ## Events
 
-NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs.
+NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs. The payload shape (`HushChange`, `HushOrigin`, `FluxSource`, `FluxClearSource`) and the failure rules are the [API spec's](api.md#events). **`HushSpreadEvent` fails closed:** a throwing listener makes the mutation a miss, with nothing changed and nothing debited ("The operation").
 
 | Event | When | Payload |
 |---|---|---|
@@ -651,7 +651,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **No event** for an attempt, a miss, a saturation, a merge of pending flux or a zero deposit.
 - **A failed post** (a listener threw) is logged once; the change stands, and **our later posts** of the same operation still run. The remaining subscribers of the post that failed are NeoForge's dispatch, not ours to resume.
 
-**Plain `core` services:** `FluxService.deposit`, `.clear` (`core.hush`); `FluxMath.visSpill`, `.essentiaFlux`, `.essentiaFluxBound` (`core.flux.model`); `HushService.readout(level, chunk)`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `FluxService.deposit`, `.clear` (`core.hush`); `FluxMath.visSpill`, `.essentiaFlux`, `.essentiaFluxBound` (`core.flux.model`); `HushService.readout(level, chunk)`. They are **internal in v1** ([API spec, Services](api.md#services)): no addon deposits or clears flux.
 
 ## Sync and state
 
@@ -890,7 +890,12 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The three server switches and two client options under "Tuning and limits", as named.
 
 **API**
-- In `api`: `FluxRules`, `HushLimits`, `FluxSource`, the event payload records, `HushKeys` (the `#vftv:hushed` and `#vftv:hush_immune` tag keys, the `vftv:hushed` node-type key, the `vftv:hollow` entity-type key, the attachment's id) and a read-only descriptor of the hushed-form table (source and form ids). In `api.neoforge`: the `vftv:aura` `AttachmentType` handle, `HushSpreadEvent` and `FluxEvent`. Concrete forms and services stay in `core`. Which services are public is the API spec's call.
+- In `api`:
+  - **Stable:** `HushLimits`, `FluxSource`, `FluxClearSource`, the event payload records, and `HushKeys`. `HushKeys` holds the `#vftv:hushed` and `#vftv:hush_immune` tag keys, the `vftv:hushed` node-type key, the `vftv:hollow` entity-type key, the `vftv:aura` attachment's id, and `FORMS`, an unmodifiable list of `HushedForm(source id, form id)` describing the hushed-form table.
+  - **`@Experimental`:** `FluxRules`, whose codec and generation stay as above.
+- In `api.neoforge`: `HushSpreadEvent` and `FluxEvent`.
+- The `vftv:aura` `AttachmentType` is **not** public: its id is published for diagnostics, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
+- Concrete forms and every service stay in `core`.
 
 ## Production tickets
 

@@ -38,9 +38,9 @@ Two **synced datapack registries**, fixed when a world opens, like the aspect se
 | cap `vftv:copper` | `minecraft:copper_nugget` | ×1.00 |
 | cap `vftv:resonant_brass` | `vftv:resonant_brass_cap` | ×0.85 |
 
-- **Required built-in keys** (`WandPartKeys` in `api`): the four entries above. Packs may override their values and add parts; they cannot delete these.
+- **Required built-in keys** (`WandPartKeys` in `api`): the four entries above. Packs may override their values and add parts; they cannot delete these. `WandPartKeys` also holds the later tiers' keys below.
 - **Load validation** refuses the world with a clear error naming the entry: an unknown item or air; one item used by two parts, across both registries; a value out of range; a required key missing.
-- **Later tiers** (Stages 3–4) are entries added by [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21) or [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), with no code. Stage 3's are the [infusion spec](infusion.md#the-echo-rod-and-cap)'s rod `vftv:echo` (`vftv:echo_rod`, capacity 300) and cap `vftv:echo` (`vftv:echo_cap`, ×0.70). Stage 4's are the [Eldritch tier spec](eldritch.md#the-void-wand-tier)'s rod `vftv:void` (`vftv:void_rod`, capacity 500) and cap `vftv:void` (`vftv:void_cap`, ×0.55), in its own parts file, merged with every other and rejecting a duplicate id or item. An addon's part model needs an override of `items/wand.json`; two addons overriding that one file conflict, a known limitation handed to the API spec.
+- **Later tiers** (Stages 3–4) are entries added by [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21) or [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), with no code. Stage 3's are the [infusion spec](infusion.md#the-echo-rod-and-cap)'s rod `vftv:echo` (`vftv:echo_rod`, capacity 300) and cap `vftv:echo` (`vftv:echo_cap`, ×0.70). Stage 4's are the [Eldritch tier spec](eldritch.md#the-void-wand-tier)'s rod `vftv:void` (`vftv:void_rod`, capacity 500) and cap `vftv:void` (`vftv:void_cap`, ×0.55), in its own parts file, merged with every other and rejecting a duplicate id or item. An addon's part model needs an override of `items/wand.json`; two addons overriding that one file conflict. That is a v1 limitation, documented in [API spec, Known limitations](api.md#known-limitations), with no merge offered.
 - Names are lang keys `wand_rod.<ns>.<path>` and `wand_cap.<ns>.<path>`.
 
 ### Assembly
@@ -805,7 +805,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 
 ## Events
 
-NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the whole commit**, through a small publisher seam that `neoforge` implements (`core` stays loader-free). Their payload records (`VisQuote`, `VisContext`, `NodeRef`) live in `api`, which the separately compiled API source set requires.
+NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the whole commit**, through a small publisher seam that `neoforge` implements (`core` stays loader-free). Their payload records (`VisQuote`, `VisContext`, `NodeRef`) live in `api`, which the separately compiled API source set requires. The payload shape, immutability and failure rules are the [API spec's](api.md#events), which also fixes these records' fields.
 
 | Event | Payload |
 |---|---|
@@ -829,7 +829,7 @@ No event fires for a tap or relay pulse, regeneration, a duplicate's removal, or
 - `remove(id, cause)` (works on unloaded ids; the block is removed at reconciliation);
 - `update(id, change, cause, boundary?) → UpdateResult`: loaded nodes only, otherwise refused as `NOT_LOADED`. The change may set a new type (registered), new aspects (at most 6, maxes 1–1000) or a new clarity. It settles first and rebases after; it keeps the id, position and the counters of aspects that remain; `current` clamps to a lowered max, and an added aspect starts at current 0. **Order** (amended for [the Hush spec](hush.md#hushed-nodes)): validate; write the node block entity and mark it for sync; call the optional **apply boundary** `applied(before, after)` **exactly once**, after the write and **before** `NodeEvent(CHANGED)`, with no foreign code between the write and it (the boundary may only update its caller's own bookkeeping: no node, world or registry change); then post `NodeEvent(CHANGED)`. **Outcomes:** `UPDATED`; `NOT_LOADED` and the other refusals, which changed nothing and never call the boundary; and **`COMMITTED_NOTIFY_FAILED`**, when posting `CHANGED` threw: the write and the boundary stand, nothing is rolled back, the error is logged once, and the caller must never treat it as a refusal or retry it. An exception from the boundary itself is logged once, the write stands, `CHANGED` is still posted, and the result is `COMMITTED_NOTIFY_FAILED`.
 
-Whether these are exposed in `api` is the API spec's call.
+These services are **internal in v1** ([API spec, Services](api.md#services)): addons read nodes through `NodeEvent` and spend no vis.
 
 ## Sync and state
 
@@ -897,7 +897,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 - the core, mote, glint and hum numbers: `assets/vftv/nodes/client.json` (`content/nodes/client.json`), overridable by resource packs;
 - `hud.x`, `hud.y` (default 4, 4): client config.
 
-**Fixed limits, in code** (formats and invariants, not balance): 64-block cells; 8 nodes per cell, of which at most 1 natural and 2 structure at minting; 6 aspects per node; 8 vis aspects; 32 members per network; the 180-block starter cap; the `nearest` radius ≤ 256; the 72,000-tick use duration; the 64 slot changes per spend; the HUD geometry; the codec bounds; base costs 0–1000. **Fixed feedback constants:** the 40-tick drone retrigger; 2 tap glints per pulse; the 20-tick absorb-sound cooldown; the global cap of 64 live glints; the block-entity view distance of 64.
+**Fixed limits, in code** (formats and invariants, not balance), as constants in **`VisLimits`** in `api`: 64-block cells; 8 nodes per cell, of which at most 1 natural and 2 structure at minting; 6 aspects per node; 8 vis aspects; 32 members per network; the 180-block starter cap; the `nearest` radius ≤ 256; the 72,000-tick use duration; the 64 slot changes per spend; the HUD geometry; the codec bounds; base costs 0–1000. **Fixed feedback constants:** the 40-tick drone retrigger; 2 tap glints per pulse; the 20-tick absorb-sound cooldown; the global cap of 64 live glints; the block-entity view distance of 64.
 
 ## Performance
 

@@ -128,10 +128,10 @@ A synced datapack registry, **`vftv:golem_material`**, following [ADR 0003](../a
 
 **The job contract** (in `core.golem`, loader-free):
 - A **job type** declares its carry kind (`ITEMS` or `ESSENTIA`), its ordered valid roles and its default role. It holds no behaviour of its own.
-- A **core item** is a `GolemCoreItem` bound in code to exactly one job key. The `vftv:golem_core` component names the item, and the job comes from it.
+- A **core item** is a `GolemCoreItem` bound in code to exactly one job key. Ours and an addon's alike implement `api`'s `GolemCore`, which is what the golem reads. The `vftv:golem_core` component names the item, and the job comes from it.
 - **Planning** is one shared, loader-free planner in `core.golem.model`. It works over primitive views: marks (positions as `long`, faces and roles as ordinals, filters as interned ints), per-think resource tokens whose equality the platform adapter defines (an `ItemResource` is item plus components; an aspect is its index in ascending id), and a **slot reader seam** that charges every read to the think's budget. It returns a bounded plan record (`TAKE`/`GIVE`/`FEED`/`TIP`/`COLLECT`, mark index, slot, token, amount), a yield position, `WAIT` with a reason, or `IDLE`. It never sees a capability, transaction, `BlockPos` or `ResourceKey`.
 - **Execution** lives in `neoforge.golem`: the capability calls, the journals, transactions and spawns, which report back what moved.
-- **An addon** may register a job type with its core item, choosing a carry kind and a subset of the five roles. A new kind of act needs an API extension; the API spec decides whether to offer one.
+- **An addon** may register a job type with its core item, choosing a carry kind and a subset of the five roles (`TAKE` and `GIVE` only for `ESSENTIA`). This is public: the record `GolemJob`, the typed `vftv:golem_job` key and the loader-free binding interface `GolemCore` that a core item implements ([API spec, Golem jobs](api.md#golem-jobs)). A new kind of act needs an API extension, which v1 doesn't offer: acts, the planner and execution stay internal.
 - **A missing core or job** (the core item's mod removed) leaves a placed golem **inert** and kept (see "Sync and state").
 
 ## Making a golem
@@ -852,7 +852,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen.
 
 ## Events
 
-NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs: item stacks are copies, positions are values.
+NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs: item stacks are copies, positions are values. The payload shape, copying on access and failure rules are the [API spec's](api.md#events). **`GolemWorkEvent` fails closed:** a throwing listener makes the act `REFUSED`, with nothing moved and nothing debited ("An act").
 
 | Event | When | Payload |
 |---|---|---|
@@ -872,7 +872,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **Once per occurrence.** Nothing fires per think, travel check, path or probe.
 - **A throwing listener** is logged once with the position; the state stands, the act is never retried, and our remaining notifications still run. NeoForge's own dispatch to its remaining subscribers is NeoForge's.
 
-**Plain `core` services:** `GolemPlanner.plan`, `GolemRange.inRange`, `GolemPhase.of`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `GolemPlanner.plan`, `GolemRange.inRange`, `GolemPhase.of`. They are **internal in v1** ([API spec, Services](api.md#services)).
 
 ## Sync and state
 
@@ -1106,7 +1106,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The admin cap `golems.max_per_chunk` (default 16, 1–256), applied at placement only.
 
 **API**
-- `GolemLimits`, the payload records of `GolemEvent` and `GolemWorkEvent`, the `vftv:golem_job` and `vftv:golem_material` registry keys, and the component keys live in `api`. The job contract (a job type's carry kind and roles, a core's binding, the loader-free planner returning bounded plans, and execution behind the platform layer) is as under "Cores and jobs"; no transfer type reaches `core`. Which services are public is the API spec's call.
+- `GolemLimits`, the payload records of `GolemEvent` and `GolemWorkEvent`, the `vftv:golem_job` and `vftv:golem_material` registry keys, and the component keys live in `api`. The job contract (a job type's carry kind and roles, a core's binding, the loader-free planner returning bounded plans, and execution behind the platform layer) is as under "Cores and jobs"; no transfer type reaches `core`. Public in `api`: `GolemJob`, `GolemCarryKind`, `GolemRole`, `GolemCore` and `GolemKeys` (the typed job key with `vftv:carry` and `vftv:decant`). The planner, execution and every service are internal ([API spec, Golem jobs](api.md#golem-jobs)).
 
 ## Production tickets
 

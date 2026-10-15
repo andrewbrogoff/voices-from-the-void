@@ -686,7 +686,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 
 ## Events
 
-NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs.
+NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs. The payload shape (`WarpState` before, after and delta, and `WarpSource`) and the failure rules are the [API spec's](api.md#events).
 
 | Event | When | Payload |
 |---|---|---|
@@ -695,7 +695,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **One post per change,** never per check or cue. The [research spec's](research.md#triggers) `warp_at_least` latches on it.
 - **A throwing listener** is logged once; the change stands.
 
-**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.silence`, `.isSilenced`, `.noteVoidWork`, `.registerPlaceQuery`, `.inVoidTouchedPlace`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.silence`, `.isSilenced`, `.noteVoidWork`, `.registerPlaceQuery`, `.inVoidTouchedPlace`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. They are **internal in v1** ([API spec, Services](api.md#services)): no addon commits or applies warp.
 
 ## Sync and state
 
@@ -947,7 +947,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The server switches and client options under "Tuning and limits", as named.
 
 **API**
-- `WarpCost`, `WarpSource`, `WarpPreview`, `CommitResult`, `WarpLimits`, the `WarpRules` record, the `vftv:voice_event`, `vftv:voice_event_type` and `vftv:bargain` registry keys, the `vftv:gear_warp` data-map key and the `vftv:voice_spawnable` tag key live in `api`, loader-free. The `WarpChangedEvent` class and the data-map registration live in `api.neoforge`. The commit's guard and publication contract is as under "The commit". Which services are public is the API spec's call.
+- `WarpSource`, `WarpPreview`, `WarpState`, `WarpLimits`, the marker interfaces `VoiceEvent` and `Bargain`, and `WarpKeys` (the `vftv:voice_event` and `vftv:bargain` registry keys, the `vftv:gear_warp` data-map key, the `vftv:voice_spawnable` tag key and the `vftv:warp` attachment's id) live in `api`, loader-free, as Stable. `WarpCost`, `CommitResult` and the `WarpRules` record live there too, as `@Internal`. The `WarpChangedEvent` class and the `vftv:gear_warp` `DataMapType` live in `api.neoforge`.
+- The `vftv:voice_event_type` registry and its key are internal in v1; its type ids and their fields stay a public data format. The commit's guard and publication contract is as under "The commit". Every service is internal ([API spec](api.md#services)).
 
 ## Production tickets
 

@@ -937,7 +937,9 @@ A secret is hinted only through its `hinted_by` entry's prose, and validation pr
 
 ## Events
 
-NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server after the whole state transition is committed, plus plain `core` queries `isLearned(player, id)`, `isLatchedOrLearned(player, id)` (read-only: the entry is in the attachment's `latched` or `learned` set; used by the [worldgen spec's Reliquary](worldgen.md#using-it)) and `stage(player)`. Whether they are exposed in `api` is the API spec's call.
+NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server after the whole state transition is committed, plus plain `core` queries `isLearned(player, id)`, `isLatchedOrLearned(player, id)` (read-only: the entry is in the attachment's `latched` or `learned` set; used by the [worldgen spec's Reliquary](worldgen.md#using-it)) and `stage(player)` (0–4). The payload shape, immutability and failure rules are the [API spec's](api.md#events).
+
+**The three queries are public** as the read-only **`ResearchView`**, delivered for a `ServerPlayer` through the entity capability `vftv:research_view` ([API spec, ResearchView and BaffleView](api.md#researchview-and-baffleview)). The events carry no login baseline and no revocation, so addons gate on the view. Every other research service and the `vftv:research` attachment stay internal; the attachment's id is in `ResearchKeys`.
 
 | Event | Payload |
 |---|---|
@@ -1036,7 +1038,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 - `research.mode`: server config;
 - `book.clear_prose`: client config.
 
-**Fixed limits, in code** (formats and validator rules, not balance): anchors 2–5; grid radius ≤ 7 (169 cells); synthesis depth ≤ 3; 8 actions and 1 commit per player per tick; 16 open notes; 9 bookmarks; the codec bounds above; the 40-tick pending timeout; the GUI layout. **Test threshold:** `affordability.margin` 1.5.
+**Fixed limits, in code** (formats and validator rules, not balance), as constants in **`ResearchLimits`** in `api`: anchors 2–5; grid radius ≤ 7 (169 cells); synthesis depth ≤ 3; 8 actions and 1 commit per player per tick; 16 open notes; 9 bookmarks; the codec bounds above; the 40-tick pending timeout; the GUI layout. **Test threshold:** `affordability.margin` 1.5.
 
 ## Performance
 

@@ -73,7 +73,14 @@ JaCoCo `0.8.15` merges the unit and GameTest execution data, filtered to `com.an
 - A test checks the distributable jar: it contains the API classes and every resource, and no test, harness or dev-only dependency.
 - **The packaged jar** (not the dev classpath) boots on a dedicated server with no soft dependency installed.
 - Integration tests for Curios, JEI and TerraBlender run when code in their `neoforge.compat.<mod>` package changes.
-- **API:** Javadoc builds for the `api` source set with `-Xdoclint` and fails on errors. A tiny external addon fixture compiles against the built `-api.jar`. Binary-compatibility tooling (e.g. japicmp) waits until the API spec sets a published baseline.
+- **API** ([API spec](api.md)):
+  - Javadoc for the `api` source set runs with `-Xdoclint:all -Werror` over the API, Minecraft and NeoForge classpath.
+  - The `api` jar holds only `META-INF/MANIFEST.MF`, directory entries, `LICENSE-API` and the API classes, and the `api-sources` jar the same with sources. Both manifests carry `Vftv-Version` and `Vftv-NeoForge-Version`.
+  - The example addon `testAddon` compiles against the built `api` jar file.
+  - The frozen compatibility corpus `testCompat` compiles against it. It references only Stable declarations (`API_CORPUS_STABLE`), and every method carries its deprecation suppression from the day it is added. Its data replays in its own GameTest run, at startup and after `/reload`.
+  - **The baseline** is the release with the highest semantic version below `mod_version` of the same MAJOR, excluding drafts and prereleases, identified by tag and asset and checked against its `SHA256SUMS`. If one exists, `apiCompat` (japicmp, failing on binary and source incompatibility, with the Experimental and Internal tiers excluded), `API_NO_DEMOTION`, `API_RECORDS_FROZEN`, the corpus freeze check and the binary replay of the baseline's corpus jar all run; if a download fails, the step fails. If none exists (before `1.0.0`, or in a new MAJOR), those comparisons are skipped and logged, and every other API check still runs.
+  - `apiGateSelfTest` proves the gate's own verdicts on committed old/new pairs.
+  - These gates check compatibility; they don't prove it. Data schemas are also reviewed at release ([API spec, Public data formats](api.md#public-data-formats)).
 
 ## Logging
 
@@ -88,7 +95,7 @@ GitHub Actions on hosted `ubuntu-24.04`.
 - **Pinning:** every dependency and plugin version, and every action by full commit SHA. Upgrades come in reviewed PRs that pass every gate. No automatic upgrades of the formatter or the platform.
 - **The harness** is checked out with `actions/checkout` (its `repository` and a full commit SHA kept in a committed version file) in **every job that configures Gradle**, `build` included, because `settings.gradle` loads its plugin. The job writes the ignored `local.properties` with an absolute `harness.dir`. No submodule.
 - **Jobs:**
-  1. `build`: `spotlessCheck`, `check` (compile with EP + NullAway, unit tests, `archTest`, coverage gate, AT check), `runGameTestServer` with the discovery guard, the datagen check, the shipping-jar checks, and the Javadoc and addon-fixture builds.
+  1. `build`: the API baseline step (picks and downloads the baseline release's `api` and `compat` jars, fail-closed), `spotlessCheck`, `check` (compile with EP + NullAway, unit tests including the binary replay, `archTest` including the API rules, `apiCompat`, `apiGateSelfTest`, coverage gate, AT check), `runGameTestServer` with the discovery guard, `runCompatGameTestServer` with its own discovery guard, the datagen check, the shipping-jar checks, the Javadoc build, the `testAddon` and `testCompat` builds, and the corpus freeze check.
   2. `e2e` (needs `build`): every harness scenario under xvfb with software GL, plus the assertion checker.
   3. `bench` (nightly only, never gating): JMH ns/op and `gc.alloc.rate.norm` trends for the `model` tier.
 - **Artifacts:** screenshots, `protocol.jsonl`, assertion results, GameTest logs and coverage reports are uploaded on **every** run, not only on failure, because the definition of done reviews them.
@@ -166,7 +173,11 @@ A build ticket is done when everything below that applies to its change holds, w
 4. `en_us` lang is complete for everything added.
 5. Assets follow the art style guide, and each one has a row in [`docs/assets-provenance.md`](../assets-provenance.md).
 6. New files fall under the right rule in [`NOTICE.md`](../../NOTICE.md), and any third-party material carries its own licence and notices.
-7. Public API changes carry Javadoc that passes `-Xdoclint`.
+7. **Public API changes:**
+   - every new API declaration has an effective, documented tier: Stable by default, or `@Experimental` or `@Internal` ([API spec, Stability tiers](api.md#stability-tiers));
+   - it carries Javadoc that passes `-Xdoclint:all -Werror` with the content the API spec requires;
+   - the evidence is a green `apiCompat` against the baseline, or the logged no-baseline case;
+   - `testAddon` covers it, and any new public data format has `testCompat` entries.
 8. No new mixin or AT, unless the architecture's order of preference and its one-line justification rule are met.
 9. The harness scenario screenshots for the change have been reviewed by an agent, and the review is linked.
 10. For changes that affect performance or rendering: the reference-machine measurement is attached, and the system stays within its declared share and the whole-mod envelope.

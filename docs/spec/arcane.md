@@ -472,7 +472,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 
 Nothing fires for a turned table (beyond the vanilla `BreakBlockEvent` it asks and the game event it posts), a refusal, a batch that stops, or the taking of committed output.
 
-**Plain `core` services:** `ArcanePreview.of`; `ArcaneRecipes.select(player, grid)` over the current snapshot. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `ArcanePreview.of`; `ArcaneRecipes.select(player, grid)` over the current snapshot. They are **internal in v1** ([API spec, Services](api.md#services)). The `vftv:arcane` recipe body is a public data format, and the `#vftv:converts_to_worktable` tag key is in `ArcaneKeys` in `api`.
 
 ## Sync and state
 

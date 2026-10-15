@@ -18,8 +18,10 @@ Resolved in [Architecture and loader seams](https://github.com/andrewbrogoff/voi
 
 There is **one Gradle project** ([ADR 0001](../adr/0001-single-gradle-project.md)), with two source sets:
 
-- **`api`**: compiled on its own, so it cannot see `core`. It builds the `-api.jar` that addon authors compile against.
-- **`main`**: holds `core`, `neoforge` and `datagen`, and depends on `api`.
+- **`api`**: compiled on its own, so it cannot see `core`. It builds the `api` and `api-sources` classifier jars that addon authors compile against ([API spec, The artefacts](api.md#the-artefacts)).
+- **`main`**: holds `core`, `neoforge` and `datagen`, and depends on `api`. The mod jar packages the `api` classes too.
+
+The test source sets `testAddon` (the example addon) and `testCompat` (the frozen compatibility corpus) compile against the built `api` jar file, never against `main` ([API spec, The fixtures](api.md#the-fixtures)).
 
 Generated resources are committed to `src/generated/resources` (see "Datagen").
 
@@ -99,7 +101,7 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 
 ## Essentia and capabilities
 
-- `EssentiaResource(Holder<Aspect>)` implements the transfer API's `Resource`. It is exposed as `BlockCapability<ResourceHandler<EssentiaResource>, Direction>`.
+- `EssentiaResource(Holder<Aspect>)` implements the transfer API's `Resource`, so it lives in `api.neoforge.essentia`. It is exposed as the capability **`vftv:essentia`**, a `BlockCapability<ResourceHandler<EssentiaResource>, @Nullable Direction>` ([API spec, Capabilities and views](api.md#capabilities-and-views)).
 - **Essentia Jars** implement that handler through an explicit adapter with its own journal. They don't inherit it unmodified: the stock `ResourceStacksResourceHandler` keeps its journal private and checks indices before arguments ([essentia spec, Contents and the handler](essentia.md#contents-and-the-handler)). **The Alembic** stores nothing and exposes no handler.
 - **Transactions:** a multi-hop tube transfer runs inside one `Transaction`, so a failed transfer rolls back.
 - **Suction** is a separate, small capability. It never overloads the essentia handler.
@@ -108,9 +110,11 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 
 ## Public API
 
-- **`api`** is loader-free. It holds immutable records, interfaces, `ResourceKey`/`TagKey`/registry/data-map keys, and every shared constant (javac inlines constants, so they must live here, where ArchUnit can see them). It never holds implementations.
-- **`api.neoforge`** holds the capability constants (essentia, suction) and the NeoForge events that addons subscribe to ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)).
-- Which registries and events are exposed, and how versioning and stability are promised, belongs to the API spec.
+- **`api`** is loader-free. It holds immutable records, interfaces, `ResourceKey`/`TagKey`/registry/data-map keys, and every shared constant (javac inlines constants, so they must live here, where ArchUnit can see them). It never holds implementations of game logic. That is enforced structurally by `API_SHAPES`, plus review, because a record or a default method can still hold logic.
+- **`api.neoforge`** holds the capability constants (essentia, suction and the two read-only views), the data-map types, `EssentiaResource` and the NeoForge events that addons subscribe to ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)).
+- **Packages mirror features:** `api.<f>` and `api.neoforge.<f>` for each `core.<f>` slice.
+- **Tiers:** a declaration is Stable unless it, an enclosing type or its package carries `@Experimental` or `@Internal`, both our own annotations in `…api`.
+- What is exposed, its tiers, versioning, deprecation and the compatibility gates are the [API spec](api.md)'s.
 
 ## Soft dependencies
 
@@ -158,6 +162,12 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | `COMPAT_CONFINED` | `curios`, `jei` and `terrablender` types are used only in their own `neoforge.compat.<mod>` package |
 | `FLUX_LEAF` | `core.flux..` uses no other `core.(*)..` package |
 | `FLUX_ENTRY_POINTS` | a package allowlist: only classes in `neoforge.hush..` and `core.hush..` call `FluxService.deposit` (review keeps them to the Hush spec's named entry points). A static caller check: once-only delivery and conservation are proved by the Hush spec's GameTests |
+| `API_PACKAGES` | every `..api..` package is the root `…api` or `api.<f>` / `api.neoforge.<f>` for an existing `core.<f>` slice ([API spec, Packages](api.md#packages)) |
+| `API_SHAPES` | every top-level and nested `..api..` type is an interface, record, enum, annotation, constant holder or (in `api.neoforge`) a `final` `Event` subclass; cancellable exactly for the three listed events; never `IModBusEvent` ([API spec, Shapes](api.md#shapes)) |
+| `API_TIER_LEAK` | no Stable declaration mentions an Experimental or Internal type anywhere in its signature: generic arguments and bounds, supertypes, record components and `throws` included ([API spec, No tier leaks](api.md#no-tier-leaks)) |
+| `API_CONSTRUCTION` | public constructors are Stable only on the addon-constructible types; every other API record and event declares an `@Internal` constructor ([API spec, Construction ownership](api.md#construction-ownership)) |
+| `API_CORPUS_STABLE` | the frozen compatibility corpus `testCompat` references only effectively Stable API declarations ([API spec, The fixtures](api.md#the-fixtures)) |
+| `API_NO_DEMOTION`, `API_RECORDS_FROZEN` | with a release baseline only: every baseline Stable declaration is still Stable, and every baseline Stable record keeps its components ([API spec, Compatibility gates](api.md#compatibility-gates)) |
 
 **Other checks:**
 - A Gradle check fails if any active line (not blank, not a comment) in `META-INF/accesstransformer.cfg` lacks a trailing `# why` comment.

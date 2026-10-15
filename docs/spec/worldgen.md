@@ -846,7 +846,7 @@ A sketch:
 
 No sibling needs more.
 
-**Plain `core` services:** `ChoirSitePlaceQuery` (`core.worldgen`, registered with `core.warp`); `ReliquaryService.use(player, pos)` (server only). Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `ChoirSitePlaceQuery` (`core.worldgen`, registered with `core.warp`); `ReliquaryService.use(player, pos)` (server only). They are **internal in v1** ([API spec, Services](api.md#services)).
 
 ## Sync and state
 
@@ -1108,9 +1108,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - No option of ours. Peaceful removes the defenders, not the ruins. A pack disables ruins by overriding the structure set (for example `frequency` 0.0).
 
 **API**
-- In `api`: `WorldgenKeys` (the `vftv:choir_site` registry key, the `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering` tag keys, the `vftv:choir_ruin` structure and site keys, the `vftv:choir` node-type key and the attachment's id) and `WorldgenLimits`.
-- In `api.neoforge`: the `vftv:choir_claims` `AttachmentType` handle.
-- Services, models and codecs stay implementations. Which services are public is the API spec's call.
+- In `api`: the marker interface `ChoirSite` (the registry is server-only), `WorldgenKeys` (the `vftv:choir_site` registry key, the `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering` tag keys, the `vftv:choir_ruin` structure and site keys, the `vftv:choir` node-type key and the `vftv:choir_claims` attachment's id) and `WorldgenLimits`.
+- The `vftv:choir_claims` `AttachmentType` is **not** public: its id is published, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
+- Services, models and codecs stay implementations, all internal in v1.
 
 ## Production tickets
 

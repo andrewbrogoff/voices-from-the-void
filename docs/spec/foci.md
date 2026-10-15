@@ -31,7 +31,7 @@ Five `note` entries, authored by the research content tickets:
 
 ## Composition
 
-**Types in code, instances in data** ([architecture, Data and code](architecture.md#data-and-code)). Each of the three parts has a **code registry of behaviour types** and a **synced datapack registry of instances**, fixed when a world opens, like the wand parts ([wands, Parts](wands.md#parts); [ADR 0003](../adr/0003-aspects-as-datapack-registry.md)). An addon adds a type in code and entries in data; a pack retunes or adds entries with no code.
+**Types in code, instances in data** ([architecture, Data and code](architecture.md#data-and-code)). Each of the three parts has a **code registry of behaviour types** and a **synced datapack registry of instances**, fixed when a world opens, like the wand parts ([wands, Parts](wands.md#parts); [ADR 0003](../adr/0003-aspects-as-datapack-registry.md)). **In v1 the behaviour types are internal** ([API spec, Code extension](api.md#code-extension)): an addon or a pack retunes or adds entries over the built-in types, in data only, and the type ids with their `params` are a public data format. A later API minor may open the type registries as an `@Experimental` SPI.
 
 | Code registry (types) | Built-in types | Datapack registry (instances) |
 |---|---|---|
@@ -933,7 +933,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 
 ## Events
 
-NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through the platform seam. Their payload records live in `api`.
+NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through the platform seam. Their payload records live in `api`. The payload shape, immutability and failure rules are the [API spec's](api.md#events). **`FocusAffectEntityEvent` fails closed:** a throwing listener is logged, the working ends where it was with no refund of the vis already paid, and the cooldown, notifications and guard release still run ("Failure after the spend").
 
 | Event | When | Payload |
 |---|---|---|
@@ -944,7 +944,7 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 - `VisSpentEvent` comes from `spend`, and [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) generates its flux on it ([Hush spec, Sources](hush.md#sources)).
 - Nothing fires for a refusal, an attach or detach, a fizzle or a beam that pays nothing.
 
-**Plain `core` services,** implemented in `core`: `FocusService.kind(stack)`, `FocusService.composition(stack)`, `FocusCost.base`, `FocusMagnitude.of`, `FocusRules.valid`, `FocusPreview.of`. `api` cannot depend on `core` or hold implementations ([architecture, Public API](architecture.md#public-api)), so any public facade is an interface in `api` that `core` implements. Whether there is one is the API spec's call.
+**Plain `core` services,** implemented in `core`: `FocusService.kind(stack)`, `FocusService.composition(stack)`, `FocusCost.base`, `FocusMagnitude.of`, `FocusRules.valid`, `FocusPreview.of`. `api` cannot depend on `core` or hold implementations ([architecture, Public API](architecture.md#public-api)), so any public facade would be an interface in `api` that `core` implements. **There is none in v1** ([API spec, Services](api.md#services)): all six stay in `core`.
 
 ## Sync and state
 
@@ -1157,7 +1157,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The admin switch `foci.block_effects` (default on), applied to `BLOCKS` effects at the start of a cast and at every Beam pulse.
 
 **API**
-- `FocusKeys`, `FocusLimits`, the payload records of `FocusEvent` and `FocusAffectEntityEvent`, and `FocusService.kind` live in `api`. Which services and registries are public is the API spec's call.
+- `FocusKeys` (with the `#vftv:focus_immune` tag key), `FocusLimits`, the marker interfaces `FocusEffect`, `FocusMedium` and `FocusModifier`, and the payload records of `FocusEvent` and `FocusAffectEntityEvent` live in `api`. `FocusService.kind` and every other service stay in `core`. The three datapack registries are public data formats; the three behaviour-type registries are internal in v1 ([API spec](api.md#code-extension)).
 
 ## Production tickets
 

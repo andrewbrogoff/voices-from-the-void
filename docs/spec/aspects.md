@@ -121,7 +121,7 @@ The aspect set is the synced datapack registry `vftv:aspect` ([ADR 0003](../adr/
 | `hidden_primal` | no | `taught_parents` (2 ids) and `revealed_by` (a research id, checked once research data loads) |
 | `discovery_bonus` | no | points granted on discovery; defaults to the tuning value |
 
-Name and gloss are lang keys `aspect.<ns>.<path>` and `aspect.<ns>.<path>.gloss`. The `api` exposes `AspectKeys` (a `ResourceKey` per built-in) and the registry and data-map keys.
+Name and gloss are lang keys `aspect.<ns>.<path>` and `aspect.<ns>.<path>.gloss`. The `api` exposes the element interface `Aspect`, `AspectKeys` (a `ResourceKey` per built-in, and the registry and data-map keys), the data-map value `AspectValues` and, in `api.neoforge`, the `DataMapType`s ([API spec, The inventory](api.md#the-inventory)).
 
 **Overrides:** datapacks may add aspects and override ours (colour, icon, parents). They cannot delete ours, because code holds their keys. The whole graph is re-validated. The set is fixed when a world opens: changing it needs the world reopened, while the value maps below follow `/reload`.
 
@@ -257,7 +257,7 @@ Striking a **blank Book and Quill** in the inventory turns it into the Commonpla
 
 ## Events
 
-NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), fired on the server after state is committed, plus plain service methods in `core`.
+NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), fired on the server after state is committed, plus plain service methods in `core`, which are internal in v1. The payload shape, immutability and failure rules are the [API spec's](api.md#events), and the scan key's representation is `ScanKey` there.
 
 | Event | Payload |
 |---|---|
@@ -301,7 +301,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 
 **Validation:** a `sounding.radius` outside 1–256, or band edges that break 0 < `near` < `mid` ≤ `radius`, makes the file invalid. An invalid file refuses the world at open; on `/reload` the previous record is kept and an error logged.
 
-**Fixed limits, in code** (formats and validator rules, not balance): at most 5 aspects per material entry; depth ≤ 3; compound fan-out ≤ 5; ≥ 2 tier-1 children per exposed primal; the sounding radius ≤ 256. **Test thresholds:** ≥ 3 sources per aspect. **Authoring targets:** the value-scale totals above.
+**Fixed limits, in code** (formats and validator rules, not balance), as constants in **`AspectLimits`** in `api`: at most 5 aspects per material entry; depth ≤ 3; compound fan-out ≤ 5; ≥ 2 tier-1 children per exposed primal; the sounding radius ≤ 256. **Test thresholds:** ≥ 3 sources per aspect. **Authoring targets:** the value-scale totals above.
 
 ## Performance
 

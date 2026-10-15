@@ -319,7 +319,7 @@ The descent's landing (row 9) is checked the same way.
 
 ### The layout
 
-**Fixed in code** (`RoadLayout` in `api`) and checked against the templates at datagen. Four stations stacked on one axis, the centre of block (0, 0), each a **ring** of masonry around an open **well**. From any ring you look down the well at the lights of the rings below and, at the bottom, the Heart. "*Thahvis*: the road, the way down."
+**Fixed in code** (the constants in `RoadLayout` in `api`; the functions over them in `core.road`'s `RoadGeometry`) and checked against the templates at datagen. Four stations stacked on one axis, the centre of block (0, 0), each a **ring** of masonry around an open **well**. From any ring you look down the well at the lights of the rings below and, at the bottom, the Heart. "*Thahvis*: the road, the way down."
 
 | Station | Floor y | Template |
 |---|---|---|
@@ -865,7 +865,7 @@ JSON object keys are strings, so the `target` and `decay` maps key ids as decima
 
 ## Events
 
-NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured after the state they report is written.
+NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured after the state they report is written. The payload shape and failure rules are the [API spec's](api.md#events).
 
 | Event | When | Payload |
 |---|---|---|
@@ -875,7 +875,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 - **A throwing listener** is logged once; the change stands, and the remaining steps run.
 - **Travel** uses NeoForge's own `EntityTravelToDimensionEvent` and `PlayerChangedDimensionEvent`; same-level travel posts nothing of ours.
-- **Plain `core` services:** `RoadService` (descent, return, the bells, the Heart, the catch), `RoadLayout`, `RoadPlaceQuery`, `ChoristerFactory` and the `Chorister` entity (the Choristers spec's), `Encounter`. **All live in the one feature `core.road`**, with the Minecraft-free encounter and Chorister rules in `core.road.model`, so the frame and the creature never form a feature cycle ([architecture, Enforcement](architecture.md#enforcement)). Whether any is exposed in `api` is the API spec's call.
+- **Plain `core` services:** `RoadService` (descent, return, the bells, the Heart, the catch), `RoadGeometry` (the layout functions over `api`'s constants-only `RoadLayout`), `RoadPlaceQuery`, `ChoristerFactory` and the `Chorister` entity (the Choristers spec's), `Encounter`. **All live in the one feature `core.road`**, with the Minecraft-free encounter and Chorister rules in `core.road.model`, so the frame and the creature never form a feature cycle ([architecture, Enforcement](architecture.md#enforcement)). None is public in v1 ([API spec, Services](api.md#services)).
 
 ## Sync and state
 
@@ -1003,7 +1003,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **Unit (`model` tier and codecs):**
 - **every vector** in this spec, replayed from `content/eldritch/fixtures.json`: the placement rows through vanilla's own `RandomSpreadStructurePlacement#getPotentialStructureChunk`; health, admission, targets, decay, the Joining bonus and arrival through ours;
 - every row of the descent, Step Bell, rise, Heart-use and `HeartChoose` tables;
-- `RoadLayout`: arrival, station from a bell's position, the arena predicate on its boundaries, the Road's column, `last_station` at login;
+- `RoadGeometry` over `RoadLayout`'s constants: arrival, station from a bell's position, the arena predicate on its boundaries, the Road's column, `last_station` at login;
 - the catch: below and at `catch.depth`, the order with `last_station`, creative and spectator exempt;
 - the capstone predicates over the warp record, including a record holding both;
 - codecs: the `vftv:road` record (defaults, bounds, unknown and future formats kept raw, duplicate and unknown keys), `HeartQuote`, `HeartChoose`, `EndingCue`, the tuning file and every `content/` schema and rejection rule;
@@ -1133,9 +1133,13 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - No server switch of ours: peaceful and the warp and Hush switches suffice.
 
 **API**
-- In `api`: `RoadLayout`, `RoadLimits`, the `RoadRules` record, `EldritchKeys` (the dimension, level, biome, generator, structure, site, tag, advancement and attachment keys, and the `vftv:chorister` registry key with its three instance keys), and the payload and event records. The [Choristers spec](choristers.md#contracts-on-sibling-specs) adds `ChoristerLimits` and its registry entry records.
-- In `api.neoforge`: the `vftv:road` `AttachmentType` handle and the three event classes.
-- Services stay implementations; which are public is the API spec's call.
+- In `api`, Stable:
+  - `RoadLayout` (constants only), `RoadLimits`, and the payload records with `EncounterOutcome` and `Ending`;
+  - `EldritchKeys`: the dimension, level, biome, generator, structure, site, tag and advancement keys, the `vftv:road` attachment's id, and the `vftv:chorister` registry key with its three instance keys.
+  - The [Choristers spec](choristers.md#contracts-on-sibling-specs) adds `ChoristerLimits` and the `Chorister` marker interface.
+- In `api`, `@Internal`: the `RoadRules` record.
+- In `api.neoforge`: the three event classes. The `vftv:road` `AttachmentType` is **not** public: its id is published, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
+- Services stay implementations, all internal in v1.
 
 ## Production tickets
 

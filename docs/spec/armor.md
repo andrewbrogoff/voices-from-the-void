@@ -488,10 +488,14 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 
 ## Events
 
-**None new** ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). Addons read the `vftv:baffle` attribute, the `vftv:baffle` attachment and the `vftv:wearable` data map through the keys in `api`, and the damage hooks are NeoForge's own.
+**None new** ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). Addons read:
+- the `vftv:baffle` attribute (capacity's input) and the `vftv:wearable` data map, through the keys in `api`. The map gives the raw entries; which take effect is the internal validated view ("Wearables").
+- the Baffle's live charge and capacity through the read-only **`BaffleView`**, delivered for a `ServerPlayer` by the entity capability `vftv:baffle_view` ([API spec, ResearchView and BaffleView](api.md#researchview-and-baffleview)): `readable`, `current` and `capacity`, answered by the same `core` code as the HUD.
+
+The `vftv:baffle` attachment itself is internal; only its id is public. The damage hooks are NeoForge's own.
 - **Options considered:** a `BaffleAbsorbedEvent`. **Why not:** no sibling consumes it, and a listener inside the damage pipeline would be one more callback to order.
 
-**Plain `core` services:** `BaffleService.capacity`, `.absorb`, `.tick`; `Wearables.modifiers`; `SpectaclesCard.of`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `BaffleService.capacity`, `.absorb`, `.tick`; `Wearables.modifiers`; `SpectaclesCard.of`. They are **internal in v1**, except that `BaffleView` exposes the reads ([API spec, Services](api.md#services)).
 
 ## Sync and state
 
@@ -698,7 +702,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The client options `spectacles.card` and `baffle.hud`.
 
 **API**
-- `ArmorKeys` (the `vftv:baffle` attribute and attachment keys, the `vftv:wearable` data-map key, the tags `vftv:void_armor`, `vftv:reveals_aspects`, `vftv:repairs_void_armor`, `vftv:baffle_ignores`, and the `vftv:baffling` enchantment key), `ArmorLimits` and the `ArmorRules` record live in `api`, loader-free. The data-map registration lives in `api.neoforge`; `PercentageAttribute` construction stays in `neoforge`. Which services are public is the API spec's call.
+- `ArmorKeys` (the `vftv:baffle` attribute key and the attachment's id, the `vftv:wearable` data-map key, the tags `vftv:void_armor`, `vftv:reveals_aspects`, `vftv:repairs_void_armor`, `vftv:baffle_ignores`, and the `vftv:baffling` enchantment key), `ArmorLimits`, the data-map value `Wearable` (with `WearableSlot`) and `BaffleView` live in `api`, loader-free, as Stable, beside the `ArmorRules` record as `@Internal`. The `vftv:wearable` `DataMapType` and the `vftv:baffle_view` capability live in `api.neoforge`; `PercentageAttribute` construction stays in `neoforge`. The `vftv:baffle` attachment is public by id only, and every service is internal ([API spec](api.md#researchview-and-baffleview)).
 
 ## Production tickets
 

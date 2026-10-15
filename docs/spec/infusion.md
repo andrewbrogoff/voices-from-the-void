@@ -794,20 +794,20 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 
 ## Events
 
-**`InfusionEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the state it reports has been written**, through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs: item stacks are copies, aspect maps are unmodifiable and in ascending id.
+**`InfusionEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the state it reports has been written**, through a publisher seam that `neoforge` implements. Payload records live in `api` and are **immutable**, captured before any listener runs: item stacks are copies, aspect maps are unmodifiable and in ascending id. The payload shape, copying on access and failure rules are the [API spec's](api.md#events). `STARTED` carries the API's `InfusionPlan`, never the internal `InfusionReadout`; `UPSET`'s effect is the sealed `UpsetEffect`; `ABANDONED`'s cause is `AbandonCause`.
 
 | Kind | Payload |
 |---|---|
-| `STARTED` | level and position; the bowl id and `seq`; the starter's UUID; the recipe id; the readout |
+| `STARTED` | level and position; the bowl id and `seq`; the starter's UUID; the recipe id; the readout, as the API's `InfusionPlan`: a snapshot of the committed `READY` assessment with every field and flag of "The readout", including the frozen output stack for both result forms |
 | `UPSET` | level and position; `seq`; the effect `JOLT` (the pedestal position and a copy of the item), `SPILL` (the aspect and amount) or `NONE` |
-| `SPILLED` | level and position; the aspects spilled; the cause, `api`'s `SpillCause.UPSET`, `ABANDONED` or `REMOVED`; the flux rules to apply (the run's frozen ones for `UPSET`, the current ones otherwise; absent until #26 lands) |
+| `SPILLED` | level and position; the aspects spilled; the cause, `api`'s `SpillCause.UPSET`, `ABANDONED` or `REMOVED`. **The flux rules to apply are not in the payload:** they are on the event, as `InfusionEvent.fluxRules()`, an `@Experimental`, nullable accessor ([API spec, The events](api.md#the-events)). It returns the run's frozen rules for `UPSET` and the current ones otherwise, and is absent for an `UPSET` from a run frozen before #26 landed. |
 | `COMPLETED` | level and position; `seq`; the starter's UUID; the recipe id; a copy of the output |
 | `ABANDONED` | level and position; `seq`; the cause, `PLAYER` (with the player) or `REMOVED`; the drawn map |
 
 - **Once per occurrence.** Nothing fires per draw, absorb, stall or pause.
 - **A throwing listener** is logged once with the position; the state stands and our remaining notifications still run.
 
-**Plain `core` services:** `InfusionPreview.of`; `InfusionAltars.readout(level, pos, player)`. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `InfusionPreview.of`; `InfusionAltars.readout(level, pos, player)`. They are **internal in v1** ([API spec, Services](api.md#services)). `InfusionKeys` in `api` holds the `#vftv:infusion_stabilisers` and `#vftv:infusion_unenchantable` tag keys.
 
 ## Sync and state
 

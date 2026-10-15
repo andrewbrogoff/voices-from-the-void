@@ -261,7 +261,7 @@ Every path that removes a jar while keeping its contents runs **one reservation*
 
 ## Suction
 
-**`vftv:essentia_suction`**: a `BlockCapability<EssentiaSuction, @Nullable Direction>` in `api.neoforge`. The interface **`EssentiaSuction`** lives in `api`, and is loader-free:
+**`vftv:essentia_suction`**: a `BlockCapability<EssentiaSuction, @Nullable Direction>` in `api.neoforge`, beside the handler capability **`vftv:essentia`** and **`EssentiaResource`**, both in `api.neoforge.essentia` ([API spec, Capabilities and views](api.md#capabilities-and-views)). The interface **`EssentiaSuction`** lives in `api`, is loader-free and is implementable by addons:
 
 ```java
 int suction(ResourceKey<Aspect> aspect);                  // 0–128
@@ -857,7 +857,7 @@ A complete file (counts, ingredients and costs illustrative; the content ticket 
 
 ## Events
 
-**`EssentiaEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). It is posted on the server **after the settled state**, through a publisher seam that `neoforge` implements, so `core` never imports a NeoForge event, capability or transaction type. Its payload records live in `api` and are **immutable**: aspect maps are unmodifiable and in ascending id.
+**`EssentiaEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). It is posted on the server **after the settled state**, through a publisher seam that `neoforge` implements, so `core` never imports a NeoForge event, capability or transaction type. Its payload records live in `api` and are **immutable**: aspect maps are unmodifiable and in ascending id. The payload shape and failure rules are the [API spec's](api.md#events).
 
 | Kind | Payload |
 |---|---|
@@ -867,7 +867,7 @@ A complete file (counts, ingredients and costs illustrative; the content ticket 
 - **Nothing fires** for a move, a pour, a label, a valve, a rebuild or a stall. No sibling needs them, and they are hot paths. Addons can read handlers.
 - **A throwing listener** is logged once. The spill stands, and the remaining cleanup runs (see "Transactions").
 
-**Plain `core` services:** `EssentiaLines.status(level, pos)` (the status pages' values) and `EssentiaLines.of(level, pos)` (a read-only view of a live line: state, counts, last move). Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `EssentiaLines.status(level, pos)` (the status pages' values) and `EssentiaLines.of(level, pos)` (a read-only view of a live line: state, counts, last move). They are **internal in v1** ([API spec, Services](api.md#services)): addons read and move essentia through the two capabilities. `EssentiaKeys` in `api` holds the `#vftv:essentia_endpoints` and `#vftv:alembic_bases` tag keys, the capability ids and the component ids.
 
 ## Sync and state
 

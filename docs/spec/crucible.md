@@ -620,7 +620,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 
 ## Events
 
-**`CrucibleEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the commit** through a publisher seam that `neoforge` implements: `core` never imports a NeoForge event, capability or attachment type. Its payload records live in `api` and are **immutable**: item stacks are copies, and aspect maps are unmodifiable and ordered by ascending id.
+**`CrucibleEvent`**, a NeoForge post-event in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)), posted on the server **after the commit** through a publisher seam that `neoforge` implements: `core` never imports a NeoForge event, capability or attachment type. Its payload records live in `api` and are **immutable**: item stacks are copies, and aspect maps are unmodifiable and ordered by ascending id. The payload shape, copying on access and failure rules are the [API spec's](api.md#events).
 
 | Kind | Payload |
 |---|---|
@@ -632,7 +632,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 - **Nothing fires** for a refusal, an extraction, a fill, a refresh or a step.
 - **A throwing listener** is logged once; the commit stands, and the remaining notifications still run (see "Committing a craft").
 
-**Plain `core` services:** `CruciblePreview.of`; `CrucibleRecipes.candidates(player, stack)` over the current snapshot. Whether they are exposed in `api` is the API spec's call.
+**Plain `core` services:** `CruciblePreview.of`; `CrucibleRecipes.candidates(player, stack)` over the current snapshot. They are **internal in v1** ([API spec, Services](api.md#services)). `CrucibleKeys` in `api` holds the `#vftv:crucible_heat` and `#vftv:crucible_refuses` tag keys and the ids of the `vftv:crucible_dissolve` and `vftv:crucible_refused` attachments; the attachments themselves stay internal.
 
 ## Sync and state
 
