@@ -19,7 +19,7 @@ Resolved in [Art pipeline proof and style guide](https://github.com/andrewbrogof
 
 Ink & Brass grows the mod's art directly out of its logo: brass instruments drawn with an **ink-navy line**, lit from the upper left, with one small **teal resonance tick** that marks an object as magical. Shapes are a notch more graphic than vanilla: instruments stand upright and bars lie flat, with fewer and broader clusters and no speckle noise. The style sits beside vanilla without clashing because it keeps vanilla's 16×16 grid, light direction and material honesty; it stands apart because of the outline colour and the muted, logo-derived palette. The tone ramp lives in two things only, saturation and *where the teal sits*. At Stage 1 the teal is outside the object, in the light, like the logo's arcs. By Stage 4 it has moved *inside* a hole of void ink, and the warm metal around it is draining to Hush grey. This follows the lore's ramp from a scholar's brass and glass to cosmic horror, without leaving the acoustic world.
 
-## 2. Palette (locked, project-wide, 32 colours)
+## 2. Palette (locked, project-wide, 48 colours)
 
 One palette for every VFTV asset. Generators paint with names (`brass3`) and `lib.save()` rejects any off-palette RGB. Ramps run dark to light. Alpha is free: glass uses palette colours at partial alpha.
 
@@ -30,9 +30,22 @@ One palette for every VFTV asset. Generators paint with names (`brass3`) and `li
 | **brass** | the house metal, ending in logo cream | `#5b4d3b` `#85663f` `#a57c43` `#b89459` `#d8c399` `#e8d8b4` |
 | **copper** | Stage 1 tools | `#5a2e2a` `#8a4430` `#b4643c` `#d88a58` `#f0b88a` |
 | **amethyst** | shards, inlays | `#3d2c5c` `#634a92` `#8f74c4` `#c4b0ec` |
-| **teal** | *accent only*: resonance, essentia | `#1e4a4e` `#3f8a86` `#82c9bc` `#d2f2ea` |
+| **teal** | *accent only*: resonance | `#1e4a4e` `#3f8a86` `#82c9bc` `#d2f2ea` |
 | **glass** | glass tints (with alpha) | `#8fa9b4` `#d5e6e8` |
 | **hush** | drained, silent greys | `#55545c` `#77757c` `#9c99a0` `#c6c2c4` |
+
+**Aspect ramp** (added with the [Aspects and scanning spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/15); owner-approved). These families are used **only** on aspect icons and essentia tints, never on ordinary items or blocks. Each runs dark to light like the other ramps: step 0 is the shade and step 1 the base, and the registry colour is the base. Glyph surfaces in these families shade with their two steps only, an exception to the 3–4 step rule in §3. Mind uses `amethyst`, cloth `mauve`, metal `brass`, void `ink` and silence `hush`, so none of them gets a new family. Colour separates families, but an icon's shape still carries its identity, and jars and tubes also carry a glyph label.
+
+| Family | Use | Hex (0 shade → 1 base) |
+|---|---|---|
+| **ember** | fire, heat | `#a2441f` `#e0862e` |
+| **tide** | water, cold, flow | `#27428a` `#4a78c4` |
+| **loam** | earth, stone, ore | `#5c5428` `#9a8838` |
+| **gale** | air, motion, sound | `#7a9ccc` `#b8d4ec` |
+| **verdure** | plants, growth | `#356a38` `#66a64e` |
+| **vital** | life, flesh, healing | `#7e2442` `#c8445c` |
+| **blight** | poison, rot, entropy | `#5c2456` `#9c4886` |
+| **lumen** | order, light, crystal | `#b0942a` `#f0dc64` |
 
 The source values come from the logo: `#82c9bc` (arcs), `#b89459` (brass strokes), `#e8d8b4` (title cream), `#464153`/`#343849` (panels), `#5b4d3b` (frame lines) and `#1a1a2a` (ground). Adding a colour means amending this table, not a single texture.
 
@@ -59,7 +72,7 @@ A VFTV item is recognisable by the **navy line**, **brass/copper in muted, logo-
 | Stage | Colour and saturation | Teal | Noise | Sample |
 |---|---|---|---|---|
 | 1 Resonance | warm copper/brass, full ramps, cream highlights | tick **outside** the object, in light | none | `tuning_fork`: copper, amethyst set in the yoke, tick off the tines |
-| 2 Distillation | brass dominant, slightly cooler shadows | tick outside, on the free end or as a small **inlaid** pip | none | `resonant_brass_ingot` (chime bar, teal ring off the end), `essentia_jar` (teal essentia, teal pip on the lid) |
+| 2 Distillation | brass dominant, slightly cooler shadows | tick outside, on the free end or as a small **inlaid** pip | none | `resonant_brass_ingot` (chime bar, teal ring off the end), `essentia_jar` (essentia tinted by its aspect family, teal pip on the lid) |
 | 3 Ruins | mauve and slate creep into the shadows | teal dimmer (`teal1`), in grooves | none | (not in this set) |
 | 4 Choir's Road | metal drains to **hush** greys from the lower right through a 1-px checker | teal **inside a hole of void ink** (`ink0`), haloed by the outline | the dither edge only | `hollow_bell`: half brass, half Hush, punched through, teal in the dark, void mouth |
 

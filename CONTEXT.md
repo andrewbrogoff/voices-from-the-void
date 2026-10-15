@@ -73,6 +73,14 @@ _Avoid_: complex aspect, derived aspect
 **Vacuos**:
 The aspect of the Void. It seems to be a compound, but listening reveals it to be a hidden primal that lies beneath the others.
 
+**Unheard**:
+An aspect the Listener has met but not yet discovered, because its parents aren't both known. Its amount still shows exactly; only its identity is withheld.
+_Avoid_: unknown aspect, locked aspect
+
+**Aspect points**:
+A Listener's store of each aspect, earned by striking things for the first time and spent on research. Uncapped.
+_Avoid_: research points, RP
+
 **Vis**:
 Free-flowing magical energy: resonance not bound to any object.
 _Avoid_: mana, aura energy
@@ -102,6 +110,14 @@ _Avoid_: codex (in player-facing text), Thaumonomicon, guidebook
 **Tuning Fork**:
 The first listening instrument. Striking it against a thing reveals that thing's aspects.
 _Avoid_: scanner, Thaumometer
+
+**Strike**:
+Using the Tuning Fork on a block, entity, item or node to read its aspects. "Scanning" names the system in specs, never the act in player-facing text.
+_Avoid_: scan (in player-facing text)
+
+**Sounding**:
+Striking the Tuning Fork at nothing to hear the bearing and distance of the nearest node.
+_Avoid_: pinging, locating
 
 **Resonant Brass**:
 The first magical metal, made by attuning copper.
