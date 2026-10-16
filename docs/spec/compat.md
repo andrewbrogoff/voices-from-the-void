@@ -604,44 +604,19 @@ and the permitted call, `static WornSlots init(IEventBus)`, from the wiring.
 
 ## Contracts on sibling specs
 
-Each spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
-
-- **[Architecture](architecture.md):**
-  - "Layers": the example is `(curios, jei)`;
-  - "Soft dependencies": the integrations are Curios and JEI, with a pointer here, and the entry rule;
-  - "Datagen": no TerraBlender regions, and Curios files written by datagen;
-  - "Enforcement": `COMPAT_CONFINED` as under "Code layout".
-- **[Quality gates](quality-gates.md):**
-  - "Shipping artifact": the integration runs every PR;
-  - the `build` job runs `runCuriosGameTestServer`;
-  - the `e2e` job runs the JEI-present and Curios-present clients;
-  - "Graphics backends": the two nightly rendering configurations, deferred to v1.1.
-- **[Aspects](aspects.md):**
-  - "Vanilla values": the in-play rule, `{}` as suppression, the derivation at load (its sentence "There is no runtime derivation in v1" is removed), the audit export, and `DerivationRecipes` shared;
-  - "Data maps": the lookup consults `DerivedAspects` after `vftv:aspect_defaults`; "Sync and state" adds `DerivedAspectsSync`;
-  - "Tuning": the `derivation.*` keys feed datagen, the derivation at load and the export;
-  - "Performance": Striking's drawing in the client share;
-  - "Tests": the non-amplification replay over the widened recipes.
-- **[Arcane](arcane.md):**
-  - "JEI": the diff in `core.research.model`, and the lifecycle here;
-  - "Tests": the diff and the E2E lifecycle cases;
-  - "Turning a table": the claim-mod pointer.
-  - [Crucible](crucible.md#jei) and [infusion](infusion.md#jei) inherit it unchanged.
-- **[Wands](wands.md):**
-  - "Assembly": the representative result, and JEI through the crafting-category extension, not a category;
-  - "Creation, removal and sharing": the claim-mod pointer.
-- **[Golems](golems.md), [Hush](hush.md), [worldgen](worldgen.md), [foci](foci.md):** their claim-mod hand-offs point to "Claim mods". In worldgen, `neoforge.compat.terrablender` doesn't exist.
-- **[Armor](armor.md):**
-  - "The collector": wired through `WornSlots`;
-  - "Layers": the wiring;
-  - "Tests": the Curios runs every PR.
-- **[Configuration](config.md):** "Commands" gains the level-4 leaf `aspects derive` and its lang ownership; "Server keys" gains `aspects.derive_modded` (bool, default `true`, applied at the next data load), so the server key count goes from 20 to 21.
-- **[API](api.md):**
-  - "What addons may extend" points here for the mechanics and scripting tools;
-  - "Known limitations": v1 ships a JEI integration only;
-  - "The inventory": `CrucibleKeys.RESONANT_BRASS_INGOTS`.
-- **[Arcane](arcane.md#authored-content), [crucible](crucible.md#authored-content), [infusion](infusion.md#authored-content), [armor](armor.md#authored-content), [essentia](essentia.md#authored-content), [golems](golems.md#authored-content), [Hush](hush.md#authored-content), [Eldritch tier](eldritch.md#authored-content):** each recipe's generated-output mapping reads "body unchanged except the compatibility spec's ingredient widening". The crucible's `vftv:resonant_brass_ingot` catalyst and the Eldritch tier's `vftv:hollow_bell` components are exempt and stay exact ("Consumed").
-- **Unchanged:** warp (the gear sample's allowance and order stand; only the collector's wiring is armor's; its glass-bottle draught is outside the widening table), wands' and foci's recipe mappings (they don't promise an unchanged body), research, `CONTEXT.md`, every ADR and `NOTICE.md`.
+| Needs from | What | Met at |
+|---|---|---|
+| architecture | `neoforge.compat.<mod>` for Curios and JEI; the soft-dependency entry rule; no progression on a soft dependency | [architecture, Layers](architecture.md#layers), [Soft dependencies](architecture.md#soft-dependencies) |
+| architecture | the ArchUnit rule `COMPAT_CONFINED` | [architecture, Enforcement](architecture.md#enforcement) |
+| quality gates | the Curios-present GameTest server and the JEI- and Curios-present clients run every PR; rendering-mod configurations deferred to v1.1 | [quality gates, Shipping artifact](quality-gates.md#shipping-artifact), [CI](quality-gates.md#ci), [Graphics backends](quality-gates.md#graphics-backends) |
+| aspects | the lookup consults `DerivedAspects` after `vftv:aspect_defaults`, synced as `DerivedAspectsSync`; the `derivation.*` tuning keys | [aspects, Data maps](aspects.md#data-maps), [Tuning](aspects.md#tuning) |
+| configuration | the level-4 leaf `aspects derive`; the server key `aspects.derive_modded` | [configuration, Commands](config.md#commands), [Server keys](config.md#server-keys) |
+| arcane, crucible, infusion | JEI categories with the gated-recipe lifecycle here | [arcane, JEI](arcane.md#jei), [crucible](crucible.md#jei), [infusion](infusion.md#jei) |
+| wands | wand assembly in JEI through the crafting-category extension | [wands, Assembly](wands.md#assembly) |
+| armor | the worn-gear collector wired through `WornSlots` | [armor, The collector](armor.md#the-collector) |
+| arcane, wands, golems, Hush, foci | claim-mod hand-offs point to "Claim mods" | [arcane](arcane.md#turning-a-table), [wands](wands.md#creation-removal-and-sharing), [golems](golems.md#multiplayer-and-automation), [Hush](hush.md#claims), [foci](foci.md#multiplayer-and-automation) |
+| recipe owners | each generated-output mapping allows the ingredient widening, with the exempt exact ingredients under "Consumed" | [crucible](crucible.md#authored-content), [infusion](infusion.md#authored-content), [essentia](essentia.md#authored-content), [Eldritch tier](eldritch.md#authored-content), [arcane](arcane.md#authored-content), [armor](armor.md#authored-content), [golems](golems.md#authored-content), [Hush](hush.md#authored-content) |
+| API | "Known limitations": v1 ships a JEI integration only; `CrucibleKeys.RESONANT_BRASS_INGOTS` in the inventory | [API, Known limitations](api.md#known-limitations), [The inventory](api.md#the-inventory) |
 
 ## Production tickets
 

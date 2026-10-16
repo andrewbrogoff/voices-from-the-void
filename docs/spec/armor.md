@@ -146,7 +146,7 @@ While the player **wears a revealing item** (an item in `#vftv:reveals_aspects` 
 | # | Target | Card |
 |---|---|---|
 | 1 | an entity of type `vftv:apparition` | **none**: the fork's silence ([warp, Phantoms](warp.md#phantoms)) |
-| 2 | a node whose block entity is dormant or whose id is unset | the type "Unknown" (`node.vftv.unknown_type`), as a strike shows it ([wands, Inspection](wands.md#inspection-and-teaching)), no aspects |
+| 2 | a node whose block entity is unreadable or whose id is unset | the type "Unknown" (`node.vftv.unknown_type`), as a strike shows it ([wands, Inspection](wands.md#inspection-and-teaching)), no aspects |
 | 3 | a node whose `node:<id>` key isn't in the viewer's ledger | its name and `hud.vftv.spectacles.unstruck` |
 | 4 | a node in the ledger | type, clarity and each aspect as current / max, from the synced state **settled to the client's game time** through the wands spec's pure regeneration ([wands, Regeneration](wands.md#regeneration)) and `VisRules`: the one thing a strike can't show, a node regenerating in place |
 | 5 | anything else (a block, entity or dropped item) | its scan key in the ledger: the strike card's readout for that key, from the ledger and the synced maps by the [aspects spec's](aspects.md#what-a-strike-reveals) own rules, read-only; not in the ledger: its name and `hud.vftv.spectacles.unstruck` ("I haven't struck this.") |
@@ -191,7 +191,7 @@ Player attachment **`vftv:baffle`**, persisted with a serializer, **not** `copyO
 | `current` | `float`, finite, 0–40 | yes | Baffle points left |
 | `next_recharge` | game time | no | transient; set to `g + baffle.delay` at login, respawn and dimension change |
 
-- **Decoding checks format bounds only.** A record with an unknown `format` or out of bounds keeps its raw tag and is written back unchanged with one warning. That player's Baffle is **inert**: nothing clamps, recharges or absorbs, so no write ever replaces the raw tag, and the HUD shows nothing. The [warp](warp.md#kinds-and-the-record) and [golems](golems.md#sync-and-state) specs keep records the same way.
+- **An unreadable record** follows [conventions, Raw-record retention](conventions.md#raw-record-retention). While it is unreadable, that player's Baffle does nothing: nothing clamps, recharges or absorbs, and the HUD shows nothing.
 - **Respawn** starts from the attachment's default, 0. **Logout** keeps the value. A **dimension change** keeps the same `ServerPlayer` and its value.
 
 ### Absorbing
@@ -337,7 +337,7 @@ The formats, absence rules and live dependencies are the research spec's tables.
 
 ## Authored content
 
-The content tickets deliver authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails its type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+The content tickets deliver these inputs in [the envelope](conventions.md#the-envelope), under [the common rejection list](conventions.md#rejection).
 
 ```
 content/armor/wearables.json      the Stage 1–3 items' wearable values
@@ -362,7 +362,7 @@ content/lang/en_us/armor_void.json the four Void names
 | `bootstrap.json` | `vftv:armor_bootstrap/1` | nothing: read by the review |
 | `fixtures.json` | `vftv:armor_fixtures/1` | nothing: read by the unit tests |
 | `void.json` | `vftv:void_armor/1` | its wearables into the data map above; `data/vftv/data_maps/item/gear_warp.json`; its four recipes |
-| `lang/<lang>/armor.json`, `armor_void.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |
+| `lang/<lang>/armor.json`, `armor_void.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 A recipe id declared in two `content/` files, of any type, fails datagen ([infusion, Authored content](infusion.md#authored-content)).
 
@@ -400,7 +400,9 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 }}
 ```
 
-**Rejected:** an id outside the table or a required id missing; a body of the wrong type; any field outside its type's table; any rule above broken; a created result that is empty or over its maximum stack.
+**Rejected:** an id outside the table or a required id missing; a body of the wrong type; any rule above broken; a created result that is empty or over its maximum stack.
+
+This spec adds no recipe type: the arcane and infusion types carry the gate, preview and JEI, and the four ungated Brass recipes sit on `vftv:brass_armor`'s page.
 
 ### Enchantments, tags and Curios
 
@@ -410,7 +412,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 
 ### The bootstrap
 
-`{"schema": "vftv:armor_bootstrap/1", "recipes": {<id>: {"items": [{"item": <item id or #tag>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for exactly the eleven recipes of `recipes.json`. **Coverage:** every ingredient, centre and component (a tag names the alternative the review resolves) and every essentia aspect. **Review:** each `why` says how the thing is obtained in its recipe's Stage without the thing it makes, and for an aspect, which matter dissolves into it ([aspects, Coverage and supply](aspects.md#coverage-and-supply)); the sequence is non-circular. **Rejected:** a missing recipe, item or aspect; an empty `why`.
+Follows [conventions, Bootstrap](conventions.md#bootstrap). `{"schema": "vftv:armor_bootstrap/1", "recipes": {<id>: {"items": [{"item": <item id or #tag>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for exactly the eleven recipes of `recipes.json`. **Coverage:** every ingredient, centre and component (a tag names the alternative the review resolves) and every essentia aspect. **Review:** each `why` says how the thing is obtained in its recipe's Stage without the thing it makes, and for an aspect, which matter dissolves into it ([aspects, Coverage and supply](aspects.md#coverage-and-supply)); the sequence is non-circular. **Rejected:** a missing recipe.
 
 ### The Void set
 
@@ -424,7 +426,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 
 ### Fixtures
 
-`{"schema": "vftv:armor_fixtures/1", "baffle_max": [...], "absorb": [...], "schedule": [...], "quote": [...], "dials": [...], "durability": [...], "baffling": [...], "pips": [...], "hud": [...], "pct": [...]}`. **All ten sections are required**, and together they transcribe every vector in this spec exactly. Every field is required unless a default is given.
+`{"schema": "vftv:armor_fixtures/1", "baffle_max": [...], "absorb": [...], "schedule": [...], "quote": [...], "dials": [...], "durability": [...], "baffling": [...], "pips": [...], "hud": [...], "pct": [...]}`, ten sections, following [conventions, Fixtures](conventions.md#fixtures). Every field is required unless a default is given.
 
 | Record | Fields |
 |---|---|
@@ -458,11 +460,9 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
  "pct":        [{"value": 0.03, "expect": {"per_mille": 30, "text": "3%"}}]}
 ```
 
-**Rejected:** a section missing; an unknown field; a row of a vector table missing or altered.
-
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach what "In the Commonplace Book" lists.
+Files and validation follow [conventions, Lang](conventions.md#lang). Every key below is required in `en_us`. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach what "In the Commonplace Book" lists.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -479,7 +479,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 | `options.vftv.spectacles.card`, `.baffle.hud` | 0 | "Spectacles card", "Baffle row" |
 | `subtitles.vftv.baffle.absorb`, `.break` | 0 | "Baffle soaks a blow", "Baffle gives way" |
 
-**Used, not declared here:** `node.vftv.unknown_type`, the clarity keys and aspect names (the wands and aspects specs'). **Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
+**Used, not declared here:** `node.vftv.unknown_type`, the clarity keys and aspect names (the wands and aspects specs').
 
 ## Events
 
@@ -502,12 +502,12 @@ The `vftv:baffle` attachment itself is internal; only its id is public. The dama
 | `next_recharge` | transient per-player memory | never |
 | `vftv:baffle`, `vftv:vis_discount` and vanilla armour attributes | vanilla attribute modifiers, re-applied on equip and unequip | **tracking players and self**, as vanilla syncs syncable attributes (`MC:server/level/ServerEntity.java:287–290,352–355`) |
 | `vftv:wearable`, `vftv:gear_warp` | data maps | every player, as synced data maps are |
-| armour rules | the tuning record | **`ArmorRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
+| armour rules | the tuning record | **`ArmorRules`**, the whole `armor.json` record and no server config, sent as [Rules records](conventions.md#rules-records) are |
 | the card and HUD layouts | client caches | never |
 
 - **No client-to-server payload.** The card derives only from data the client already holds (a client can read every value anyway, [aspects, Sync and state](aspects.md#sync-and-state)); the Baffle is server arithmetic.
 - **Baselines are NeoForge's:** login and respawn send initial player attachments, and a dimension change resends them ([warp, Sync and state](warp.md#sync-and-state)).
-- **Bounded codecs:** the record as above; `ArmorRules` a fixed record. Out of bounds is rejected at decode.
+- **Bounded codecs:** the record as under "State"; `ArmorRules` as [Rules records](conventions.md#rules-records) are.
 
 **Reloads:**
 
@@ -587,7 +587,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the card:** every first-match row; row 5 equal to the strike card's readout for the same key and ledger (one partial and one completed key), and `unstruck` for a key not in the ledger; masking against the current known set; a stationary node's settled values advancing while the target is unchanged; a dropped item's carried item changing;
 - the wearable-to-modifier conversion; a `vftv:wearable` entry with a field removed gives no modifier for it;
 - the validated view: a slot-mismatched entry and an `offhand` entry on an equippable item are excluded with an error naming the item, and the rest kept;
-- codecs: the attachment (bounds, the raw round trip of an unreadable record), `ArmorRules`, the data-map entry;
+- codecs: the attachment, by the raw-retention template of [conventions, Tests](conventions.md#tests); `ArmorRules`; the data-map entry;
 - the registration table against "The roster";
 - every `content/` rejection rule and lint: the loadout bound, the Void durability, the gear-warp sum, the lexicon names, the recipe rules, the enchantment's shape and tags.
 
@@ -617,87 +617,22 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)'s contracts on this ticket):
-
-| Wands contract | Met by |
-|---|---|
-| Vis discounts **only** as modifiers on `vftv:vis_discount` (default 0, range 0–1, syncable), capped at `quote.max_discount` and flagged; GameTest: gear past the cap shows `discount_capped` and the capped cost, identically on client and server | "Wearables", "Vis discount": data-map modifiers only; the flag fixed to compare per mille (amended there); the test-pack 0.40 GameTest and the E2E client over-cap quote equal to the server's |
-| No vis-storing trinket in v1; everything works without Curios | "Without Curios": none; trinkets count in the off hand; the packaged jar boots without Curios |
-
-**Met here** (the [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)'s contracts):
-
-| Foci contract | Met by |
-|---|---|
-| Cast discounts come only from `vftv:vis_discount`; no gear changes a focus's magnitude in v1 | "Vis discount"; "Void armour": the amplifier scales the Baffle only |
-
-**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)'s contracts):
-
-| Warp contract | Met by |
-|---|---|
-| Void-tier gear carries warp only through the `vftv:gear_warp` data map; its Curios compat passes carried Curios stacks to the gear sample | "Void armour": 2/3/2/2 in `void.json`; "The collector": ordered `(slot, index, cosmetic, stack)` entries within one shared `MAX_GEAR_SLOTS` allowance, functional and cosmetic both (amended in the warp spec) |
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)'s contracts):
-
-| Infusion contract | Met by |
-|---|---|
-| Infusion recipes use the body with their own `research`, in their own content files; `kind: void` built-ins need a Stage 4 gate; #24 may use `transmute`; runic augments and the like are extensions they propose | "Baffling": the existing enchantment result form, no new recipe form, with exactly one lint exemption (amended there); "Void armour": `transmute` inside `result`, `kind: void` behind `vftv:void_armor`; "Authored content": `recipes.json` and `void.json` |
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts):
-
-| Arcane contract | Met by |
-|---|---|
-| Any Worktable recipe is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate; a recipe needing warp on craft proposes an extension; Stage 1 arcane recipes meet the affordability test | "Recipes": every arcane body `ordinary` with its gate; none applies warp; the spectacles ≤ 32 per aspect from pre-iron ingredients |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts, which bind #24 through the arcane block for its own recipe types, and its production note):
-
-| Research contract | Met by |
-|---|---|
-| The recipe-gate, recipe-page, authoritative-preview and JEI contracts for its own recipe types | no recipe type of its own: the arcane and infusion types carry the gate, preview and JEI; the ungated Brass recipes sit on `vftv:brass_armor`'s page |
-| The Stage 2–4 content tickets are blocked by #24 | "Stage" and "In the Commonplace Book": five entries and two fact sources (the research spec amended); the Stage 1 ticket is now blocked by #24 too |
-
-**Met here** (the [architecture spec](architecture.md#soft-dependencies)): Curios is optional, compiled against its API, confined to `neoforge.compat.curios` and entered behind `isLoaded`; progression never needs it ("Curios"); no loader type reaches `core` ("Layers").
-
-**Met here** (the [progression spec](progression.md)): armour and trinkets kept, trinkets on Curios, runic shielding renamed ("The Baffle"); Void-tier gear grows stronger with warp, bounded ("Void armour"); instruments never lie: the card is a read-only projection that names real blocks and never an unheard aspect, and the Baffle row prints its exact value ("Tuned Spectacles", "The HUD").
-
-**Met here** (the [lore spec](lore.md#vocabulary-policy)): Thaumium → Resonant Brass armour; Goggles of Revealing → Tuned Spectacles; Runic Shielding → Baffle; acoustic imagery; Void-tongue only for the Void set.
-
-**Met here** (the [aspects spec](aspects.md#what-a-strike-reveals) and the [warp spec's](warp.md#phantoms) phantom rules): unheard amounts exact and identities withheld, against the current known set, by the strike card's own readout rules; apparitions silent.
-
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with bounded work at every allowed tuning, allocation budgets, and disclosed native terms, among them the Curios walk, O(S + T log T), which the client worn check and the gear sample may take ("The collector", "Performance").
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)**, **[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)** and **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)** place no contract on this ticket.
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
-- `discount_capped` iff `Math.round(value × 1000) > Math.round(quote.max_discount × 1000)`, with a new vector row and fixture form for a modifier sum; `vftv:vis_discount` is registered as NeoForge's `PercentageAttribute`; its sync row says tracking players and self.
-
-**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)** (amended in this change)
-- The built-in enchanting lint exempts exactly `vftv:baffling`; "no enchantment of our own in v1" now names Baffling as the one.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 1](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [Stage 2](https://github.com/andrewbrogoff/voices-from-the-void/issues/35), [Stage 3](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) and [Stage 4 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/37):
-- **Entries:** the five under "Stage", with their kinds, parents, the Void reveal and `hinted_by`; each carries `vftv:recipe` pages for the recipes it gates, and `vftv:brass_armor` pages the four ungated Brass recipes.
-- **Fact sources** `wearable` and `baffle`, with their formats, absence rules and live dependencies.
-- **The affordability artifact:** `path-stage4.json` shows the Void reveal latched by `vftv:silence_beneath`'s lasting 4 during the Stage 3 replay. No path learns an armour entry; the Void set's material bootstrap is the Void armour content ticket's, not #37's.
-- **Prose** as under "In the Commonplace Book".
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)** (amended in this change)
-- The gear sample reads the player's vanilla inventory first, in container index order, then Curios entries from `CuriosWorn.collect` with what remains of the one `MAX_GEAR_SLOTS` allowance.
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- The Void set is the only built-in gear warp in v1 (9 of `gear.max` 12); #28 adds none.
-- It may add its Void material to `#vftv:repairs_void_armor`.
-- Any Void-tongue word the Void set's names need beyond the lexicon is added through the lexicon.
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for the **14** items, armour carrying Tutamen by the aspects spec's mandatory override.
-- **Round-trip non-amplification** over the fifteen recipes' actual outputs, ingredients, remainders and essentia, with vis counting as no material input; transmuting and enchanting add no value, so preserved enchantments and components count for nothing ([infusion, Contracts](infusion.md#contracts-on-sibling-specs)).
-
-**Configuration**
-- The client options `spectacles.card` and `baffle.hud`.
-
-**API**
-- `ArmorKeys` (the `vftv:baffle` attribute key and the attachment's id, the `vftv:wearable` data-map key, the tags `vftv:void_armor`, `vftv:reveals_aspects`, `vftv:repairs_void_armor`, `vftv:baffle_ignores`, and the `vftv:baffling` enchantment key), `ArmorLimits`, the data-map value `Wearable` (with `WearableSlot`) and `BaffleView` live in `api`, loader-free, as Stable, beside the `ArmorRules` record as `@Internal`. The `vftv:wearable` `DataMapType` and the `vftv:baffle_view` capability live in `api.neoforge`; `PercentageAttribute` construction stays in `neoforge`. The `vftv:baffle` attachment is public by id only, and every service is internal ([API spec](api.md#researchview-and-baffleview)).
+| Needs from | What | Met at |
+|---|---|---|
+| wands | `discount_capped` compares per mille, with a vector row for a modifier sum (0.10 + 0.20) | [wands, The quote](wands.md#the-quote) |
+| wands | `vftv:vis_discount` registered as NeoForge's `PercentageAttribute`, synced to tracking players and self | [wands, Sync and state](wands.md#sync-and-state) |
+| wands | a `quote` fixture row may give its discount as `discount_modifiers`, summed in order as `double` | [wands, Fixtures](wands.md#fixtures) |
+| infusion | the built-in enchanting lint exempts exactly `vftv:baffling`, the one enchantment of our own in v1 | [infusion, Enchanting through infusion](infusion.md#enchanting-through-infusion) |
+| research | the five entries under "Stage", with their kinds, parents, the Void reveal and `hinted_by`; `vftv:brass_armor` pages the four ungated Brass recipes | [research, Roster](research.md#roster) |
+| research | the fact sources `wearable` and `baffle`, with their formats, absence rules and live dependencies | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | `path-stage4.json` shows the Void reveal latched by `vftv:silence_beneath`'s lasting 4 in the Stage 3 replay; no path learns an armour entry; the Void bootstrap is the Void armour content ticket's | [research, Production tickets](research.md#production-tickets) |
+| research | the research content tickets write the prose listed under "In the Commonplace Book" | not stated |
+| warp | the gear sample reads the vanilla inventory first, in container index order, then `CuriosWorn.collect` with what remains of the one `MAX_GEAR_SLOTS` allowance; `gear.max` 12 | [warp, Gear warp](warp.md#gear-warp) |
+| warp | the lexicon the Void names are drawn from | [warp, The lexicon](warp.md#the-lexicon) |
+| eldritch | no Eldritch item carries `vftv:gear_warp`, so the Void set's 9 is the only built-in gear warp | [eldritch, Gear warp](eldritch.md#gear-warp) |
+| aspects (#30) | hand entries or reviewed exemptions for the 14 items, armour carrying Tutamen; round-trip non-amplification over the fifteen recipes, vis counting as no input, enchanting and transmuting adding no value | general rules only: [aspects, Vanilla values](aspects.md#vanilla-values), [Coverage and supply](aspects.md#coverage-and-supply) |
+| config | the client options `spectacles.card` and `baffle.hud` | [configuration, Client keys](config.md#client-keys) |
+| api | `ArmorKeys`, `ArmorLimits`, `Wearable`, `WearableSlot` and `BaffleView` Stable in `api`; `ArmorRules` `@Internal`; `ArmorDataMaps` and `ArmorCapabilities` in `api.neoforge` | [API, The inventory](api.md#the-inventory) |
 
 ## Production tickets
 

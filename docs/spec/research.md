@@ -71,18 +71,7 @@ Generation is a pure function in `core.research.model`: (seed, anchors, known as
 
 **Precondition to begin** (otherwise the entry is LOCKED and shows the mechanical hint): the entry's first *n* anchors, with *n* = min(anchor count, `anchors.max_used`), are all known, and each consecutive pair is connected in the player's **known-link graph** (known aspects only, links by the player's current view).
 
-**Seed.** One `long`, from the SplitMix64 finaliser folded over 64-bit words, all arithmetic wrapping:
-
-```
-mix64(z): z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L
-          z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL
-          return z ^ (z >>> 31)
-fold(words): h = 0; for w in words: h = mix64((h + 0x9E3779B97F4A7C15L) ^ w); return h
-idWords(id): the UTF-8 bytes of id.toString() ("ns:path"), cut into 8-byte big-endian words,
-             the last zero-padded on the right, followed by one word holding the byte length
-seed = fold([0x4E4F5445 ("NOTE"), server.overworld().getSeed(), uuid.getMostSignificantBits(),
-             uuid.getLeastSignificantBits(), attempt] ++ idWords(entry id))
-```
+**Seed.** `seed = fold([NOTE, world seed, UUID, attempt] ++ idWords(entry id))`, with `fold`, `idWords` and the words as [conventions, mix64 and fold](conventions.md#mix64-and-fold) pin them.
 
 - **`attempt`** is the player's attempt counter for that entry: 0 at first, **+1 on every abandon by the player**. A note the server drops (a skip purchase, a `grant`, reconciliation) and a refused `begin` leave it unchanged; `reset` clears it.
 - **RNG:** one `java.util.Random(seed)` per `begin`, whose algorithm its Javadoc fixes. Every draw is `nextInt(bound)`, **even when `bound` is 1**. Generation attempts continue the same stream.
@@ -146,7 +135,7 @@ Config or tuning changes therefore never alter an open note's board or price. Li
 | A note's entry is gone, is no longer a `note`, or is already learned | The note is dropped. |
 | A placement or anchor names an aspect that is gone | The placement is removed and logged. A note with a missing anchor is dropped. |
 | An entry's anchors, parents, category or the aspect graph changed | The open note keeps its board, stays usable (see "Existing notes are not re-gated" above), and learning it learns the entry. The entry's state is recomputed from the new data. |
-| A learned, latched or revealed id names an entry that is gone | It is kept dormant, so re-adding the pack restores it. |
+| A learned, latched or revealed id names an entry that is gone | It is kept inert ([conventions, Missing ids are inert](conventions.md#missing-ids-are-inert-not-unreadable)), so re-adding the pack restores it. |
 | A bookmark names an entry that is gone | It is dropped. |
 | Any change | Rewards are never paid twice (see "Rewards"). |
 
@@ -158,7 +147,7 @@ Research bought with aspect points. Skip mode skips the puzzle, never the explor
 - **Reference vector:** the unpadded chain over **all authored anchors**, in data order, in the **taught view with every aspect known**, laid on the canonical spiral (no RNG, no routing). It is `place_cost` × the count of each aspect in the non-anchor cells. It is identical for every player, recomputed when tuning reloads, and sent to the client as a quote. A note entry whose reference vector is empty is rejected at load.
 - **Eligibility** is the puzzle's own: mode is `skip`, the entry is a `note` that is not HIDDEN, its `parents` and `hidden_parents` are learned, and the **begin precondition** holds (its first *n* anchors known and connected in the player's known-link graph). So skip never asks for more exploration than the puzzle would. The price may name aspects the player doesn't know (the reference vector's intermediates are whatever the full-knowledge chain picks); the debit plan synthesises any aspect with no balance from its parents, knowledge notwithstanding, so they are payable.
 - **Payment** runs the debit plan for the whole price against the pool. All or nothing: the price is debited, any open note for the entry is dropped, and the entry is learned in one action.
-- **Commit:** `buy` echoes the price, and the warp if the entry carries any. The server rechecks the mode, eligibility, price and #25's warp preview at commit. A mismatch refuses with "The cost has changed." and sends fresh quotes. Cancelling the confirm spends nothing.
+- **Commit:** `buy` is a [checked commit](conventions.md#checked-commits) echoing `quotes.revision`, the price and the warp if the entry carries any; the server rechecks the mode, eligibility, price and #25's warp preview. Cancelling the confirm spends nothing.
 
 ### Affordability and recovery
 
@@ -298,7 +287,7 @@ Every round learns or reveals at least one entry, or the resolution stops, so it
 Warp is never a hidden tax. It is only ever applied by an explicit commit the player sees.
 
 - **Only `note` and `listen` entries** may carry `warp` (validated), and **no trigger ever applies warp**.
-- **Commit flow:** the action page shows the exact cost with #25's preview (actual deltas, including any clipping at the permanent cap), taken from the quote. The commit button opens a confirm dialog repeating it, and the payload echoes the previewed cost. The server makes **one checked commit** through #25 with that expected preview: if the current preview differs, it refuses with "The cost has changed." and changes nothing. Cancelling spends nothing.
+- **Commit flow:** the action page shows the exact cost with #25's preview (actual deltas, including any clipping at the permanent cap), taken from the quote, and the commit button opens a confirm dialog repeating it. The action is a [checked commit](conventions.md#checked-commits) that echoes the previewed cost, made through [`WarpService.commit`](warp.md#commit-and-apply) with that expected preview. Cancelling spends nothing.
 - **Applies to:** `listen` (the **Listen** button), `learn` on a solved note with warp, and `buy` of a warp-bearing note. A solved note waiting for confirmation can still be abandoned, at no cost.
 
 ### The Vacuos reveal
@@ -350,7 +339,7 @@ Stage 3 and 4 `find` entries in the `vftv:choir_pages` category, each carried by
 
 ## Authored content
 
-**Production tickets deliver authored inputs under the top-level `content/` directory** (CC-BY-4.0 data, per [`NOTICE.md`](../../NOTICE.md)). Future datagen reads them and writes the registry instances and lang files into `src/generated/resources`, so the architecture's generated-resource rule stands unchanged. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#authored-content).
 
 ```
 content/research/categories.json          categories
@@ -368,10 +357,8 @@ The book's own interface strings are code-defined, not authored here ("Book UI k
 |---|---|
 | `categories.json`, `stage<N>.json` | `data/<ns>/vftv/research_category/<path>.json`, `data/<ns>/vftv/research/<path>.json` (an id `vftv:choir/x` becomes `choir/x.json`) |
 | `overlay.json` | `assets/vftv/commonplace/overlay.json` |
-| `lang/<lang>/*.json` | only each file's `strings` object is merged into `assets/vftv/lang/<lang>.json`, together with the code-defined UI keys; a duplicate key fails datagen. The merge and the common rules are the [localisation spec's](accessibility.md#the-lang-pipeline) |
+| `lang/<lang>/*.json` | merged by the [lang pipeline](conventions.md#lang), together with the code-defined UI keys |
 | `path-stage<N>.json`, `number_words/<lang>.json` | nothing: read by the affordability test and the lint only |
-
-Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown field, a wrong type, a value out of range, or an entry that fails load validation.
 
 | File | Schema | Shape |
 |---|---|---|
@@ -560,13 +547,15 @@ hush   : <key>                               exactly one of the keys listed unde
 road   : <key>                               exactly one of the keys listed under "road keys" below
 ```
 
+**Spans that read a Rules record** (`vis`, `essentia`, `infusion`, `golem`, `golem_material`'s `range`, `baffle`, `hush`, `road`, `warp`, `warp_rules`, `entry:…:warp`, `focus_rank` and `focus_rules`) render `[?]` until their record arrives, as [conventions, Rules records](conventions.md#rules-records) says.
+
 **`focus*` keys** ([foci spec, The authoritative preview](foci.md#the-authoritative-preview)). Each source is a **typed context**, and its keys, formats and absent texts are that spec's tables, resolved through its `FocusPreview`:
 - **`focus`**: the reader's reference focus (the main hand's wand's focus, else a focus in the main hand, else the off hand's wand's, else a focus in the off hand), priced with the wand holding it or else the arcane reference wand. Keys: `cost`, `cost_effective`, `flux`, `discount_capped`, `clamped`, `exceeds_capacity`, `availability`, `wand`, `cooldown`, `entity_range`, `block_range` (from the reader's live `block_interaction_range` attribute), `radius`, `block_radius_sq`, `pulse`, `magnitude`, `duration`, `slow_amplifier`, `amplifier`, `kind`, `castable`. **No context:** every key renders `focus.vftv.fact.no_focus`. **A focus with no composition** (blank, unreadable, a missing part, out of tune) runs no composition arithmetic: every key renders `focus.vftv.fact.blank`, `.unreadable`, `.unknown` (with the missing id) or `.out_of_tune`. An unpriced effective cost or flux renders `arcane.vftv.no_wand` or `arcane.vftv.inert_wand`.
 - **`focus_effect`**, **`focus_medium`**, **`focus_modifier`**: the entry's own figures before composition. An effect: `cost`, `magnitude`, `duration`, `slow_amplifier`, `kind`, `hardness`. A medium: `cost_factor`, `cooldown`, `range`, `radius`, `block_radius_sq`, `pulse`, `speed`, `lifetime`. A modifier: `cost_factor`, `max_level`, `step_pm` (Force), `step` (Reach), `radius_step` and `block_step_sq` (Breadth). A key the entry's type doesn't have renders `focus.vftv.fact.not_applicable`.
 - **`focus_rank`**: `cost` (ranks cost vis only), and, priced with the reference wand, `cost_effective`, `flux`, `availability` and `wand`.
 - **`focus_rules`**: exactly `void.per_warp_pm` and `void.max_bonus_pm` (per mille as the arcane percentage format: 10 → "1%"), and `limits.max_rank`, `limits.burst_entities`, `limits.burst_blocks` and `limits.live_bolts` (plain integers).
 - **Formats** are the foci spec's frozen table: costs as "*Aspect* *n*" lists; counts, ticks and squared radii as integers; distances and steps as decimals with up to 2 places, trimmed; magnitudes in thousandths with up to 3 places, trimmed; cost factors and the amplifier in the arcane factor format; `step_pm` in the arcane percentage format; `slow_amplifier` as the effect level vanilla shows (amplifier + 1).
-- A key outside its context's list, or a `focus_rules` key outside the six, is a malformed span, rejected by the validator. **Until the first `FociRules` arrives,** `focus_rank` and `focus_rules` spans render `[?]` without logging; every player receives `FociRules` on join. Example: "each force adds {fact:focus_modifier:vftv:force:step_pm}; the second rank asks {fact:focus_rank:2:cost}."
+- A key outside its context's list, or a `focus_rules` key outside the six, is a malformed span, rejected by the validator. Example: "each force adds {fact:focus_modifier:vftv:force:step_pm}; the second rank asks {fact:focus_rank:2:cost}."
 
 **`vis` keys** ([wands spec, Inspection and teaching](wands.md#inspection-and-teaching)). Numeric keys render as integers. **A fact can render a yes/no value:** the flag `starter` renders `fact.vftv.vis.starter.present` while the starter node stands and `fact.vftv.vis.starter.absent` otherwise, both translated texts rather than digits. The `sounding` entry carries `{fact:vis:starter}`, so a world without a Wellspring says so in the book.
 
@@ -586,7 +575,6 @@ road   : <key>                               exactly one of the keys listed unde
 | `limits.max_handler_slots` | the most slots a vessel's handler may have and still be read by a line or alembic |
 
 - A key outside this table is a malformed span, rejected by the validator.
-- **Until the first `EssentiaRules` arrives,** an `essentia` span renders as `[?]` without logging. Every player receives `EssentiaRules` on join, before any book can open.
 
 **`infusion` keys** ([infusion spec, Tuning and limits](infusion.md#tuning-and-limits)). Arity 1, with the same rendering rules as `essentia` keys. Per-mille values render as their integer per mille; prose supplies the unit.
 
@@ -604,7 +592,6 @@ road   : <key>                               exactly one of the keys listed unde
 | `limits.max_pedestals`, `limits.max_sources` | the most pedestals an altar may have; the most vessels it draws from |
 
 - A key outside this table is a malformed span, rejected by the validator.
-- **Until the first `InfusionRules` arrives,** an `infusion` span renders as `[?]` without logging. Every player receives `InfusionRules` on join.
 
 **`golem` keys** ([golems spec, Tuning and limits](golems.md#tuning-and-limits)). Arity 1. Plain ASCII digits with no separators or units, except `interact.reach`; prose supplies the unit.
 
@@ -634,7 +621,7 @@ road   : <key>                               exactly one of the keys listed unde
 | `fire_immune` | | `golem.vftv.fact.yes` or `golem.vftv.fact.no` |
 
 - A key or field outside these tables is a malformed span, rejected by the validator.
-- **Until the first `GolemRules` arrives,** a `golem` span and a `golem_material` `range` span render as `[?]` without logging. Every player receives `GolemRules` on join; the material registry arrives with the world's registries before any book can open.
+- The material registry arrives with the world's registries before any book can open.
 - A material the registry doesn't hold is an unresolvable span: `[?]`, logged once.
 
 **`wearable` fields** ([armor spec, Wearables](armor.md#wearables)). Arity 3: the item's namespace, path and the field. Values come from the item's synced `vftv:wearable` entry, its `vftv:gear_warp` value and its registration properties. Plain ASCII digits with no separators or units; prose supplies the unit.
@@ -663,7 +650,7 @@ road   : <key>                               exactly one of the keys listed unde
 | `capacity` | the reader's live Baffle capacity, `baffle_max` | integer |
 
 - A key outside this table is a malformed span, rejected by the validator.
-- **Until the first `ArmorRules` arrives,** a `baffle` span renders as `[?]` without logging; every player receives `ArmorRules` on join. The `baffling.*` keys render `[?]`, logged once, when the enchantment is missing or its grant isn't one `add_value` linear amount on `vftv:baffle` whose `base` equals its `per_level_above_first`. `current` and `capacity` render `[?]`, logged once, while the reader's Baffle record is unreadable.
+- The `baffling.*` keys render `[?]`, logged once, when the enchantment is missing or its grant isn't one `add_value` linear amount on `vftv:baffle` whose `base` equals its `per_level_above_first`. `current` and `capacity` render `[?]`, logged once, while the reader's Baffle record is unreadable.
 
 **`hush` keys** ([Hush spec, Tuning and limits](hush.md#tuning-and-limits)). Arity 1; the key is a dotted name with no `:`. Values come from the synced `FluxRules` and from registration facts fixed in code. Integers and decimals render in plain ASCII digits with no separators or units, and prose supplies the unit; the per-mille rows render in the arcane percentage format and the switch rows as their lang text, as the table says.
 
@@ -682,7 +669,7 @@ road   : <key>                               exactly one of the keys listed unde
 | `switch.spread`, `switch.hollows`, `switch.unattended` | the server switches in force | `hush.vftv.fact.on` or `.off` |
 
 - A key outside this table is a malformed span, rejected by the validator. The book has **no live reading** of the ground: the Clearing Bell is that instrument.
-- **Until the first `FluxRules` arrives,** a `hush` span renders as `[?]` without logging; every player receives `FluxRules` on join, after `/reload` and after a server config reload. Registration keys are fixed while a world is open.
+- Registration keys are fixed while a world is open.
 
 **`road` keys** ([Eldritch tier spec, Tuning and limits](eldritch.md#tuning-and-limits)). Arity 1; the key is a dotted name with no `:`. Values come from the synced `RoadRules` and from `RoadLimits`. Plain ASCII digits with no separators; prose supplies the unit.
 
@@ -695,7 +682,6 @@ road   : <key>                               exactly one of the keys listed unde
 | `scale.max_players`, `limits.max_participants`, `limits.steps` | counts (`limits.steps` is 3) | integer |
 
 - A key outside this table is a malformed span, rejected by the validator.
-- **Until the first `RoadRules` arrives,** a `road` span renders as `[?]` without logging; every player receives `RoadRules` on join and after `/reload`.
 
 **`warp` keys** ([warp spec](warp.md#warp)). Arity 1: the reader's own live warp, from their synced record and `WarpRules`. Plain ASCII digits with no separators.
 
@@ -723,10 +709,10 @@ road   : <key>                               exactly one of the keys listed unde
 | `switch.tax`, `switch.amplifier`, `switch.gear`, `switch.voices` | the server switches in force | `warp.vftv.fact.on` or `.off` |
 
 - A key outside these tables is a malformed span, rejected by the validator; a `milestone.*` key naming no listed milestone renders `[?]`, logged once.
-- **Until the first `WarpRules` arrives,** a `warp`, `warp_rules` or `entry:…:warp` span renders as `[?]` without logging. Every player receives `WarpRules` on join. An unreadable warp record renders every `warp` key as `[?]`, logged once.
+- An unreadable warp record renders every `warp` key as `[?]`, logged once.
 
 - Fact spans render as exact values in plain text (aspect amounts as name and number, never inline icons), are byte-identical at every warp band, and are never struck or covered.
-- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, warp, quotes, a recipe or data reload, a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)), or, for `vis` spans, the arrival of a new `VisRules` ([wands spec, Sync and state](wands.md#sync-and-state): on join and after `/reload`), and for `essentia` spans the arrival of a new `EssentiaRules` ([essentia spec, Sync and state](essentia.md#sync-and-state): on join and after `/reload`), and for `infusion` spans the arrival of a new `InfusionRules` ([infusion spec, Sync and state](infusion.md#sync-and-state): on join and after `/reload`), and for `golem` and `golem_material` spans the arrival of a new `GolemRules` ([golems spec, Sync and state](golems.md#sync-and-state): on join and after `/reload`; the material registry is fixed while a world is open), and for `wearable` spans the arrival of the item data maps `vftv:wearable` and `vftv:gear_warp` ([armor spec, After a reload](armor.md#after-a-reload): a sync, or in an integrated world the server's reload; the item registry is fixed while a world is open), and for `hush` spans the arrival of a new `FluxRules` ([Hush spec, Sync and state](hush.md#sync-and-state): on join, after `/reload` and after a server config reload), and for `road` spans the arrival of a new `RoadRules` ([Eldritch tier spec, Sync and state](eldritch.md#sync-and-state): on join and after `/reload`), and for `baffle` spans the arrival of a new `ArmorRules` ([armor spec, Sync and state](armor.md#sync-and-state): on join and after `/reload`; the enchantment registry is fixed while a world is open) and, for `current` and `capacity`, any change to the reader's Baffle record, their `vftv:baffle` attribute, their armour slots, their synced warp record or `WarpRules`, and for `focus*` spans any input of the [foci spec's preview](foci.md#the-authoritative-preview): the reference focus and the pricing wand (hand, off hand or inventory contents, including the wand's pools), the learned set, the focus registries, `FociRules`, `VisRules`, the discount attribute, the reader's `block_interaction_range` attribute, #25's factor and amplifier inputs, or a disconnect (every cache cleared), and for `warp`, `warp_rules` and `entry:…:warp` spans any change to the reader's synced warp record (including a gear sample) or the arrival of a new `WarpRules` ([warp spec, Sync and state](warp.md#sync-and-state): on join, after `/reload` and after a server config reload). Layout caching may keep the surrounding text, but **never an old decision value**.
+- **Live values:** a fact span is re-resolved whenever one of its dependencies changes: the pool, warp, quotes or a recipe or data reload; a `recipe` span's **preview context** (the arcane reference wand; the crucible the player is looking at with its synced pool and state, [crucible spec, The authoritative preview](crucible.md#the-authoritative-preview); or the player's current readout (armed or of a run) of the Singing Bowl they are looking at, which changes when a readout arrives or clears, the targeted block changes, or they disconnect, [infusion spec, The authoritative preview](infusion.md#the-authoritative-preview)); the arrival of the Rules record the span reads ([conventions, Rules records](conventions.md#rules-records)); for `wearable` spans, the arrival of the item data maps `vftv:wearable` and `vftv:gear_warp` ([armor spec, After a reload](armor.md#after-a-reload): a sync, or in an integrated world the server's reload); for the `baffle` keys `current` and `capacity`, any change to the reader's Baffle record, their `vftv:baffle` attribute, their armour slots or their synced warp record; for `focus*` spans, any input of the [foci spec's preview](foci.md#the-authoritative-preview): the reference focus and the pricing wand (hand, off hand or inventory contents, including the wand's pools), the learned set, the focus registries, the discount attribute, the reader's `block_interaction_range` attribute, #25's factor and amplifier inputs, or a disconnect (every cache cleared); and for `warp`, `warp_rules` and `entry:…:warp` spans, any change to the reader's synced warp record (including a gear sample). The golem material, item and enchantment registries are fixed while a world is open. Layout caching may keep the surrounding text, but **never an old decision value**.
 - **Guardrail lints** (build phase):
   - **Digits:** shipped prose contains **no decimal digit** (`\p{Nd}`, not only ASCII) outside fact spans, in every locale.
   - **Number words (`en_us`):** these case-insensitive whole-word tokens are rejected: `zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty sixty seventy eighty ninety hundred hundreds thousand thousands dozen dozens score half halves quarter quarters twice thrice double triple single pair pairs couple`. This list is exhaustive, and `content/research/number_words/en_us.json` transcribes it. **Each other locale** has its own list in `content/research/number_words/<lang>.json`, and a locale without one can't ship ([localisation, Per-locale lints](accessibility.md#per-locale-lints), which owns the schema and the matching).
@@ -748,7 +734,7 @@ road   : <key>                               exactly one of the keys listed unde
 - **A step** is exactly one of `{"use": <source id>}`, `{"learn": <note entry id>}` or `{"listen": <listen entry id>}`.
 - **Rejected:** an unknown source id; using a source beyond its `count` or before its `requires` hold; a `learn` on a non-note or an ineligible note; a `listen` on an ineligible entry; an advancement or page that no reviewed source names; a Stage that does not end as required.
 
-**World sources** published by the [worldgen spec](worldgen.md#contracts-on-sibling-specs) and the [Eldritch tier spec](eldritch.md#stage-4-choir-pages) (each amended in its change). An opener's find is **acquired** in the path of the Stage before, and a Choir page is **tipped in** only in its own Stage's path. The acquisition and the tip-in are one physical copy, never two guaranteed copies:
+**World sources**, from the [worldgen spec](worldgen.md#site-kinds) and the [Eldritch tier spec](eldritch.md#stage-4-choir-pages), listed here as the reviewed set. An opener's find is **acquired** in the path of the Stage before, and a Choir page is **tipped in** only in its own Stage's path. The acquisition and the tip-in are one physical copy, never two guaranteed copies:
 
 | Path | Source | `count` | `requires` | `why` (the reviewed sense) |
 |---|---|---|---|---|
@@ -799,7 +785,7 @@ road   : <key>                               exactly one of the keys listed unde
 - `bands` has **exactly three** objects (bands 1, 2 and 3; band 0 is always empty);
 - `own` 0–1, `foreign` 0–2, `interlinear` 0–1, `blots` 0–6, `struck_percent` 0–100.
 
-Anything else is rejected: a missing or unknown field, a wrong type, a value out of range, or a different band count. A resource pack's invalid override is ignored with a logged error, and the built-in file is used.
+**Rejected:** a band count other than three. A resource pack's invalid override is ignored with a logged error, and the built-in file is used.
 
 ### Roster
 
@@ -808,7 +794,7 @@ Anything else is rejected: a missing or unknown field, a wrong type, a value out
 | Stage | Entries |
 |---|---|
 | 1 Resonance (frozen) | `resonance` (opener) → `commonplace_book` (free; teaches the inventory strike), `notes_of_things` (free; aspects and the unheard), `sounding` (free) → `taking_notes` (note; the tutorial: Aer and Ignis, joined through **Lux**, which the path makes known first) → `knots_in_the_air` (find: `scanned` with `node: true`) → `first_wand` (**free**: teaches the **ungated** wand recipe `vftv:wand_assembly` and gates nothing, so no puzzle stands before a recipe the player can already craft) → `tapping` (note: no recipe; gates the server-checked tap action) → `arcane_crafting` (note; [Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s Stage 1 recipes: turning a table, the Bell and the [foci spec's](foci.md#stage) Lathe, its page showing the Bell and the Lathe side by side) → `foci` (note; [Foci](foci.md#stage): the blank focus, Kindle, Gust, Bolt and Touch) and `tuned_spectacles` (note; [Armor](armor.md#stage): gates the arcane recipe `vftv:tuned_spectacles`). Two notes stand before the first tap, three before the Worktable. |
-| 2 Distillation | `distillation` (opener), then the crucible, essentia and jars (`essentia_jars`, note, after `crucible`), Resonant Brass, tubes (`essentia_tubes`, note, after `essentia_jars` and `resonant_brass`), cultivating nodes, relays and first golems (`golems`, note, after `resonant_brass`; `golem_decanting`, note, after `golems` and `essentia_jars`; [Golems](golems.md#stage): their prose teaches the Feed handoff warning and every carry-loss row, [golems spec, Contracts](golems.md#contracts-on-sibling-specs)); `focus_ranks` (note, after `foci` and `resonant_brass`) and `delving` (note, after `foci` and `distillation`); `brass_armor` (free, after `resonant_brass`: pages the four ungated Brass armour crafting recipes) and `felted_garments` (note, after `resonant_brass` and `tuned_spectacles`: gates the Felted garments and the Chime Pendant; [Armor](armor.md#stage)); `clearing_bell` (note, after `resonant_brass`: gates and pages the arcane recipe `vftv:clearing_bell`; [Hush](hush.md#stage)) |
+| 2 Distillation | `distillation` (opener), then the crucible, essentia and jars (`essentia_jars`, note, after `crucible`), Resonant Brass, tubes (`essentia_tubes`, note, after `essentia_jars` and `resonant_brass`), the wand entries `singing_wands`, `cultivating_nodes`, `vis_relays` and `moving_nodes` ([wands, Recipes](wands.md#recipes)), first golems (`golems`, note, after `resonant_brass`; `golem_decanting`, note, after `golems` and `essentia_jars`; [Golems](golems.md#stage): their prose teaches the Feed handoff warning and every carry-loss row, [golems spec, Contracts](golems.md#contracts-on-sibling-specs)); `focus_ranks` (note, after `foci` and `resonant_brass`) and `delving` (note, after `foci` and `distillation`); `brass_armor` (free, after `resonant_brass`: pages the four ungated Brass armour crafting recipes) and `felted_garments` (note, after `resonant_brass` and `tuned_spectacles`: gates the Felted garments and the Chime Pendant; [Armor](armor.md#stage)); `clearing_bell` (note, after `resonant_brass`: gates and pages the arcane recipe `vftv:clearing_bell`; [Hush](hush.md#stage)) |
 | 3 Ruins | `ruins` (opener), the Choir pages, the Answerers (find: `vftv:find/answerers`, [worldgen](worldgen.md#the-answerers-find); a leaf, never a path source), infusion (`infusion`, note, after `ruins`, `essentia_jars` and `resonant_brass`; [Infusion](infusion.md#stage)), `being_heard` (`listen`, temporary 3, after `ruins`: warp and stilling; [warp spec, Stage](warp.md#stage)), `the_hush` (note, after `infusion` and `clearing_bell`: gates and pages the infusion recipe `vftv:pealing_bell`; [Hush](hush.md#stage)), `silence_beneath` (lasting 4), `under_the_silence` (optional `listen`, permanent 2, after `silence_beneath`); `far_workings` (note, after `focus_ranks` and `ruins`); `echo_golems` (note, after `golems` and `infusion`; [Golems](golems.md#stage)); `baffling` (note, after `infused_enchanting` and `brass_armor`: gates the Baffle Ring and the Baffling infusion; [Armor](armor.md#stage)) |
 | 4 The Choir's Road | `choirs_road` (opener: find `vftv:find/choirs_road`, a page from a Threshold; parents `ruins` and `silence_beneath`; `hinted_by` #36's last Stage 3 page), `hollow_bell` (note, temporary 2 and lasting 2, after `choirs_road`: gates the Hollow Bell's infusion and the descent), `the_road` (free, after `hollow_bell`), `void_wands` (note, secret, revealed by `warp_at_least` `lasting_plus_permanent` 4, which `silence_beneath`'s lasting 4 latches in Stage 3, so stilling afterwards never re-locks it; `hinted_by` `the_road`, lasting 2, after `hollow_bell` and `echo_wands`: gates the Void rod and cap), `the_heart` (free, after `the_road`: Joining and Silencing documented), `heard` and `unheard` (secret finds on the advancements `vftv:end/joined` and `vftv:end/silenced`, `hinted_by` `the_heart`: the capstone pages), all as frozen in the [Eldritch tier spec](eldritch.md#stage); `learning_the_tongue` (optional `listen`, permanent 3, after `choirs_road` and `silence_beneath`); `void_foci` (note, after `far_workings` and `choirs_road`); `void_armor` (note, secret, revealed by `warp_at_least` `lasting_plus_permanent` 4, which `silence_beneath`'s lasting 4 latches in Stage 3; `hinted_by` `baffling`; after `choirs_road` and `baffling`: gates the four Void armour infusions; [Armor](armor.md#stage)). The choice itself is made in the world (#28), never in the book. |
 
@@ -867,7 +853,7 @@ All sizes are **logical pixels**, and one sprite texel is one logical pixel.
 - **The Ledger's warp spread** (its last spread):
   - **Left page:** a prose viewport (the rules below) holding, one row each: `ledger.vftv.warp.title`; temporary, lasting, permanent (with the cap), gear and total; the band, with the next threshold unless at band 3; the counter, with its maximum; the **chance per eligible check** with the check's interval in seconds (`ledger.vftv.warp.chance`) and its parts (`ledger.vftv.warp.chance_parts`: the base, per permanent, per count and the cap, from `WarpRules`); how much a Stilling Draught stills; and `ledger.vftv.warp.silenced` for a silenced Listener. Rows wrap in the text column; nothing is cut off.
   - **Right page:** the **offer card**, drawn on the 130×64 `ledger/offer_panel` sprite as its frame. Its text (the effect power, the cost from the offer's quote, the seconds left; v1 has no points Bargain) is a prose viewport from y = 32 to y = 162, scrolling when long. Below it, two 54×18 buttons: **Accept** at (172, 166) and **Refuse** at (236, 166); the feedback line keeps (170, 188). With no live offer, the card shows `ledger.vftv.offer.none` in the same viewport and, once `vftv:silence_beneath` is learned, the **Listen** rite's cost (`ledger.vftv.offer.cost`, from the rite's quote) with one 54×18 **Listen** button (`ledger.vftv.listen.button`) at (172, 166) ([warp, The Listen rite](warp.md#the-listen-rite)); before the reveal, the viewport runs to y = 186 and no button is drawn.
-  - **Listen** sends `listen_rite(echoedWarp)` at once (the cost is on the card, and the rite's warp is lasting, which stilling treats). It is never drawn for a Silenced Listener or while `warp.voices.enabled` is off. It is **disabled**, staying focusable, while pending and whenever the rite's quote carries a refusal (cooling, with the seconds left from `last_listen` and the synced game time; not in a Void-touched place; clipped), with that refusal's message as its tooltip and narration (`narration.vftv.listen` with the cost otherwise). On `OK` the server plays `vftv:book.listen` and closes the book, so the Voices can answer.
+  - **Listen** sends `listen_rite(revision, echoedWarp)` at once (the cost is on the card, and the rite's warp is lasting, which stilling treats). It is never drawn for a Silenced Listener or while `warp.voices.enabled` is off. It is **disabled**, staying focusable, while pending and whenever the rite's quote carries a refusal (cooling, with the seconds left from `last_listen` and the synced game time; not in a Void-touched place; clipped), with that refusal's message as its tooltip and narration (`narration.vftv.listen` with the cost otherwise). On `OK` the server plays `vftv:book.listen` and closes the book, so the Voices can answer.
   - **Accept** opens the confirm dialog repeating the power and the cost; confirming sends `accept_offer`. **Refuse** sends `refuse_offer` at once, since it costs nothing. Both are disabled while pending, when the offer has expired by the synced game time (`ledger.vftv.offer.expired`), and Accept also when the quote is clipped (`message.vftv.warp.offer_full` as its tooltip).
   - **Labels** are centred in the vanilla font; a label wider than 50 px is truncated with "…", and its full text is the button's tooltip and narration. **Every 54×18 button in the book** (Learn or Buy, Abandon, Listen, the note button, Confirm and Cancel) follows the same rule (R2).
   - **Keyboard:** the main region's focus order is the left viewport, the right viewport, Accept and Refuse (or Listen, when it is drawn), then the feedback line while it shows text. Enter or Space activates a button; Up and Down scroll a focused viewport. A disabled Accept or Refuse stays focusable and narrates why.
@@ -933,7 +919,7 @@ A secret is hinted only through its `hinted_by` entry's prose, and validation pr
 
 - **Applies to `text` pages only.** Titles, hints, fact spans, recipe, aspect, structure, image and action pages, Choir pages and the Ledger are never touched. Words are struck through and stay legible; nothing is replaced.
 - **Eligible words** are maximal runs of Unicode letters at least `min_word_letters` long, outside fact spans. The struck count is *k* = ⌊(`struck_percent` × eligible + 50) / 100⌋.
-- **Determinism:** one `java.util.Random` seeded with `fold([0x4D415247 ("MARG"), uuid msb, uuid lsb] ++ idWords(entry) ++ [page index, band])`. Draws, in order:
+- **Determinism:** one `java.util.Random` seeded with `fold([MARG, UUID] ++ idWords(entry) ++ [page index, band])` ([conventions, mix64 and fold](conventions.md#mix64-and-fold)). Draws, in order:
   1. *k* struck words, each `nextInt(remaining)` over the remaining eligible words in text order;
   2. for each own note, `nextInt(remaining own pool)`, then a paragraph `nextInt(paragraphs)`, after which the note is inserted as an indented italic line;
   3. foreign notes, the same way (in `amethyst1` ink, 5.10:1 on the page paper; [localisation, Text contrast](accessibility.md#text-contrast));
@@ -980,8 +966,7 @@ The book's interface strings are **code-defined UI keys**, as the admin commands
 | `message.vftv.research.short` | 1 | "Not enough %s." (the first short leaf) |
 | `message.vftv.research.already_open` | 0 | "That note is already open in my book." |
 | `message.vftv.research.no_room` | 0 | "My book has no room for another open note." |
-| `message.vftv.research.cost_changed` | 0 | "The cost has changed." |
-| `message.vftv.research.stale` | 0 | "My notes have moved on. I look again." (a stale request, revision or echo) |
+| `message.vftv.research.stale` | 0 | "My notes have moved on. I look again." (a stale `requestId`, or a stale `noteRevision` on `place`, `remove` or `abandon`) |
 | `message.vftv.research.not_now` | 0 | "I can't do that yet." (any other eligibility failure) |
 | `message.vftv.research.pending` | 0 | "Waiting for an answer." |
 | `message.vftv.choir_page.blank`, `.too_old`, `.already`, `.tipped` | 0 | "The page is blank to me.", "The hand is too old for me yet.", "Already in my book.", "Tipped in." |
@@ -995,7 +980,7 @@ The book's interface strings are **code-defined UI keys**, as the admin commands
 | `subtitles.vftv.book.stage_1` … `.stage_4` | 0 | "A new chapter opens" (each) |
 | `subtitles.vftv.book.tip_in`, `.listen` | 0 | "Page tipped in", "The silence answers" |
 
-Every refusal in `ResearchFeedback.result` names one of the `message.vftv.research.*` keys, or the [warp spec's](warp.md#lang-keys) for an offer. The grammar of every value is independent of its numbers ([localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)).
+Every refusal in `ResearchFeedback.result` names one of the `message.vftv.research.*` keys, a [shared message key](conventions.md#message-keys) (`message.vftv.cost_changed` for a stale commit), or the [warp spec's](warp.md#lang-keys) for an offer or the rite. The grammar of every value is independent of its numbers ([localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)).
 
 **The book's sound events**, each naming its subtitle above, in the registers under "Production tickets":
 
@@ -1039,42 +1024,45 @@ No event fires for a reveal, a placement, an abandon or a revocation, since no s
   - `place(entry, noteRevision, q, r, aspect)`
   - `remove(entry, noteRevision, q, r)`
   - `abandon(entry, noteRevision)`
-  - `learn(entry, noteRevision, echoedWarp)`
-  - `buy(entry, echoedPrice, echoedWarp)`
-  - `listen(entry, echoedWarp)`
+  - `learn(entry, noteRevision, revision, echoedWarp)`
+  - `buy(entry, revision, echoedPrice, echoedWarp)`
+  - `listen(entry, revision, echoedWarp)`
   - `bookmark(entry, on)`
-  - `accept_offer(offerSeq, echoedWarp)` and `refuse_offer(offerSeq)`: the [warp spec's Bargains](warp.md#bargains), decided on the Ledger's warp spread
-  - `listen_rite(echoedWarp)`: the [warp spec's Listen rite](warp.md#the-listen-rite), from the Ledger's Listen button
+  - `accept_offer(offerSeq, revision, echoedWarp)` and `refuse_offer(offerSeq)`: the [warp spec's Bargains](warp.md#bargains), decided on the Ledger's warp spread
+  - `listen_rite(revision, echoedWarp)`: the [warp spec's Listen rite](warp.md#the-listen-rite), from the Ledger's Listen button
 - **S2C `ResearchFeedback`,** to the owner only:
-  - `quotes`: the server's **`mode`** (`research.mode` as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`), which decides whether the book offers a note or **Buy**; the skip price and #25's warp preview for every non-HIDDEN `note`/`listen` entry; and the **live offer's** `seq` and warp preview (with `clipped`); and the **Listen rite's** warp preview, `preview(listen.cost, LISTEN)` (with `clipped`), with its current refusal key, if any, from the warp spec's rows 3–6 (the place is read when the quote is built: the book is a screen, so the player doesn't walk while it is open, and the server checks again on press). Sent when the menu opens. While it is open, also re-sent when a server config change alters `research.mode`, even if no price changed ([configuration spec, Publishing a change](config.md#publishing-a-change)). While it is open, re-sent **after any resolution** (whether from an action, an event or a command), after a tuning `/reload`, and after **any change to the player's warp record or offer** (a `WarpChangedEvent`, an offer created, accepted, refused or deleted, including a lazy expiry), whenever the set of non-HIDDEN `note`/`listen` entries, the offer, or any price or preview has changed. For example, a reward that reveals a secret listen sends its preview at once. Expiry is also shown without a quote, from the offer's `expires` and the synced game time.
+  - `quotes`: the book's **`revision`**, the [surface revision](conventions.md#the-revision) of this open book, bumped on every re-send; the server's **`mode`** (`research.mode` as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`), which decides whether the book offers a note or **Buy**; the skip price and #25's warp preview for every non-HIDDEN `note`/`listen` entry; and the **live offer's** `seq` and warp preview (with `clipped`); and the **Listen rite's** warp preview, `preview(listen.cost, LISTEN)` (with `clipped`), with its current refusal key, if any, from the warp spec's rows 3–6 (the place is read when the quote is built: the book is a screen, so the player doesn't walk while it is open, and the server checks again on press). Sent when the menu opens. While it is open, also re-sent when a server config change alters `research.mode`, even if no price changed ([configuration spec, Publishing a change](config.md#publishing-a-change)). While it is open, re-sent **after any resolution** (whether from an action, an event or a command), after a tuning `/reload`, and after **any change to the player's warp record or offer** (a `WarpChangedEvent`, an offer created, accepted, refused or deleted, including a lazy expiry), whenever the set of non-HIDDEN `note`/`listen` entries, the offer, or any price or preview has changed. For example, a reward that reveals a secret listen sends its preview at once. Expiry is also shown without a quote, from the offer's `expires` and the synced game time.
   - `result(requestId, OK | REFUSED, reason key, up to 4 args)`. Attachments alone can't report a refusal that changes no state.
 - **Server checks, in this order,** with the first failure refusing:
   1. **Rate:** at most 8 actions per player per tick, of which at most 1 is a commit (`begin`, `abandon`, `learn`, `buy`, `listen`, `accept_offer`, `refuse_offer`, `listen_rite`), checked **before** any generation or resolution. Excess is dropped with no reply.
   2. `requestId` is greater than the last one processed for this player in this connection (stale or replayed requests are refused).
   3. `CommonplaceMenu` is open, its container id equals `containerId`, and the book is in a hand.
-  4. The variant's eligibility (table below), including `noteRevision` where the variant carries one.
-  5. The debit plan, where the variant needs one (`place`'s would-be Learn plan, `learn`, `buy`), succeeds.
-  6. Echoes match the current quote and preview.
+  4. A **quoted commit** (`learn`, `buy`, `listen`, `accept_offer`, `listen_rite`) echoes the current `quotes.revision`, else `STALE`.
+  5. The variant's eligibility (table below), including `noteRevision` where the variant carries one.
+  6. The debit plan, where the variant needs one (`place`'s would-be Learn plan, `learn`, `buy`), succeeds.
+  7. Echoes match the current quote and preview, else `STALE`.
+
+  For the quoted commits, checks 4 and 7 are the [checked commit's](conventions.md#checked-commits): `STALE` shows `message.vftv.cost_changed` and sends fresh quotes. A stale `noteRevision` refuses `place`, `remove` and `abandon` with `message.vftv.research.stale`, and `learn` as `STALE`.
 - **Variant eligibility:**
 
   | Variant | Requires |
   |---|---|
   | `begin` | the entry is a `note`, not learned, with no open note for it; mode is not `skip`; the begin precondition holds; fewer than 16 notes are open ("My book has no room for another open note.") |
-  | `place` | an open note for the entry with that revision; the cell is inside the grid, not an anchor, not silent and empty; the aspect is known. Checked against the note only (see "Existing notes are not re-gated"); the pool check is step 5. |
+  | `place` | an open note for the entry with that revision; the cell is inside the grid, not an anchor, not silent and empty; the aspect is known. Checked against the note only (see "Existing notes are not re-gated"); the pool check is step 6. |
   | `remove` | an open note with that revision; the cell holds a placement |
   | `abandon` | an open note with that revision (solved or not) |
   | `learn` | an open note with that revision, **solved** under the current view's links; the entry not yet learned; the warp echo matches if the entry carries warp |
   | `buy` | skip eligibility; the entry not yet learned; the price echo and warp echo match |
   | `listen` | a `listen` entry that is OPEN and not yet learned; the warp echo matches |
   | `bookmark` | on: the entry is not HIDDEN, and fewer than 9 are set (re-setting an existing bookmark is a no-op); off: always |
-  | `accept_offer` | nothing here: after checks 1–3, the [warp spec's acceptance](warp.md#accepting) owns every offer check (the live offer, its `seq`, expiry, validity, the echo), and its refusals (`busy`, `offer_gone`, `offer_full`, "The cost has changed.", `offer_cannot`) are this action's. Checks 4–6 don't apply. |
+  | `accept_offer` | nothing here: after checks 1–4, the [warp spec's acceptance](warp.md#accepting) owns every offer check (the live offer, its `seq`, expiry, validity, the echo), and its refusals (`message.vftv.busy`, `offer_gone`, `offer_full`, `message.vftv.cost_changed`, `offer_cannot`) are this action's. Checks 5–7 don't apply. |
   | `refuse_offer` | nothing here: after checks 1–3, the warp spec's refusal owns the offer checks (else `offer_gone`); it costs nothing |
-  | `listen_rite` | `vftv:silence_beneath` learned (else `message.vftv.warp.listen_closed`); then [`WarpService.listen`](warp.md#the-listen-rite) owns every other check, in its order, and its refusals (`busy`, `unreadable`, `listen_closed`, `listen_place`, `listen_cooldown`, `offer_full`, "The cost has changed.") are this action's. Checks 5–6 don't apply. A live offer doesn't refuse it; the button is simply not drawn while one stands. |
+  | `listen_rite` | `vftv:silence_beneath` learned (else `message.vftv.warp.listen_closed`); then [`WarpService.listen`](warp.md#the-listen-rite) owns every other check, in its order, and its refusals (`message.vftv.busy`, `message.vftv.unreadable`, `listen_closed`, `listen_place`, `listen_cooldown`, `offer_full`, `message.vftv.cost_changed`) are this action's. Checks 6–7 don't apply. A live offer doesn't refuse it; the button is simply not drawn while one stands. |
 
 - **Refusals change nothing.** Every refusal path, and every failed plan or commit, leaves the research attachment, the knowledge attachment and warp exactly as they were. **The one exception:** an `accept_offer` or `refuse_offer` refused because the offer has expired or become invalid deletes that offer (the warp spec's lazy cleanup), and still charges no warp, research or knowledge. A refusal for a stale `offerSeq` keeps a different live offer.
 - **Bounded codecs:**
   - ids ≤ 4,096 per set, notes ≤ 16, cells ≤ 169, anchors ≤ 5, bookmarks ≤ 9, triggers ≤ 16, pages ≤ 32;
-  - **echoed price** ≤ 64 entries, each 1–4,096; **echoed warp** three values, each 0–100; **`offerSeq`** a positive `long`;
+  - **echoed price** ≤ 64 entries, each 1–4,096; **echoed warp** three values, each 0–100; **`revision`** an `int`; **`offerSeq`** a positive `long`;
   - reason args ≤ 4 strings of ≤ 256 chars;
   - `quotes.mode` 0–3; any other byte is rejected at decode.
 
@@ -1139,7 +1127,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - links in both views, and the reveal adding links;
 - the solve check, including strays and branching;
 - **grid geometry:** spiral contiguity and completeness for radius 0–7, all 12 symmetries, the neighbour order;
-- **seed vectors** (the table above) and the full-note fixtures;
+- **seed vectors** (the table above, and the `NOTE` row of [conventions, Vectors](conventions.md#vectors)) and the full-note fixtures;
 - **generation:** BFS tie-breaking, padding, the radius rule, walk candidates and the anchor distance, silent-cell draws, a forced fallback and a forced refusal at every preset;
 - **no tutorial padding:** every shipped Stage 1 note's unpadded chain, over the known-link graph its affordability path reaches, has every segment ≥ the standard `min_distance`, so standard never pads it;
 - **solvability:** every issued note solved by an **independent exhaustive solver** on small boards (radius ≤ 2, ≤ 8 aspects, every seed in a range), plus **independent witness validation** at full scale (100,000 notes over random known sets at every preset);
@@ -1164,6 +1152,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - a mode switch mid-note keeps the snapshot; **graph and tuning changes across a reopen** keep open notes usable;
 - **a stilled reveal still latches:** learn `silence_beneath`, still lasting warp to 0, then learn `hollow_bell`: `void_wands` (gate L + P ≥ 4) is revealed;
 - `listen` confirm, a mismatched echo refused, a warp note waiting for confirmation;
+- the [checked-commit template](conventions.md#tests) for every quoted commit: a stale `quotes.revision` or echo gives `message.vftv.cost_changed` and fresh quotes; a stale `noteRevision` on `place` gives `message.vftv.research.stale`;
 - each trigger type, latching before visibility, login catch-up;
 - every Choir page case; **lost-page reissue**; two players each claim `beneath_the_notes` from one ruin without consuming the other's claim; the **129th claimant** still gets their page (with #27's block);
 - an entry removed by a reopened pack (its note dropped);
@@ -1193,66 +1182,45 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
+What this spec needs from its siblings. Each row is an acceptance criterion in the sibling's ticket.
 
-**Met here** (the [Aspects and scanning spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/15)'s contracts on this ticket):
-
-| Aspects contract | Met by |
-|---|---|
-| Puzzle links: the taught view before the reveal, taught links plus every exposed primal after it; notes made before the reveal stay valid | "Links" (links only grow in play) |
-| Owns the `revealed_by` entry, and the revealing listen shows its warp cost before commit | "The Vacuos reveal" and "Warp on entries" |
-| Stage 1 reachable from guaranteed supply; an active recovery path, so no player can strand themselves | "Affordability and recovery" (reachability prefix proof and three layers), "Paying for placements" (nothing spent before Learn) |
-| Owns the Commonplace Book item, records Stage 1 on the shard-or-fork trigger, teaches the inventory strike in the first entry | "The item", "Stage", "Stage gates" |
-| Consumes `ThingScannedEvent` and `AspectDiscoveredEvent` rather than polling | "Triggers" (event-driven, plus one catch-up per login) |
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)**
-- The node types that generate in **Stage 1** terrain together carry all 6 exposed primals (a unit test over node-type data), and first-strike rewards are per player per node. This is recovery layer 2.
-- It declares **node guarantee ids** (at least `vftv:starter`), each with its guaranteed composition, capacity and how many distinct nodes it guarantees in which Stage, which the affordability paths replay.
-- It names a **stable, ungated recipe id for the wand** and a **server-checked action gate for tapping**. *Reconciled with the wands spec:* no hook proves a research gate on the vanilla crafting grid, so the wand recipe `vftv:wand_assembly` carries no `research`; `vftv:first_wand` teaches it and gates nothing, and `vftv:tapping` has no recipe but gates the tap action on the server at its start and at every pulse ([wands spec, Stage](wands.md#stage)).
-- Node scan keys stay `node:<stable id>` through moves, so `scanned` triggers with `node: true` work.
-
-**[Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)** (the recipe-gate contracts also bind [Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20), [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) and [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for their own recipe types)
-- **Gate:** each research-gated recipe carries `research: <entry id>`. The server refuses every processing and output path until that entry is learned, proved by a GameTest with an unlearned player.
-  - **Machines that run over time** (reconciled with the [infusion spec](infusion.md#stage)): the gate is checked at the **commit** that starts the run, before anything is claimed, drawn or consumed. The committed run then completes that authorised craft even if the research is later revoked, or its starter is offline or dead, just as a committed Worktable output is never confiscated. Such a spec states its commit point and proves it with a GameTest that revokes the research mid-run.
-- **Recipe-page validator:** a `recipe` page in entry E shows a recipe that is ungated, or gated by E or by anything in E's transitive `parents` ∪ `hidden_parents` closure. Any other (forward-looking) recipe must be marked `preview: true`.
-- **One authoritative cost preview** per recipe type: base and effective vis, flux spill and every other decision cost, with capped modifiers flagged. It backs both the recipe page and the fact fields (`output`, `inputs` and each cost).
-- **JEI** filters by the **learned gate**, updates on grant, revoke, login and logout, and marks recipes the player currently can't afford accurately. Everything works with JEI absent.
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)**
-- The gate applies to crucible matching and consumption.
-- Book pages follow the real essentia rules, including the Vacuos statement it owns. Point synthesis in the puzzle is a separate, explicitly defined economy and implies nothing about essentia.
-
-**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)**
-- The preview includes **stability** as a fact field, and the altar is a `multiblock` id that structure pages can show. *Met by the [infusion spec](infusion.md#the-authoritative-preview): every decision cost as a fact field (`stability`, `instability`, `chance`, `clean_floor`, `clean_full_supply` with `clean` as the floor's alias, `upset_flux` with `flux` as its alias, a live run's `abandon_flux`, and the `stabilisers_capped` and `clamped` flags), from an armed readout or a matching run's, with exact absent texts and the visible `checked_at` identity; the `infusion` fact source above; and `vftv:infusion_altar` under the structure resource contract (amended here).*
-
-**[Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)**
-- The recipe-gate contracts above, for its arcane recipes, and one authoritative preview behind every focus number the book states. *Met by the [foci spec](foci.md#contracts-on-sibling-specs): the five `note` entries in the roster above, gating its two arcane recipes and every compose, rank-up and cast on the server at the action; `FocusPreview` with the complete quote, typed contexts and typed absence; and the `focus*` fact sources (amended here).*
-
-**[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- The recipe-gate contracts above, for its arcane and infusion recipes, and a fact source behind every armour number the book states. *Met by the [armor spec](armor.md#contracts-on-sibling-specs): no recipe type of its own, so the arcane and infusion types carry the gate, preview and JEI; the four Brass armour recipes are ungated vanilla crafting paged on `vftv:brass_armor`; five entries in the roster above; the `wearable` and `baffle` fact sources (amended here).*
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- `book_bands`: three ascending warp thresholds in its tuning. It syncs the owner's current band (0–3) and their exact warp per kind.
-- It defines **`total`**, including gear warp if gear counts, and posts a post-commit warp-change event with values and source, **including gear equip and unequip** if they change the total.
-- **One checked commit:** `commit(player, cost, source, expectedPreview)` applies exactly the previewed deltas (cap clipping included), or refuses on stale state, and returns the actual deltas. A listener or state change can never come between the preview and the charge.
-- It sets a concrete **lasting-only** amount for `vftv:silence_beneath`, written into that entry's data before the Stage 3 content completes. It decides whether an optional deeper listen with permanent warp exists, and if so its name and amount.
-- The book counts as an open GUI, so no Voice event fires while it is open.
-- *Met by the [warp spec](warp.md#contracts-on-sibling-specs): `bands` [6, 14, 24] (the book band, renamed here) and the owner-filtered record with every kind, gear, total and band; total = temporary + lasting + permanent + gear, with `WarpChangedEvent` posted after every complete change, gear samples included, while the operation guard is held; the checked commit with clipping, milestone authorisation, `STALE` and re-entry refused `BUSY`; lasting 4 for `silence_beneath` and the optional `vftv:under_the_silence` (permanent 2); and `hasContainerOpen()` covering `CommonplaceMenu`. Amended here: the warp fact keys, the Ledger's warp spread, the offer actions, the four load-validation rules and the ordered warp-gate proof.*
-
-**[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
-- Ships the hidden advancements `vftv:find/distillation` and `vftv:find/ruins` at those exact ids, attainable with only NeoForge installed. A test proves no opener prerequisite cycle.
-- **Per-player Choir page blocks:** persistent claims once per player per page per site, **no eviction** (unlike a vanilla vault's capped history), and a free reissue for a claimed page that is neither latched nor learned. One player's claim never consumes another's.
-- `vftv:choir/beneath_the_notes` is obtainable in Stage 3 with no Stage 3 research learned. A GameTest has two players obtain it independently from one ruin.
-- It publishes source identities (site ids for Choir pages, advancement ids for finds), their aspect discovery and research prerequisites, quantities and pre-spend reachability for the Stage 2 and 3 affordability paths.
-- *Met by the [worldgen spec](worldgen.md#contracts-on-sibling-specs): hidden advancements on vanilla triggers with no parents, and the cycle proved by the replay acquiring each find in the Stage before; the Reliquary's positional per-player claims on the player, with no eviction, raw retention and an immediate, guarded reissue; `beneath_the_notes` first in every ruin with no `requires`; and the "World sources" under "Affordability paths" (amended here), with the Answerers' find a leaf.*
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Ships `vftv:find/choirs_road`, places the Stage 4 Choir pages in the same kind of per-player block, and keeps the Joining and Silencing choice in the world; the book only documents it. It publishes its Stage 4 sources the same way as #27.
-- *Met by the [Eldritch tier spec](eldritch.md#contracts-on-sibling-specs): the hidden find on one page by exact component; the worldgen Reliquary with the site kinds `vftv:threshold` and `vftv:road`, claims successive and global; the Heart, a block-bound menu, with `the_heart`, `heard` and `unheard` documenting it; the sources under "Affordability paths" (amended here), with Road pages past an encounter excluded. Amended here too: the Stage 4 roster, the `road` fact source and the `warp_rules` key `joining.amplifier_bonus`.*
+| Needs from | What | Met at |
+|---|---|---|
+| aspects | the `vftv:strike` recipes that turn a book or blank Book and Quill into the Commonplace Book, refusing written books | [aspects, The Commonplace Book](aspects.md#the-commonplace-book) |
+| aspects | discovery through the knowledge service (prerequisites first, bonuses, `AspectDiscoveredEvent`), and `ThingScannedEvent` with its outcomes | [aspects, Knowledge](aspects.md#knowledge), [Events](aspects.md#events) |
+| aspects | first-strike rewards per player per node (recovery layer 2) | [aspects, Aspect points](aspects.md#aspect-points) |
+| wands | the node types that generate in Stage 1 together carry all 6 exposed primals (a unit test) | [wands, Node types](wands.md#node-types), [Tests](wands.md#tests) |
+| wands | the node guarantee `vftv:starter`, with its Stage, count, type and composition, which the paths replay | [wands, Guarantees](wands.md#guarantees), [The starter](wands.md#the-starter) |
+| wands | a stable, ungated wand recipe `vftv:wand_assembly`, and the tap action gated by `vftv:tapping` on the server at its start and every pulse | [wands, Assembly](wands.md#assembly), [Hand-tapping](wands.md#hand-tapping) |
+| wands | node scan keys stay `node:<stable id>` through moves | [wands, Identity and reconciliation](wands.md#identity-and-reconciliation) |
+| wands | the `VisRules` keys and the `starter` flag behind `vis` spans | [wands, Inspection and teaching](wands.md#inspection-and-teaching) |
+| arcane, crucible, infusion, foci, armor, golems, essentia, Eldritch | each research-gated recipe carries `research`, and the server refuses every processing and output path until it is learned (a GameTest with an unlearned player); a machine that runs over time checks the gate at the commit that starts the run, and the run then completes even if the research is revoked | [arcane, The craft payload](arcane.md#the-craft-payload), [crucible, Selection](crucible.md#selection), [infusion, Stage](infusion.md#stage), [foci, Stage](foci.md#stage), [armor, Recipes](armor.md#recipes), [golems, Stage](golems.md#stage), [essentia, Recipes](essentia.md#recipes), [Eldritch, The items](eldritch.md#the-items) |
+| arcane, crucible, infusion, foci | one authoritative cost preview per recipe type (base and effective vis, flux and every decision cost, capped modifiers flagged), backing recipe pages and fact fields | [arcane](arcane.md#the-authoritative-preview), [crucible](crucible.md#the-authoritative-preview), [infusion](infusion.md#the-authoritative-preview) and [foci](foci.md#the-authoritative-preview), each under "The authoritative preview" |
+| arcane | JEI filters by the learned gate, updates on grant, revoke, login and logout, marks unaffordable recipes, and nothing needs JEI | [arcane, JEI](arcane.md#jei) |
+| crucible | book pages follow the real essentia rules, including that Aer and Perditio essentia never combine into Vacuos | [crucible, Combining essentia, and Vacuos](crucible.md#combining-essentia-and-vacuos) |
+| infusion | the altar is the multiblock `vftv:infusion_altar`, in the structure format `vftv:structure` pages read | [infusion, The altar multiblock](infusion.md#the-altar-multiblock) |
+| foci, armor | the `focus*`, `wearable` and `baffle` fact sources' contexts and values | [foci, The authoritative preview](foci.md#the-authoritative-preview), [armor, Wearables](armor.md#wearables), [The Baffle](armor.md#the-baffle) |
+| warp | the tuning `bands`, three ascending thresholds | [warp, Bands](warp.md#bands) |
+| warp | the owner-synced warp record, from which the client reads each kind, total and band | [warp, Sync and state](warp.md#sync-and-state), [Total warp](warp.md#total-warp) |
+| warp | `WarpChangedEvent` after every complete change, gear samples included | [warp, Events](warp.md#events), [Gear warp](warp.md#gear-warp) |
+| warp | the preview (clipping and milestones) and the checked commit `WarpService.commit` with an expected preview | [warp, Preview](warp.md#preview), [Commit and apply](warp.md#commit-and-apply) |
+| warp | the amounts of `being_heard` (temporary 3), `silence_beneath` (lasting 4), `under_the_silence` (permanent 2) and `learning_the_tongue` (permanent 3); no warp in Stages 1–2; milestones in `permanent.milestones` | [warp, Stage](warp.md#stage), [Permanent warp](warp.md#permanent-warp) |
+| warp | no Voice event while `CommonplaceMenu` is open | [warp, Suppression](warp.md#suppression) |
+| warp | Bargain acceptance and the Listen rite own their checks and refusals; the Ledger's warp values | [warp, Accepting](warp.md#accepting), [The Listen rite](warp.md#the-listen-rite), [In the Commonplace Book](warp.md#in-the-commonplace-book) |
+| Hush | `vftv:clearing_bell` buildable early, from Brass and the crucible | [Hush, Stage](hush.md#stage) |
+| worldgen | the hidden advancements `vftv:find/distillation` and `vftv:find/ruins`, on vanilla triggers, with only NeoForge installed | [worldgen, Stage 2: dripstone](worldgen.md#stage-2-dripstone), [Stage 3: a Choir page](worldgen.md#stage-3-a-choir-page) |
+| worldgen | per-player Choir page claims, once per player per page per site, no eviction, a free reissue for a page neither latched nor learned | [worldgen, Claims](worldgen.md#claims), [Using it](worldgen.md#using-it) |
+| worldgen | `vftv:choir/beneath_the_notes` first in every ruin's batch of six, with no research needed | [worldgen, Site kinds](worldgen.md#site-kinds) |
+| worldgen | the Answerers' find | [worldgen, The Answerers' find](worldgen.md#the-answerers-find) |
+| Eldritch | `vftv:find/choirs_road` on a Threshold's page | [Eldritch, The find](eldritch.md#the-find) |
+| Eldritch | the Stage 4 Choir pages in per-player Reliquaries, and their published sources | [Eldritch, Stage 4 Choir pages](eldritch.md#stage-4-choir-pages) |
+| Eldritch | the Joining and Silencing choice made in the world, which the book only documents; the Stage 4 entries | [Eldritch, The choice](eldritch.md#the-choice), [Stage](eldritch.md#stage) |
 
 ## Production tickets
 
 This spec settles every decision. Six required child tickets deliver the assets and the authored content, and **the system is not done until all six land**. **None of them writes mod code.** The content tickets deliver authored inputs under `content/`, in the schemas above. The asset tickets deliver generators and assets under the [art style](art-style.md). The runtime validators, datagen output and every test above are build-phase acceptance criteria.
+
+**The system specs' needs are in scope.** Each system spec's "Contracts on sibling specs" table has rows under "Needs from research" (or naming a Stage research content ticket): the entries, parents, recipe and structure pages, path order and teaching prose that system needs. Those rows are part of the matching Stage content ticket's scope, alongside the [Roster](#roster); a Stage ticket is not done until every such row naming its Stage is met.
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|

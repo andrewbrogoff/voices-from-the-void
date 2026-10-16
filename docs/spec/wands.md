@@ -90,9 +90,9 @@ All persistent and network-synced.
 **One pool per vis aspect, every pool at the rod's capacity, whole vis only.** Per-primal pools make *which* node you find matter, and one capacity for every pool is one number to read.
 
 - **Vis aspects** are the **exposed primals**: registry aspects with `parents: []` and no `hidden_primal` ([aspects, registry format](aspects.md#registry-format)). The six built-in ones are Aer, Terra, Ignis, Aqua, Ordo and Perditio; an addon may add a seventh or eighth, which addon node types supply (the starter never does). Vacuos is never one. Making it one would take an eligibility extension that [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) would have to propose; the limit of eight vis aspects leaves room, but doesn't do it alone. More than 8 exposed primals refuses the world (a fixed limit).
-- **`vftv:vis`** is `{"format": 1, "pools": {<aspect id>: 0–1000}}`, at most 16 entries. A missing entry is 0. A value with an unknown format or out of bounds is kept as its raw tag and the wand is inert until it decodes (see "Sync and state").
+- **`vftv:vis`** is `{"format": 1, "pools": {<aspect id>: 0–1000}}`, at most 16 entries. A missing entry is 0. An unreadable `vftv:vis` follows [conventions](conventions.md#raw-record-retention) and makes the wand inert as a whole, so the spend refuses it with `message.vftv.spend.inert`.
 - **Reads clamp** each pool to the current capacity, and the next write stores the clamp. A reopened pack that shrinks a rod can only lose the excess, never invent vis.
-- **Entries for aspects that aren't vis aspects** (an aspect a pack removed, or one that stopped being primal) are **kept as they are** and ignored, so restoring the pack restores them. Writes carry them through. If a write would exceed 16 entries, the dormant entries with the highest ids are dropped and logged.
+- **Entries for aspects that aren't vis aspects** (an aspect a pack removed, or one that stopped being primal) are **kept as they are** and ignored, so restoring the pack restores them. Writes carry them through. If a write would exceed 16 entries, the ignored entries with the highest ids are dropped and logged.
 - **Inert wands.** A wand is inert when it is **unfinished** (its `vftv:wand_rod` or `vftv:wand_cap` component is missing, e.g. from `/give`) or when **a part is missing** (a component names a key the registry doesn't hold). An inert wand cannot tap, be charged or spend, and nothing writes its `vftv:vis`: no clamping, no debit. Its tooltip and HUD name the case and, for a missing part, the id. Restoring the pack restores the wand.
 
 ### Display
@@ -162,9 +162,9 @@ The modifier flags are `discount_capped` and `clamped`. The capacity flags depen
 - **Steps,** the first failure refusing with its message and changing nothing:
   1. the stack is a `vftv:wand` and not inert ("This wand is missing a part.");
   2. `ctx.research`, if set, is learned;
-  3. the quote is recomputed. If `expected` is given and is not the same cost, refuse with "The cost has changed." UI paths (#18) always pass `expected`; same-tick paths (a cast) may pass none;
+  3. the quote is recomputed. If `expected` is given and is not the same cost, refuse as stale (`message.vftv.cost_changed`), the [checked commit's](conventions.md#checked-commits) recompute. UI paths (#18) always pass `expected`; same-tick paths (a cast) may pass none, the unchecked form;
   4. `affordable`, else "Not enough …" naming every `short` aspect;
-  5. every slot still holds exactly its `expectedBefore` (`ItemStack.matches`), else "The cost has changed.";
+  5. every slot still holds exactly its `expectedBefore` (`ItemStack.matches`), else stale (`message.vftv.cost_changed`);
   6. **commit under a rollback scope:** snapshot the wand's `vftv:vis` and every named slot; write the debited `vftv:vis` in place; set each slot to its `after` in list order. If anything throws, every snapshot is restored (vis, materials and output), the boundary is told `applied(false)`, no event is posted, and the error is rethrown and logged. Otherwise the boundary is told `applied(true)`;
   7. after the commit, post `VisSpentEvent` through the platform publisher. #26 applies its flux on that event. **If posting throws** (a listener failed), the commit stands: nothing is rolled back, the error is logged once with the `source`, and `spend` returns **`COMMITTED_NOTIFY_FAILED`** instead of rethrowing.
 - **Outcomes:** `SPENT` and `COMMITTED_NOTIFY_FAILED` both mean vis, materials and output were committed; each refusal of steps 1–5 is a refusal outcome naming its message (inert, unlearned, stale, short) and changed nothing; only a step-6 failure throws, and it changed nothing either. A consumer never treats `COMMITTED_NOTIFY_FAILED` as a refusal or a rollback.
@@ -318,15 +318,7 @@ Per dimension, **in memory**, rebuilt from the registry at server start: cells o
 **One seeded candidate per 64×64 cell**: deterministic, unit-testable from (seed, cell) alone, at most one natural node per cell by construction, and no level state touched on worldgen threads.
 
 - **Placement:** a `Feature` **`vftv:node`**, configured as `vftv:node` and placed with no modifiers, added to `#minecraft:is_overworld` at `top_layer_modification` by the biome modifier `vftv:add_nodes`. It runs once per chunk. Other dimensions are a pack's choice, with no code.
-- **Seed** for cell (`rx`, `rz`), with the SplitMix64 finaliser and `fold` exactly as pinned in the [research spec](research.md#generating-a-note), all arithmetic wrapping and `rx`, `rz` sign-extended to 64 bits:
-
-```
-h = fold([0x4E4F4445 ("NODE"), worldSeed, rx, rz])
-stream: s = h;  next() = { s = s + 0x9E3779B97F4A7C15L; return mix64(s) }
-bounded(d, lo, hi) = lo + (d >>> 1) % (hi − lo + 1)
-weighted(d, weights) = t = (d >>> 1) % Σweights; the first i with t < weights[0] + … + weights[i]
-```
-
+- **Seed** for cell (`rx`, `rz`): `h = fold([NODE, worldSeed, rx, rz])`. The draws are successive `next()` of `stream(h)`, with `bounded` and `weighted` as [conventions, Streams](conventions.md#streams) pins them.
 - **Draws,** in this order, all made even if a later step gives up:
   1. `d0`: the cell spawns iff `(d0 >>> 11) × 2⁻⁵³ < chance` (a `double` comparison; the product is exact);
   2. `d1`: the column `x = 64·rx + (d1 & 63)`, `z = 64·rz + ((d1 >>> 6) & 63)`;
@@ -363,7 +355,7 @@ Over the 10,000 cells in [−50, 49]², the reference spawns 35.02%. Cell keys: 
 - **When:** at `ServerStartedEvent`, whenever `starter` is absent or its id is `REMOVED`: a new world, an existing world the mod was added to, or after an operator removed it. A starter that is `PLACED` in an unloaded chunk is never duplicated, because the id is persisted.
 - **Where.** Let `P` be the **effective** protected radius for a non-op player, from every condition vanilla's `DedicatedServer#isUnderSpawnProtection` applies: `P` = the configured `spawn-protection` radius iff the server is dedicated, the respawn position's dimension is the overworld, the operator list is non-empty and the radius is > 0; otherwise `P` = 0 (so always 0 on an integrated server). Let `a = max(starter.min_ring, P + 1)`. Under those conditions vanilla protects a position iff its Chebyshev distance from the spawn position is ≤ `P`, so every candidate is outside actual protection.
   - **Rings** *k* = `a`, `a + 1`, … `a + starter.ring − 1`, never beyond 180. If `a` > 180 there are no candidates.
-  - **Within ring *k*,** the perimeter of the Chebyshev square has 8*k* columns, indexed *i* = 0 … 8*k* − 1: with `side = i / 2k` and `t = i % 2k`, side 0 is (−*k* + *t*, −*k*), side 1 (*k*, −*k* + *t*), side 2 (*k* − *t*, *k*) and side 3 (−*k*, *k* − *t*), as (dx, dz) from the bootstrap. The walk starts at `start = Long.remainderUnsigned(fold([0x53544152 ("STAR"), worldSeed, k]), 8k)` and visits `(start + j) % 8k` for *j* = 0 … 8*k* − 1.
+  - **Within ring *k*,** the perimeter of the Chebyshev square has 8*k* columns, indexed *i* = 0 … 8*k* − 1: with `side = i / 2k` and `t = i % 2k`, side 0 is (−*k* + *t*, −*k*), side 1 (*k*, −*k* + *t*), side 2 (*k* − *t*, *k*) and side 3 (−*k*, *k* − *t*), as (dx, dz) from the bootstrap. The walk starts at `start = Long.remainderUnsigned(fold([STAR, worldSeed, k]), 8k)` ([conventions, Salts](conventions.md#salts)) and visits `(start + j) % 8k` for *j* = 0 … 8*k* − 1.
   - **A candidate column** (`x`, `z`) is valid iff all of these hold:
     1. it is inside the world border;
     2. with `h = WORLD_SURFACE(x, z)`, the node position `N = (x, h + starter.height, z)` is `isAir()` and inside the build height;
@@ -473,7 +465,7 @@ The Node Tap (see "Relays") exposes the architecture's essentia capability, **in
 
 **Release** (a filled jar on any block face; the click is consumed even if refused). The target is the adjacent position on the clicked face. Checks, in order:
 1. `vftv:moving_nodes` learned;
-2. the component decodes ("The jar holds nothing I recognise.");
+2. the component is readable (else `message.vftv.unreadable`);
 3. the id's entry is `CARRIED` with **exactly this jar's token**. `PLACED`, `REMOVED`, or another token means a stale copy ("This echo is old; the node has moved on."). **No entry** is refused in survival; for a creative player with permission level 2 it is a **recovery**, which changes nothing yet and is registered only at the final commit;
 4. the target `isAir()`, inside the build height and the world border ("There is no room for it here.");
 5. no indexed node in the dimension is closer than `node.min_spacing` (equality is allowed; "Too close to another node.");
@@ -576,7 +568,7 @@ Membership changes only through one per-level queue, processed at the **end of e
 - **Nodes are visible to everyone, always,** with or without a fork: they are landmarks. The fork reads them, and sounding finds the unseen ones.
 - **Renderer:** a block-entity renderer submitting camera-facing quads through `submitCustomGeometry`, **cutout** (no partial alpha, [art style §3](art-style.md#3-resolution-and-pixel-rules)) and full-bright, within the fixed block-entity view distance of 64 blocks.
   - **Core:** one quad from the 8-frame strip `vftv:block/node_core` (block atlas), frame `(gameTime / frame_ticks[clarity]) % 8`. Size `min(max_size, base_size + size_per_root × √Σcurrent)` blocks, times `scale[clarity]`.
-  - **Motes:** one per aspect, at most 6, each drawing **the aspect's own icon** (`vftv:aspect/<id>`, or the aspect's `icon` field), never a tint-only sprite, so identity rests on the approved glyph channel and needs no palette change. Mote *i* of *n* (aspects in ascending id), at `t = gameTime + partialTick`, has angle `θ = 2π × (t / orbit_ticks + i / n)` and sits at offset `(orbit_radius × cos θ, bob × sin 2θ, orbit_radius × sin θ)` from the core's centre: a horizontal circle with a vertical bob twice per orbit. A dormant node draws its core only.
+  - **Motes:** one per aspect, at most 6, each drawing **the aspect's own icon** (`vftv:aspect/<id>`, or the aspect's `icon` field), never a tint-only sprite, so identity rests on the approved glyph channel and needs no palette change. Mote *i* of *n* (aspects in ascending id), at `t = gameTime + partialTick`, has angle `θ = 2π × (t / orbit_ticks + i / n)` and sits at offset `(orbit_radius × cos θ, bob × sin 2θ, orbit_radius × sin θ)` from the core's centre: a horizontal circle with a vertical bob twice per orbit. An inert or unreadable node draws its core only.
   - **Budget:** at most 7 quads per node. The index caps nodes at 8 per cell, so at most 9 cells and **72 nodes, 504 quads** are within the view distance. Our renderer allocates nothing per frame.
 - **Ambient glints:** a `vftv:node_glint` particle at most once per node per `glints.every_ticks`, only within `glints.range`, none at the "minimal" particle setting.
 - **Global glint cap:** the client counts every live `vftv:node_glint`, ambient and tapping alike, and **drops any new one while 64 are alive** (a fixed limit). The cap holds whatever the density or the number of tapping players.
@@ -598,7 +590,7 @@ Membership changes only through one per-level queue, processed at the **end of e
 
 Every number a decision rests on is shown exactly, live, and never in prose.
 
-- **Strike a node** with the fork: the [aspects readout](aspects.md#what-a-strike-reveals) shows its localised type, clarity, and each aspect as current / max after settlement, through `NodeService.readout`. A dormant node shows its aspects and the type "Unknown".
+- **Strike a node** with the fork: the [aspects readout](aspects.md#what-a-strike-reveals) shows its localised type, clarity, and each aspect as current / max after settlement, through `NodeService.readout`. An inert node (its type removed) shows its aspects and the type "Unknown".
 - **The wand:** HUD, Shift tooltip and item bar (see "Display").
 - **Relay members:** the status lines above, including why a network or cradle is idle, empty or full.
 - **Refusals** name their cause, with any number as a live argument.
@@ -606,7 +598,7 @@ Every number a decision rests on is shown exactly, live, and never in prose.
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen, which writes the resources into `src/generated/resources`. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails load validation. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#authored-content).
 
 ```
 content/wands/parts.json        rods and caps
@@ -627,7 +619,7 @@ content/lang/en_us/wands.json   every key under "Lang keys"
 | `placement.json` | `vftv:node_placement/1` | `data/vftv/worldgen/configured_feature/node.json`; the placed feature and `data/vftv/neoforge/biome_modifier/add_nodes.json` are fixed by code |
 | `client.json` | `vftv:node_client/1` | `assets/vftv/nodes/client.json`, overridable by resource packs |
 | `guarantees.json`, `fixtures.json` | `vftv:node_guarantees/1`, `vftv:node_fixtures/1` | nothing: read by tests only |
-| `lang/<lang>/wands.json` | `vftv:lang/1` | its `strings` object merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `lang/<lang>/wands.json` | `vftv:lang/1` | merged by the [lang pipeline](conventions.md#lang) |
 
 ### Parts
 
@@ -643,7 +635,7 @@ content/lang/en_us/wands.json   every key under "Lang keys"
    "vftv:resonant_brass": {"item": "vftv:resonant_brass_cap",  "cost_multiplier": 0.85}}}
 ```
 
-**Rejected:** a required key missing; anything that fails the parts load validation.
+**Rejected:** anything that fails the parts load validation.
 
 **Other content files** may use the same schema for later-tier parts (the [infusion spec](infusion.md#wand-parts)'s `content/infusion/wand_parts.json` is the first). Datagen merges them; a part id declared in two `content/` files fails datagen.
 
@@ -757,7 +749,7 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 
 **A `quote` row** gives its discount as exactly one of `discount` (one number) or `discount_modifiers` (a list, summed in order as `double`, as the attribute sums its modifiers), e.g. `{"cap": 0.85, "discount_modifiers": [0.10, 0.20], "max_discount": 0.30, "w": 1.00, …, "expect": {…, "discount": 300, "discount_capped": false}}`.
 
-**Every `long`-typed value** (`seed`, `h`, `tick`, `now`, `game_time`, and `tick` in `expect`) is a hex string, so JSON never rounds it. The `quote` inputs `cap`, `discount`, `discount_modifiers` (each element), `max_discount` and `w` are finite JSON numbers, read as `double`; every other number is a JSON integer. **Rejected:** a section missing; a row of a vector table missing or altered; a `coverage` biome that isn't a vanilla overworld biome; a vanilla overworld biome missing from `coverage`.
+**Every `long`-typed value** (`seed`, `h`, `tick`, `now`, `game_time`, and `tick` in `expect`) is a hex string, so JSON never rounds it. The `quote` inputs `cap`, `discount`, `discount_modifiers` (each element), `max_discount` and `w` are finite JSON numbers, read as `double`; every other number is a JSON integer. The file follows [conventions, Fixtures](conventions.md#fixtures). **Rejected:** a `coverage` biome that isn't a vanilla overworld biome; a vanilla overworld biome missing from `coverage`.
 
 ### Lang keys
 
@@ -782,9 +774,9 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 | `hud.vftv.vis.unfinished` | 0 | |
 | `hud.vftv.vis.missing` | 1 | |
 | `message.vftv.tap.unlearned`, `.tap.inert`, `.tap.unknown`, `.tap.nothing`, `.tap.full`, `.tap.empty` | 0 | the tap refusals and stops above |
-| `message.vftv.spend.unlearned`, `.spend.inert`, `.spend.stale` | 0 | |
+| `message.vftv.spend.unlearned`, `.spend.inert` | 0 | |
 | `message.vftv.spend.short` | 1 | "Not enough %s." (the short aspects, joined) |
-| `message.vftv.jar.unlearned`, `.jar.anchored`, `.jar.unknown`, `.jar.unreadable`, `.jar.stale`, `.jar.no_room`, `.jar.crowded` | 0 | the jar refusals above |
+| `message.vftv.jar.unlearned`, `.jar.anchored`, `.jar.unknown`, `.jar.stale`, `.jar.no_room`, `.jar.crowded` | 0 | the jar refusals above |
 | `message.vftv.jar.too_close` | 1 | "Too close to another node (%s blocks)." |
 | `message.vftv.relay.too_many` | 2 | "Too many voices for one chord: %s of %s." |
 | `message.vftv.relay.no_node`, `.relay.taken` | 0 | |
@@ -800,8 +792,10 @@ These are the shipped values. **Ranges:** sizes, scales, `orbit_radius` and `bob
 | `commands.vftv.node.removed`, `commands.vftv.node.unknown` | 1 | |
 | `commands.vftv.node.starter_placed` | 2 | "Placed the Wellspring (no. %s) at %s." |
 | `commands.vftv.node.starter_exists` | 1 | "The Wellspring already stands (no. %s)." |
-| `commands.vftv.node.starter_overworld`, `.starter_blocked`, `.dormant` | 0 | "The Wellspring belongs in the overworld.", "A Wellspring can't stand there.", "The node registry is unreadable; nothing was changed." |
+| `commands.vftv.node.starter_overworld`, `.starter_blocked`, `.unreadable` | 0 | "The Wellspring belongs in the overworld.", "A Wellspring can't stand there.", "The node registry is unreadable; nothing was changed." |
 | `subtitles.vftv.<event>` for every sound event | 0 | |
+
+**Used, not declared here:** the [shared keys](conventions.md#message-keys) `message.vftv.cost_changed` (a stale spend) and `message.vftv.unreadable` (an unreadable `vftv:captured_node`).
 
 ```json
 {"schema": "vftv:lang/1", "strings": {
@@ -839,7 +833,7 @@ No event fires for a tap or relay pulse, regeneration, a duplicate's removal, or
 - `readout(level, pos)` (loaded nodes only, settled);
 - `nearest(dimension, point, r)` (memory only);
 - `remove(id, cause)` (works on unloaded ids; the block is removed at reconciliation);
-- `update(id, change, cause, boundary?) → UpdateResult`: loaded nodes only, otherwise refused as `NOT_LOADED`. The change may set a new type (registered), new aspects (at most 6, maxes 1–1000) or a new clarity. It settles first and rebases after; it keeps the id, position and the counters of aspects that remain; `current` clamps to a lowered max, and an added aspect starts at current 0. **Order** (amended for [the Hush spec](hush.md#hushed-nodes)): validate; write the node block entity and mark it for sync; call the optional **apply boundary** `applied(before, after)` **exactly once**, after the write and **before** `NodeEvent(CHANGED)`, with no foreign code between the write and it (the boundary may only update its caller's own bookkeeping: no node, world or registry change); then post `NodeEvent(CHANGED)`. **Outcomes:** `UPDATED`; `NOT_LOADED` and the other refusals, which changed nothing and never call the boundary; and **`COMMITTED_NOTIFY_FAILED`**, when posting `CHANGED` threw: the write and the boundary stand, nothing is rolled back, the error is logged once, and the caller must never treat it as a refusal or retry it. An exception from the boundary itself is logged once, the write stands, `CHANGED` is still posted, and the result is `COMMITTED_NOTIFY_FAILED`.
+- `update(id, change, cause, boundary?) → UpdateResult`: loaded nodes only, otherwise refused as `NOT_LOADED`. The change may set a new type (registered), new aspects (at most 6, maxes 1–1000) or a new clarity. It settles first and rebases after; it keeps the id, position and the counters of aspects that remain; `current` clamps to a lowered max, and an added aspect starts at current 0. **Order** (for [the Hush spec](hush.md#hushed-nodes)): validate; write the node block entity and mark it for sync; call the optional **apply boundary** `applied(before, after)` **exactly once**, after the write and **before** `NodeEvent(CHANGED)`, with no foreign code between the write and it (the boundary may only update its caller's own bookkeeping: no node, world or registry change); then post `NodeEvent(CHANGED)`. **Outcomes:** `UPDATED`; `NOT_LOADED` and the other refusals, which changed nothing and never call the boundary; and **`COMMITTED_NOTIFY_FAILED`**, when posting `CHANGED` threw: the write and the boundary stand, nothing is rolled back, the error is logged once, and the caller must never treat it as a refusal or retry it. An exception from the boundary itself is logged once, the write stands, `CHANGED` is still posted, and the result is `COMMITTED_NOTIFY_FAILED`.
 
 These services are **internal in v1** ([API spec, Services](api.md#services)): addons read nodes through `NodeEvent` and spend no vis.
 
@@ -859,13 +853,13 @@ These services are **internal in v1** ([API spec, Services](api.md#services)): a
 | cradle wand | cradle block entity | trackers: initial data, then on insert and take only (charging changes no packet) |
 | tap sessions | transient per-player memory | never |
 | `vftv:vis_discount` | a syncable attribute (default 0, range 0–1), registered as NeoForge's `PercentageAttribute` (`NF:common/PercentageAttribute.java:34–54`), so a tooltip shows an `add_value` of 0.03 as "+3%" | tracking players and self, as vanilla syncs syncable attributes (`MC:server/level/ServerEntity.java:287–290,352–355`) |
-| vis rules | the tuning record, the fixed limits and the `starter` flag | **`VisRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`), and again to every player when the `starter` flag changes (a placement, a `/vftv node remove` of the starter) |
+| vis rules | the tuning record, the fixed limits and the `starter` flag | **`VisRules`**, a [Rules record](conventions.md#rules-records), also re-sent to every player when the `starter` flag changes (a placement, a `/vftv node remove` of the starter) |
 
 - **Coalesced updates:** tap pulses, relay pulses and cultivation mark node block entities dirty in a per-level set, which is flushed once per tick, after the level ticks: **at most one update packet per node per tick**, however many players and networks touched it. Hand-tap pulses are aligned on the global clock, so a node tapped by any number of players sends at most one update per `tap.interval` from tapping.
 - **One custom payload,** `VisRules`, server to client, carrying everything the client's quote, regeneration preview and book facts need. **No client-to-server payload:** every input arrives through vanilla use, interact and placement packets, validated as such (reach, held item, research, protection).
 - **Client caches** (HUD layout, tooltips, book facts) are invalidated when `VisRules` arrives, when the discount attribute changes and on resource reload. **Client quotes** are also invalidated when the Hush spec's `FluxRules` arrives, since its two spill rates are quote inputs; a quote echoed against older rates is refused by the echo check.
-- **Formats:** every persisted record (block entities, the `vftv:vis` and `vftv:captured_node` components, SavedData) carries `format: 1`. The exception is the scalar `vftv:wand_rod` and `vftv:wand_cap` components: they are bare ids in their native `ResourceKey` codec, which the item model selects on, and an unknown id is already handled as a missing part. A record with an unknown format, or one that fails its bounds, is **kept as its raw tag and written back unchanged**, with one log line: the node or jar is dormant rather than deleted, so a newer save opened by an older build loses nothing. Reconciliation leaves a dormant node block entity alone; it is neither minted nor counted as a ghost.
-- **Bounded codecs:** node aspects ≤ 6; `vftv:vis` ≤ 16 entries; amounts and maxes 0–1000; counters below 64 and Sonus below 4,096; ids and tokens ≥ 0; relay members per SavedData record ≤ 2²⁰; `VisRules` a fixed record. Decoding checks the **format bounds**, never current tuning; changed tuning is reconciled afterwards (settlement, rebase and counter carry), so a lowered threshold never invalidates a saved node.
+- **Formats:** every persisted record (block entities, the `vftv:vis` and `vftv:captured_node` components, SavedData) carries `format: 1`. The exception is the scalar `vftv:wand_rod` and `vftv:wand_cap` components: they are bare ids in their native `ResourceKey` codec, which the item model selects on, and an unknown id is already handled as a missing part. An unreadable record follows [conventions, Raw-record retention](conventions.md#raw-record-retention): the node or jar is **unreadable**, not deleted. Reconciliation leaves an unreadable node block entity alone; it is neither minted nor counted as a ghost. While `vftv_nodes` is unreadable, node commands refuse with `commands.vftv.node.unreadable`.
+- **Bounded codecs:** node aspects ≤ 6; `vftv:vis` ≤ 16 entries; amounts and maxes 0–1000; counters below 64 and Sonus below 4,096; ids and tokens ≥ 0; relay members per SavedData record ≤ 2²⁰; `VisRules` a fixed record. Changed tuning is reconciled after decoding (settlement, rebase and counter carry).
 
 **Pack changes:**
 
@@ -873,7 +867,7 @@ These services are **internal in v1** ([API spec, Services](api.md#services)): a
 |---|---|
 | A rod's capacity lowered | pools clamp on read; the excess is lost at the next write |
 | A part removed | wands holding it are inert and untouched; restoring the pack restores them |
-| A node type removed | its nodes are **dormant**: kept verbatim, drawn as a core only, read as "Unknown", untappable, uncapturable and skipped by relays |
+| A node type removed | its nodes are [**inert**](conventions.md#missing-ids-are-inert-not-unreadable): kept verbatim, drawn as a core only, read as "Unknown", untappable, uncapturable and skipped by relays |
 | An aspect removed | node entries and wand entries for it are kept and ignored |
 | Tuning `/reload` | a new record; `VisRules` resent (book facts re-resolve); nodes rebase at their next settlement; a range change rebuilds components, unlinking members past 32 (see "Topology"); stale quotes are refused by echo |
 | Tuning changed while the server was stopped | as above, at world open; nothing is refused |
@@ -942,7 +936,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **Unit (`model` tier and codecs):**
 - **the quote:** every vector above, factors included; half-up rounding at the per-mille boundary; clamps and flags; zero base; `exceeds_capacity`; the maximum-factor case without overflow; a non-finite factor; `ORDINARY` against `VOID` contexts through a stub factor; echo equality on each cost field;
 - **the spend:** all or nothing at every step; a slot whose contents no longer match `expectedBefore` refuses; **a deliberately partial, throwing commit** (the second of three slot changes throws) restores the wand's vis, the material slots and the output slot, tells the boundary `applied(false)` once, and posts no event; duplicate slots and more than 64 changes are rejected; **the boundary** is called exactly once, after the last write and before `VisSpentEvent`, on commit and on rollback, and never on a step 1–5 refusal; **a throwing `VisSpentEvent` listener** leaves the commit in place and returns `COMMITTED_NOTIFY_FAILED`;
-- **pools:** clamping on a lowered capacity; dormant entries kept through writes; both inert cases untouched;
+- **pools:** clamping on a lowered capacity; ignored entries kept through writes; both inert cases untouched;
 - **regeneration:** every vector above; remainders kept; every clarity; a long carry; a clock going backwards; rebase after a tuning change prices the past at the old parameters;
 - **natural spread:** every region vector; the stream order; weighted picks at every boundary; cell keys for negative coordinates; the spawn rate over a large sample;
 - **the starter ring:** every ring vector; each perimeter complete and contiguous; candidate rules (border, height, protection edge at exactly `P` and `P + 1`, the 180 cap, standing spot, reach, spacing, full cell); the **effective** radius for every combination of dimension, empty or non-empty operator list and radius 0 or positive;
@@ -955,14 +949,14 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **coverage:** the union of `aspects` over the built-in natural types contains the six built-in primals, and each is the `main_aspect` of at least one natural type; every vanilla overworld biome in `fixtures.json` has its listed eligible types;
 - **fixtures:** every section of `content/nodes/fixtures.json`, checked against the `model` code;
 - **every `content/` rejection rule** above;
-- **codecs:** every component, block entity, both SavedData, every registry entry, the tuning file, `VisRules` and every `content/` schema, with defaults, ranges, format 1, and the raw-tag fallback for unknown formats.
+- **codecs:** every component, block entity, both SavedData, every registry entry, the tuning file, `VisRules` and every `content/` schema, with defaults, ranges and format 1; the [raw-retention template](conventions.md#tests) for every persisted record.
 
 **GameTest:**
 - the registries and tuning load, and each bad entry and file is refused with a clear error; the `vftv:wellspring` rules;
 - **wand assembly:** caps must match; click, shift-click and crafter paths; an unlearned player crafts it but cannot tap; no vanilla recipe matches the built-in parts' pattern;
 - **tapping:** each refusal (and that it is consumed, so no air use follows); pulse amounts on aligned ticks; every stop condition, including a revoked entry, **switching to another, otherwise identical wand**, changing the selected hotbar slot, a lost raycast, spawn protection and a node swapped for another id; the tap's own in-place writes never stop it; two players on one node;
 - **spending:** refused spends leave wand, materials and output unchanged; a stale `expected` refused; a failing output (a full output slot) refused; a throwing slot change mid-commit leaves vis, materials and output as they were with no event; a `VisSpentEvent` listener that changes a named slot sees the commit complete and the boundary already called; a throwing `VisSpentEvent` listener leaves vis, materials and output committed and returns `COMMITTED_NOTIFY_FAILED`; ordinary against Void quotes;
-- **starter placement:** a fresh world; an existing world; **active** spawn protection 0, 16 and 120 (operators present), with a **non-op player striking it with the fork and tapping it**; configured protection 180 with **no operators** succeeding on suitable terrain; no duplicate when the starter's chunk is unloaded; re-placement after `/vftv node remove`; each `nodes.starter` mode with no valid candidate (active protection 180 is one): `best_effort` starts with one warning and no starter, retries at the next start, sends the first joining level-2 player exactly one `message.vftv.node.starter_missing` and a later one none, and an empty sounding there shows `hud.vftv.sounding.no_wellspring`; `required` throws `IllegalStateException` from the `ServerStartedEvent` listener naming the three remedies and the active config file; `off` is silent, with no notice and no sounding line; and each mode with an existing starter (untouched); the `starter` flag in `VisRules` flips and is resent when `/vftv node starter` places one; `/vftv node starter` as under the [configuration spec's tests](config.md#tests);
+- **starter placement:** a fresh world; an existing world; **active** spawn protection 0, 16 and 120 (operators present), with a **non-op player striking it with the fork and tapping it**; configured protection 180 with **no operators** succeeding on suitable terrain; no duplicate when the starter's chunk is unloaded; re-placement after `/vftv node remove`; each `nodes.starter` mode with no valid candidate (active protection 180 is one): `best_effort` starts with one warning and no starter, retries at the next start, sends the first joining level-2 player exactly one `message.vftv.node.starter_missing` and a later one none, and an empty sounding there shows `hud.vftv.sounding.no_wellspring`; `required` throws `IllegalStateException` from the `ServerStartedEvent` listener naming the three remedies and the active config file; `off` is silent, with no notice and no sounding line; and each mode with an existing starter (untouched); the `starter` flag in `VisRules` flips and is resent when `/vftv node starter` places one; the [Rules template](conventions.md#tests) for `VisRules`; `/vftv node starter` as under the [configuration spec's tests](config.md#tests);
 - **sounding loads 0 chunks** at full density, after moves and removals;
 - **identity:** capture then release keeps the id and pays no second first-strike reward; anchored refusal; cell-full and spacing refusals, including spacing equality; a copied jar refused after the original is released and again after a recapture; an unknown id refused in survival and recovered in creative;
 - **cancellation:** a cancelled `BreakBlockEvent` on capture and a cancelled `EntityPlaceEvent` on release each change nothing: block, jar, registry, index and events. A listener on the release event sees **the node as the placed block and air as the replaced snapshot**, with the real player. A creative recovery refused by the event, or by a later check (spacing, border), leaves the registry, `next_id` and `next_token` unchanged and posts no `CREATED`;
@@ -978,7 +972,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **E2E:**
 - under the [localisation fixtures](accessibility.md#fixtures): an inert wand's text wrapping past 160 px, uncut; the node tap's five-argument status line and the relay's line on the status line, whole;
 - the wand HUD for main hand, offhand and both, with 6 rows and an inert wand, plus the Shift tooltip and item bar (screenshots and a state dump of the component);
-- nodes at 3 clarities and with 1, 3 and 6 aspects, plus a dormant node (screenshots);
+- nodes at 3 clarities and with 1, 3 and 6 aspects, plus an inert node (screenshots);
 - tapping particles, sounds and subtitles;
 - sounding to a moved node;
 - a relay base charging a cradled wand (a dump over time) and the status lines;
@@ -987,69 +981,36 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
+What this spec needs from its siblings. Each row is an acceptance criterion in the sibling's ticket.
 
-**Met here** (the [Aspects and scanning spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/15)'s contracts on this ticket):
-
-| Aspects contract | Met by |
-|---|---|
-| Owns node placement and the node index; `nearest(pos, radius)` for the 192-block radius examines a bounded set of cells, with a declared per-cell cap, and never loads or generates a chunk | "The index": at most 49 cells × 8 = 392 entries at 192, memory only. `nearest` accepts radii up to 256; the aspects spec's tuning now bounds `sounding.radius` to 256 and validates its band edges against it (amended in the same change). GameTest: sounding loads 0 chunks at full density after moves and removals. |
-| Node ids are stable through moves; creating or re-placing a node never mints a fresh identity | "Identity and reconciliation": ids are minted only at birth; only the entry placed at a position can be tombstoned from it, so removing a duplicate keeps the original. "Moving nodes": capture tokens refuse stale copies. Capture commits block, jar, registry and index together after an uncancelled `BreakBlockEvent`. Release installs the node provisionally, asks `EntityPlaceEvent` about the real node, and commits jar, registry and index only on acceptance, restoring air on cancellation; a creative recovery registers only then. GameTests for each. |
-| A real, usable starter node within 192 blocks of a named bootstrap location, proved by a starter-placement test | "The starter": the bootstrap is the overworld respawn position at placement. The node is outside the **effective** spawn protection at placement (vanilla's every condition: dimension, a non-empty operator list and a positive radius), within 180 in 3-D, with a standing spot in fork and wand reach, and its id is persisted. **Qualified:** where the terrain admits no candidate, the default `nodes.starter` = `best_effort` starts without one, tells the first operator to join and says so at the sounding and in the book; `required` (opt-in) throws at startup instead, and `/vftv node starter` places one by hand ([configuration spec, The starter opt-out](config.md#the-starter-opt-out)). A starter placed by that command keeps the id, Stage, type and composition but **not** the protection, distance, standing-spot or reach promises: the operator chose the spot. Protection that becomes active later (an operator added, the radius raised) can cover it, with no warning; `/vftv node remove` then lets the next start re-place it. GameTests: a non-op strikes **and taps** it at active protection 0, 16 and 120; configured 180 with no operators succeeds. |
-| Node-type data supplies aspects and max capacity, may override `node_reward_divisor`, and declares the maximum aspects per node | "Node types": `aspects` with ranges, `node_reward_divisor`, and the fixed limit of 6 |
-| (What a strike reveals) a node readout shows its type and "brightness" | **Clarity** is the brightness: `NodeService.readout` supplies the localised type, the clarity and exact current / max after settlement |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| The node types that generate in Stage 1 terrain together carry all 6 exposed primals (a unit test), and first-strike rewards are per player per node | The built-in types; the coverage unit test (the union of the built-in natural types' aspects contains the six built-in primals, and each is some natural type's `main_aspect`). An addon's seventh or eighth primal is that addon's to supply. First strikes stay the aspects spec's ledger; cultivation and moves never pay one again. |
-| Node guarantee ids, each with its composition, capacity, count and Stage | **`vftv:starter`**: Stage 1, one node per world, type `vftv:wellspring`, the six built-in primals at exactly 32 each (enforced by the Wellspring's load validation), authored in `content/nodes/guarantees.json`, which must hold exactly this guarantee. Paths name it in full, `{"node": "vftv:starter"}`; a bare `"starter"` would parse as `minecraft:starter`, so the research spec's examples and contract are amended to `vftv:starter` in the same change. It counts only once its placement and access GameTests pass. |
-| Stable recipe ids for the wand and tapping entries, and those recipes carry `research` | **Reconciled, not met as worded** (see "Stage": gate actions, not the craft). No proven hook gates the vanilla crafting grid before the result is taken. So the wand's stable recipe id is **`vftv:wand_assembly`, ungated**; `vftv:first_wand` is the entry that teaches it (a `free` entry, frozen in the Stage 1 chain) and gates nothing. `vftv:tapping` has **no recipe**: it gates the tap action, checked on the server at the start and at every pulse. The contract therefore now reads: *a stable, ungated recipe id for the wand, and a server-checked action gate for tapping*. The research spec's contract and roster are amended to that wording in the same change, and it is recorded in the hand-off to [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) below. |
-| Node scan keys stay `node:<stable id>` through moves | Decimal ids, never re-minted; the moved-node GameTest |
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)**, handed to [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) and [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35):
-- **Stage 1:** `vftv:first_wand` is `free` (the frozen Stage 1 chain: `knots_in_the_air` → `first_wand` → `tapping`, [research, Roster](research.md#roster)), gates nothing, and may show `vftv:wand_assembly` on a recipe page (ungated recipes pass the recipe-page validator anywhere). `vftv:tapping` is a `note` whose learning enables tapping; it has no recipe page of its own.
-- **Stage 2:** entries **`vftv:singing_wands`**, **`vftv:cultivating_nodes`**, **`vftv:vis_relays`** and **`vftv:moving_nodes`**, gating the recipes under "Authored content, Recipes". `vftv:moving_nodes` also gates capture and release.
-- **Affordability paths** name the starter as `vftv:starter` (research spec amended).
-- **Fact source `vis`:** the research spec's fact grammar now includes `vis : <VisRules key>`, re-resolved whenever `VisRules` arrives (join and `/reload`), so pages state tapping rates, cultivation prices, relay range, cap and throughput live (research spec amended). The research lints keep these numbers out of prose.
-
-**[Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)**
-- **Every vis charge** goes through `VisService.spend` with the recipe id as `source`, `kind` `ORDINARY` (or `VOID` for Void-tier recipes), `research` set to the recipe's gate, `expected` echoed from the preview, and an `effect` of prepared slot changes: each material slot it consumes and the output slot it fills, with the contents it expects before. Items, vis and output commit together or not at all, and `VisSpentEvent` comes after. GameTests: a stale quote, a failed output (a full output slot) and a material slot changed between preview and commit each refuse and change nothing.
-- Its cost preview embeds `VisService.quote` unchanged.
-- **Stage 1 affordability:** every Stage 1 arcane recipe has a base cost ≤ 32 per aspect, so a wand filled from the starter alone pays any of them at zero warp (a unit test over recipe data), and the first arcane craft's materials and research are reachable before it in the Stage 1 path.
-- Its arcane recipe type carries the Stage 2 recipes at the ids and gates under "Authored content, Recipes"; its recipe schema is the body of those entries.
-- Base vis costs are validated at load: vis aspects only, 0–1000 each.
-- Its wand slot accepts only `vftv:wand` and never charges it. Turning a block into its worktable with a wand is its own right-click listener, and works with a focused wand too; the wand passes on blocks that aren't nodes.
-
-**[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)**
-- Tubes and jars feed a Node Tap only through the essentia capability, inside a transaction whose rollback they honour.
-- It reads the tap's suction as `cultivate.suction` for an aspect the tap would accept and 0 otherwise. If #20's suction scale differs, #20 states the mapping and this spec's default follows it. *Met by the [essentia spec](essentia.md#suction): the scale is 0–128, so no mapping is needed, and 16 is the bottom of its consumer band. The tap exposes suction on its handler's faces, is in `vftv:essentia_endpoints`, and holds at rank 0 (amended under "Cultivation").*
-
-**[Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)**
-- A focus is its own component on `vftv:wand`; #22 adds the third `select` layer to `items/wand.json` and its assets.
-- Every cast spends through `VisService.spend` with the focus id as `source` and the focus's `kind`. A cast short of vis does nothing and names the short aspects; a held cast spends per pulse at an interval it states. Foci never draw from nodes or charge wands.
-- **Interaction:** `use` on air or an entity casts; **sneak-use on a block that isn't a node** is #22's block-targeted path; use on a node is always tapping. A refused cast consumes the click.
-- *Met by the [foci spec](foci.md#contracts-on-sibling-specs): `vftv:wand_focus` and the appended third model member (`vftv:none` → `minecraft:empty`, `unknown` as the fallback); every cast through `spend` with the effect id as `source` and the effect's kind; a short cast refused before anything is applied; the Beam spending every `pulse` ticks with no double payment at its start; no node or charging path; main-hand gestures separated from target domains, every refusal consuming the click; and its failures after the spend stated per medium. Amended here in the same change: the one-session dispatch with its exposed kind, and the harvesting answer.*
-
-**[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Vis discounts exist **only** as modifiers on the attribute `vftv:vis_discount` (registered here: default 0, range 0–1, syncable, a `PercentageAttribute`), which the quote caps at `quote.max_discount` and flags (per mille). GameTest: gear past the cap shows `discount_capped` and the capped cost, identically on client and server.
-- **No vis-storing trinket in v1.** Nodes are the only source and rods set capacity; a trinket that stores vis would need its own proposal of a conserved transfer and capacity rule, as an extension to this spec. Everything works without Curios.
-- *Met by the [armor spec](armor.md#vis-discount): every discount is a `vftv:wearable` data-map modifier on this attribute; the flag now compares per mille, and the attribute is a `PercentageAttribute` (both amended here); a test-pack value of 0.40 drives the GameTest and an E2E client quote equal to the server's; no trinket stores vis, and trinkets count in the off hand without Curios.*
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- It supplies `vis_factor(player, ctx)`, a finite pure function of the owner's synced warp state and `ctx.kind`: ≥ 1.0 for `ORDINARY`, and whatever it states for `VOID` (which may be below 1.0). Client and server compute the same value.
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- It supplies `spill(inputs, ctx)`, a pure function used inside the quote, and on `VisSpentEvent` generates flux equal to that event's `spill` (amended: **generated**; what an aura retains may be less at its format bound, and the difference is reported as overflow). GameTest: previewed spill = generated flux.
-- It adds no flux inside this system: tapping, relays, regeneration, cultivation and capture.
-- **Hush node types** are `vftv:node_type` entries with `natural: false`. Hush changes nodes only through `NodeService.update` and `remove`, and relay members only by ordinary block removal; it never rewrites a node's id, and there is no autonomous natural Hush source.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): `visSpill` over `effective` and the quote's own `neutral` (amended under "The quote"), so only the vis warp actually added spills, plus `VOID`'s fixed share; one `HIGHEST` listener generating the event's own `spill`; the built-in `vftv:hushed` type (amended under "Node types"), assigned and restored only through `update` with a journal written first, never `remove`; relay members never targets; deposits only through checked entry points.*
-
-**[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
-- Structure templates save node blocks with the id **unset**, `origin: structure` and a valid type. At most 2 structure nodes per 64×64 cell are minted, **across every template copy**, and any surplus is removed with a warning, so its templates place at most one node-bearing piece per cell. GameTests: two copies of one template get two distinct ids; a third structure node in one cell is removed.
-- It places no natural nodes and doesn't remove the `vftv:add_nodes` biome modifier; its processors never replace node blocks.
-- *Met by the [worldgen spec](worldgen.md#processors): its converter saves every template node as a complete node record with id 0 and `origin: structure` (pinned for `vftv:choir`); `vftv:roll_node` replaces only the clarity, maxes and currents, and drops a template node whose target isn't air; `minecraft:protected_blocks` comes first, so no template overwrites a node; one authored node per Choir ruin, in its start piece only, so two ruins never share a cell; no natural placement; and the built-in type `vftv:choir` (amended under "Node types", "Lang keys" and "Production tickets"), authored only in the worldgen content.*
+| Needs from | What | Met at |
+|---|---|---|
+| aspects | `sounding.radius` bounded to 256, the index's supported radius | [aspects, Tuning](aspects.md#tuning) |
+| aspects | first-strike rewards per player per node, never paid again for a move | [aspects, Aspect points](aspects.md#aspect-points) |
+| aspects | the strike readout shows a node's type, clarity and current / max from `NodeService.readout` | [aspects, What a strike reveals](aspects.md#what-a-strike-reveals) |
+| research | `vftv:first_wand` free and gating nothing, `vftv:tapping` a note, in the Stage 1 chain | [research, Roster](research.md#roster) |
+| research | the Stage 2 entries `vftv:singing_wands`, `vftv:cultivating_nodes`, `vftv:vis_relays` and `vftv:moving_nodes`, gating the recipes under "Recipes" | [research, Roster](research.md#roster) |
+| research | affordability paths name the starter as `{"node": "vftv:starter"}` | [research, Affordability paths](research.md#affordability-paths) |
+| research | the `vis` fact source, re-resolved when `VisRules` arrives | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| arcane | every vis charge through `VisService.spend`: the recipe id as `source`, its kind and gate, `expected` echoed, prepared slot changes; GameTests for a stale quote, a full output and a changed slot | [arcane, The craft payload](arcane.md#the-craft-payload), [Committing](arcane.md#committing) |
+| arcane | its preview embeds `VisService.quote` unchanged | [arcane, The authoritative preview](arcane.md#the-authoritative-preview) |
+| arcane | every Stage 1 arcane recipe costs ≤ 32 per aspect (a unit test), and the first craft is reachable in the Stage 1 path | [arcane, Recipes](arcane.md#recipes), [Tests](arcane.md#tests) |
+| arcane | the `vftv:arcane` body for the Stage 2 recipes, base costs validated at load (vis aspects only, ≤ 1000) | [arcane, The recipe type](arcane.md#the-recipe-type) |
+| arcane | the wand slot accepts only `vftv:wand` and never charges it; turning a table is its own listener and works with a focused wand | [arcane, The menu](arcane.md#the-menu), [Turning a table](arcane.md#turning-a-table) |
+| essentia | tubes and jars feed a Node Tap only through the essentia capability, inside a transaction whose rollback they honour | [essentia, Transactions](essentia.md#transactions) |
+| essentia | the suction scale, 0–128 with the consumer band from 16 | [essentia, Suction](essentia.md#suction) |
+| foci | `vftv:wand_focus` and the third member of `items/wand.json` | [foci, On the wand](foci.md#on-the-wand) |
+| foci | every cast spends through `VisService.spend` with the effect id as `source` and its kind; a short cast is refused naming the short aspects; a held cast spends per pulse | [foci, The cost](foci.md#the-cost), [Checks](foci.md#checks), [Beam](foci.md#beam) |
+| foci | no path draws from nodes or charges wands | [foci, Failure after the spend](foci.md#failure-after-the-spend) |
+| foci | use on air or an entity casts; sneak-use on a non-node block is the block path; use on a node always taps; a refused cast consumes the click | [foci, Entry points](foci.md#entry-points), [Checks](foci.md#checks) |
+| armor | vis discounts only as modifiers on `vftv:vis_discount` | [armor, Vis discount](armor.md#vis-discount) |
+| armor | no vis-storing trinket | [armor, Without Curios](armor.md#without-curios) |
+| warp | `vis_factor(player, ctx)`: finite, pure, ≥ 1.0 for `ORDINARY`, the same on client and server | [warp, The dials](warp.md#the-dials) |
+| Hush | `visSpill`, pinned | [Hush, The pinned functions](hush.md#the-pinned-functions) |
+| Hush | one listener generating each `VisSpentEvent`'s own `spill`; previewed spill = generated flux | [Hush, Sources](hush.md#sources), [Generated, retained and overflow](hush.md#generated-retained-and-overflow) |
+| Hush | no flux from tapping, relays, regeneration, cultivation or capture | [Hush, Sources](hush.md#sources) |
+| Hush | Hush node types are `natural: false` entries; nodes change only through `NodeService`, never with a rewritten id; relay members are never targets | [Hush, Hushed nodes](hush.md#hushed-nodes), [The node type](hush.md#the-node-type) |
+| worldgen | templates save nodes with id 0, `origin: structure` and a valid type; ≤ 2 structure nodes per cell; processors never replace a node; no natural nodes, and `vftv:add_nodes` kept | [worldgen, Processors](worldgen.md#processors), [Structure nodes](worldgen.md#structure-nodes), [Stage](worldgen.md#stage) |
 
 ## Production tickets
 
@@ -1061,4 +1022,4 @@ This spec settles every decision. Three required child tickets deliver the asset
 | **Node, jar and relay assets** | The generator `tools/art/nodes.py`. The **node core strip** `assets/vftv/textures/block/node_core.png`, 16×128 (8 frames, teal ramp, cutout), and the node's blockstate and particle-only model. The **glint** particle: 4 frames at 8×8 (`textures/particle/node_glint_0…3.png`) and `particles/node_glint.json`. The **Bell Jar** item, empty and filled at 16×16, with an item definition selecting on `minecraft:has_component` for `vftv:captured_node`. **Block models** of at most 6 cuboids each ([art style §6](art-style.md#6-blocks-and-models)), textures, blockstates and item forms for `node_tap` (an ear-trumpet; six facings by blockstate rotation), `vis_relay` (a fork on a stand) and `wand_cradle`. **Sounds**, with the cadences under "Rendering and sound": `node.hum` ×3, `node.absorb` ×3, `node.clarity_rise` ×1, `relay.link` ×1, `cradle.charge` ×3, `bell_jar.capture` ×1, `bell_jar.release` ×1, with `sounds.json` entries naming the subtitle keys under "Lang keys". Blender renders of every non-cube model; provenance rows. **No mote sprite**: motes reuse the aspect icons. | none |
 | **Wand and node content** | Every file under "Authored content", in its schema: `content/wands/parts.json`, `content/wands/recipes.json` (the Stage 2 bodies in the `vftv:arcane` format), `content/nodes/types.json` (biome tags, spread weights and clarity weights for the built-ins, **excluding `vftv:hushed` and `vftv:choir`**, which the Hush and worldgen content tickets deliver with their names), `content/nodes/placement.json`, `content/nodes/guarantees.json`, `content/nodes/client.json`, `content/nodes/fixtures.json` (the vector tables transcribed, plus the reviewed coverage list), and `content/lang/en_us/wands.json` with every key under "Lang keys" (not `node_type.vftv.hushed` or `node_type.vftv.choir`) | none (the Stage 2 recipe bodies use the [arcane recipe type](arcane.md#the-recipe-type)'s format, frozen) |
 
-The Stage 1 and Stage 2 research content tickets ([#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [#35](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)) consume this spec's entry ids, gates and the recorded change to the research contract.
+The Stage 1 and Stage 2 research content tickets ([#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [#35](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)) consume this spec's entry ids and gates: `vftv:first_wand` is `free`, gates nothing and may page `vftv:wand_assembly`; `vftv:tapping` is a `note` with no recipe page; `vftv:moving_nodes` also gates capture and release.

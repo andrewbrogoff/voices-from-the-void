@@ -24,7 +24,7 @@ Resolved in [Localisation and accessibility spec](https://github.com/andrewbrogo
 
 ### Files
 
-**One envelope** for every authored lang input, the research spec's ([research, Authored content](research.md#authored-content)):
+**One envelope** for every authored lang input ([conventions, Lang](conventions.md#lang)):
 
 ```json
 {"schema": "vftv:lang/1", "strings": {"<key>": "<text>"}}
@@ -32,7 +32,7 @@ Resolved in [Localisation and accessibility spec](https://github.com/andrewbrogo
 
 - **Inputs** live at `content/lang/<code>/<file>.json`. The **file names stay each owner's**: research's `stage1.json` … `stage4.json` and `marginalia.json`, warp's `warp.json` and `voices.json`, foci's `foci.json` and `foci_void.json`, and so on. A non-English locale uses the same file names as `en_us`, so a key's file tells its owner.
 - **`<code>`** is a language code from the client's supported language catalogue (`en_us`, `fr_fr`, `pt_br`, `zh_cn`, …), not a pattern: the validator checks it against the catalogue in the pinned client jar.
-- **Code-defined keys** (the [configuration](config.md#lang-keys), [compatibility](compat.md#lang-keys), [research UI](research.md#book-ui-keys) and [aspects](aspects.md#lang-keys) keys, whose English is final in their specs) are written by datagen into `en_us` only. Their translations are authored in `content/lang/<code>/<owner>.json` like any other key, where `<owner>.json` is the **file the owner declares** for them: `config.json`, `compat.json`, `aspects.json`, `research_ui.json` and, for this spec's own keys, `accessibility.json`.
+- **Code-defined keys** (the [configuration](config.md#lang-keys), [compatibility](compat.md#lang-keys), [research UI](research.md#book-ui-keys), [aspects](aspects.md#lang-keys) and [shared message](conventions.md#message-keys) keys, whose English is final in their specs) are written by datagen into `en_us` only. Their translations are authored in `content/lang/<code>/<owner>.json` like any other key, where `<owner>.json` is the **file the owner declares** for them: `config.json`, `compat.json`, `aspects.json`, `research_ui.json` and, for this spec's own keys and the shared message keys, `accessibility.json`.
 - **Merge:** datagen writes `assets/vftv/lang/<code>.json` as the union of that code's `strings` objects (plus the code-defined keys for `en_us`), **sorted by key**, so the [datagen gate](quality-gates.md#static-gates) diffs stably.
 
 ### Validation
@@ -165,7 +165,7 @@ The [shared cost-cell rule](arcane.md#the-screen), unchanged: the number scales 
 
 ### R5: the status line
 
-**The one destination for world-use feedback:** every status line, refusal and confirmation the server sends one player about a block, item or entity they used. It replaces the vanilla action bar for our messages, because the action bar is one unwrapped line (`MC:client/gui/Hud.java:364–392`) and our messages carry names, joined lists and up to five arguments. Every current user is listed under "Contracts on sibling specs".
+**The one destination for world-use feedback:** every status line, refusal and confirmation the server sends one player about a block, item or entity they used. It replaces the vanilla action bar for our messages, because the action bar is one unwrapped line (`MC:client/gui/Hud.java:364–392`) and our messages carry names, joined lists and up to five arguments. Which feedback goes here is [conventions, Feedback routing](conventions.md#feedback-routing).
 
 - **Payload:** S2C **`StatusLine(text)`**, `text` a `Component` in vanilla's **bounded** `ComponentSerialization.STREAM_CODEC` (`MC:network/chat/ComponentSerialization.java:38`), never its trusted variant, to that player only. That codec's bound is the wire limit: a component too large to decode is rejected there. **No limit applies to the rendered text**, which a client's resource pack decides; long rendered text is handled by the visible-line cap and the details view below.
 - **Code:** the server sends it through `StatusLines.send(ServerPlayer, Component)` in **`core.text`**, an ordinary feature that may use `api`, vanilla Minecraft and the JDK, but **no other `core` feature**; `core.text.model` is Minecraft-free, and client types live in `core.text.client`. The payload goes through the networking seam, and the layers and key mappings are registered by the `neoforge.text.client` listener ([architecture, Seams](architecture.md#seams)). Caption geometry from other features (the Voice text's lines) is passed in as plain numbers; `core.text` imports nothing from warp.
@@ -189,7 +189,7 @@ The status line and the Voice text share one **caption band**, bounded and alway
 ### R6: tooltips
 
 - **Width:** mod-owned tooltips wrap at **170 px**, the width vanilla widgets use (`MC:client/gui/components/Tooltip.java:20,72–73`). Item tooltip lines keep their components and styles; a line of ours longer than 170 px is split the same way.
-- **Height:** vanilla flips and repositions a tooltip, but never scrolls it, and can place it above the screen when it is taller (`MC:client/gui/screens/inventory/tooltip/DefaultTooltipPositioner.java:22–30`; `MC:client/gui/GuiGraphicsExtractor.java:1151–1184`). So every mod-owned tooltip fits **240 − 8 px** tall at 320 × 240 under the wide-font fixture (an E2E assertion). A tooltip that can't fit keeps a short summary and moves its detail into a focusable R1 viewport in its screen, opened by mouse and keyboard. **The Lathe's rank quote does so** ([foci, The screen](foci.md#the-screen): the rank details).
+- **Height:** vanilla flips and repositions a tooltip, but never scrolls it, and can place it above the screen when it is taller (`MC:client/gui/screens/inventory/tooltip/DefaultTooltipPositioner.java:22–30`; `MC:client/gui/GuiGraphicsExtractor.java:1151–1184`). So every mod-owned tooltip fits **240 − 8 px** tall at 320 × 240 under the wide-font fixture (an E2E assertion). A tooltip that can't fit keeps a short summary and moves its detail into a focusable R1 viewport in its screen, opened by mouse and keyboard. No shipped tooltip needs one: the Lathe's rank quote is at most three aspects and fits as the arcane cost tooltip ([foci, The screen](foci.md#the-screen)).
 
 ## The minimum view
 
@@ -200,7 +200,7 @@ The status line and the Voice text share one **caption band**, bounded and alway
 
 ### The baseline
 
-The custom screens are the Commonplace Book (with the Ledger and its confirm), the Worktable, the Lathe (with its rank details), the Heart (with its confirm) and this spec's `StatusDetailsScreen`. NeoForge's `ConfigurationScreen` and JEI's UI are theirs. Each custom screen meets all of these:
+The custom screens are the Commonplace Book (with the Ledger and its confirm), the Worktable, the Lathe, the Heart (with its confirm) and this spec's `StatusDetailsScreen`. NeoForge's `ConfigurationScreen` and JEI's UI are theirs. Each custom screen meets all of these:
 
 1. **Keyboard:** Tab and Shift+Tab cycle the focus targets in the owner's frozen order; arrows move within a region; Enter or Space activates; Esc closes the innermost layer. **Every mouse action has a key.** **Vanilla container slots are exempt**: moving items stays vanilla's mouse-and-hotkey interaction, and vanilla's item tooltips on slots are not keyboard-reachable. That is an inherited limitation, recorded, not a promise.
 2. **The focused element is always visible:** a scroll or pan keeps it in view, and it draws its focus state, which differs from idle by shape or luminance ("Colour and contrast").
@@ -334,7 +334,7 @@ A translucent background (a backing, a partly transparent sprite pixel) is compo
 | Voice text (`void`) | `amethyst3` `#c4b0ec` | black at alpha 0.8, composited (worst: over white) | 6.48:1 |
 | Voice text, status line, Baffle value | `hush3` `#c6c2c4` | black at alpha 0.8, composited (worst: over white) | 7.17:1 |
 | HUD cards (vis, crucible, infusion, golem, Hush, Spectacles, strike) and their sheet indicator | `hush3` | the frame's interior, uniform `ink1` `#1a1a2a` | 9.73:1 |
-| book prose, titles, hints, Ledger rows, feedback line, confirm and rank-details bodies | `ink1` | the page paper's text column, or the panel's body, uniform `brass5` `#e8d8b4` | 12.17:1 |
+| book prose, titles, hints, Ledger rows, feedback line, and confirm bodies | `ink1` | the page paper's text column, or the panel's body, uniform `brass5` `#e8d8b4` | 12.17:1 |
 | the foreign hand ([research, Prose that degrades with warp](research.md#prose-that-degrades-with-warp)) | **`amethyst1`** `#634a92` | the page paper's text column | 5.10:1 (`amethyst2` would give 2.73:1) |
 | Choir page prose | `ink1` | the Choir paper's text column, uniform `glass1` `#d5e6e8` | 13.31:1 |
 | Worktable and Lathe titles and inventory labels | `ink1` | the label strips, uniform `brass4` `#d8c399` | 9.95:1 |
@@ -355,7 +355,7 @@ Every surface that shows text, with the rules it follows. Owners hold the detail
 |---|---|---|---|---|---|
 | Commonplace Book, Ledger, confirm | [research](research.md#gui-contract) | R1 prose, panels and confirm body; R2 labels, buttons and feedback line | full, with inspection targets | entries, cells, palette, buttons, Ledger rows; clean prose only | frame and widget sets; `amethyst1` hand |
 | Worktable | [arcane](arcane.md#the-screen) | R2 status line; R4 cells; R6 cost tooltip | preview, cells, status line | preview, each cell's full breakdown | `cost_cell_short` notch |
-| Lathe and its rank details | [foci](foci.md#the-screen) | R2 detail and status lines, buttons; R4; R6, the rank quote in an R1 body | full, backward cycle, Details | choices, sockets, cells, buttons; the rank details whole | choice set |
+| Lathe | [foci](foci.md#the-screen) | R2 detail and status lines, buttons; R4; R6, Raise rank's tooltip as the rank quote | full, backward cycle | choices, sockets, cells, buttons | choice set |
 | Heart and confirm | [Eldritch tier](eldritch.md#the-block-and-the-screen) | R1 panels and body; R2 buttons | full, viewports included | choice and panels | as owned |
 | NeoForge config screen | [configuration](config.md#the-config-screen) | vanilla | vanilla | vanilla, translated tooltips and enums | — |
 | JEI categories | [compatibility](compat.md#lang-keys) and owners | R4 | JEI's | JEI's | — |
@@ -423,7 +423,7 @@ One test resource pack, generated by the build, never shipped, loaded by the har
 
 **E2E** ([quality gates, E2E](quality-gates.md#e2e-mc-agent-harness)), under the wide-font pack unless noted:
 - every custom screen and HUD at 320 × 240: screenshots reviewed (no number or name cut, nothing off screen); HUD outer pose scale ≥ 0.75 in the dump, with the caption band at its maximum over the largest cards, which scale as frozen; every mod-owned tooltip within 232 px; the status line's worst messages within 3 visible lines and whole in the details view;
-- **keyboard only** through each custom screen in its frozen order, including the Lathe's backward cycle, the cost cells' full breakdown, the rank details (a three-aspect quote with flags and spill), the Heart's viewports, both confirms' initial focus on Cancel and `StatusDetailsScreen`; in the world, Page Up and Page Down through every sheet of a paged card, and J opening the last message after it has faded;
+- **keyboard only** through each custom screen in its frozen order, including the Lathe's backward cycle, the cost cells' full breakdown, Raise rank's tooltip (a three-aspect quote with flags and spill), the Heart's viewports, both confirms' initial focus on Cancel and `StatusDetailsScreen`; in the world, Page Up and Page Down through every sheet of a paged card, and J opening the last message after it has faded;
 - **narration, one scenario:** with the narrator in **System** mode, a strike's card and a status line are emitted by the platform narrator. Focus-target narration (exact values, clipped fields read in full, the book's clean prose) is reviewed through each owner's narration keys, and attempts are the unit test's;
 - **captions:** the Voice text at `notificationDisplayTime` 2.0 holds twice as long; on its backing over a white sky with the vanilla text-background option at 0; above a status line, which sits above the vanilla action bar while Baffle rows show; a caption **appearing and then expiring over an otherwise unchanged target** re-lays every crosshair card both times; a new line replacing a lingering caption; the ending scene waiting for each extended caption;
 - **long rendered text:** a client resource pack translating a status message to 513 characters displays it (2 lines and the hint) and shows it whole in the details view;
@@ -432,26 +432,26 @@ One test resource pack, generated by the build, never shipped, loaded by the har
 
 ## Contracts on sibling specs
 
-Each spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
-
-- **[Research](research.md):** "Authored content" points to this spec's validator; the digit lint covers `\p{Nd}`; number words move to `content/research/number_words/<code>.json` (`en_us` transcribes the list and absorbs `number-words-allowed.json`); marginalia pools and `.margin.<band>` keys are whole or absent per locale; the [book UI key table](research.md#book-ui-keys) and the book's sound events and subtitles are frozen; the feedback line and every button label follow R2, the confirm's body R1, and confirms open on Cancel; the feedback line is an inspection target; `guiScale` is the effective scale; search folds with `Locale.ROOT`; the foreign hand is `amethyst1`; the GUI sprite ticket gains the state-variant marks and contact sheets; "a long test translation" is the fixtures.
-- **[Aspects](aspects.md):** the [lang key table](aspects.md#lang-keys) (names, glosses, the fork, readout states, sounding, refusal) and the fork's three sound events and subtitles; strike and sounding results narrated on arrival; the client hold multiplied by `max(1, notificationDisplayTime)`; the bearing marker shows its band as a word; the strike card uses the crucible geometry, caption band and sheets, rebuilding on the band's revision and the language.
-- **[Warp](warp.md):** the Voice text's backing, colours, position, hold, replacement, wrapping and per-locale bound ("Voice text"); the 46 line events exempt from subtitles, `voice.insight` not; Void-tongue protected per "Protected text"; the Stilling Draught's refusals on the status line.
-- **[Crucible](crucible.md):** header and spill lines wrap (R3), with frame height counting wrapped lines; the existing no-caption vectors are unchanged; `H′` ends above the published caption band; a card that would draw below 0.75 pages into **sheets** with an indicator and the sheet keys; the card is capped at 12 cells, with **capped-card vectors** frozen, none of which pages; the layout rebuilds on the band's revision, the language and the sheet; feedback, including the `SHORT` list of at most 8 aspects, goes to the status line.
-- **[Hush](hush.md):** "at most 4 lines" becomes an English target, keeping the 200-px wrap and the place under the vis frame; the bell's "nothing" goes to the status line.
-- **[Wands](wands.md):** the vis HUD's inert-wand line wraps at its 160-px limit and the frame's height follows; status lines and refusals, tapping's included, go to the status line, including the node tap's five-argument line.
-- **[Arcane crafting](arcane.md):** cost cells are focus targets, each showing and narrating its full cost tooltip (effective and base, pool, factors, flags, spill); the status line is an inspection target; `cost_cell_short` carries its notch; every text region's colour is pinned; tall cost tooltips follow R6.
-- **[Foci](foci.md):** Shift+Enter or Shift+Space cycles a focused socket backward, without also cycling forward; cost cells as arcane's; **the rank details**, a focusable, scrollable body opened by the Details button with mouse or keyboard, hold the complete rank quote (vis only; ranks cost no experience), while Raise rank's tooltip stays short; button labels follow R2; the detail and status lines are inspection targets; text colours and the choice set's marks; cast refusals go to the status line.
-- **[Golems](golems.md):** a page turn narrates the new page; the card declares its head and foot for sheets and rebuilds on the band's revision and the language; role and status glyphs pass review as silhouettes; refusals go to the status line.
-- **[Eldritch tier](eldritch.md):** the Heart's panels are focusable viewports in its order; its button labels follow R2 and its confirm's body R1; the ending scene's next line waits for the extended caption; Road and Heart messages go to the status line; the boss bar's missing narration is recorded.
-- **[Essentia](essentia.md):** status lines and refusals go to the status line, a shared layer rather than an essentia HUD, so "No HUD layer" stands.
-- **[Infusion](infusion.md):** `InfusionReadout` carries `solicited`, true only for the answer to the player's own strike or commit; lines 1 and 2 of a solicited readout are passed to the narration helper whatever the narrator mode, and no refresh, bump or run update is narrated; the card declares its head and foot for sheets and rebuilds on the band's revision and the language; refusals and the abandon prompt go to the status line, while its HUD-only `status.vftv.infusion.*` keys stay on the HUD.
-- **Other status-line users**, each on its own messages: [worldgen](worldgen.md) (the Reliquary's messages; "No payload of our own" becomes the shared status line), [research](research.md) (the Choir page tip-in messages), [armor](armor.md) (none today: its absorb and break are sounds).
-- **[Armor](armor.md):** the Baffle value draws on the black backing; the Spectacles card declares its head for sheets and rebuilds on the band's revision and the language.
-- **[Art style](art-style.md):** §7's Voice text line points here; §8 adds the flash rule (each strip's frame timings and mean luminances on its contact sheet, reviewed against "The flash test") and the palette's red assertion, the colour-vision contact sheets, the state-variant check and the contrast table over whole text regions; the palette stays locked.
-- **[Configuration](config.md):** every key's comment is also its translatable tooltip, `options.vftv.<path>.tooltip`; `research.mode` and `nodes.starter` values display through translated names; "Accessibility, already covered" points here; no new key.
-- **[Quality gates](quality-gates.md):** "Static gates" adds `DefaultLocale` and `StringCaseLocaleUsage` and this spec's validator, palette, state-variant and contrast tests; "Language" points here; "Harness work" adds loading the wide-font pack and setting `notificationDisplayTime`, the narrator mode and the language.
-- **Unchanged:** architecture (`core.text` is an ordinary feature under its rules, using `api`, vanilla Minecraft and the JDK but no other `core` feature, through the existing seams), API (lang keys stay unpromised), compatibility (its positional placeholders are legal), Choristers (marks already shape-coded), lore, progression and `CONTEXT.md`.
+| Needs from | What | Met at |
+|---|---|---|
+| every system spec | world-use feedback on the status line; readouts on their own layers | [conventions, Feedback routing](conventions.md#feedback-routing) |
+| research | number words in `content/research/number_words/<code>.json`; the frozen book UI keys; confirms open on Cancel; "a long test translation" is the wide-font pack | [research, Authored content](research.md#authored-content), [Book UI keys](research.md#book-ui-keys), [GUI contract](research.md#gui-contract), [Tests](research.md#tests) |
+| aspects | the frozen lang keys; strike results narrated; the client hold scaled by `notificationDisplayTime`; the strike card under the caption band | [aspects, What a strike reveals](aspects.md#what-a-strike-reveals), [Lang keys](aspects.md#lang-keys) |
+| warp | the Voice text's backing, position, hold and per-locale bound; line events exempt from subtitles; Void-tongue protected | [warp, Voice lines](warp.md#voice-lines) |
+| crucible | wrapped header lines, `H′` above the caption band, sheets and the capped-card vectors | [crucible, The HUD](crucible.md#the-hud) |
+| Hush | the reading keeps its wrap and place under the vis frame | [Hush, Reading](hush.md#reading) |
+| wands | the inert-wand line wraps at its 160-px limit | [wands, Display](wands.md#display) |
+| arcane | cost cells and the status line as focus targets; pinned text colours | [arcane, The screen](arcane.md#the-screen) |
+| foci | the backward socket cycle | [foci, The screen](foci.md#the-screen) |
+| foci | the complete rank quote in Raise rank's tooltip, fitting R6 | [foci, The screen](foci.md#the-screen) |
+| golems | page turns narrated; the card's head and foot for sheets | [golems, The golem card](golems.md#the-golem-card) |
+| Eldritch tier | the Heart's panels as focusable viewports; button labels per R2 | [eldritch, The block and the screen](eldritch.md#the-block-and-the-screen) |
+| essentia | no HUD layer of its own | [essentia, Inspection and teaching](essentia.md#inspection-and-teaching) |
+| infusion | `InfusionReadout.solicited`; only solicited lines narrated | [infusion, Arms and revisions](infusion.md#arms-and-revisions) |
+| armor | the Baffle value on the black backing; the Spectacles card's head for sheets | [armor, The HUD](armor.md#the-hud) |
+| art style | the flash rule, the palette's red assertion, colour-vision sheets and the contrast table | [art style, §8](art-style.md#8-how-a-build-agent-applies-this) |
+| configuration | each key's comment is its translatable tooltip; enum values translated | [configuration, The config screen](config.md#the-config-screen) |
+| quality gates | `DefaultLocale`, `StringCaseLocaleUsage` and this spec's tests in the static gates; the harness loads the wide-font pack | [quality gates, Static gates](quality-gates.md#static-gates), [E2E](quality-gates.md#e2e-mc-agent-harness) |
 
 ## Production tickets
 

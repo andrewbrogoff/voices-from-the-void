@@ -32,7 +32,7 @@ The map requires that every **system** gets all three layers. A single ticket on
 ### Unit (`test` suite, JUnit 6 with FML)
 
 - **The `model` tier:** behaviours, boundaries and invariants of each algorithm or rule. There's no "one test class per class" rule.
-- **Codecs:** every persisted record and every network payload. A round trip (encode → decode → equal) is necessary but not enough. Also test defaults for missing fields, rejected invalid values, and every historical format we still promise to read. `StreamCodec`s get their own tests.
+- **Codecs:** every persisted record and every network payload. A round trip (encode → decode → equal) is necessary but not enough. Also test defaults for missing fields, rejected invalid values (a persisted record keeps them as unreadable, per the [raw retention template](conventions.md#tests)), and every historical format we still promise to read. `StreamCodec`s get their own tests.
 - **Allocation budgets:** for hot paths a spec declares (see "Performance").
 
 ### GameTest (`runGameTestServer`, dedicated server)

@@ -173,11 +173,11 @@ A hand **base table** plus **recipe derivation at datagen**, committed to `src/g
 
 ### Coverage and supply
 
-- **Coverage:** every survival-obtainable vanilla item, block and entity has an entry or sits in a reviewed exempt list (air, barrier, command blocks, spawn eggs…).
+- **Coverage:** every survival-obtainable vanilla item, block and entity, and **every `vftv:` item, block and entity**, has an entry or sits in a reviewed exempt list (air, barrier, command blocks, spawn eggs…). The **Vanilla aspect value table** ticket owns the VFTV entries too: each system spec's "Needs from aspects (#30)" contract rows name the specific values it relies on (for example the first-Brass dose plan), and those rows are part of that ticket's scope.
 - **Known limitation:** scans ignore item components and block states in v1, so potions, tipped arrows, enchanted books and suspicious stew each share one value per item. They are listed as such.
 - **Supply:** every aspect has ≥ 3 accessible sources, across vanilla *and* VFTV content, obtainable in the Stage where it is first needed. Hush and Choir aspects may come from VFTV content alone.
 - **Reachability:** a test checks that every Stage 1 note #16 defines can be begun from Stage 1 supply alone, starting from the bootstrap: its anchors discoverable and connected ([research, Affordability and recovery](research.md#affordability-and-recovery)). Points don't bind (under "Aspect points"), so this is the check that can strand a player.
-- **Non-amplification:** no round trip through crafting recipes yields more aspects than went in.
+- **Non-amplification:** no round trip through crafting recipes yields more aspects than went in. The round trips include every built-in `vftv:arcane` recipe, counting vis as no material input, and the crafting table → Worktable conversion ([arcane, Turning a table](arcane.md#turning-a-table)).
 
 ## The Tuning Fork
 
@@ -456,30 +456,25 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
+What this spec needs from its siblings. Each row is an acceptance criterion in the sibling's ticket.
 
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)**
-- The puzzle links aspects by the taught view before a player's reveal, and by the taught links plus every exposed primal after it. Notes made before the reveal stay valid.
-- It owns the research entry named in Vacuos's `revealed_by`, and the revealing listen shows its warp cost before the player commits.
-- **Reachability and recovery:** Stage 1 research is reachable from the supply this spec guarantees (anchors discoverable and connected), and there is an active way to recover from spending mistakes (nothing spent before Learn, or a renewable source), so no player can strand themselves.
-- It owns the Commonplace Book item, records Stage 1 on the trigger under "Stage", and teaches the inventory strike in the first entry.
-- It consumes `ThingScannedEvent` and `AspectDiscoveredEvent` rather than polling knowledge.
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)**
-- It owns node placement and the node index. The index answers `nearest(pos, radius)` for the 192-block radius by examining a bounded set of cells, with a declared per-cell cap, and **never loads or generates a chunk**.
-- **Node ids are stable** through moves, and creating or re-placing a node never mints a fresh identity for the same node.
-- A **real, usable starter node** is guaranteed in the same dimension within the shipped sounding radius (192 blocks, by the distance rule under "Sounding for nodes") of a bootstrap location that #17 names, such as world spawn. #17 proves the guarantee with a starter-placement test.
-- Node-type data supplies each node's aspects and max capacity, and may override `node_reward_divisor`. It declares the maximum aspects a node can hold (the performance bound depends on it).
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)**
-- It dissolves using `vftv:aspects` and `vftv:aspect_defaults` as they are, with its own yield multiplier if it needs one.
-- Vacuos behaves as a primal in decay: it never breaks down into Aer or Perditio.
-- It states whether Aer and Perditio essentia combine into Vacuos, and the book never shows a recipe the world refuses.
-- Nothing it does lets a round trip yield more essentia than went in.
-- Jars and tubes carry labels as well as tint.
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- Phantom mobs have no server identity, so the fork's readout always names what is really there. *Met by the [warp spec](warp.md#phantoms): apparitions are client-only entities under negative ids, and a strike at one is cancelled on the client with its swing turned off, so nothing is sent and the fork stays silent rather than sounding. Phantom-block disguises are cut, so no phantom block exists to strike.*
+| Needs from | What | Met at |
+|---|---|---|
+| research | puzzle links: the taught view before a player's reveal, the taught links plus every exposed primal after it; notes made before the reveal stay valid | [research, Links](research.md#links) |
+| research | it owns Vacuos's `revealed_by` entry, whose listen shows its warp cost before the commit | [research, The Vacuos reveal](research.md#the-vacuos-reveal), [Warp on entries](research.md#warp-on-entries) |
+| research | Stage 1 research reachable from this spec's supply, and recovery from spending mistakes, so no player strands | [research, Affordability and recovery](research.md#affordability-and-recovery) |
+| research | it owns the Commonplace Book item, records Stage 1 on a shard or fork, and teaches the inventory strike in the first entry | [research, Stage](research.md#stage), [The item](research.md#the-item) |
+| research | it consumes `ThingScannedEvent` and `AspectDiscoveredEvent` rather than polling knowledge | [research, Triggers](research.md#triggers) |
+| wands | the node index answers `nearest` over a bounded set of cells, with a per-cell cap, and never loads or generates a chunk | [wands, The index](wands.md#the-index) |
+| wands | node ids stay stable through moves; re-placing a node never mints a fresh identity | [wands, Identity and reconciliation](wands.md#identity-and-reconciliation), [Moving nodes](wands.md#moving-nodes-the-bell-jar) |
+| wands | a real, usable starter node within the sounding radius of a named bootstrap location, proved by a placement test | [wands, The starter](wands.md#the-starter) |
+| wands | node-type data supplies aspects, max capacity and an optional `node_reward_divisor`, with a declared maximum of aspects per node | [wands, Node types](wands.md#node-types) |
+| wands | a node readout with its type and clarity (the brightness) | [wands, Inspection and teaching](wands.md#inspection-and-teaching) |
+| crucible | it dissolves with `vftv:aspects` and `vftv:aspect_defaults` as they are | [crucible, Dissolving](crucible.md#dissolving) |
+| crucible | Vacuos never decays into Aer or Perditio, and the spec states whether Aer and Perditio essentia combine into Vacuos | [crucible, The pool](crucible.md#the-pool), [Combining essentia, and Vacuos](crucible.md#combining-essentia-and-vacuos) |
+| crucible | no round trip yields more essentia than went in | [crucible, Dissolving](crucible.md#dissolving) |
+| essentia | jars and tubes carry labels as well as tint | [essentia, Labels](essentia.md#labels) |
+| warp | phantoms have no server identity, so a strike at one is silent | [warp, Phantoms](warp.md#phantoms) |
 
 ## Production tickets
 

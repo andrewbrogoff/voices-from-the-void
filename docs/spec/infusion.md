@@ -13,10 +13,11 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [architecture spec](architecture.md) for the code layout, the data and sync rules, and the essentia model;
 - the [quality gates](quality-gates.md) for every gate;
 - the [aspects spec](aspects.md) for aspect icons, the unheard rule and values;
-- the [research spec](research.md) for research gates, recipe and structure pages, fact spans, `mix64` and `fold`;
+- the [shared conventions](conventions.md) for raw-record retention, guards and re-entry, checked commits, `mix64`, `fold`, streams, phases and salts, Rules records, authored content and the shared message keys;
+- the [research spec](research.md) for research gates, recipe and structure pages and fact spans;
 - the [wands spec](wands.md) for wands, the part registries, the coalesced flush and interaction precedence;
 - the [arcane crafting spec](arcane.md) for the `vftv:arcane` recipe type, the shared cost-cell rule and the JEI reconcile;
-- the [crucible spec](crucible.md) for the phase function, the HUD frame rules, the provisional-spawn pattern and the spill boundary;
+- the [crucible spec](crucible.md) for the HUD frame rules, the provisional-spawn pattern and the spill boundary;
 - the [essentia spec](essentia.md) for the essentia capability, transactions and the endpoint tag;
 - the [art style](art-style.md) for every asset.
 
@@ -41,7 +42,7 @@ Resolved in [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-voi
 
 - **Gate the recipe, not the altar.** Striking, loading and reading an altar are ungated: a bowl someone gave you reads for you, as a crucible does ([crucible, Stage](crucible.md#stage)). **Obtaining counts.**
 - **Every infusion recipe carries its own `research`**, checked for the player who starts it at the read and again at the commit, before anything is claimed (see "Starting").
-- **The start is the commit.** A run that has started finishes, even if the starter's research is later revoked, and even while they are offline or dead (see "The run"). The research spec's gate contract is amended in this change to say so for machines that run over time.
+- **The start is the commit.** A run that has started finishes, even if the starter's research is later revoked, and even while they are offline or dead (see "The run"), as the [research gate](research.md#contracts-on-sibling-specs) allows for machines that run over time.
 - **Brass and wand ancestry:** `vftv:infusion` names `vftv:resonant_brass` as a parent itself, because `vftv:essentia_jars` now follows `vftv:crucible` and no longer carries Brass ([essentia, Stage](essentia.md#stage)); so the altar's recipes may still take the ingot, as before. `vftv:echo_wands` follows `vftv:singing_wands`, because the Echo recipes take the chime rod and the Brass cap as their centres. No progression cycle is possible.
 - **Options considered:** a Choir-page find for infusion; one entry for everything. **Why three notes:** the [research roster](research.md#roster) lists infusion as Stage 3 research; the jars parent exists because the altar draws only from vessels; and enchanting and the wand tier are separate ideas.
 
@@ -83,16 +84,16 @@ The two paths that move items without a hand obey **one rule set**.
 | `extract(…)` | after the preconditions: 0 if unavailable, if the index isn't 0, if the slot doesn't hold `r` or if taking is locked. Otherwise `k = min(n, 1)`; if `k` > 0 the journal snapshots this depth and the slot is emptied. Returns `k`. |
 
 - **Arguments first:** every `insert` and `extract` overload begins with `TransferPreconditions.checkNonEmptyNonNegative(resource, amount)`; after that nothing throws ([crucible, Essentia out](crucible.md#essentia-out)). The resource-only overloads are overridden to O(1).
-- **Unavailable:** the block entity is removed or isn't the one at its position, or its record is dormant, or (bowl only) a run operation is open on it.
+- **Unavailable:** the block entity is removed or isn't the one at its position, or its record is unreadable, or (bowl only) a run operation is open on it.
 - **May insert:**
   - **bowl:** it is idle (no run) and empty; any item.
   - **pedestal, unclaimed** (no claim, or a claim found dead; see "Claims"): any item.
   - **pedestal, claimed and live:** only **restoration**: the slot is empty, the claim's component is still pending, and `r` is the **promised stack** (`isSameItemSameComponents` with the copy in the run's plan). This is how a jolted component goes back.
 - **Taking is locked** on a ringing bowl and on a pedestal whose claim is live or unknown.
-- **Transaction-busy:** from the journal's first snapshot until its root closes, on commit or abort. While busy, the hand paths refuse (`message.vftv.infusion.busy`), the container path below refuses, the run skips that block for absorbing and jolting (the step stalls), a commit refuses, and removal is deferred to the root's close, which then drops whatever the journal left. **An abort can only restore what it snapshotted.**
+- **Transaction-busy** ([conventions](conventions.md#transaction-busy)): from the journal's first snapshot until its root closes, on commit or abort. While busy, the hand paths refuse with `message.vftv.busy`, the container path below refuses, the run skips that block for absorbing and jolting (the step stalls), a commit refuses, and removal is deferred to the root's close, which then drops whatever the journal left. **An abort can only restore what it snapshotted.**
 - **On the root commit:** the block entity is marked changed and dirty for the coalesced sync, unless removed. Publication only.
 
-**The container path.** Vanilla's hopper prefers a `Container` block entity to any capability (`MC:world/level/block/entity/HopperBlockEntity.java:446–455`) and honours `canPlaceItem` and `canTakeItem` (`:340–349`). Both return exactly the handler's "may insert" and "taking is not locked", and both return `false` while the block entity is dormant, unavailable or transaction-busy.
+**The container path.** Vanilla's hopper prefers a `Container` block entity to any capability (`MC:world/level/block/entity/HopperBlockEntity.java:446–455`) and honours `canPlaceItem` and `canTakeItem` (`:340–349`). Both return exactly the handler's "may insert" and "taking is not locked", and both return `false` while the block entity is unreadable, unavailable or transaction-busy.
 
 - **Qualified:** code that calls `setItem` or `removeItem` directly (commands such as `/item replace`, other mods) bypasses both locks, exactly as it would on a chest. The run never trusts the slot: an absorb checks the promised stack, and a missing or replaced one stalls (see "Absorbing").
 
@@ -102,8 +103,8 @@ Every row runs inside vanilla's `useItemOn`, after spawn protection, `mayInterac
 
 | Held (in the hand being used) | Target | Effect | Returns |
 |---|---|---|---|
-| anything | dormant bowl or pedestal | refused: `message.vftv.infusion.unreadable` | `CONSUME` |
-| anything | transaction-busy | refused: `message.vftv.infusion.busy` | `CONSUME` |
+| anything | unreadable bowl or pedestal | refused: `message.vftv.unreadable` | `CONSUME` |
+| anything | transaction-busy | refused: `message.vftv.busy` | `CONSUME` |
 | a `vftv:wand` | bowl | a **strike** (see "Reading an altar" and "Starting") | `SUCCESS` |
 | any item | idle, empty bowl | places one as the centre; `minecraft:entity.item_frame.add_item` plays | `SUCCESS` |
 | any item | ringing bowl | refused: `message.vftv.infusion.ringing` | `CONSUME` |
@@ -155,12 +156,12 @@ The **mirror** of (dx, dy, dz) is (−dx, dy, −dz): a half turn about the bowl
 
 | Status | When | Lang key | Args |
 |---|---|---|---|
-| `UNREADABLE` | the bowl's record is dormant | `status.vftv.infusion.unreadable` | 0 |
+| `UNREADABLE` | the bowl's record is unreadable | `status.vftv.infusion.unreadable` | 0 |
 | `RINGING` | the bowl has a run (the readout is the run's; see "The readout") | `status.vftv.infusion.ringing` | 1: the output's name |
 | `UNLOADED` | a box chunk isn't loaded or block-ticking | `status.vftv.infusion.unloaded` | 0 |
 | `EMPTY` | no centre item | `status.vftv.infusion.empty` | 0 |
 | `TOO_MANY` | more than 16 pedestals at dy = 0 | `status.vftv.infusion.too_many` | 1: the count |
-| `PEDESTAL_UNREADABLE` | a pedestal at dy = 0 is dormant | `status.vftv.infusion.pedestal_unreadable` | 3: its position |
+| `PEDESTAL_UNREADABLE` | a pedestal at dy = 0 is unreadable | `status.vftv.infusion.pedestal_unreadable` | 3: its position |
 | `PROMISED` | a pedestal at dy = 0 has a live or unknown claim of another bowl | `status.vftv.infusion.promised` | 3: its position |
 | `BUSY` | the bowl or a pedestal at dy = 0 is transaction-busy | `status.vftv.infusion.busy` | 0 |
 | `NO_RECIPE` | no learned recipe matches (see "Selection") | `status.vftv.infusion.no_recipe` | 1: the number of pedestal items |
@@ -234,9 +235,9 @@ The first row is the trickle case: one unit per draw rolls 5 times, not 2, and t
 
 ### Arms and revisions
 
-A strike on an idle bowl creates or refreshes the striker's **arm**: one per player, in server memory, `{kind ARMED, dimension, position, bowl id, revision, seen revision, inputs, readout, last strike tick, due tick}`. A strike on a ringing bowl, and every commit, makes it a **run subscription** instead (kind `RUN`; see below).
+A strike on an idle bowl creates or refreshes the striker's **arm**: one per player, in server memory, `{kind ARMED, dimension, position, bowl id, revision, seen revision, inputs, readout, last strike tick, due tick}`. A strike on a ringing bowl, and every commit, makes it a **run subscription** instead (kind `RUN`; see below). The arm is the readout surface of [conventions, Checked commits](conventions.md#checked-commits), and its revision is [conventions' revision](conventions.md#the-revision).
 
-- **Inputs** are everything the plan depends on: the snapshot (every reduced cell, every pedestal's block-entity identity, item copy and claim state, the bowl's identity and centre copy), the recipe snapshot's generation, the `InfusionRules` generation, the striker's research revision, `Wp`, and #26's flux-rule generation. **The revision bumps (+1, wrapping 32-bit) whenever the inputs differ**, whether or not any displayed field changed. A same-id recipe `/reload` or an equivalent replacement ingredient therefore bumps it.
+- **Inputs** are everything the plan depends on: the snapshot (every reduced cell, every pedestal's block-entity identity, item copy and claim state, the bowl's identity and centre copy), the recipe snapshot's generation, the `InfusionRules` generation, the striker's research revision, `Wp`, and #26's flux-rule generation. No echo carries any of them, so **the revision bumps whenever the inputs differ**, whether or not any displayed field changed. A same-id recipe `/reload` or an equivalent replacement ingredient therefore bumps it.
 - **Selection runs only when inputs other than the claim states and the box's vessels changed** (see "Selection").
 - **Refresh:** every `arm.refresh` ticks the arm's due entry pops (see "Scheduling"); the server rebuilds the snapshot and, if the inputs differ, re-assesses, bumps and sends, carrying "held now" as last computed. A refresh never recomputes "held now".
 - **Seen:** when the client's HUD takes an `ARMED` readout, it sends **`InfusionSeen(pos, revision)`** (C2S: a `BlockPos` and a VarInt; anything else is rejected at decode), once per readout it receives. The server accepts at most 4 per player per tick and drops extras; an honest client never sends more, because the server sends at most one readout per refresh or strike. The server records it as the arm's **seen revision** iff the arm exists for that dimension and position and `revision` equals the arm's current revision; otherwise it is ignored. A bump leaves the seen revision behind until the client acknowledges the new one. Seen proves only what an honest client displayed; it **authorises nothing** (see "Starting").
@@ -266,7 +267,7 @@ A strike on an idle bowl creates or refreshes the striker's **arm**: one per pla
 - **Wrapping, not clipping:** each line wraps to `maxInner` with the font's own `split`; no number is ever cut. The cells follow the [crucible HUD](crucible.md#the-hud)'s grid rule, every cell on the arcane spec's plain `vftv:worktable/cost_cell`. An aspect held short now draws the same plain cell, with the shortfall visible only in its "held now" number: at the altar short means "will start and wait", not "cannot", so the Worktable's and crucible's refusal sprite `cost_cell_short` is never used here. Then frame, padding, position, clamp, the caption band, the pose-scale fallback and **sheets** are the crucible's, unchanged, so every readout fits at a scale of at least 0.75 or pages. **Head:** line 1; **foot:** line 7; the body is lines 2–6 and the cell rows, in order.
 - **Unheard aspects** draw the unheard icon with their exact amounts ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)).
 - **Narration:** when a readout with `solicited` true arrives, lines 1 and 2 are passed once to the [localisation narration helper](accessibility.md#hud-narration), **whatever the narrator mode**: vanilla's `saySystemQueued` decides whether anything is spoken. A readout with `solicited` false (a refresh, a revision bump from changed inputs, a run update) is never narrated, nor is anything per frame. The book's fact fields carry the same values in full (see "The authoritative preview").
-- **The `status.vftv.infusion.*` keys** are this HUD's line 1, never a status-line message; refusals and the abandon prompt are `message.vftv.infusion.*` on the [status line](accessibility.md#r5-the-status-line).
+- **The `status.vftv.infusion.*` keys** are this HUD's line 1, never a status-line message; refusals (`message.vftv.infusion.*` and the [shared keys](conventions.md#message-keys)) and the abandon prompt go on the [status line](accessibility.md#r5-the-status-line).
 - **Precomputing:** the layout is rebuilt only when a readout arrives or clears, the viewer's knowledge, the resources, the language, the scaled screen size, the [caption band's](accessibility.md#the-caption-band) revision or the sheet change. Our draw code allocates nothing per frame.
 
 ## Starting
@@ -292,19 +293,19 @@ A wand use on a ringing bowl is a strike that makes a run subscription. The firs
 
 ### The commit
 
-**Checks,** on the server thread, first failure refusing on the [status line](accessibility.md#r5-the-status-line) (and, where marked, sending a fresh readout):
+The commit is [conventions' checked commit](conventions.md#checked-commits) with [infusion's site differences](conventions.md#commits-per-site): there is no C2S commit, the acknowledged seen revision stands in for the echo, and the server re-assesses instead of comparing an echo. `STALE` shows `message.vftv.cost_changed` with a fresh readout, and the HUD's line 7 becomes `.changed`. **Checks,** on the server thread, in this order, first failure refusing on the [status line](accessibility.md#r5-the-status-line):
 
 | # | Check | On failure |
 |---|---|---|
 | 1 | the player is alive and not a spectator; the attempt's arm still exists, `ARMED`, for this dimension, position and bowl id | `message.vftv.infusion.strike_first` |
 | 2 | the use's hand held a `vftv:wand` | `.strike_first` |
 | 3 | the position's chunk is loaded; the player is in reach; `level.mayInteract` (spawn protection, `MC:server/level/ServerLevel.java:901`) | dropped, no message |
-| 4 | the arm's revision and seen revision are the captured ones, and equal | `.stale`, fresh readout |
-| 5 | **recheck:** rebuild the snapshot, resolve every predicate (ingredients, `supportsEnchantment`, the research gate) and assess; the inputs equal the arm's | `.stale`, bump, fresh readout |
+| 4 | the arm's revision and seen revision are the captured ones, and equal | `STALE` |
+| 5 | **recheck:** rebuild the snapshot, resolve every predicate (ingredients, `supportsEnchantment`, the research gate) and assess; the inputs equal the arm's | `STALE`, bump |
 | 6 | the status is `READY` | its status message |
-| 7 | **`Transaction.getLifecycle() == Lifecycle.NONE`** (`NF:transfer/transaction/Transaction.java:99–109,247–263`), and neither the bowl nor any matched pedestal is transaction-busy | `.busy` |
-| 8 | **claims:** every matched pedestal is unclaimed or its claim is dead; an unknown or unresolved claim refuses | `.promised`, fresh readout |
-| 9 | **the live fingerprint**, callback-free, after every callback of check 5: the bowl's and each matched pedestal's block-entity instance (the same object, not removed, still at its position), each slot (`ItemStack.matches` with the assessed copy), each claim, the bowl id and `runs`, the striker's research revision, the recipe snapshot and `InfusionRules` generations, `Wp` and #26's flux-rule generation all equal the assessed inputs | `.stale`, bump, fresh readout |
+| 7 | **`Transaction.getLifecycle() == Lifecycle.NONE`** (`NF:transfer/transaction/Transaction.java:99–109,247–263`), and neither the bowl nor any matched pedestal is transaction-busy | `message.vftv.busy` |
+| 8 | **claims:** every matched pedestal is unclaimed or its claim is dead; an unknown or unresolved claim refuses | `message.vftv.infusion.promised`, fresh readout |
+| 9 | **the live fingerprint**, callback-free, after every callback of check 5: the bowl's and each matched pedestal's block-entity instance (the same object, not removed, still at its position), each slot (`ItemStack.matches` with the assessed copy), each claim, the bowl id and `runs`, the striker's research revision, the recipe snapshot and `InfusionRules` generations, `Wp` and #26's flux-rule generation all equal the assessed inputs | `STALE`, bump |
 
 Check 5 runs every foreign callback (custom `Ingredient` tests, the item's `supportsEnchantment` hook) **before** the commit; check 9 catches anything those callbacks changed. **The commit itself runs no foreign code:**
 1. if `runs` = 2³¹ − 1, a new bowl id is minted and `runs` = 0 first (every claim on the old id is dead); then `seq = runs + 1`; `runs = seq`; a 64-bit **nonce** is minted from the level's random source and the `seed` derived from it (see "Upsets");
@@ -431,7 +432,7 @@ The commit writes the **whole plan** before anything is published. A run never r
 
 A per-level **step queue** of entries `(due tick, signed bowl asLong, bowl id, seq)`, ordered by due tick then position. Nothing scans every bowl, and an idle bowl costs nothing.
 
-- **Phase:** a ringing bowl is due on ticks where `gameTime mod run.interval = phase(pos)`, the [crucible's phase](crucible.md#boiling-and-the-step) with the frozen interval. **Vectors** (reference implementation, the crucible's salted phase) at 10: (0, 64, 0) → 7; (1, 64, 0) → 1; (0, 64, 1) → 5; (−37, 70, 512) → 4; (−1, −64, −1) → 8; (29999999, −64, −29999999) → 3.
+- **Phase:** a ringing bowl is due at `phase(CRUC, [asLong(pos)], run.interval)` on its level's game time ([conventions, Phases](conventions.md#phases)), with the frozen interval. The `CRUC` salt is shared with the crucible step ([conventions, Salts](conventions.md#salts)). **Vectors** (reference implementation) at 10: (0, 64, 0) → 7; (1, 64, 0) → 1; (0, 64, 1) → 5; (−37, 70, 512) → 4; (−1, −64, −1) → 8; (29999999, −64, −29999999) → 3.
 - **Entered** at the commit and by the bowl's `onLoad` when it has a run; **left** by `setRemoved`, the run's end, or a stale pop (the bowl at the position is gone, or its id or `seq` differs).
 - **Processing,** at the end of each level tick: entries due at or before now pop in order; at most **`MAX_STEPS_PER_TICK` = 16** steps run per level. Every pop counts toward **`MAX_QUEUE_POPS_PER_TICK` = 64** (stale entries included). Leftovers keep their original due tick, so overdue bowls go first next tick.
 - **The arm queue** is the same shape, keyed `(due tick, player UUID)`, for arm and run-subscription refreshes: at most 64 pops per level per tick, stale entries (an ended arm) included, leftovers keeping their due tick.
@@ -440,7 +441,7 @@ A per-level **step queue** of entries `(due tick, signed bowl asLong, bowl id, s
 
 ### A step
 
-1. **Nothing happens** (the bowl is rescheduled at its next phase tick) when: the record is dormant; abandoning is armed and not expired; a run operation is already open on the bowl (re-entry from a listener); or a box chunk isn't loaded and block-ticking (**paused**).
+1. **Nothing happens** (the bowl is rescheduled at its next phase tick) when: the record is unreadable; abandoning is armed and not expired; a run operation is already open on the bowl (a listener's re-entry, which has no player: [conventions, Re-entry](conventions.md#re-entry)); or a box chunk isn't loaded and block-ticking (**paused**).
 2. **Open the operation.** While it is open the bowl's item handler is unavailable, and a removal is deferred to its close.
 3. **Act,** first match: something is owed → **draw**; a component is pending → **absorb**; otherwise → **finish** (no roll).
 4. **Roll** after a rolled step (see "Upsets").
@@ -459,6 +460,7 @@ A per-level **step queue** of entries `(due tick, signed bowl asLong, bowl id, s
     - **After the commit:** NeoForge runs root-close callbacks after journals have committed, and one can throw (`NF:transfer/transaction/Transaction.java:215–240`; `NF:transfer/transaction/TransactionManager.java:120–135`). The ledger then shows the credit, which **stands**: the step counts as a rolled draw and rolls, the exception is logged once, and that move is never retried or refunded.
 - **Suction:** the bowl offers none and is no endpoint. **Direct pulls don't route like a line**, so they inherit no line throughput and apply no suction rule ([essentia, Contracts](essentia.md#contracts-on-sibling-specs)); the rate is `run.rate`.
 - **Partial draws are legal:** a draw that takes one unit is a rolled step. "Counting the run" is built for this.
+- **Consuming only:** infusion combines no essentia and ships no crucible recipe.
 
 ### Absorbing
 
@@ -471,15 +473,17 @@ Absorbing empties the slot (a direct write; no callbacks run), marks the compone
 
 ### Upsets
 
-After each rolled step, if `upsets < upset.max`:
+After each rolled step, if `upsets < upset.max` (`fold` and `at` are [conventions'](conventions.md#mix64-and-fold) [streams](conventions.md#streams); the `INFU` salt is in [Salts](conventions.md#salts)):
 
 ```
-seed = fold([0x494E4655 ("INFU"), nonce])     the research spec's fold; nonce minted at the commit
+seed = fold([INFU, nonce])                    nonce minted at the commit
 k    = rolls; rolls = k + 1
-u_j  = mix64(seed + (3k + j + 1) · 0x9E3779B97F4A7C15)     j = 0 roll, 1 kind, 2 target; mod 2⁶⁴
+u_j  = at(seed, 3k + j + 1)                   j = 0 roll, 1 kind, 2 target
 upset iff Long.remainderUnsigned(u_0, 1000) < p
 kind  = Long.remainderUnsigned(u_1, jolt_weight + spill_weight) < jolt_weight ? JOLT : SPILL
 ```
+
+The draws reduce with `Long.remainderUnsigned`, not conventions' `bounded` or `weighted` (which shift first), so the vectors below stand.
 
 On an upset, `upsets + 1` **whatever its effect**, then:
 
@@ -518,7 +522,7 @@ On an upset, `upsets + 1` **whatever its effect**, then:
 | recipe, tag or tuning `/reload` | nothing: the plan is frozen |
 | a pedestal broken | it drops its item through vanilla; its component, if pending, stalls until a pedestal at that offset holds the promised stack again. A new pedestal there is unclaimed, so it accepts the item, and the run claims it for itself before absorbing; if another bowl has claimed it meanwhile, the run stalls without touching it (see "Absorbing") |
 | the bowl removed | see "Removal" |
-| a record unreadable at load | dormant (see "Sync and state") |
+| a record unreadable at load | it does nothing ([conventions](conventions.md#what-an-unreadable-record-does); see "Sync and state") |
 
 ### Abandoning
 
@@ -534,7 +538,7 @@ On an upset, `upsets + 1` **whatever its effect**, then:
 
 **`BlockEntity#preRemoveSideEffects`** on the bowl:
 - **an operation is open** or **the item handler is transaction-busy:** record one pending removal; it runs when the operation or the root closes;
-- **dormant:** nothing is spilled and a warning names the position; vanilla drops what it can;
+- **unreadable:** nothing is spilled, and the record is lost as [conventions, Removal](conventions.md#removal) says; vanilla drops what it can;
 - **a run:** copy `drawn`, clear the run, then post `InfusionEvent(SPILLED)` with cause `REMOVED` under #26's current rules and `InfusionEvent(ABANDONED)` with cause `REMOVED`, each caught separately, **then** the default drop runs in a `finally`, so cleanup happens exactly once whatever a listener throws.
 
 **On a pedestal:** the default drop, deferred to the root's close while transaction-busy.
@@ -548,7 +552,7 @@ A pedestal's **claim** is `{bowl position, bowl id, seq}`. Every interaction, in
 | Bowl's chunk | Finding | Claim |
 |---|---|---|
 | not loaded (`getChunkNow` is null) | **unknown** | kept; taking is locked; a new claim is refused (`PROMISED`) |
-| loaded | the block entity there is a **dormant** bowl, whose id and run can't be read | **unresolved**: kept; taking is locked; a new claim is refused (`PROMISED`) until its pack is restored and the bowl can be validated |
+| loaded | the block entity there is an **unreadable** bowl, whose id and run can't be read | **unresolved**: kept; taking is locked; a new claim is refused (`PROMISED`) until its pack is restored and the bowl can be validated |
 | loaded | the block entity there is a readable bowl with this id, ringing with this `seq`, and its plan has a pending component at this offset | **live** |
 | loaded | anything else (no bowl, another id, another `seq`, no run, or that component `done`) | **dead**: cleared, marked changed and for sync |
 
@@ -666,13 +670,13 @@ At scale 0.5 a sword or a block (8 px across) fits inside the bowl's 12-px rim a
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails its type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+The content ticket's inputs follow [conventions, Authored content](conventions.md#the-envelope), with its [rejection list](conventions.md#rejection).
 
 ```
 content/infusion/recipes.json        the arcane, Echo and enchanting recipes this spec owns
 content/infusion/wand_parts.json     the Echo rod and cap
 content/infusion/multiblock.json     the altar the book shows
-content/infusion/echo_bootstrap.json the reviewed Echo sources
+content/infusion/bootstrap.json      the reviewed Echo sources
 content/lang/en_us/infusion.json     every key under "Lang keys"
 ```
 
@@ -681,8 +685,8 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | `recipes.json` | `vftv:infusion_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `wand_parts.json` | `vftv:wand_parts/1` (the [wands schema](wands.md#parts)) | `data/vftv/vftv/wand_rod/echo.json` and `data/vftv/vftv/wand_cap/echo.json`; a part id declared in two `content/` files fails datagen |
 | `multiblock.json` | `vftv:multiblocks/1` | each multiblock `<ns>:<path>` → `assets/<ns>/multiblock/<path>.json` (format below) |
-| `echo_bootstrap.json` | `vftv:echo_bootstrap/1` | nothing: read by the review and a lint |
-| `lang/<lang>/infusion.json` | `vftv:lang/1` | its `strings` merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `bootstrap.json` | `vftv:infusion_bootstrap/1` | nothing: read by the review and a lint |
+| `lang/<lang>/infusion.json` | `vftv:lang/1` | merged as [conventions, Lang](conventions.md#lang) says |
 
 **Other specs' infusion recipes** live in their own content files with the recipe type's body, under their own `research`. A recipe id declared in two `content/` files, of any type, fails datagen.
 
@@ -713,7 +717,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 }}
 ```
 
-**Rejected:** an id outside the table or a required id missing; a body of the wrong type; any field outside its type's table; any rule above broken; a created result that is empty or over its maximum stack.
+**Rejected:** an id outside the table or a required id missing; a body of the wrong type; any rule above broken.
 
 ### Wand parts
 
@@ -725,7 +729,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
  "caps": {"vftv:echo": {"item": "vftv:echo_cap", "cost_multiplier": 0.70}}}
 ```
 
-**Rejected:** any other id; anything that fails the wands spec's parts load validation.
+**Rejected:** any other id.
 
 ### The altar multiblock
 
@@ -740,16 +744,16 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 
 ### The Echo bootstrap
 
-`{"schema": "vftv:echo_bootstrap/1", "recipes": {<id>: {"items": [{"item": <id>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for exactly `vftv:echo_rod` and `vftv:echo_cap`.
+`content/infusion/bootstrap.json` is [conventions' bootstrap](conventions.md#bootstrap): `{"schema": "vftv:infusion_bootstrap/1", "recipes": {<id>: {"items": [{"item": <id>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for exactly `vftv:echo_rod` and `vftv:echo_cap`.
 
 - **Coverage:** `items` lists the centre and every component item (for a tag, the alternative the review names), and `aspects` every essentia aspect, of that recipe.
 - **Review:** each `why` says how the thing is obtained in Stages 1–3 without an Echo part, and for an aspect, which matter dissolves into it in a crucible ([aspects, Coverage and supply](aspects.md#coverage-and-supply)). The review checks the sequence is non-circular.
 
-**Rejected:** another id; a missing centre, component or aspect; an empty `why`.
+**Rejected:** any other recipe id.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, waiting without harm, restoring a jolted component, abandoning and its price, and the loss exceptions.
+The file and its validation are [conventions, Lang](conventions.md#lang). Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, waiting without harm, restoring a jolted component, abandoning and its price, and the loss exceptions.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -779,7 +783,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | `hud.vftv.infusion.paused`, `.waiting` | 0 | "Paused: part of the altar is beyond my hearing.", "Waiting for essentia. Waiting costs nothing." |
 | `hud.vftv.infusion.abandon` | 1 | "Abandoning it now spills %s flux." |
 | `hud.vftv.infusion.abandon_confirm` | 0 | "Take it out again to abandon." |
-| `message.vftv.infusion.unreadable`, `.busy`, `.ringing`, `.strike_first`, `.stale`, `.abandon_pending`, `.not_yours`, `.too_busy` | 0 | refusals (`.not_yours`: "This ringing isn't yours to stop."; `.too_busy`: "The altar is crowded with listeners; strike again.") |
+| `message.vftv.infusion.ringing`, `.strike_first`, `.abandon_pending`, `.not_yours`, `.too_busy` | 0 | refusals (`.not_yours`: "This ringing isn't yours to stop."; `.too_busy`: "The altar is crowded with listeners; strike again.") |
 | `infusion.vftv.fact.yes`, `infusion.vftv.fact.no` | 0 | "yes", "no" |
 | `infusion.vftv.status.ringing_only`, `infusion.vftv.status.not_ringing` | 0 | "(already ringing)", "(not ringing)" |
 | `message.vftv.infusion.promised` | 3 | "That is promised to the bowl at %s, %s, %s." |
@@ -792,9 +796,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | `jei.vftv.category.infusion` | 0 | "Infusion" |
 | `subtitles.vftv.infusion.strike`, `.begin`, `.draw`, `.absorb`, `.upset`, `.finish`, `.abandon`, `.ring` | 0 | "Bowl is struck", "Bowl begins to sing", "Essentia drawn", "Offering absorbed", "Altar falters", "Bowl falls silent", "Infusion abandoned", "Bowl sings" |
 
-**Used, not declared here:** aspect, enchantment and item names.
-
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
+**Used, not declared here:** aspect, enchantment and item names; the shared `message.vftv.busy`, `.unreadable` and `.cost_changed` ([conventions, Message keys](conventions.md#message-keys)).
 
 ## Events
 
@@ -809,6 +811,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | `ABANDONED` | level and position; `seq`; the cause, `PLAYER` (with the player) or `REMOVED`; the drawn map |
 
 - **Once per occurrence.** Nothing fires per draw, absorb, stall or pause.
+- **Every `SPILLED` map** has ≤ 8 aspects totalling ≤ 8,000, because `drawn` never exceeds `costs`.
 - **A throwing listener** is logged once with the position; the state stands and our remaining notifications still run.
 
 **Plain `core` services:** `InfusionPreview.of`; `InfusionAltars.readout(level, pos, player)`. They are **internal in v1** ([API spec, Services](api.md#services)). `InfusionKeys` in `api` holds the `#vftv:infusion_stabilisers` and `#vftv:infusion_unenchantable` tag keys.
@@ -819,19 +822,19 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 
 | State | Storage | Synced to |
 |---|---|---|
-| bowl | block entity `{"format": 1, "id": <long ≠ 0>, "runs": 0–2³¹−1, "item"?: <stack>, "run"?: <run>}` | trackers: the item, ringing, dormant, and the **view** (the pending offsets with a present flag, the aspect being drawn, units drawn and owed, components done and total), in `getUpdateTag`, then the coalesced update |
-| pedestal | block entity `{"format": 1, "item"?: <stack>, "claim"?: {"bowl": <long>, "id": <long ≠ 0>, "seq": 1–2³¹−1}}` | trackers: the item, claimed, dormant |
+| bowl | block entity `{"format": 1, "id": <long ≠ 0>, "runs": 0–2³¹−1, "item"?: <stack>, "run"?: <run>}` | trackers: the item, ringing, unreadable, and the **view** (the pending offsets with a present flag, the aspect being drawn, units drawn and owed, components done and total), in `getUpdateTag`, then the coalesced update |
+| pedestal | block entity `{"format": 1, "item"?: <stack>, "claim"?: {"bowl": <long>, "id": <long ≠ 0>, "seq": 1–2³¹−1}}` | trackers: the item, claimed, unreadable |
 | arms and run subscriptions (with seen revisions), pending assessments, the step and arm queues, the loaded set | per-level or per-player memory | the arm's readout to its player only |
-| infusion rules | the tuning record and the fixed limits | **`InfusionRules`** S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
+| infusion rules | the tuning record and the fixed limits | **`InfusionRules`**, sent as [conventions, Rules records](conventions.md#rules-records) says |
 | infusion recipes | the recipe manager; `InfusionRecipeSnapshot` | every player, as under "Recipe sync and reload" |
 
-**`<run>`:** `{"seq", "seed": <long>, "starter": <uuid>, "recipe": <id>, "research": <id>, "kind", "output": <stack>, "components": [{"at": [dx, dz], "item": <stack>, "done": <bool>}, …], "costs": {<aspect>: 1–1000}, "drawn": {<aspect>: 1–1000}, "stability": {"r", "lone_pedestals", "lone_items", "matched", "bonus", "warp", "s", "chance"}, "rules": {"interval", "rate", "lone_pedestal", "lone_item", "per_pair", "max_pairs", "max_chance", "max", "spill", "jolt_weight", "spill_weight"}, "flux_rules"?: <#26's record>, "rolls": 0–18,016, "upsets": 0–64, "abandon"?: {"player": <uuid>, "until": <long>, "flux_generation": <long>}}` (`long`, as the [Hush spec's](hush.md#sync-and-state) `FluxRules` generation; amended from `int`).
+**`<run>`:** `{"seq", "seed": <long>, "starter": <uuid>, "recipe": <id>, "research": <id>, "kind", "output": <stack>, "components": [{"at": [dx, dz], "item": <stack>, "done": <bool>}, …], "costs": {<aspect>: 1–1000}, "drawn": {<aspect>: 1–1000}, "stability": {"r", "lone_pedestals", "lone_items", "matched", "bonus", "warp", "s", "chance"}, "rules": {"interval", "rate", "lone_pedestal", "lone_item", "per_pair", "max_pairs", "max_chance", "max", "spill", "jolt_weight", "spill_weight"}, "flux_rules"?: <#26's record>, "rolls": 0–18,016, "upsets": 0–64, "abandon"?: {"player": <uuid>, "until": <long>, "flux_generation": <long>}}` (`long`, as the [Hush spec's](hush.md#sync-and-state) `FluxRules` generation).
 
 - **Cross-field invariants,** checked **only against the run's own stored rules** and the format bounds, never against the tuning in force: 1–16 components with distinct offsets inside the box and off (0, 0), each stack count 1; 1–8 costs; `drawn`'s keys ⊆ `costs`' and `drawn[a] ≤ costs[a]`; `bonus = min(matched, max_pairs) × per_pair`; `s` = clamp(100 − `r` − `lone_pedestals` × `lone_pedestal` − `lone_items` × `lone_item` − `warp` + `bonus`, 0, 100); `chance` = ceilDiv((100 − `s`) × `max_chance`, 100); each stored rule within its tuning range; `max × spill` ≤ 10,000; `upsets ≤ max`; `rolls` ≤ the run's own `ceiling`; `1 ≤ seq ≤ runs`. A run started under one tuning therefore reopens valid under any other. Zero amounts are never written.
 - **Disk:** every persistent mutation (a commit, a claim, an absorb, a jolt, a draw's ledger, a roll's counters, abandoning, a finish, a hand or automation slot change, a minted id) calls `setChanged` on each block entity it touched, in addition to marking it for the packet flush.
-- **Formats.** A record with an unknown format, out of bounds, failing an invariant, or naming an aspect, item, enchantment or research entry the registries don't hold is **kept as its raw tag and written back unchanged**, with one log line, and the block entity is **dormant**: no hand use, no hopper or capability movement (the container path refuses and the handler is unavailable), no step, no claim validated as live, readout `UNREADABLE` or `PEDESTAL_UNREADABLE`. A dormant pedestal's claim can't be read, so the pedestal refuses new claims. A loaded **dormant bowl** leaves its pedestals' claims **unresolved** (see "Claims"): they are kept and refuse reassignment until the bowl can be validated, so restoring its pack can never resume a plan against offerings another bowl has claimed meanwhile. Removal drops nothing it can't decode and logs a warning. Restoring the pack restores it.
+- **Formats.** Both records follow [conventions, Raw-record retention](conventions.md#raw-record-retention). **Site difference:** a record naming an aspect, item, enchantment or research entry the registries don't hold is **unreadable** here, not [inert](conventions.md#missing-ids-are-inert-not-unreadable), so that its claims stay unresolved until its pack is restored. An unreadable block entity [does nothing](conventions.md#what-an-unreadable-record-does): no hand use, no hopper or capability movement (the container path refuses and the handler is unavailable), no step, no claim validated as live, readout `UNREADABLE` or `PEDESTAL_UNREADABLE`. An unreadable pedestal's claim can't be read, so the pedestal refuses new claims. A loaded **unreadable bowl** leaves its pedestals' claims **unresolved** (see "Claims"): they are kept and refuse reassignment until the bowl can be validated, so restoring its pack can never resume a plan against offerings another bowl has claimed meanwhile. Removal follows [conventions, Removal](conventions.md#removal).
 - **Coalesced updates:** every change marks the block entity in a per-level dirty set, flushed once per tick after the level ticks: at most one update packet per block entity per tick, by the [wands spec's flush](wands.md#sync-and-state). A stale entry never updates a replacement.
-- **`InfusionRules`** is a fixed record: every tuning key and the `limits.*` values the research grammar lists (see the amendment). Client caches are invalidated when it arrives.
+- **`InfusionRules`** is a [Rules record](conventions.md#rules-records): every tuning key and the `limits.*` values the research grammar lists. Its **generation**, an arm input and part of the commit's fingerprint, is `fold([INFR, format, every value in key order])`, as `FluxRules`' is ([conventions, Salts](conventions.md#salts)).
 - **Bounded codecs:** both records as above; ids ≤ 256 characters; `InfusionReadout` and `InfusionSeen` as under "Arms and revisions"; `InfusionRules` fixed; the tuning file.
 
 **Reloads:**
@@ -929,7 +932,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **enchanting:** each condition and reason; the cost, `R` and decode-bound vectors (one run to the cap); a book refused; conflict excluding the holder itself;
 - **the recipe codec:** required fields; `transmute` only with an item result and false by default; created results; per-level caps; the `StreamCodec` round trip and bounds;
 - **the item handler:** every method row; arguments first; restoration of the promised stack and refusal of a wrong one; locked taking; nested transactions with one snapshot per depth;
-- **codecs:** both block entities (every bound and invariant, raw round trip of dormant records, missing ids), the readout (held-now saturation at 99,999 from `long` totals; `solicited` true only on a strike's or commit's answer, false on every refresh, bump and run update), the seen payload, `InfusionRules`, the tuning file (the product bound) and every `content/` schema;
+- **codecs:** both block entities (every bound and invariant; [conventions' raw-retention test](conventions.md#tests), with a missing id decoding as unreadable), the readout (held-now saturation at 99,999 from `long` totals; `solicited` true only on a strike's or commit's answer, false on every refresh, bump and run update), the seen payload, `InfusionRules`, the tuning file (the product bound) and every `content/` schema;
 - **content lints:** the chime-capacity bound; the enchantment tag and maxima; the enchanting price floor; the multiblock rules; the bootstrap coverage; `void` only behind a Stage 4 gate; non-amplification (see the contracts).
 
 **GameTest:**
@@ -939,13 +942,13 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **assessment budget:** 100 players striking continuously with mixed commit attempts and refreshes: ≤ 16 assessments per level per tick, every pending one serviced or expired within `ASSESS_TTL`, and a pending commit attempt revalidated (out of reach, spawn protection gained) before it commits;
 - **run subscription:** without another strike, the starter's HUD follows progress, upsets and the abandon price, and clears at finish, abandonment and removal; a `RUN` readout never commits;
 - **the gate:** an unlearned striker gets `NO_RECIPE`; **research revoked during a committed run** — it finishes; a starter who logs out, and one who dies, mid-run — it finishes, and offline completion posts `COMPLETED` without the criterion;
-- **claims:** two overlapping bowls start one after the other on shared pedestals — the second refuses; a bowl replaced mid-run leaves dead claims that clear; a bowl in an unloaded chunk keeps its claims unknown, and they refuse a nearby start; **A's pedestal broken and replaced, then claimed by B: A stalls and never consumes B's offering**; an unclaimed replacement holding the promised stack is claimed by A and absorbed; **A dormant while loaded keeps its claims unresolved**, B can't claim them, and restoring A's pack resumes A;
+- **claims:** two overlapping bowls start one after the other on shared pedestals — the second refuses; a bowl replaced mid-run leaves dead claims that clear; a bowl in an unloaded chunk keeps its claims unknown, and they refuse a nearby start; **A's pedestal broken and replaced, then claimed by B: A stalls and never consumes B's offering**; an unclaimed replacement holding the promised stack is claimed by A and absorbed; **A, unreadable while loaded, keeps its claims unresolved**, B can't claim them, and restoring A's pack resumes A;
 - **automation:** a hopper and an item-capability caller can neither take a claimed component nor put a wrong item on a claimed pedestal, can restore the promised stack, and can't take from a ringing bowl; an aborted capability extraction leaves the slot exact; a capability transaction open across a start, an absorb and a removal (each refused or deferred, settling once);
 - **drawing:** from jars and a crucible in the box; nothing from outside it or behind an unloaded chunk; a trickle of one unit per draw rolls once per unit; a nested abort leaves vessels and ledger exact; **a source whose `onRootCommit` throws after a successful extraction: the credit stands, the step rolls, nothing retries**; an extract that throws before the commit: no credit, no roll; capability discovery that throws still closes the operation and settles a deferred removal; a box whose earlier tagged blocks expose no handler still finds its 32 sources; a non-`NONE` lifecycle defers the step; stalls never roll;
 - **upsets:** a fixed seed reproduces the vector's upsets; a jolt with a cancelled spawn, and with a listener emptying the pedestal (no duplication); restoring a jolted item by hand and by hopper; a spill is owed again and posts once; the cap;
 - **abandoning:** pause, confirm and timeout, with the exact flux; another player refused while it is armed; **a player without the run's research, and a learned non-starter while the starter is online in the level, refused `.not_yours` with nothing changed**; with the starter offline, a learned player abandons; a flux-rule `/reload` between the two uses makes it reconfirm;
 - **removal:** the bowl removed mid-run, during a step and during a capability transaction (spills and drops once each); a pedestal broken mid-run, then replaced and restored;
-- **persistence:** save and reload mid-run, paused, stalled and abandon-armed; a chunk unloaded mid-run resumes without catch-up; a tuning `/reload` mid-run leaves the run's rules frozen; **a tuning change (symmetry penalties, `upset.max_chance`, the rest) followed by save and reopen** leaves the run readable, valid against its stored rules, and unchanged in odds; dormant records refuse hands, hoppers and capabilities and survive save unchanged;
+- **persistence:** save and reload mid-run, paused, stalled and abandon-armed; a chunk unloaded mid-run resumes without catch-up; a tuning `/reload` mid-run leaves the run's rules frozen; **a tuning change (symmetry penalties, `upset.max_chance`, the rest) followed by save and reopen** leaves the run readable, valid against its stored rules, and unchanged in odds; unreadable records refuse hands (`message.vftv.unreadable`), hoppers and capabilities and survive save unchanged;
 - **enchanting:** an unenchanted and a partly enchanted sword each raised to the cap in one run, at the summed price; the cap refused; a conflict; `transmute` keeping components;
 - **bounds:** no chunk is loaded anywhere; the step and arm queues hold their caps under 64 due bowls;
 - every test id in the discovery guard.
@@ -957,87 +960,28 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the book's recipe and structure pages and fact fields with no altar, another recipe's altar, a short one, a ready one and **a live run of that recipe** (abandon flux shown, clean figures absent), with `checked_at` shown whenever there is a context;
 - **with JEI:** hide and unhide on grant and revoke, and after a reload; the ring at 1 and 16 components; **without JEI**, nothing breaks;
 - the Stage 3 flow: learn `vftv:infusion`, craft and build the shown altar, learn `vftv:echo_wands`, infuse an Echo rod and cap, assemble the wand, learn `vftv:infused_enchanting`, enchant a sword (a state dump at each step);
-- sync on join, reconnect and `/reload`;
+- sync on join, reconnect and `/reload` (the [Rules test](conventions.md#tests) for `InfusionRules`);
 - the asset, lang and model validators: every key under "Lang keys", every sound and subtitle, both blocks' models, blockstates and item definitions, the Echo items and wand layers, and the multiblock display file.
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts on this ticket):
-
-| Arcane contract | Met by |
-|---|---|
-| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "Authored content, Recipes": the bowl and pedestal are `ordinary`, gated by `vftv:infusion` |
-| Stage 1 arcane recipes meet the Stage 1 affordability test | None is in Stage 1. Both add a Stage 3 lint at the chime rod's capacity, and the bootstrap review covers the Echo recipes. |
-| A recipe needing warp on craft proposes an extension | None applies warp. The warp penalty is a stability input, not a warp charge (see "Stability"). |
-
-**Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)'s contracts on this ticket):
-
-| Crucible contract | Met by |
-|---|---|
-| Crucible recipes use the type's body with their own `research`, in their own content files, under the common validation and non-amplification test | Infusion ships no crucible recipe; any later one is bound by this |
-| Any essentia combination keeps Vacuos a true primal; book pages truthful | Infusion consumes essentia and combines none ("Drawing essentia") |
-
-**Met here** (the [Essentia logistics spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)'s contracts on this ticket):
-
-| Essentia contract | Met by |
-|---|---|
-| Moves essentia only through the essentia capability, in roots closed within the call, never across ticks | "Drawing essentia": one root per draw step, nested extracts, the ledger journalled in the same root, the `Lifecycle.NONE` guard and deferral |
-| Any suction it offers is in the consumer band; its blocks join `vftv:essentia_endpoints` if tubes should connect | The bowl offers no suction and is no endpoint; a line from a crucible feeds a jar inside the box, or a crucible stands in it |
-| Direct jar pulls inherit neither a line's connectivity nor its throughput, and need not apply the suction rule; routing like a line applies it | Direct pulls from the box only, at `run.rate`, routing nothing |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| **Gate:** `research` on every gated recipe; the server refuses every processing and output path until it is learned; a GameTest with an unlearned player | **Reconciled, not met as originally worded.** The field is required; candidates are learned recipes only; the gate is checked at the read and again at the commit's recheck, **before anything is claimed or drawn**. A run then completes the craft that commit authorised, as a committed Worktable output is never confiscated. The research spec's gate contract is amended in this change to say that a machine that runs over time is gated at its commit. GameTests: an unlearned striker, and research revoked mid-run. |
-| Recipe-page validator | Each built-in recipe sits on its gating entry's page (handed to #36) |
-| One authoritative cost preview: every decision cost, capped modifiers flagged; backs the page and the fact fields | "The authoritative preview", with an `ARMED` or a matching `RUN` context: costs, effective enchanting costs and target level, per-level reference costs without a context, `stability`, `chance`, `clean_floor` and `clean_full_supply`, `upset_flux`, a run's `abandon_flux`, and the `stabilisers_capped` and `clamped` flags; typed absence with exact absent texts; the visible `checked_at` identity on the page and in JEI; frozen fact formats; live dependencies (the research spec amended). GameTest and E2E: a live run's preview. |
-| JEI by the learned gate; updates on grant, revoke, login and logout; accurate unaffordability; works without JEI | "JEI": the shared reconcile; absent or stale contexts unavailable; tested with and without JEI |
-| **The preview includes stability as a fact field, and the altar is a `multiblock` id structure pages can show** | `stability` (and `instability`, `chance`, `clean`, `flux`) fact fields; `vftv:infusion_altar` with its resource contract (the research spec amended) and its placement GameTest |
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)): later wand tiers are entries added by Infusion with no code — "The Echo rod and cap".
-
-**Met here** (the [progression spec](progression.md#reality-slipping)): infusion stability is shown before you commit and never lies — the server's readout, a revision bound to the whole plan, a commit only inside the second permitted use against an acknowledged revision and a callback-free fingerprint, exact inputs frozen with their own rules, a true clean floor whatever the supply, and the sequence flux bound.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36):
-- **Entries:** the three notes under "Stage", with their parents and gates, each carrying `vftv:recipe` pages for the recipes it gates; `vftv:infusion` also carries a `vftv:structure` page with `multiblock: vftv:infusion_altar`.
-- **Prose** teaches striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, the difference between the clean floor and the full-supply figure, waiting without harm, restoring a jolted offering, abandoning, its price and who may do it, the start as the commit, enchanting straight to the cap in one run, and every loss exception, with every number in `recipe` or `infusion` fact spans. The number-word lint bans "pair": prose says "matched", or lists an exception.
-- **The affordability artifact:** `content/research/path-stage3.json` learns `vftv:infusion` after `vftv:ruins`, `vftv:essentia_jars` and `vftv:resonant_brass`, then `vftv:echo_wands` and `vftv:infused_enchanting`; the review reads it beside `content/infusion/echo_bootstrap.json`, the material half of the proof.
-- **No progression requires an infusion craft criterion**, since offline completion omits it.
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- It supplies **`infusion_penalty(player, kind)`**: pure, an integer 0–100, ≥ 0 for `ORDINARY`, a function only of the player's synced warp state and the kind, identical on both sides; the typed zero until it lands. It re-sends nothing itself: a change to its synced inputs is one of the arm's inputs.
-- Infusion applies no warp. Warp on an upset, or Void behaviour beyond the penalty, needs #25 (or #28) to propose a previewed, echoed extension.
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- `essentiaFlux(spilled, cause, rules)` covers `UPSET`, `ABANDONED` and `REMOVED` for infusion and generates flux **once** on `InfusionEvent(SPILLED)` with **the rules that event carries** (amended from "is applied": what an aura retains is reported separately). It supplies a pure **`essentiaFluxBound(units, cause, rules)`**: an integer 0–1,000,000, ≥ `essentiaFlux(m, cause, rules)` for every valid map `m` totalling ≤ `units` (≤ 1,000). Its rules record is versioned, synced and codec-backed, with a generation, so a run can freeze it. The two-argument `essentiaFlux(spilled, cause)` of the crucible and essentia contracts is this function under the current rules, so those contracts are unchanged. Until #26 lands, both functions are the typed zero and the record is absent.
-- **Bounds:** an infusion spill is a valid map of ≤ 8 aspects totalling ≤ 8,000.
-- It adds no flux for drawing, absorbing, stalls, pauses or finishing.
-- **Its infusion recipe `vftv:pealing_bell`** (behind `vftv:the_hush`) uses this body with its own `research`, in its own content file, bound by the common validation and the global non-amplification test, like the siblings below.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate, so `essentiaFluxBound` is exact and monotone (the default upset bound is 300: 6 spills of 50); `FluxRules` with its codec and generation; an `UPSET` from a run frozen before #26 carries no record and generates 0, while its `ABANDONED` or `REMOVED` carries the current record; generated, retained, pending and overflow reported.*
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Their infusion recipes (`vftv:hollow_bell` among them, named for its item like every item-producing body here) use this body with their own `research`, in their own content files, bound by the common validation and the global non-amplification test, as is the Hush spec's `vftv:pealing_bell` (above). `kind: void` built-ins need a Stage 4 gate. #24 may use `transmute` for upgrades. Runic augments, Void-tier stability rules or anything else is an extension they propose. *Met by the [armor spec](armor.md#contracts-on-sibling-specs) for #24: its recipes live in `content/armor/recipes.json` and `void.json`; its runic-augmentation equivalent, Baffling, uses this type's enchantment form with no extension, needing only the lint exemption above (amended here); its Void pieces are `kind: void` transmutes behind the Stage 4 gate `vftv:void_armor`. Met by the [Eldritch tier spec](eldritch.md#void-tier-crafting) for #28: three bodies, `vftv:hollow_bell`, `vftv:void_rod` and `vftv:void_cap`, in `content/eldritch/recipes.json`, each `kind: void` behind `vftv:hollow_bell` or `vftv:void_wands`; no runic augmentation and no Void stability rule.*
-
-**[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- Golems may load pedestals and bowls and restore promised stacks through the item capability or the container path, under its rules. No golem starts an infusion in v1: a start needs a player's second permitted strike against an acknowledged readout.
-
-**[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
-- No advancement it ships for progression requires an infusion craft criterion.
-- *Met by the [worldgen spec](worldgen.md#the-advancements): every criterion of its three advancements is `inventory_changed` or `player_killed_entity`, checked by a datagen test.*
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for `vftv:singing_bowl`, `vftv:pedestal`, `vftv:echo_rod` and `vftv:echo_cap`.
-- **Round-trip non-amplification** over the two arcane recipes (vis counting as no material input) and every built-in infusion recipe in every content file: `total(v(result)) ≤ min over centre alternatives of total(v(alt)) + Σ min over each component's alternatives + total(essentia)`. Enchanting and transmuting add no value: values ignore components ([aspects, Coverage and supply](aspects.md#coverage-and-supply)).
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change) **and [Wand assets](https://github.com/andrewbrogoff/voices-from-the-void/issues/38)**
-- The wands spec now says that later-tier parts live in their own content files in the parts schema, merged with cross-file duplicate rejection, and that later tiers **append** cases to `items/wand.json`.
-- **#38 owns `assets/vftv/items/wand.json` first** and delivers it exactly as the wands spec's "Components" shows. The Infusion assets ticket then appends the `vftv:echo` case to each select (layer models `vftv:item/wand/rod/echo` and `vftv:item/wand/cap/echo`), keeping every existing case, both `unknown` fallbacks and the foci layer. The two tickets never rewrite the file at the same time.
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)** (amended in this change)
-- `api`'s `SpillCause` gains **`UPSET`** and **`ABANDONED`**, posted only by `InfusionEvent`. The crucible's own spills, producers and bounds are unchanged.
+| Needs from | What | Met at |
+|---|---|---|
+| [Research](research.md) | a machine that runs over time is gated at the commit that starts its run | [research, Contracts on sibling specs](research.md#contracts-on-sibling-specs) ("Machines that run over time") |
+| [Research](research.md) | `vftv:structure` pages read a `multiblock` id from `assets/<ns>/multiblock/<path>.json` in the owner's format; `recipe` pages take this spec's preview context; the `infusion` fact keys | [research, Page descriptors](research.md#page-descriptors), [Prose and fact references](research.md#prose-and-fact-references) |
+| [Stage 3 research content #36](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) | the three notes under "Stage", each with `vftv:recipe` pages for what it gates, and `vftv:infusion` with a `vftv:structure` page for `vftv:infusion_altar`; prose teaching striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, the clean floor against the full-supply figure, waiting without harm, restoring a jolted offering, abandoning (its price and who may), the start as the commit, enchanting to the cap in one run and every loss exception, with every number in `recipe` or `infusion` fact spans and "pair" banned; `path-stage3.json` learning `vftv:infusion` after `vftv:ruins`, `vftv:essentia_jars` and `vftv:resonant_brass`, then `vftv:echo_wands` and `vftv:infused_enchanting`, read beside `content/infusion/bootstrap.json`; no progression requiring an infusion craft criterion | [research, Roster](research.md#roster) and [Affordability and recovery](research.md#affordability-and-recovery); the rest is in the Stage 3 ticket's scope ([research, Production tickets](research.md#production-tickets)) |
+| [Warp](warp.md) | `infusion_penalty(player, kind)`: pure, an integer 0–100, ≥ 0 for `ORDINARY`, a function only of the synced warp state and the kind, identical on both sides, the typed zero until it lands | [warp, The dials](warp.md#the-dials) |
+| [Hush](hush.md) | `essentiaFlux(spilled, cause, rules)` for `UPSET`, `ABANDONED` and `REMOVED`, applied once on `InfusionEvent(SPILLED)` with the rules the event carries; a pure `essentiaFluxBound(units, cause, rules)`, 0–1,000,000, ≥ `essentiaFlux` of every valid map totalling ≤ `units` (≤ 1,000); both the typed zero until it lands | [Hush, Sources](hush.md#sources), [The pinned functions](hush.md#the-pinned-functions) |
+| [Hush](hush.md) | `FluxRules`: versioned, synced and codec-backed, with a generation, so a run can freeze it | [Hush, Sync and state](hush.md#sync-and-state) |
+| [Hush](hush.md) | no flux for drawing, absorbing, stalls, pauses or finishing | [Hush, Sources](hush.md#sources) |
+| [Hush](hush.md), [Eldritch](eldritch.md), [Armor](armor.md) | their infusion recipes use this body with their own `research`, in their own content files, bound by the common validation and the non-amplification lint; built-in `kind: void` behind a Stage 4 gate; anything more (runic augments, Void stability rules) is an extension they propose | [Hush, Recipes](hush.md#recipes), [eldritch, Void-tier crafting](eldritch.md#void-tier-crafting), [armor, Baffling](armor.md#baffling) and [Void armour](armor.md#void-armour) |
+| [Foci](foci.md) | a sneaking wand with a focus on a bowl or pedestal is the block-targeted cast, and anything it breaks goes through the player mining path, so "Removal" applies | [foci, Entry points](foci.md#entry-points) |
+| [Worldgen](worldgen.md) | no advancement it ships for progression requires an infusion craft criterion | [worldgen, The advancements](worldgen.md#the-advancements) |
+| [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) | hand entries (or reviewed exemptions) for `vftv:singing_bowl`, `vftv:pedestal`, `vftv:echo_rod` and `vftv:echo_cap`; round-trip non-amplification over the two arcane recipes (vis counting as no material input) and every built-in infusion recipe: `total(v(result)) ≤ min over centre alternatives of total(v(alt)) + Σ min over each component's alternatives + total(essentia)`, with enchanting and transmuting adding no value | not stated: [aspects, Coverage and supply](aspects.md#coverage-and-supply) states non-amplification for crafting recipes only |
+| [Wands](wands.md) | later-tier parts live in their own content files in the parts schema, merged with cross-file duplicate rejection | [wands, Parts](wands.md#parts) |
+| [Wands](wands.md), [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) | #38 delivers `assets/vftv/items/wand.json` first; later tiers append cases, keeping every case, both `unknown` fallbacks and the foci member, never writing the file at the same time | [wands, Components](wands.md#components) |
+| [Crucible](crucible.md), [API](api.md) | `SpillCause` has `UPSET` and `ABANDONED`, posted only by `InfusionEvent` | [crucible, Events](crucible.md#events), [API, The events](api.md#the-events) |
+| [Essentia](essentia.md) | direct jar pulls inherit neither a line's connectivity nor its throughput, and need not apply the suction rule | [essentia, Contracts on sibling specs](essentia.md#contracts-on-sibling-specs) |
 
 ## Production tickets
 
@@ -1046,6 +990,6 @@ This spec settles every decision. Two required child tickets deliver the assets 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
 | **Infusion assets** | **Generator:** `tools/art/infusion.py`. Every asset is in the Stage 3 row of [art style §5](art-style.md#5-tone-ramp-by-stage): mauve and slate in the shadows, `teal1` in grooves.<br>**Block textures,** 16×16, under `assets/vftv/textures/block/`: `singing_bowl_side.png`, `singing_bowl_top.png` (the rim), `singing_bowl_inner.png` (walls and floor inside), `singing_bowl_bottom.png`; `pedestal_side.png`, `pedestal_top.png`, `pedestal_bottom.png`.<br>**Block models,** pixel-aligned, no rotations ([art style §6](art-style.md#6-blocks-and-models)): `assets/vftv/models/block/singing_bowl.json` with exactly the 6 cuboids under "The blocks" (textures `side`, `top`, `inner`, `bottom`, `particle` = side), and `assets/vftv/models/block/pedestal.json` with exactly its 3 cuboids (`side`, `top`, `bottom`, `particle` = side).<br>**Blockstates:** `assets/vftv/blockstates/singing_bowl.json` and `pedestal.json`, one variant each.<br>**Item definitions:** `assets/vftv/items/singing_bowl.json`, `pedestal.json` (`minecraft:model` of the block model), `echo_rod.json`, `echo_cap.json`.<br>**Items:** `assets/vftv/textures/item/echo_rod.png` (an upright instrument, [art style §4](art-style.md#4-silhouette-language)) and `echo_cap.png`, with `assets/vftv/models/item/echo_rod.json` and `echo_cap.json` (parent `minecraft:item/generated`).<br>**Wand layers:** `assets/vftv/textures/item/wand/rod/echo.png` and `…/wand/cap/echo.png` with their layer models `vftv:item/wand/rod/echo` and `vftv:item/wand/cap/echo` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (see the contracts on #38).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound" (≤ 3 s, faded tails), with the triggers, category, volume, pitch rule and variant counts in its table.<br>**No new sprite:** the HUD frame is `vftv:hud/vis_frame` and its cells `vftv:worktable/cost_cell`.<br>**Review:**<br>• a contact sheet at GUI scale 2 beside vanilla's lectern, enchanting table and amethyst cluster, with every item and the 5 rod-and-cap wands that include an Echo part;<br>• Blender renders of the shown altar empty, loaded and ringing, with **a sword and a block held** on the bowl and a pedestal at the geometry under "Rendering and sound";<br>• **worst-case HUD mockups** composed from the reused sprites and the vanilla font: a `READY` readout with 8 cells of 4-digit amounts, a run that is missing an offering, paused, waiting and abandon-armed, a `PROMISED` and an `UNREADABLE` readout, a long test translation, and unheard aspects, on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD.<br>Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) (it owns `items/wand.json` first) |
-| **Infusion content** | `content/infusion/recipes.json` (`vftv:infusion_recipes/1`: the two arcane bodies, the two Echo bodies and 6–10 enchanting bodies, within "Authored content, Recipes"); `content/infusion/wand_parts.json` (`vftv:wand_parts/1`, exactly the shipped Echo values); `content/infusion/multiblock.json` (`vftv:multiblocks/1`, the altar the book shows, passing its lints); `content/infusion/echo_bootstrap.json` (`vftv:echo_bootstrap/1`, with every `why` reviewed and the sequence non-circular); and `content/lang/en_us/infusion.json` (`vftv:lang/1`) with every key under "Lang keys". Its review checks that the messages teach what that section lists. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
+| **Infusion content** | `content/infusion/recipes.json` (`vftv:infusion_recipes/1`: the two arcane bodies, the two Echo bodies and 6–10 enchanting bodies, within "Authored content, Recipes"); `content/infusion/wand_parts.json` (`vftv:wand_parts/1`, exactly the shipped Echo values); `content/infusion/multiblock.json` (`vftv:multiblocks/1`, the altar the book shows, passing its lints); `content/infusion/bootstrap.json` (`vftv:infusion_bootstrap/1`, with every `why` reviewed and the sequence non-circular); and `content/lang/en_us/infusion.json` (`vftv:lang/1`) with every key under "Lang keys". Its review checks that the messages teach what that section lists. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
 
 [Stage 3 research content #36](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) consumes the entry ids, recipe ids, the multiblock id, the fact fields and the `infusion` fact keys frozen here.

@@ -179,7 +179,7 @@ The built-ins: 8 effects, 4 media, 3 modifiers. Depth comes from combining them,
 | `modifiers` | 0–3 entries, id → 1–3 | |
 
 - **A blank focus** has rank 0 and no composition when crafted. It can be ranked but not cast. A focus with no component at all is read as a blank of rank 0.
-- **Decoding** checks the format bounds, never the current registries or tuning. An unknown format or an out-of-bounds value is kept as its **raw tag** and written back unchanged, with one log line ([wands, Sync and state](wands.md#sync-and-state)): the focus is **unreadable**, casts nothing, can't be composed or ranked, and its tooltip says so. Ids that name no registry entry decode and are kept; such a focus is **inert** until the pack returns or it is recomposed.
+- **Decoding and retention** follow [conventions, Raw-record retention](conventions.md#raw-record-retention). An **unreadable** focus casts nothing and can't be composed or ranked; its tooltip shows `tooltip.vftv.focus.unreadable`. A focus naming a missing registry entry is **inert** ([conventions](conventions.md#missing-ids-are-inert-not-unreadable)) until the pack returns or it is recomposed.
 - **The kind of a focus** is its effect's `kind`: `VOID` iff the effect is `void`. A blank, unreadable or inert focus has no kind. `FocusService.kind(stack)` answers for a focus item or a wand holding one.
 
 ### Attaching and detaching
@@ -201,7 +201,7 @@ The built-ins: 8 effects, 4 media, 3 modifiers. Depth comes from combining them,
 
 ### On the wand
 
-**`vftv:wand_focus`**, on `vftv:wand` ([wands, Components](wands.md#components)), persistent and network-synced: `{"format": 1, "focus": <ItemStack>}`. It holds **the attached focus stack itself**, through vanilla's `ItemStack` codec, so nothing on it (a name, another mod's data) is lost. The stack must be a `vftv:focus` of count 1. Otherwise, or with an unknown format, the value is kept raw and written back unchanged, and the wand casts nothing and can't detach.
+**`vftv:wand_focus`**, on `vftv:wand` ([wands, Components](wands.md#components)), persistent and network-synced: `{"format": 1, "focus": <ItemStack>}`. It holds **the attached focus stack itself**, through vanilla's `ItemStack` codec, so nothing on it (a name, another mod's data) is lost. The stack must be a `vftv:focus` of count 1. Otherwise the value is unreadable ([conventions](conventions.md#raw-record-retention)): the wand casts nothing and can't detach.
 
 **The model.** One custom select property, **`vftv:focus_effect`**, registered through NeoForge's `RegisterSelectItemModelPropertyEvent` (`MC:client/renderer/item/properties/select/SelectItemModelProperties.java:26`). It is needed because vanilla's `minecraft:component` property can't reach a field inside a record. It reads either the focus's own component (for `vftv:focus`) or the attached focus (for `vftv:wand`):
 
@@ -356,7 +356,7 @@ Each collection's size is read and checked **before anything is allocated**. Out
 
 ### Revision and status
 
-**The revision** is the [arcane spec's preview revision](arcane.md#preview-revision), unchanged in mechanism. It is a server-owned 32-bit counter per open menu, starting at 0 and wrapping, sent in data slots 1 and 2. It bumps on a menu slot change (including the wand's vis written by a spend, and an attach or detach), a change to the player's research, and a replaced `FociRules` or `VisRules`. **Price inputs never bump it:** the discount attribute and #25's factor and amplifier inputs. The quote echo catches a stale price; a change to a price input clears the refusal without a bump. The O(1) change check runs in `broadcastChanges`, at check 3, and before every commit. Torn reads of the two halves are refused as `STALE`, never acted on.
+**The revision** follows [conventions, The revision](conventions.md#the-revision) and the Lathe's row of [Commits per site](conventions.md#commits-per-site), as the [arcane spec's preview revision](arcane.md#preview-revision) does: one per open menu, in data slots 1 and 2. It bumps on a menu slot change (including the wand's vis written by a spend, and an attach or detach), a change to the player's research, and a replaced `FociRules` or `VisRules`. The change check runs in `broadcastChanges`, at check 3, and before every commit.
 
 **Status and refusals.** One enum, **`LatheStatus`**, in `core.focus`; its code is the wire value of data slot 0.
 
@@ -375,7 +375,7 @@ Each collection's size is read and checked **before anything is allocated**. Out
 | 10 | `INERT_WAND` | client; rank check 8; spend "inert" | `message.vftv.spend.inert` | 0 |
 | 11 | `EXCEEDS_CAPACITY` | client; rank check 9; spend "short" with `exceeds_capacity` | `status.vftv.worktable.exceeds_capacity` | 0 |
 | 12 | `SHORT` | client; rank check 9; spend "short" | `message.vftv.spend.short` | 1 |
-| 13 | `STALE` | server only: check 3; spend "stale" | `message.vftv.spend.stale` | 0 |
+| 13 | `STALE` | server only: check 3; spend "stale" | `message.vftv.cost_changed` | 0 |
 | 14 | `ERROR` | server only: a spend that threw and was rolled back | `status.vftv.lathe.error` | 0 |
 
 - **Two predictions.** The client predicts each action from synced state in its check order: **Turn** through `NO_FOCUS`, `UNREADABLE`, `INCOMPLETE`, `INVALID`, `UNLEARNED`, `UNCHANGED`, else `READY`; **Raise rank** through `NO_FOCUS`, `UNREADABLE`, `MAX_RANK`, `RANK_UNLEARNED`, `NO_WAND`, `INERT_WAND`, `EXCEEDS_CAPACITY`, `SHORT`, else `READY`. The status line shows Raise rank's prediction while that button is hovered or focused, otherwise Turn's.
@@ -451,9 +451,9 @@ The fourth row through the wands quote: cap 1.00, no discount, W 1.00 → `m` 10
 | # | Check | Refusal |
 |---|---|---|
 | 1 | a focus is attached (`vftv:wand_focus` present) | none: `PASS`, as [the wands spec](wands.md#hand-tapping) has it |
-| 2 | not already inside a cast (the operation guard below) | silent |
+| 2 | not already inside a cast (the operation guard below) | `message.vftv.busy`, at most once per player per tick ([conventions, Re-entry](conventions.md#re-entry)) |
 | 3 | the wand is not inert | `message.vftv.spend.inert` |
-| 4 | the focus is readable, not blank, every id is present and the composition is valid at its rank | `message.vftv.focus.unreadable` / `.blank` / `.unknown` (1: the missing id) / `.out_of_tune` |
+| 4 | the focus is readable, not blank, every id is present and the composition is valid at its rank | `message.vftv.unreadable` / `message.vftv.focus.blank` / `.unknown` (1: the missing id) / `.out_of_tune` |
 | 5 | the effect, the medium and every modifier are learned | `message.vftv.focus.unlearned` |
 | 6 | block gesture only: vanilla's cooldown (`isOnCooldown`), which this path checks itself because it runs before vanilla's | silent |
 | 7 | a `BLOCKS` effect: the entity gesture is refused (above), and the server config `foci.block_effects` is on | `.needs_block`; `message.vftv.focus.block_effects_off` |
@@ -467,7 +467,7 @@ The fourth row through the wands quote: cap 1.00, no discount, W 1.00 → `m` 10
 **Dispatch by medium.** Bolt, Touch and Burst are **one-shot casts**, below. A Beam is not: after checks 1–8 it installs its session and runs its single pulse procedure for the start tick (see "Beam"), and that procedure is the only thing that pays for it. There is no one-shot spend for a Beam, so a Beam can never pay twice at its start, nor pay for an empty start.
 
 **A one-shot cast:**
-1. **The operation guard.** A per-player flag in transient server memory is set before the spend and cleared **last**, in the `finally` below, after every notification. While it is set, any further cast or Beam pulse by that player (from a `VisSpentEvent`, `FocusAffectEntityEvent` or `FocusEvent` listener, say) is refused silently at check 2. So no listener can re-enter a cast before its cooldown is in place.
+1. **The operation guard,** the foci guard keyed by the player ([conventions, Operation guards](conventions.md#the-operation)), is taken before the spend and released **last**, in the `finally` below, after every notification. While it is held, any further cast or Beam pulse by that player (from a `VisSpentEvent`, `FocusAffectEntityEvent` or `FocusEvent` listener, say) is refused at check 2. So no listener can re-enter a cast before its cooldown is in place.
 2. **The spend:** `VisService.spend(player, wand, base, ctx, expected = none, effect = [], boundary = none)`. A same-tick path passes no echo (wands step 3). A refusal maps to check 3, 5 or 9's message. A throw was already rolled back and logged by the wands spec: the cast ends with no cooldown.
 3. **On `SPENT` or `COMMITTED_NOTIFY_FAILED`** (both committed), inside a `try`:
    1. **The caster check,** because a `VisSpentEvent` listener may have moved them or changed their hand. If it fails, the working **slips** (`message.vftv.focus.slipped`): nothing is applied.
@@ -479,7 +479,7 @@ The fourth row through the wands quote: cap 1.00, no discount, W 1.00 → `m` 10
 
 ### Failure after the spend
 
-The spend's atomicity covers vis only ([wands, The spend](wands.md#the-spend)); the working runs after it. **There is never a refund.** Vis leaves only through `spend`, and the checks above run first, so a refusal before the spend is the common case.
+The spend's atomicity covers vis only ([wands, The spend](wands.md#the-spend)); the working runs after it. **There is never a refund.** Vis leaves only through `spend` (foci never draw from nodes or charge a wand), and the checks above run first, so a refusal before the spend is the common case.
 
 | Medium | What can fail after the spend | Result |
 |---|---|---|
@@ -532,7 +532,7 @@ The spend's atomicity covers vis only ([wands, The spend](wands.md#the-spend)); 
 - **Start,** from either gesture, after checks 1–8: install the session, call `startUsingItem` (the use duration is the wand's 72,000 ticks), send the beam-state signal, then run **the pulse procedure** for the start tick. A start that finds no target pays nothing and keeps beaming.
 - **The schedule:** the start call runs the procedure at tick `start`. Later, `onUseTick` runs it on a tick `now` iff `now > last` and `(now − start) % pulse == 0`. Vector: start 100, pulse 10, `onUseTick` on every tick 100–130 → pulses at 100, 110, 120, 130; start 103 → 103, 113, 123.
 - **The pulse procedure,** the only thing that pays for a Beam:
-  1. **record `last = now`**, before any foreign code can run, and set the operation guard (refused silently if already set);
+  1. **record `last = now`**, before any foreign code can run, and take the operation guard (if it is held, the pulse is refused with `message.vftv.busy`, as check 2);
   2. **session checks,** ending the session on any failure: the same `ItemStack` object (`==`) in the same main-hand slot; the attached composition still equals the session's (an attach, detach or swap ends it); not inert; every part learned; for a `BLOCKS` effect, `foci.block_effects` still on;
   3. **the target, by effect domain, not by gesture:** an `ENTITIES` effect uses the entity ray at `entity_range` (with Reach), even when the beam was started with the block gesture; a `BLOCKS` effect uses the block raycast within **`block_range`** = `min(16, the player's block_interaction_range attribute)`, then that position's pre-filter. The pulse's pin is taken here (the caster, the wand, the composition and the target);
   4. **no target, no spend:** the procedure clears the guard and returns, and the beam continues;
@@ -619,7 +619,7 @@ Blocks already changed stay changed. The promise is the events under "Multiplaye
 
 ## The Void tier
 
-**Only `void` effects are amplified, and only in magnitude** (the scaled quantities under "Effects"), never in radius, range, target count, cost or cadence. Every work bound in this spec therefore holds at any warp. Ordinary foci are never weakened in power; warp reaches them only through cost ("The cost"). That keeps one lever, owned by #25.
+**Only `void` effects are amplified, and only in magnitude** (the scaled quantities under "Effects"), never in radius, range, target count, cost or cadence. Every work bound in this spec therefore holds at any warp. Ordinary foci are never weakened in power; warp reaches them only through cost ("The cost"). That keeps one lever, owned by #25. No gear changes a focus's magnitude in v1.
 
 ### Magnitude
 
@@ -699,7 +699,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 
 **The tooltip** of a focus, or of a wand with one, with Shift held: the effect, medium and modifiers by name; the rank pips; `cost` and, when priced, `cost_effective` with the multiplier's parts, every set flag and the spill (the arcane cost-tooltip lines); the cooldown, range or radius, pulse and magnitude now; the kind; each unlearned part (`tooltip.vftv.focus.unlearned`); and for Exchange, `tooltip.vftv.focus.exchange_warning`. Without Shift, one line names the effect and medium.
 
-**Fact sources** ([research, Prose and fact references](research.md#prose-and-fact-references), amended in this change). Each has a fixed arity:
+**Fact sources** ([research, Prose and fact references](research.md#prose-and-fact-references)). Each has a fixed arity:
 
 | Span | Context |
 |---|---|
@@ -730,7 +730,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 
 - A key outside its context's list, a `focus_rules` key outside the last two rows, or any key outside this table is a malformed span, rejected by the validator.
 - **Representative spans** (each validated by the build-phase validator and resolved in a test): "A kindled bolt costs {fact:focus_effect:vftv:kindle:cost} before its medium", "this working costs {fact:focus:cost_effective} each time, or each pulse", "a burst reaches {fact:focus_medium:vftv:burst:radius} blocks, and each breadth adds {fact:focus_modifier:vftv:breadth:radius_step}", "each force adds {fact:focus_modifier:vftv:force:step_pm}", "the second rank asks {fact:focus_rank:2:cost}", "what hears me strengthens a Void working by {fact:focus_rules:void.per_warp_pm} for each measure, up to {fact:focus_rules:void.max_bonus_pm}".
-- **Until the first `FociRules` arrives,** a `focus_rules` or `focus_rank` span renders `[?]` without logging. An effect, medium or modifier id a pack removed renders `[?]` and is logged once ([research, Prose and fact references](research.md#prose-and-fact-references)).
+- **Until the first `FociRules` arrives** ([conventions, Rules records](conventions.md#rules-records)), a `focus_rules` or `focus_rank` span renders `[?]`. An effect, medium or modifier id a pack removed renders `[?]` and is logged once ([research, Prose and fact references](research.md#prose-and-fact-references)).
 - **JEI:** the Lathe and the blank focus are `vftv:arcane` recipes, which the arcane spec's JEI integration already shows. Composing is not a recipe and has no JEI category.
 
 ## Multiplayer and automation
@@ -776,7 +776,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 
 ## Authored content
 
-The content tickets deliver authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen, which writes the resources into `src/generated/resources`. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails load validation. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow [conventions, The envelope](conventions.md#the-envelope) and its [rejection list](conventions.md#rejection).
 
 ```
 content/foci/effects.json          the six ordinary effects
@@ -798,7 +798,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
 | `recipes.json` | `vftv:foci_recipes/1` | `data/vftv/recipe/<path>.json` |
 | `damage_types.json` | `vftv:damage_types/1` | `data/vftv/damage_type/<path>.json`; the `vftv:kindle` entry in `data/minecraft/tags/damage_type/is_fire.json` and the `vftv:unmaking` entry in `.../bypasses_armor.json` (both `"replace": false`) |
 | `fixtures.json` | `vftv:foci_fixtures/1` | nothing: read by tests only |
-| `lang/<lang>/foci.json`, `foci_void.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `lang/<lang>/foci.json`, `foci_void.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 **Merging:** files with the same schema are merged by datagen. An id declared twice **within one output registry** (two `vftv:focus_effects/1` files declaring the same effect, say) fails datagen. Ids in different registries may coincide: the effect `vftv:kindle` and the damage type `vftv:kindle` are different things.
 
@@ -821,7 +821,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
 }}
 ```
 
-**Rejected:** a missing or unknown field; anything that fails load validation; a built-in entry differing from the roster table; a file holding other than its listed ids; a `void` entry outside `effects_void.json` or an `ordinary` one inside it; **a built-in `void` effect whose `research` is not a Stage 4 entry**, or an ordinary built-in gated above the Stage in "Stage".
+**Rejected:** a built-in entry differing from the roster table; a file holding other than its listed ids; a `void` entry outside `effects_void.json` or an `ordinary` one inside it; **a built-in `void` effect whose `research` is not a Stage 4 entry**, or an ordinary built-in gated above the Stage in "Stage".
 
 ### Media and modifiers
 
@@ -839,7 +839,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
                    "media": ["vftv:burst"], "params": {"radius_step": 1.0, "block_step_sq": 3}}}}
 ```
 
-**Rejected:** as for effects; a built-in differing from the roster tables.
+**Rejected:** an id other than the built-ins; a built-in differing from the roster tables.
 
 ### Recipes
 
@@ -860,11 +860,11 @@ content/lang/en_us/foci_void.json  the Void effects' names
 
 ### Damage types
 
-`{"schema": "vftv:damage_types/1", "types": {<id>: {"exhaustion", "scaling", "tags"}}}`, holding exactly `vftv:kindle` (tags `["minecraft:is_fire"]`), `vftv:focus` (no tags) and `vftv:unmaking` (tags `["minecraft:bypasses_armor"]`), each with `exhaustion` 0.0–1.0 and `scaling` one of vanilla's three strings, `never`, `when_caused_by_living_non_player` or `always`. The generated `message_id` is `<namespace>.<path>` of the id (`vftv.kindle`, `vftv.focus`, `vftv.unmaking`), which the death-message keys under "Lang keys" match. **Rejected:** another id; another `scaling` string; a tag other than those.
+`{"schema": "vftv:damage_types/1", "types": {<id>: {"exhaustion", "scaling", "tags"}}}`, holding exactly `vftv:kindle` (tags `["minecraft:is_fire"]`), `vftv:focus` (no tags) and `vftv:unmaking` (tags `["minecraft:bypasses_armor"]`), each with `exhaustion` 0.0–1.0 and `scaling` one of vanilla's three strings, `never`, `when_caused_by_living_non_player` or `always`. The generated `message_id` is `<namespace>.<path>` of the id (`vftv.kindle`, `vftv.focus`, `vftv.unmaking`), which the death-message keys under "Lang keys" match. **Rejected:** another id; a tag other than those.
 
 ### Fixtures
 
-`{"schema": "vftv:foci_fixtures/1", "cost": [...], "quote": [...], "magnitude": [...], "burst": [...], "beam": [...], "push": [...]}`. A `beam` row's `ticks` is the **closed interval** `[first, last]` of ticks on which `onUseTick` runs, one call per tick, both ends included. Each section transcribes one of this spec's vector tables, which an independent reference computed, so the build-phase unit tests check the `model` code against numbers it didn't produce. One entry of each:
+Follows [conventions, Fixtures](conventions.md#fixtures): `{"schema": "vftv:foci_fixtures/1", "cost": [...], "quote": [...], "magnitude": [...], "burst": [...], "beam": [...], "push": [...]}`. A `beam` row's `ticks` is the **closed interval** `[first, last]` of ticks on which `onUseTick` runs, one call per tick, both ends included. One entry of each:
 
 ```json
 {"schema": "vftv:foci_fixtures/1",
@@ -883,11 +883,11 @@ content/lang/en_us/foci_void.json  the Void effects' names
                 "expect": [2.041353, 0.0, 2.19838]}]}
 ```
 
-Decimal expectations compare to within 0.000001. **Rejected:** a section missing; a row of a vector table missing or altered.
+Decimal expectations compare to within 0.000001.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content tickets write the final text. The two Void effects' `focus_effect.*` keys live only in `foci_void.json`, in Void-tongue, copied from the lexicon's `names` ([warp spec, The lexicon](warp.md#the-lexicon)), with no provisional English.
+Lang files follow [conventions, Lang](conventions.md#lang). Every key below is required in `en_us`, with its listed Args. The English is the intended sense; the content tickets write the final text. The two Void effects' `focus_effect.*` keys live only in `foci_void.json`, in Void-tongue, copied from the lexicon's `names` ([warp spec, The lexicon](warp.md#the-lexicon)), with no provisional English.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -904,7 +904,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 | `tooltip.vftv.focus.exchange_warning` | 0 | "If the new block can't be set, the old one is broken all the same." |
 | `tooltip.vftv.focus.blank`, `.unreadable`, `.out_of_tune` | 0 | |
 | `tooltip.vftv.focus.unknown` | 1 | "It rings in a key I don't know: %s" |
-| `message.vftv.focus.unreadable`, `.blank`, `.out_of_tune`, `.unlearned`, `.needs_block`, `.block_effects_off`, `.nothing_answers`, `.nothing_yields`, `.too_much`, `.slipped` | 0 | the refusals above |
+| `message.vftv.focus.blank`, `.out_of_tune`, `.unlearned`, `.needs_block`, `.block_effects_off`, `.nothing_answers`, `.nothing_yields`, `.too_much`, `.slipped` | 0 | the refusals above |
 | `message.vftv.focus.unknown` | 1 | |
 | `narration.vftv.lathe.choice` | 3 | |
 | `narration.vftv.lathe.socket` | 3 | |
@@ -924,7 +924,7 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 }}
 ```
 
-**Rejected:** a key outside the table's patterns; an entry key with no matching entry; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key; an English `focus_effect.vftv.unmaking` or `.undertow` in `foci.json`.
+**Rejected:** an entry key with no matching entry; an English `focus_effect.vftv.unmaking` or `.undertow` in `foci.json`.
 
 ## Events
 
@@ -936,7 +936,7 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 | `FocusAffectEntityEvent` (cancellable) | before each entity is affected (at most 16 per Burst, 1 per Touch, pulse or bolt impact) | caster; target; effect id; harmful |
 
 - **`CAST` reports a paid attempt, not what was affected.** A bolt hits later, if at all, and an Exchange can fail after its break. No sibling needs a post-impact event, so none is posted.
-- `VisSpentEvent` comes from `spend`, and [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) generates its flux on it ([Hush spec, Sources](hush.md#sources)).
+- **Foci add no flux producer of their own.** `VisSpentEvent` comes from `spend`, and [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) generates its flux on it ([Hush spec, Sources](hush.md#sources)).
 - Nothing fires for a refusal, an attach or detach, a fizzle or a beam that pays nothing.
 
 **Plain `core` services,** implemented in `core`: `FocusService.kind(stack)`, `FocusService.composition(stack)`, `FocusCost.base`, `FocusMagnitude.of`, `FocusRules.valid`, `FocusPreview.of`. `api` cannot depend on `core` or hold implementations ([architecture, Public API](architecture.md#public-api)), so any public facade would be an interface in `api` that `core` implements. **There is none in v1** ([API spec, Services](api.md#services)): all six stay in `core`.
@@ -950,7 +950,7 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 | a focus's composition and rank | the `vftv:focus` component | as items are |
 | a wand's focus | the `vftv:wand_focus` component | as items are |
 | registries | the three datapack registries | every player, through their network codecs |
-| foci rules | the tuning record and the fixed limits | **`FociRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
+| foci rules | the tuning record and the fixed limits | **`FociRules`**, a [Rules record](conventions.md#rules-records) |
 | a beam in progress | the session, in transient per-player memory | **`FocusBeamState(entityId, active)`**, S2C (below) |
 | bolts | `vftv:focus_bolt` entities (`noSave`) | trackers, by vanilla entity tracking plus one `INT` tint |
 | cooldowns | vanilla `ItemCooldowns` | the owner, as vanilla does |
@@ -959,14 +959,14 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 
 - **The beam-state signal.** `FocusBeamState(entityId, true)` is sent with `PacketDistributor.sendToPlayersTrackingEntityAndSelf` when a beam session starts. `false` is sent on **every** stop: release, a failed pulse check, logout, death or a dimension change, through the session store's one clear path. A player who starts tracking a beaming player receives `true` from the start-tracking event. The client keeps a set of beaming entity ids, cleared on disconnect and level change. The wands spec's session store exposes its session kind (tap or beam) for exactly this signal; taps send nothing.
 - **Payloads:** two S2C (`FociRules`, `FocusBeamState`) and one C2S (`LatheAction`). Every input to a cast arrives through vanilla's use packets, and attaching through its container clicks.
-- **Formats:** `vftv:focus` and `vftv:wand_focus` carry `format: 1`. A record with an unknown format, or one out of its format bounds, is kept as its raw tag and written back unchanged with one log line. Decoding checks format bounds, never current tuning or registries.
+- **Formats:** `vftv:focus` and `vftv:wand_focus` carry `format: 1`, under [raw-record retention](conventions.md#raw-record-retention).
 - **Bounded codecs:** 3 modifier entries; levels 1–3; rank 0–3; ids ≤ 256 characters; one focus stack per wand; `FociRules` a fixed record; `LatheAction` as tabled.
 
 **Pack changes:**
 
 | Change | Effect |
 |---|---|
-| An entry removed | foci naming it are **inert**: kept verbatim, refused at casting with its id named, and drawn with the `unknown` layer. Restoring the pack restores them. The Lathe can recompose them, keeping the rank. |
+| An entry removed | foci naming it are **inert** ([conventions](conventions.md#missing-ids-are-inert-not-unreadable)): refused at casting with its id named, and drawn with the `unknown` layer. The Lathe can recompose them, keeping the rank. |
 | An entry's `media`, `max_level` or applicability narrowed | the focus is **out of tune** until recomposed |
 | A cost or param changed | priced and applied by the new data at the next cast; a bolt in flight keeps its snapshot |
 | A tuning `/reload` | a new `FociRules`; Lathe revisions bump; previews and facts re-resolve |
@@ -1030,26 +1030,26 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **push and pull:** the Gust fallback and Undertow vectors, including the whole-vector speed clamp and the minimum-distance cases;
 - **facts:** every key of every `focus*` source renders in its frozen format for a representative entry; a key a type doesn't have renders `not_applicable`; a blank, unreadable, unknown and out-of-tune reference focus render their status texts without composition arithmetic; the representative spans under "The authoritative preview" pass the validator;
 - **load validation:** each bad entry refused (a compound cost key, a `BLOCKS` effect allowing a Bolt, a non-finite or out-of-range param, an unknown field, too many entries);
-- **codecs:** both components, `FociRules`, `FocusBeamState` and `LatheAction` (sizes checked before allocation, duplicate keys, oversized ids), with defaults, ranges, format 1 and the raw-tag fallback;
-- **fixtures:** every section of `content/foci/fixtures.json`, checked against the `model` code;
+- **codecs:** both components, `FociRules`, `FocusBeamState` and `LatheAction` (sizes checked before allocation, duplicate keys, oversized ids), with defaults, ranges and format 1;
+- **fixtures:** every section of `content/foci/fixtures.json` ([conventions, Fixtures](conventions.md#fixtures));
 - **every `content/` rejection rule** above.
 
 **GameTest:**
 - the registries and tuning load, and each bad entry and file is refused with a clear error;
 - **attaching:** attach, swap and detach by click; refused on a crafting result, the Worktable's output and a locked slot; an unreadable `vftv:wand_focus` never detaches; the cursor and the component change together;
 - **gestures:** each cast check refuses, consumes the click (no air use follows) and changes nothing; the off hand passes; a sneaking click on a node still taps; a non-sneaking click on a chest opens it; a `BLOCKS` effect on the entity gesture is refused; Kindle Burst from the block gesture needs no harvesting filter; `foci.block_effects` off refuses Delve at the start and stops a running Delve Beam at its next pulse, while Kindle still casts;
-- **cooldown:** it covers every wand; the block gesture honours it; **an effect that throws still sets the cooldown and clears the guard**; a `VisSpentEvent` listener that casts again is refused by the guard;
+- **cooldown:** it covers every wand; the block gesture honours it; **an effect that throws still sets the cooldown and clears the guard**; re-entry ([conventions, Tests](conventions.md#tests)) by a `VisSpentEvent` listener that casts again;
 - **spend:** a short cast names its aspects; **a `VisSpentEvent` listener that teleports the caster to another dimension, or a few blocks within the same level, or replaces the main-hand wand, makes the working slip**;
 - **rechecks:** a `FocusAffectEntityEvent` listener that teleports the caster abandons the remaining Burst targets; one that moves a target out of the Burst skips it; a damage listener that kills or moves a Kindle target suppresses its fire; a `BreakBlockEvent` listener that teleports the caster within the level, changes their dimension, or swaps either hand stops the rest of a Burst Exchange before the next placement;
-- **Beam:** **exactly one debit at a targeted start and none at an empty start**; pulses and spends per interval; an `ENTITIES` Beam started with the block gesture uses the entity ray; stops on a slot change, a swap to an identical wand, a focus swap mid-use, revoked research and running short; no target, no spend; a `FocusEvent` listener that tries to cast during a pulse is refused by the guard; **a pulse whose application throws ends the session, clears the signal and sets the cooldown once**; **a Beam-focused wand tapping a node draws no beam on a second client**, and the beam signal clears on every stop path;
+- **Beam:** **exactly one debit at a targeted start and none at an empty start**; pulses and spends per interval; an `ENTITIES` Beam started with the block gesture uses the entity ray; stops on a slot change, a swap to an identical wand, a focus swap mid-use, revoked research and running short; no target, no spend; a `FocusEvent` listener that tries to cast during a pulse is refused with `message.vftv.busy`; **a pulse whose application throws ends the session, clears the signal and sets the cooldown once**; **a Beam-focused wand tapping a node draws no beam on a second client**, and the beam signal clears on every stop path;
 - **Bolt:** the cap discards the oldest; a cancelled `ProjectileImpactEvent` discards it with no effect; it is discarded after a processed hit; the owner logging out or changing dimension makes it fizzle; it never persists across a save;
 - **Burst:** 16 of 40 mobs, in id order; PvP-protected players don't use up places; **a mob behind a stone wall inside the radius is affected** (bursts pass through walls, deliberately);
 - **PvP:** with PvP off, every harmful effect (Gust and Undertow included) spares players; teams; creative and spectator players skipped; Mend affects anyone;
 - **effects:** Kindle on a fire-immune mob neither damages nor ignites it; Rime's slowness only when damage is dealt; Gust and Undertow at a zero vector;
 - **block work:** a cancelled `BreakBlockEvent` skips that position while the others proceed and the vis stays spent; spawn protection, adventure mode (through the `blockActionRestricted` pre-filter), air, `vftv:focus_immune`, obsidian and bedrock refused before the spend; double blocks; Delve drops match an iron pickaxe's eligibility, with a `HarvestCheck` listener overriding it; **a `destroyBlock` that returns true without removal places nothing**; a redirected `BlockPlaceContext` places nothing; a cancelled `EntityMultiPlaceEvent` for a bed restores both halves and the off-hand count, and the broken block stays broken; **an exception during a cancelled placement's restoration leaves both `captureBlockSnapshots` and `restoringBlockSnapshots` at their saved values, and an ordinary placement afterwards works and is protected as usual**; the adapter refuses entry while another capture or restoration is active and leaves its snapshots alone; Delve on a crucible spills as the crucible's removal does; Delve on a claimed pedestal follows infusion's removal;
-- **the Lathe:** every check; a stale revision; a forged echo; out-of-range and duplicate modifiers; unlearned parts; `UNCHANGED`; a retry after `STALE` and after `SHORT` without another slot change; **rank-up atomicity:** vis and slot together, a throwing slot change rolling both back, a throwing `VisSpentEvent` listener (`COMMITTED_NOTIFY_FAILED`), and **a rank-up that leaves the player's experience untouched**;
+- **the Lathe:** every check; the checked-commit template ([conventions, Tests](conventions.md#tests)), its echo case on a rank-up; out-of-range and duplicate modifiers; unlearned parts; `UNCHANGED`; a retry after `SHORT` without another slot change; **rank-up atomicity:** vis and slot together, a throwing slot change rolling both back, a throwing `VisSpentEvent` listener (`COMMITTED_NOTIFY_FAILED`), and **a rank-up that leaves the player's experience untouched**;
 - **the Void tier:** magnitude at `w` 0, 15 and 25 through a stub;
-- save and reload of both components and of dormant raw tags;
+- save and reload of both components; raw retention for both ([conventions, Tests](conventions.md#tests));
 - every test id in the discovery guard.
 
 **E2E:**
@@ -1059,99 +1059,33 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the wand's third layer for every effect, blank, unknown, unreadable and none, beside the focus items' own models;
 - bolts, beams, burst particles, sounds and subtitles, seen by a second client;
 - a Stage 1 flow: craft a Lathe after `vftv:arcane_crafting`, learn `vftv:foci`, craft a blank focus, compose Kindle by Bolt, attach it, and cast at a zombie;
-- sync on join, reconnect and `/reload` (`FociRules`, facts, the beam signal);
+- the Rules template for `FociRules` ([conventions, Tests](conventions.md#tests)); facts and the beam signal on join, reconnect and `/reload`;
 - the asset, lang and model validators: every key under "Lang keys", every sound event and subtitle, every case of `items/wand.json` and `items/focus.json`.
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)'s contracts on this ticket):
-
-| Wands contract | Met by |
-|---|---|
-| A focus is its own component on `vftv:wand`; #22 adds the third `select` layer to `items/wand.json` and its assets | "On the wand": `vftv:wand_focus` holding the attached stack; the third member, a select on `vftv:focus_effect` with `vftv:none` → `minecraft:empty` and `unknown` as the fallback, appended after #38 and #47; `items/focus.json`; the Foci assets ticket |
-| Every cast spends through `VisService.spend` with the focus id as `source` and the focus's `kind` | "The cost": `source` is the **effect's id** (a focus has no id of its own; the wands spec records this reading in the same change), `kind` the effect's, `research` the effect's; the medium's and modifiers' research checked before |
-| A cast short of vis does nothing and names the short aspects | "Checks", check 9: `message.vftv.spend.short` in the wands spec's order, before anything is applied |
-| A held cast spends per pulse at an interval it states | "Beam": no one-shot spend; the single pulse procedure pays, at the start tick and then every `pulse` (default 10) ticks, recording the pulse tick before any foreign code, so the start tick never pays twice; no target, no spend |
-| Foci never draw from nodes or charge wands | No such path: tapping stays first on nodes, and vis leaves only by `spend` ("Failure after the spend") |
-| Use on air or an entity casts; sneak-use on a non-node block is the block-targeted path; use on a node always taps; a refused cast consumes the click | "Entry points" (verified against `MC:client/Minecraft.java:1736–1806` and `MC:server/level/ServerPlayerGameMode.java:383–418`), with gesture and target domain separated, and every refusal returning `FAIL` |
-| Effects that aren't slot changes run after the spend; the consumer checks first; #22 states what its casts do on a later failure | "Checks", "The cast" (the cast pin and caster check after the spend and between our callback-bearing operations, target rechecks after every listener, the operation guard, the cooldown in a `finally`), "Failure after the spend", "Block work" (revalidation before every position) |
-| Later tiers append cases to `items/wand.json`, keeping the foci layer | "On the wand": additive cases; the appends are serialised #38 → #47 → Foci assets |
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts on this ticket):
-
-| Arcane contract | Met by |
-|---|---|
-| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "Recipes": `vftv:lathe` (gated by `vftv:arcane_crafting`) and `vftv:blank_focus` (gated by `vftv:foci`), both `ordinary` |
-| A recipe needing warp on craft proposes an extension | none applies warp |
-| Stage 1 arcane recipes meet the Stage 1 affordability test | both are capped at 32 per aspect by a content rejection rule, with pre-iron ingredients from the reviewed list; Stage 1 casts cost at most 4 base per aspect |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts, which bind Foci through the arcane block for its own recipe types):
-
-| Research contract | Met by |
-|---|---|
-| **Gate:** `research` on each gated recipe; the server refuses every processing and output path until it is learned; a GameTest with an unlearned player | Foci has no recipe type of its own. Its two recipes carry `research`; composing, ranking and casting are gated per part on the server at the action ("Stage"), each with an unlearned GameTest |
-| **Recipe-page validator** | `vftv:lathe` sits on `vftv:arcane_crafting`'s page and `vftv:blank_focus` on `vftv:foci`'s (handed to #34) |
-| **One authoritative cost preview**: base and effective vis, spill and every decision cost, capped modifiers flagged; it backs pages and facts | "The authoritative preview": `FocusPreview` with the complete quote (spill and every flag), typed contexts and absence, live dependencies, and the `focus*` fact sources (the research spec amended) |
-| **JEI** by the learned gate | the two recipes ride the arcane spec's JEI; composing is not a recipe |
-| The Stage 2–4 content tickets are blocked by Foci | "Stage": five entries with their gates, and the Lathe recipe on `vftv:arcane_crafting`; #34 now consumes `vftv:foci` too (the research spec amended) |
-
-**Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)): a sneaking wand click on a crucible reaches Foci's block-targeted path. That is "Entry points", and a Delve or Exchange there breaks the crucible through the player mining path, so the crucible's own removal spill applies.
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)'s contracts on this ticket):
-
-| Infusion contract | Met by |
-|---|---|
-| A sneaking wand with a focus on a bowl or pedestal is Foci's block-targeted cast | "Entry points"; anything a Delve breaks follows infusion's removal and claim rules, through the player mining path |
-| Its infusion recipes use the infusion body with their own `research`; `kind: void` built-ins need a Stage 4 gate; runic augments and the like are extensions they propose | Foci ships no infusion recipe; any later one is bound by this |
-
-**Met here** (the [progression spec](progression.md)): composable foci (effect + medium + modifiers) on a simple GUI ("Composition", "The Lathe"). Void-tier foci grow stronger with current warp, bounded and in magnitude only, while ordinary magic pays warp in vis ("The Void tier", "The cost"). Every number a decision rests on is exact ("The authoritative preview"). Every Stage's content is opened by that Stage's find ("Stage").
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
-- The components table names `vftv:wand_focus`; `items/wand.json` gains the third member, with `vftv:none` mapped to `minecraft:empty` and `unknown` as the fallback; later appends are additive and serialised.
-- **The spend's typed experience change is withdrawn:** foci ranks cost vis only, so the spend needs no experience change, no `PlayerXpEvent.LevelChange` protocol and no experience packet resend.
-- The wand's use callbacks dispatch to the player's **one session**, a tap or a beam, and the session store exposes its kind for the beam-state signal.
-- Casting is main hand only. `source` for a cast is the effect's id.
-- The wand's `isCorrectToolForDrops` answers for an attached harvesting focus.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 1](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [Stage 2](https://github.com/andrewbrogoff/voices-from-the-void/issues/35), [Stage 3](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) and [Stage 4 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/37):
-- **Entries:** the five `note` entries under "Stage", with their parents and gates. `vftv:arcane_crafting` gates `vftv:lathe` and carries its `vftv:recipe` page; `vftv:foci` carries the page for `vftv:blank_focus`.
-- **Fact sources:** `focus`, `focus_effect`, `focus_medium`, `focus_modifier`, `focus_rank` and `focus_rules`, as under "The authoritative preview", with their typed absence and live dependencies.
-- **Prose** teaches the two gestures (and that only the crouched one changes the world), the free Lathe and its ranks paid in vis, the warp dial on both kinds, that nothing is ever refunded, and that an Exchange can break without placing. Every number goes in a `focus*` or `vis` fact span.
-- **The affordability artifact:** `path-stage1.json` learns `vftv:foci` after `vftv:arcane_crafting`.
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- It supplies **`amplifier_warp(player)`**: a pure, finite, non-negative integer, synced to the owner and identical on both sides, that measures the warp counting toward Void power. It decides the unit and which kinds of warp count, and tests its accepted scale against `void.per_warp_pm`. It is 0 until it lands.
-- `vis_factor(player, VOID)` is as already contracted.
-- It decides whether a carried Void focus is gear warp.
-- Casting applies no warp. Warp on a cast would need #25 to propose a previewed, echoed extension.
-- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), plus the Joining bonus for a Joined Listener (amended with the [Eldritch tier](eldritch.md#the-capstones)), with the scale tested at the amended default of 40 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- Foci add **no direct flux producer** of their own: their flux is the `spill` applied on `VisSpentEvent`.
-- **Indirectly,** a Delve or Exchange that breaks a crucible, a jar or a ringing bowl triggers that sibling's own once-only spill event, unchanged.
-
-**[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Cast discounts come only from `vftv:vis_discount`. No gear changes a focus's magnitude in v1.
-- *Met by the [armor spec](armor.md#vis-discount): every discount is a `vftv:wearable` modifier on that attribute, and the Void set's warp amplifier scales only its Baffle.*
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- `vftv:void_foci` follows its opener `vftv:choirs_road`. Scaling stays #25's.
-- The names of `vftv:unmaking` and `vftv:undertow` (`focus_effect.vftv.unmaking`, `.undertow`) come from the **Void-tongue lexicon** ticket ([warp spec, Production tickets](warp.md#production-tickets)), which delivers them ahead of #28's own completion; #28 builds its eldritch names on the same lexicon.
-- *Met by the [Eldritch tier spec](eldritch.md#stage): `vftv:void_foci` hangs off `vftv:choirs_road`, which it ships; scaling stays the warp spec's, whose amplifier now adds the Joining bonus (amended above); every eldritch name of its own uses existing lexicon words.*
-
-**[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- No golem casts or uses the Lathe in v1. Golems may move foci and wands as items.
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for `vftv:lathe` and `vftv:focus`; round-trip non-amplification over both arcane recipes, with vis counting as no material input. Ranks and compositions add no aspect value (components are ignored, [aspects, Coverage and supply](aspects.md#coverage-and-supply)).
-
-**Configuration**
-- The admin switch `foci.block_effects` (default on), applied to `BLOCKS` effects at the start of a cast and at every Beam pulse.
-
-**API**
-- `FocusKeys` (with the `#vftv:focus_immune` tag key), `FocusLimits`, the marker interfaces `FocusEffect`, `FocusMedium` and `FocusModifier`, and the payload records of `FocusEvent` and `FocusAffectEntityEvent` live in `api`. `FocusService.kind` and every other service stay in `core`. The three datapack registries are public data formats; the three behaviour-type registries are internal in v1 ([API spec](api.md#code-extension)).
+| Needs from | What | Met at |
+|---|---|---|
+| wands | `vftv:wand_focus` in the components table; `items/wand.json`'s third member (`vftv:none` → `minecraft:empty`, `unknown` as the fallback), appended additively after #38 and #47 | [wands, Components](wands.md#components) |
+| wands | use on a node always taps; casting is main hand only; a cast's `source` is the effect id; one session per player (tap or beam) exposing its kind; the wand's `isCorrectToolForDrops` answers for an attached harvesting focus | [wands, Hand-tapping](wands.md#hand-tapping) |
+| wands | `VisService.quote` and `spend`: base costs up to 1000, discounts only through `vftv:vis_discount`, slot-change effects and no experience, a throwing spend rolled back | [wands, The quote](wands.md#the-quote), [The spend](wands.md#the-spend) |
+| arcane | the recipe type and its JEI; the preview revision, quote echo, refusal rules, cost cells and reference wand that the Lathe reuses | [arcane, The recipe type](arcane.md#the-recipe-type), [JEI](arcane.md#jei), [Preview revision](arcane.md#preview-revision), [The craft payload](arcane.md#the-craft-payload), [Status and refusals](arcane.md#status-and-refusals), [The screen](arcane.md#the-screen), [The authoritative preview](arcane.md#the-authoritative-preview) |
+| research | the five `note` entries with their parents and gates; `vftv:arcane_crafting`'s page showing the Lathe, and `vftv:foci`'s the blank focus | [research, Roster](research.md#roster) |
+| research | the `focus*` fact sources | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | `path-stage1.json` learns `vftv:foci` after `vftv:arcane_crafting` | [research, Production tickets](research.md#production-tickets) |
+| research | prose that teaches the two gestures (only the crouched one changes the world), the free Lathe, ranks paid in vis, the warp dial on both kinds, no refunds and the Exchange warning, every number in a fact span | scope of the Stage content tickets ([research, Production tickets](research.md#production-tickets)) |
+| warp | `amplifier_warp(player)`: total warp plus the Joining bonus, 0 with `warp.amplifier` off; `vis_factor` 1.0 for `VOID` | [warp, The dials](warp.md#the-dials) |
+| warp | casting applies no warp; a carried Void focus is not gear warp | [warp, Sources](warp.md#sources), [Gear warp](warp.md#gear-warp) |
+| warp | the Void effects' names, from the lexicon ticket | [warp, The lexicon](warp.md#the-lexicon), [Production tickets](warp.md#production-tickets) |
+| eldritch | `vftv:void_foci` hangs off `vftv:choirs_road`; the Joining bonus | [eldritch, Stage](eldritch.md#stage), [The capstones](eldritch.md#the-capstones) |
+| Hush | a cast's flux is the spill on `VisSpentEvent` | [Hush, Sources](hush.md#sources) |
+| armor | discounts only from `vftv:vis_discount`; no gear changes a focus's magnitude | [armor, Vis discount](armor.md#vis-discount), [Void armour](armor.md#void-armour) |
+| crucible, infusion | a block that a Delve or Exchange breaks follows its own removal | [crucible, Removal](crucible.md#removal), [infusion, Removal](infusion.md#removal) |
+| golems | no golem casts or uses the Lathe in v1 | [golems, What golems don't do](golems.md#what-golems-dont-do) |
+| aspects (#30) | item components add no aspect value, so ranks and compositions add none | [aspects, Coverage and supply](aspects.md#coverage-and-supply) |
+| aspects (#30) | hand entries (or reviewed exemptions) for `vftv:lathe` and `vftv:focus`; round-trip non-amplification over both arcane recipes, vis counting as no material input | [aspects, Coverage and supply](aspects.md#coverage-and-supply) |
+| config | the server switch `foci.block_effects` (default on) | [configuration, Server keys](config.md#server-keys) |
+| API | `FocusKeys`, `FocusLimits`, the three marker interfaces and both event payloads in `api`; behaviour types internal; every service in `core` | [API, The inventory](api.md#the-inventory), [Code extension](api.md#code-extension), [Services](api.md#services) |
 
 ## Production tickets
 

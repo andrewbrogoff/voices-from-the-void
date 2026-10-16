@@ -1,6 +1,6 @@
 # Crucible alchemy
 
-A vessel of boiling water that dissolves thrown items into **essentia** and spends that essentia to transform a **catalyst**: the **crucible** block, its pool, the one recipe type `vftv:crucible`, the spill that emptying costs, the extract-only face that essentia logistics pull from, **Resonant Brass**, and the authoritative preview that the book and JEI read. Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). The code layout, data rules and sync rules come from the [architecture spec](architecture.md), every gate from the [quality gates](quality-gates.md), aspect values, knowledge and icons from the [aspects spec](aspects.md), research gates, recipe pages and fact fields from the [research spec](research.md), the Worktable and the `vftv:arcane` recipe type from the [arcane crafting spec](arcane.md), the HUD frame and the coalesced-sync and dormant-record patterns from the [wands spec](wands.md), and every asset from the [art style](art-style.md).
+A vessel of boiling water that dissolves thrown items into **essentia** and spends that essentia to transform a **catalyst**: the **crucible** block, its pool, the one recipe type `vftv:crucible`, the spill that emptying costs, the extract-only face that essentia logistics pull from, **Resonant Brass**, and the authoritative preview that the book and JEI read. Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). The code layout, data rules and sync rules come from the [architecture spec](architecture.md), every gate from the [quality gates](quality-gates.md), aspect values, knowledge and icons from the [aspects spec](aspects.md), research gates, recipe pages and fact fields from the [research spec](research.md), the Worktable and the `vftv:arcane` recipe type from the [arcane crafting spec](arcane.md), the HUD frame and the coalesced-sync pattern from the [wands spec](wands.md), raw-record retention, guards, phases and the content envelope from the [shared conventions](conventions.md), and every asset from the [art style](art-style.md).
 
 Resolved in [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19). Inputs: [TC4 alchemy](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-alchemy/docs/research/tc4-alchemy.md), [community pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md), [NeoForge 26.2 research](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/neoforge-26-2/docs/research/neoforge-26-2.md).
 
@@ -69,8 +69,8 @@ The **`water`** property is boolean, and **water is never consumed** by dissolvi
 
 | Held item | Crucible (first match) | Effect | Returns |
 |---|---|---|---|
-| water or empty bucket | dormant (see "Sync and state") | refused: nothing changes; the status line shows `message.vftv.crucible.dormant` | `CONSUME` |
-| water or empty bucket | transaction-busy, or an operation open (see "Essentia out" and "Emptying by bucket") | refused: nothing changes, so an open extraction's rollback can never restore a pool into a dry crucible | `CONSUME` |
+| water or empty bucket | unreadable (see "Sync and state") | refused with `message.vftv.unreadable`; nothing changes | `CONSUME` |
+| water or empty bucket | [transaction-busy](conventions.md#transaction-busy), or an operation open (see "Essentia out" and "Emptying by bucket") | refused with `message.vftv.busy`; nothing changes, so an open extraction's rollback can never restore a pool into a dry crucible | `CONSUME` |
 | water bucket | dry | **fill:** `water = true`, `boiling` recomputed; the bucket becomes an empty one through `ItemUtils.createFilledResult` (creative play keeps its bucket, and a full inventory drops the result, as vanilla's cauldron does); `crucible.fill` plays; game event `FLUID_PLACE` | `SUCCESS` |
 | water bucket | has water | nothing changes: no water is placed anywhere and the bucket is kept | `CONSUME` |
 | empty bucket | has water | **empty** (see "Spilling, Emptying by bucket") | `SUCCESS`, or `FAIL` with nothing changed |
@@ -87,14 +87,8 @@ The **`water`** property is boolean, and **water is never consumed** by dissolvi
 **`boiling = water ∧ heated`**, a block-state property recomputed in the paths under "Heat" and "Water".
 
 - **Ticker:** `getTicker` returns a server ticker **only for `boiling = true` states**, and vanilla re-evaluates the ticker on every state change of the same block. **There is no idle ticker:** a cold or dry crucible costs nothing per tick, and an item touching one costs a constant-time callback (see "Admission").
-- **Phase:** a boiling crucible runs a **step** on the ticks where `level.getGameTime() mod step.interval = phase(pos)`, with
-
-  ```
-  phase(pos) = Long.remainderUnsigned(fold([0x43525543 ("CRUC"), pos.asLong()]), step.interval)
-  ```
-
-  where `fold` is the salted hash pinned in the [research spec](research.md#generating-a-note), with the salt `CRUC` like every other seeded phase (the warp and Hush schedules salt theirs), and `asLong` is vanilla's `BlockPos` packing (26 bits of x shifted by 38, 26 bits of z shifted by 12, 12 bits of y). The phase is deterministic and spreads neighbouring crucibles across ticks. The essentia spec's Alembic and lines and the infusion spec's bowls reuse this function.
-- **A step does nothing** while the block entity is dormant, queued for refresh, inside an operation (see "Emptying by bucket") or **transaction-busy** (see "Essentia out": an extraction's transaction is still open), and **it never re-enters itself**: a step started while another is running on the same block entity (a listener driving the crucible from inside a step) returns at once.
+- **Phase:** a boiling crucible runs a **step** on its [phase](conventions.md#phases) ticks, `phase(CRUC, [pos.asLong()], step.interval)` on the crucible's level clock. `CRUC` is shared with the essentia spec's Alembic and lines and the infusion spec's bowls ([salts](conventions.md#salts)).
+- **A step does nothing** while the block entity is unreadable, queued for refresh, inside an operation (see "Emptying by bucket") or **transaction-busy** (see "Essentia out"). A step that finds the step guard held (a listener driving the crucible from inside a step) returns at once, per [re-entry](conventions.md#re-entry).
 
 **Vectors** (computed by a reference implementation and cross-checked against the JDK):
 
@@ -312,7 +306,7 @@ On the server thread, inside a step. Spawning an entity runs other mods' join li
 
 **A lowered capacity** after a tuning `/reload` never removes essentia: the crucible accepts nothing until its total falls below the new cap.
 
-**A dormant record is not a pool.** A record that can't be read at all (see "Sync and state") is never read, changed, extracted or spilled.
+**An unreadable record is not a pool** (see "Sync and state"): it is never read, changed, extracted or spilled.
 
 ## Spilling
 
@@ -340,7 +334,7 @@ At most **one operation** is open on a crucible at a time. While it is open, the
 **`BlockEntity#preRemoveSideEffects`** (called when the block is replaced, not when it unloads):
 - **an operation is open:** nothing; the operation owns the pool;
 - **transaction-busy:** the hook records **one pending removal** and does nothing else yet. When the open root transaction closes, **on commit or on abort**, the pending removal copies the pool as it then stands, clears it, plays the spill feedback and posts `CrucibleEvent(SPILLED)` with cause `REMOVED`, exactly once. The journal settles first, so the spill is the pool the transaction actually left;
-- **dormant:** nothing is spilled, and a warning names the position. The unreadable record is lost with the block, which drops as a plain crucible; nothing tries to parse or spill contents it can't read;
+- **unreadable:** nothing is spilled. The record is lost with the block per [removal](conventions.md#removal), and the block drops as a plain crucible;
 - **otherwise,** if the pool is non-empty: copy it, clear it, play the spill feedback, and post `CrucibleEvent(SPILLED)` with cause `REMOVED`.
 
 **Qualified:** the hook runs only when the block update doesn't suppress block-entity side effects (flag 256). A removal through such a path (some commands and structure placements) loses the pool without an event.
@@ -349,7 +343,7 @@ At most **one operation** is open on a crucible at a time. While it is open, the
 
 - This spec posts **`CrucibleEvent(SPILLED)`** after the pool is cleared. [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) converts it to flux through its pure function **`essentiaFlux(spilled, cause)`** and generates that amount **once**, on that event. What the chunk's aura retains is at most that; any difference at a store's bound is reported as overflow ([Hush spec, Generated, retained and overflow](hush.md#generated-retained-and-overflow)).
 - **Until #26 lands,** `essentiaFlux` is the **typed zero**: it returns 0, never an absent value, and a spill makes sound and particles only.
-- **Bounds:** `essentiaFlux` returns an integer 0–1,000,000 (`MAX_SPILL_FLUX`). Its input is a valid format-1 pool, whose total is at most 10,000; a dormant record is never an input.
+- **Bounds:** `essentiaFlux` returns an integer 0–1,000,000 (`MAX_SPILL_FLUX`). Its input is a valid format-1 pool, whose total is at most 10,000; an unreadable record is never an input.
 - **Explicit, synced inputs:** it is a pure function of the spilled map, the cause and #26's synced rule record, nothing else. The HUD previews `essentiaFlux(pool, EMPTIED)` on the client from the same synced inputs, so the preview equals the flux generated (by emptying or by removal alike, since one rate covers every cause), and the cost of emptying is never hidden ([lore, Listening and warp](lore.md#listening-and-warp): never a hidden tax).
 
 ## Essentia out
@@ -374,9 +368,9 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 | `extract(resource, amount, transaction)` | after the preconditions, **overridden** to O(1): the slot lookup, then the indexed rule. The interface's default, which walks every slot, is never used. |
 
 - **Lenient indices, strict arguments:** an invalid index is a valid question with the answer "nothing" (the interface says such indices *usually* throw, not that they must); an empty resource or a negative amount is a caller's error and throws.
-- **Unavailable** means the block entity is removed or isn't the one at its position, the record is dormant, an operation is open, or a step is running. A capability cache that outlived a block replacement therefore reads an empty, inert handler, never the old pool. The crucible calls `level.invalidateCapabilities(pos)` whenever it becomes dormant or readable again. **A cold, dry or empty crucible stays extractable.**
+- **Unavailable** means the block entity is removed or isn't the one at its position, the record is unreadable, an operation is open, or a step is running. A capability cache that outlived a block replacement therefore reads an empty, inert handler, never the old pool. The crucible calls `level.invalidateCapabilities(pos)` whenever it becomes unreadable or readable again. **A cold, dry or empty crucible stays extractable.**
 - **Transactions:** a `SnapshotJournal` over the pool. A snapshot (≤ 64 entries) is taken **once per transaction depth** the handler touches. A child's commit stands only as long as its parent commits; a root abort restores the pool exactly, committed children included.
-- **Transaction-busy:** from the journal's first snapshot until its root transaction closes, on commit or on abort, the pool is **transaction-busy**. The platform adapter reports this to `core` through the loader-free essentia seam ([architecture, Seams](architecture.md#seams)), so `core` never sees a transaction type. While busy, admission offers nothing, steps do nothing (their entities wait), both bucket paths refuse, and a craft's revalidation fails. So **an abort can only ever restore the pool it snapshotted**: no other commit can have changed it meanwhile. A removal while busy is deferred to the transaction's close (see "Removal"); the pool object stays with that pending removal so the journal can still revert into it.
+- **[Transaction-busy](conventions.md#transaction-busy):** from the journal's first snapshot until its root transaction closes, on commit or on abort. The platform adapter reports this to `core` through the loader-free essentia seam ([architecture, Seams](architecture.md#seams)), so `core` never sees a transaction type. While busy, admission offers nothing, steps do nothing (their entities wait), both bucket paths refuse, and a craft's revalidation fails. So **an abort can only ever restore the pool it snapshotted**: no other commit can have changed it meanwhile. A removal while busy is deferred to the transaction's close (see "Removal"); the pool object stays with that pending removal so the journal can still revert into it.
 - **On the root commit:** the block entity is marked changed and dirty for the coalesced sync, unless it has been removed. This is publication only, separate from correctness: the debit happened in `extract`, and busy-state release and any pending removal run on close whichever way it ends. No event, no flux and no sound.
 - **Suction:** the crucible offers **0** for every aspect: it never pulls.
 
@@ -403,8 +397,8 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 | Part | What it shows |
 |---|---|
 | Frame | `vftv:hud/vis_frame`, the wands spec's nine-slice (16×16, border 4), with 4-px padding |
-| Header | first match: dormant → `hud.vftv.crucible.dormant` (0 args); dry → `hud.vftv.crucible.dry`; cold → `hud.vftv.crucible.cold`; else `hud.vftv.crucible.boiling` (each 2 args: the total and the capacity in force) |
-| Cells | at most **12** (`MAX_CARD_ENTRIES`): every pool entry if there are 12 or fewer, else the 12 largest (ties to the lower id; missing ids rank by their amount like any other), drawn in ascending id: a 16×16 icon and the exact amount. A discovered aspect shows its icon ([aspects, Icons](aspects.md#icons)); one the viewer hasn't discovered shows the **unheard** icon; a missing id shows `vftv:hud/crucible_missing`. None when dormant. |
+| Header | first match: unreadable → `hud.vftv.crucible.unreadable` (0 args); dry → `hud.vftv.crucible.dry`; cold → `hud.vftv.crucible.cold`; else `hud.vftv.crucible.boiling` (each 2 args: the total and the capacity in force) |
+| Cells | at most **12** (`MAX_CARD_ENTRIES`): every pool entry if there are 12 or fewer, else the 12 largest (ties to the lower id; missing ids rank by their amount like any other), drawn in ascending id: a 16×16 icon and the exact amount. A discovered aspect shows its icon ([aspects, Icons](aspects.md#icons)); one the viewer hasn't discovered shows the **unheard** icon; a missing id shows `vftv:hud/crucible_missing`. None when unreadable. |
 | More line | `hud.vftv.crucible.more` (1 arg: the number of entries not drawn), iff the pool has more than 12 entries |
 | Spill line | `hud.vftv.crucible.spill` (1 arg: `essentiaFlux(pool, EMPTIED)`), iff the crucible has water and a non-empty, readable pool |
 
@@ -416,7 +410,7 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 - the header, more and spill lines **wrap** to the widest inner width, `maxInner = W − 12` (a 2-px screen margin and the 4-px padding on each side), with the font's own `split`, so no number is ever cut ([localisation, R3](accessibility.md#r3-hud-text)): `h` header lines, `q` more lines and `p` spill lines (0 without a more or spill line), 9 px each;
 - **the usable height** `H′` is `H` with no caption showing, else `bandTop − 2`, where `bandTop` is the top of the [caption band](accessibility.md#the-caption-band), read from its published value before this layout; `bandTop` is never above ⌊`H` / 3⌋, so `H′` is never negative. A caption never covers a card's numbers;
 - a **cell** is 16 px tall: the icon at (0, 0), the amount at (18, 4). Its width is `18 + T`, where `T` is the widest amount string among the drawn cells by the font's own metrics, measured once per layout. The column pitch is cell + 4 and the row pitch 18;
-- `n` is the number of drawn cells, at most 12. **No cells** (an empty pool, or a dormant record): columns = rows = 0 and no grid is drawn;
+- `n` is the number of drawn cells, at most 12. **No cells** (an empty pool, or an unreadable record): columns = rows = 0 and no grid is drawn;
 - otherwise `maxFit = max(1, ⌊(maxInner + 4) / pitch⌋)`. The **columns** `c` are the smallest count from `min(n, 4, maxFit)` up to `min(n, maxFit)` whose frame fits `H′ − 4` tall, else `min(n, maxFit)`; rows are ⌈`n` / `c`⌉;
 - frame height = 8 + 9 × `h` + 18 × rows + (2 + 9 × `q` if there is a more line) + (2 + 9 × `p` if there is a spill line), which is 17 + 18 × rows + 11 + 11 when each line fits on one; the more line sits under the grid, the spill line last; frame width = 8 + the widest of the header lines, the more lines, the spill lines and the grid (`c` × cell + (`c` − 1) × 4, or 0 with no columns);
 - **fallback:** if the frame is still wider than `W − 4` or taller than `H′ − 4`, it is drawn at the pose scale `s = min((W − 4) / width, (H′ − 4) / height)`;
@@ -452,7 +446,7 @@ No row pages: the lowest scale is 0.8495.
 
 A block-entity renderer draws **one horizontal quad at y = 15/16** over the interior, from the sprite `vftv:block/crucible_liquid` (block atlas, translucent: liquids are one of the style's two translucencies, [art style §3](art-style.md#3-resolution-and-pixel-rules)), with the block's packed light.
 
-- **Tint:** the colour of the **dominant aspect**: the registry aspect with the largest amount, ties to the lowest id; missing ids are skipped. An empty pool, a pool holding only missing ids, or a dormant record uses `vftv:aqua`'s colour.
+- **Tint:** the colour of the **dominant aspect**: the registry aspect with the largest amount, ties to the lowest id; missing ids are skipped. An empty pool, a pool holding only missing ids, or an unreadable record uses `vftv:aqua`'s colour.
 - **Dry:** no quad at all.
 - **Animation:** 4 frames of 5 ticks each, no interpolation (the sprite's `.mcmeta`).
 - **Identity never rests on the tint:** the HUD's glyphs carry it ([aspects, Colours](aspects.md#colours)). The renderer allocates nothing per frame.
@@ -488,7 +482,7 @@ A block-entity renderer draws **one horizontal quad at y = 15/16** over the inte
 | `catalyst` | the catalyst's slot display |
 | `aspects` | the cost in ascending aspect id, each marked discovered or unheard for this player |
 | `spill` | always **0**, typed, never absent: crafting spills nothing |
-| `availability` | first match: `NO_CRUCIBLE` (no context), `UNREADABLE` (a dormant record), `DRY`, `COLD`, `SHORT`, `READY` |
+| `availability` | first match: `NO_CRUCIBLE` (no context), `UNREADABLE`, `DRY`, `COLD`, `SHORT`, `READY` |
 | `shortfall` | present iff `SHORT`: cost − pool for each short aspect, in ascending id |
 | `crucible` | the context's position; absent iff `NO_CRUCIBLE` |
 
@@ -507,14 +501,14 @@ A block-entity renderer draws **one horizontal quad at y = 15/16** over the inte
 | `flux` | "0" |
 | `status` | `READY`: `crucible.vftv.status.ready`; `SHORT`: `crucible.vftv.status.short` with the shortfall in the `aspects` form; otherwise `crucible.vftv.status.no_crucible`, `.unreadable`, `.dry` or `.cold` |
 
-Aspect names are the localised names; numbers are plain integers in ASCII digits. The research spec's fact grammar and live-value rule are amended in this change so that a preview may take a world context, which is then one of its dependencies.
+Aspect names are the localised names; numbers are plain integers in ASCII digits. The preview's world context is one of the span's live dependencies ([research, Prose and fact references](research.md#prose-and-fact-references)).
 
 ## JEI
 
 A soft dependency ([architecture, Soft dependencies](architecture.md#soft-dependencies)), never on the progression path. Every JEI class lives in `…neoforge.compat.jei.client`.
 
-- **One category** for `vftv:crucible`, 160×84: the catalyst in an 18-px slot at (0, 8); the result at (106, 8); the **cost panel** at (0, 30), 4 × 2 cells of 40×18 under the **shared cost-cell rule** ([arcane crafting, The screen](arcane.md#the-screen), amended in this change): the icon at (1, 1), the number confined to x = 18…38 and drawn at the scale min(1, 20 / its measured width), so a cost of 1000 (24 px in the vanilla font) shrinks rather than covering the icon, and the cell's tooltip shows the exact, unscaled value. The sprites are the Worktable's `vftv:worktable/cost_cell` and, for an aspect short against the context, `vftv:worktable/cost_cell_short`; an unheard aspect draws the unheard icon with its exact cost. A **status line** at (0, 72), **clipped to 160 px** with "…": `crucible.vftv.checked_at`, or the absent availability's text. Ordinary world coordinates already overflow it, so its tooltip carries both lines in full: the context with its complete coordinates, and the full `status` fact. Title `jei.vftv.category.crucible`. The crucible item is its catalyst. **No transfer handler.**
-- **Reconcile:** the arcane spec's order-independent reconcile function, unchanged, applied to `vftv:crucible` with the crucible snapshot and the learned set; it runs on runtime start, on each `RecipesReceivedEvent` and on each research baseline and delta, and logout clears its caches ([arcane crafting, JEI](arcane.md#jei), amended in this change to say the function is shared). No new lifecycle.
+- **One category** for `vftv:crucible`, 160×84: the catalyst in an 18-px slot at (0, 8); the result at (106, 8); the **cost panel** at (0, 30), 4 × 2 cells of 40×18 under the **shared cost-cell rule** ([arcane crafting, The screen](arcane.md#the-screen)): the icon at (1, 1), the number confined to x = 18…38 and drawn at the scale min(1, 20 / its measured width), so a cost of 1000 (24 px in the vanilla font) shrinks rather than covering the icon, and the cell's tooltip shows the exact, unscaled value. The sprites are the Worktable's `vftv:worktable/cost_cell` and, for an aspect short against the context, `vftv:worktable/cost_cell_short`; an unheard aspect draws the unheard icon with its exact cost. A **status line** at (0, 72), **clipped to 160 px** with "…": `crucible.vftv.checked_at`, or the absent availability's text. Ordinary world coordinates already overflow it, so its tooltip carries both lines in full: the context with its complete coordinates, and the full `status` fact. Title `jei.vftv.category.crucible`. The crucible item is its catalyst. **No transfer handler.**
+- **Reconcile:** the arcane spec's order-independent reconcile function, unchanged, applied to `vftv:crucible` with the crucible snapshot and the learned set; it runs on runtime start, on each `RecipesReceivedEvent` and on each research baseline and delta, and logout clears its caches ([arcane crafting, JEI](arcane.md#jei)). No new lifecycle.
 - **Affordability** is marked per recipe against the context; open views refresh on the preview's live dependencies.
 
 ## Multiplayer and automation
@@ -536,7 +530,7 @@ There is no silent fallback to whoever placed or last touched the crucible, and 
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen, which writes the resources into `src/generated/resources`. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails its recipe type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [content envelope](conventions.md#the-envelope) and its [common rejections](conventions.md#rejection).
 
 ```
 content/crucible/recipes.json       the two recipes this spec owns
@@ -548,7 +542,7 @@ content/lang/en_us/crucible.json    every key under "Lang keys"
 |---|---|---|
 | `recipes.json` | `vftv:crucible_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `first_brass.json` | `vftv:crucible_dose_plan/1` | nothing: read by the reachability test only |
-| `lang/<lang>/crucible.json` | `vftv:lang/1` | its `strings` object merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `lang/<lang>/crucible.json` | `vftv:lang/1` | merged by the [lang pipeline](conventions.md#lang) |
 
 **Other specs' crucible recipes** live in their own content files with the recipe type's body, under their own `research`. A recipe id declared in two `content/` files, of any type, fails datagen.
 
@@ -578,7 +572,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 }}
 ```
 
-**Rejected:** any id other than these two, or either missing; another `type`, `research`, `kind`, catalyst or result; any field outside its recipe type's table; for `vftv:crucible`, no `minecraft:cauldron` ingredient, an ingredient outside `minecraft:`, or a `vis` key that isn't a built-in primal or a value over the Wellspring bound; for `vftv:resonant_brass_ingot`, more than 3 aspects or a total over ¼ of the default capacity; a created result that is empty or over its maximum stack.
+**Rejected:** any id other than these two, or either missing; another `type`, `research`, `kind`, catalyst or result; for `vftv:crucible`, no `minecraft:cauldron` ingredient, an ingredient outside `minecraft:`, or a `vis` key that isn't a built-in primal or a value over the Wellspring bound; for `vftv:resonant_brass_ingot`, more than 3 aspects or a total over ¼ of the default capacity.
 
 ### The first Brass
 
@@ -593,18 +587,18 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
    {"item": "minecraft:amethyst_shard",  "count": 2, "why": "mined from the geode that opens Stage 1"}]}
 ```
 
-**Rejected:** a `recipe` other than `vftv:resonant_brass_ingot`; no doses or more than 16; a count out of range; a missing or empty `why`; an item outside `minecraft:` or a protected one; a dose that doesn't dissolve whole; an end pool short of the cost.
+**Rejected:** a `recipe` other than `vftv:resonant_brass_ingot`; no doses or more than 16; an empty `why`; an item outside `minecraft:` or a protected one; a dose that doesn't dissolve whole; an end pool short of the cost.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its messages teach filling, heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying.
+[Lang files](conventions.md#lang); every key below is required in `en_us`. The English is the intended sense; the content ticket writes the final text, and its messages teach filling, heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying.
 
 | Key | Args | Sense |
 |---|---|---|
 | `block.vftv.crucible` | 0 | "Crucible" (also its item's name) |
 | `item.vftv.resonant_brass_ingot` | 0 | "Resonant Brass Ingot" |
 | `hud.vftv.crucible.boiling`, `.cold`, `.dry` | 2 | "Boiling: %s of %s", "Cold: %s of %s", "Dry: %s of %s" (total, capacity) |
-| `hud.vftv.crucible.dormant` | 0 | "I can't read what's in it." |
+| `hud.vftv.crucible.unreadable` | 0 | "I can't read what's in it." |
 | `hud.vftv.crucible.spill` | 1 | "Emptying it spills %s flux." |
 | `hud.vftv.crucible.more` | 1 | "… and %s more" (entries not drawn) |
 | `message.vftv.crucible.protected` | 0 | "I won't melt that down." |
@@ -612,7 +606,6 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `message.vftv.crucible.full` | 0 | "There's no room left in it." |
 | `message.vftv.crucible.short` | 1 | "The crucible is short: %s." (the shortfall) |
 | `message.vftv.crucible.error` | 0 | "Something slipped. Nothing was used." |
-| `message.vftv.crucible.dormant` | 0 | "I can't read what's in it, so I won't touch it." |
 | `crucible.vftv.unheard` | 0 | "something unheard" |
 | `crucible.vftv.checked_at` | 3 | "Checked against the crucible at %s, %s, %s." |
 | `crucible.vftv.status.ready` | 0 | "Enough is dissolved." |
@@ -623,19 +616,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `jei.vftv.category.crucible` | 0 | "Crucible" |
 | `subtitles.vftv.crucible.fill`, `.empty`, `.spill`, `.dissolve`, `.craft`, `.refuse`, `.boil` | 0 | "Crucible fills", "Crucible empties", "Essentia spills", "Crucible dissolves", "Crucible rings", "Crucible refuses", "Crucible bubbles" |
 
-**Used, not declared here:** every aspect's name belongs to the aspects spec's lang.
-
-```json
-{"schema": "vftv:lang/1", "strings": {
-  "block.vftv.crucible": "Crucible",
-  "hud.vftv.crucible.spill": "Emptying it spills %s flux.",
-  "message.vftv.crucible.short": "The crucible is short: %s.",
-  "crucible.vftv.checked_at": "Checked against the crucible at %s, %s, %s.",
-  "subtitles.vftv.crucible.craft": "Crucible rings"
-}}
-```
-
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs from the table; an empty string; a duplicate key, including any other spec's key redeclared here.
+**Used, not declared here:** every aspect's name belongs to the aspects spec's lang; `message.vftv.busy` and `.unreadable` are the [shared message keys](conventions.md#message-keys).
 
 ## Events
 
@@ -660,7 +641,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | State | Storage | Synced to |
 |---|---|---|
 | `water`, `boiling` | block state | as blocks are |
-| the pool | the block entity, `{"format": 1, "pool": {<aspect id>: 1–10000}}`: at most 64 entries, total at most 10,000 | trackers: the full state in the chunk's initial block-entity data (`getUpdateTag`), then the coalesced block-entity update. The update tag also carries the **capacity in force** and whether the record is **dormant**, so the tuning file stays server-only. |
+| the pool | the block entity, `{"format": 1, "pool": {<aspect id>: 1–10000}}`: at most 64 entries, total at most 10,000 | trackers: the full state in the chunk's initial block-entity data (`getUpdateTag`), then the coalesced block-entity update. The update tag also carries the **capacity in force** and the **`unreadable`** flag, so the tuning file stays server-only. |
 | pool revision, operation, candidate set, step guard | block-entity fields | never |
 | the refusal mark `vftv:crucible_refused`, the dissolve mark `vftv:crucible_dissolve` | entity attachments, serialised with the entity, reached from `core` through the architecture's `DataSlot` seam | never |
 | the loaded set, the refresh queue, the dirty set | per-level memory | never |
@@ -668,7 +649,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | HUD layout, preview cache, JEI reconcile state | client memory | never; cleared at logout |
 
 - **Coalesced updates:** every change marks the block entity in a per-level dirty set, flushed once per tick after the level ticks: **at most one update packet per crucible per tick**, the [wands spec's flush](wands.md#sync-and-state). The set holds block entities, not positions, and the flush skips any that is removed or no longer the one at its position, so **a stale entry never updates a replacement**.
-- **Formats:** a record with an unknown format, or out of bounds (an amount outside 1–10,000, more than 64 entries, a total over 10,000, a malformed or duplicate id), is **kept as its raw tag and written back unchanged**, with one log line, and the crucible is **dormant**: no admission, step, extraction, bucket change or spill; the HUD and the preview read it as unreadable; removal loses it with a warning (see "Removal"). **Decoding checks the format bounds, never the current capacity.** Zero amounts are never written.
+- **Formats:** the pool record follows [raw-record retention](conventions.md#raw-record-retention). Its bounds: an amount 1–10,000, at most 64 entries, a total at most 10,000, well-formed distinct ids; never the current capacity. An unreadable crucible admits, steps, extracts, changes water and spills nothing; removal is under "Removal". Zero amounts are never written.
 - **No custom payload** in either direction.
 - **Bounded codecs:** the block entity as above; the recipe `MapCodec` and `StreamCodec` under "The recipe type"; the tuning file; both attachments (one boolean each).
 
@@ -752,8 +733,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the snapshot:** index merge order, the 4,096 cap (start refusal, reload emptying);
 - **the handler:** every method row; **an empty resource or a negative amount throws `IllegalArgumentException` from all four `insert` and `extract` overloads**; a zero amount, a mismatched resource, an invalid index and each unavailable state return 0 without throwing; **nested transactions:** a child commit undone by a root abort, one snapshot per touched depth, the root-commit publication skipped for a removed block entity;
 - **the preview:** each availability; every fact field's format, including unheard masking and absent contexts;
-- **codecs:** the block entity (format 1, every bound, zero amounts never written, duplicates rejected, the raw-tag round trip of a dormant record, missing ids preserved), the update tag, both attachments, the tuning file and every `content/` schema;
-- **content lints:** the bootstrap bound and the `minecraft:` ingredient rule; the Brass rules; built-in costs ≤ the default capacity; **the first-Brass reachability test**; **non-amplification** per built-in crucible recipe (see the contracts); every `content/` rejection rule above.
+- **codecs:** the block entity (format 1, every bound, zero amounts never written, duplicates rejected, missing ids preserved, and the [raw-retention template](conventions.md#tests)), the update tag, both attachments, the tuning file and every `content/` schema;
+- **content lints:** the bootstrap bound and the `minecraft:` ingredient rule; the Brass rules; built-in costs ≤ the default capacity; **the first-Brass reachability test**; **non-amplification** per built-in crucible recipe, `count × total(v(result)) ≤ min over catalyst alternatives of total(v(alt)) + total(aspects)`, which holds only because a craft debits nothing unless its output exists ("Committing a craft") and extraction only moves essentia ("Essentia out"); every `content/` rejection rule above.
 
 **GameTest:**
 - **filling and boiling:** fill and empty; a second fill and an empty on a dry crucible change nothing; creative buckets and a full inventory; heat on and off (fire, a campfire unlit then lit, lava, magma); a cold crucible ignores items until it boils; **a heat-tag `/reload`** that adds and removes a source, with the queued crucible processing nothing until refreshed; a sneaking bucket click;
@@ -763,16 +744,16 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **crafting:** one craft per step; a marked result never reprocessed; the merge behaviour as stated, including the equal-count case;
 - **the provisional spawn:** a cancelling `EntityJoinLevelEvent` listener; a listener that **changes the pool**, **removes the catalyst**, **revokes the research**, **replaces the result's stack** or **removes the crucible** during the spawn: each leaves no debit, our result gone, the catalyst refused `ERROR`, and the listener's own changes in place (the removal spills once);
 - **notifications:** listeners on `CrucibleEvent(CRAFTED)` and `ItemCraftedEvent` that throw: the craft stands, every other notification still runs, and nothing reports `ERROR`;
-- **spill paths:** emptying by bucket spills once with the exact amounts; **a neighbour that removes the crucible during the bucket's `setBlock`** still spills exactly once; breaking and an explosion spill as `REMOVED`; a flag-256 removal posts nothing; a dormant crucible refuses both buckets and spills nothing on removal;
+- **spill paths:** emptying by bucket spills once with the exact amounts; **a neighbour that removes the crucible during the bucket's `setBlock`** still spills exactly once; breaking and an explosion spill as `REMOVED`; a flag-256 removal posts nothing; an unreadable crucible refuses both buckets with `message.vftv.unreadable` and spills nothing on removal;
 - **extraction:** a committed extraction; an aborted one (the pool identical afterwards); a child commit undone by its root's abort; a capability cache held across a block replacement reads empty; a cold or dry crucible still extracts;
 - **open transactions:** extract, then **empty by bucket** before the root closes (refused, nothing changed), then abort: the pool is restored and the crucible still has water; extract, then **a phase tick** (the step does nothing, its entities wait), then abort; extract, then **remove the crucible**, then **commit**, and the same with **abort**: each spills exactly once, as `REMOVED`, the pool the transaction left;
-- **reload and persistence:** a recipe `/reload` with the same id and a changed result; over-cap startup fails and an over-cap reload empties the snapshot; save and reload with both marks intact; a dormant record and missing ids survive save and reload unchanged;
+- **reload and persistence:** a recipe `/reload` with the same id and a changed result; over-cap startup fails and an over-cap reload empties the snapshot; save and reload with both marks intact; an unreadable record and missing ids survive save and reload unchanged;
 - **sync:** ≤ 1 update per crucible per tick under 4 pullers; **after a tuning `/reload` an idle crucible's trackers receive the new capacity**; a stale dirty entry never updates a replacement crucible;
 - **bounds:** no chunk is loaded by the step, the refresh queue or the capability;
 - every test id in the discovery guard.
 
 **E2E:**
-- the HUD in every state (boiling, cold, dry, dormant), with unheard aspects and missing ids, **at the maximum layout (a 64-entry pool: 12 cells of 4-digit amounts and the more line) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool); under the [localisation fixtures](accessibility.md#fixtures) the header, more and spill lines wrap with every number whole, the outer pose scale stays ≥ 0.75, and with a status line and a Voice line showing the frame stays above them, as the caption rows of the vectors say; a caption appearing and then expiring over an unchanged crucible re-lays the card both times;
+- the HUD in every state (boiling, cold, dry, unreadable), with unheard aspects and missing ids, **at the maximum layout (a 64-entry pool: 12 cells of 4-digit amounts and the more line) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool); under the [localisation fixtures](accessibility.md#fixtures) the header, more and spill lines wrap with every number whole, the outer pose scale stays ≥ 0.75, and with a status line and a Voice line showing the frame stays above them, as the caption rows of the vectors say; a caption appearing and then expiring over an unchanged crucible re-lays the card both times;
 - a `SHORT` refusal naming 8 aspects on the status line, whole;
 - the liquid tint and its absence when dry; the bubbles, sounds and subtitles;
 - the book recipe pages and fact fields with no crucible targeted, a dry one, a cold one, a short one and a ready one;
@@ -783,70 +764,27 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Aspects and scanning spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/15)'s contracts on this ticket):
-
-| Aspects contract | Met by |
-|---|---|
-| Dissolves using `vftv:aspects` and `vftv:aspect_defaults` as they are, with its own yield multiplier if it needs one | "Dissolving": the item lookup verbatim, and **yield 1×, no multiplier**; the data is never forked. Protection and the capacity and 64-id checks come first. |
-| Vacuos behaves as a primal in decay and never breaks down into Aer or Perditio | "The pool": **no decay at all**. Extraction and spill keep aspects as they are. |
-| States whether Aer and Perditio essentia combine into Vacuos; the book never shows a recipe the world refuses | "Combining essentia, and Vacuos": **they do not, because nothing combines in this system**. A contract on #35's prose (below); book recipe pages show only synced recipes ([research, Page descriptors](research.md#page-descriptors)). |
-| No round trip yields more essentia than went in | The necessary per-recipe lint, `count × total(v(result)) ≤ min over catalyst alternatives of total(v(alt)) + total(aspects)`, with 1× and whole-item dissolving. **Conditional on** "Committing a craft" (no debit unless the output really exists and every precondition still holds after the spawn), "Essentia out" (extraction only moves essentia, a nested abort restores it exactly, and while a transaction is open no step, bucket or removal can commit anything an abort would overwrite) and #30's round-trip test over every built-in crucible recipe in every content file and every reversible conversion, the arcane vessel included. Ordering alone establishes none of these; each has its GameTest or unit test. |
-| Jars and tubes carry labels as well as tint | Jars and tubes are #20's, so the contract is **forwarded** (below). The crucible's own displays identify aspects by glyph; its tint is decoration. |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| The gate applies to crucible matching and consumption | "Selection": candidates are the thrower's learned recipes, before any consumption, and "Committing a craft" rechecks the research after the spawn, before any debit. An unlearned catalyst is not a catalyst; dissolving it is matter processing, not a gated recipe. GameTests with an unlearned thrower and with research revoked during the spawn. |
-| Book pages follow the real essentia rules, including the Vacuos statement; point synthesis is separate | "Combining essentia, and Vacuos" and the #35 prose contract; puzzle synthesis is untouched |
-| **Gate** (`research` on every gated recipe), **recipe-page validator**, **one authoritative preview**, **JEI** by the learned gate | `research` is required on the type; each entry's recipe page is gated by its own entry; "The authoritative preview": a typed, visible context whose absence is never affordable, typed spill 0, frozen fact formats and live dependencies, with the research spec's fact rules amended in this change; "JEI": the arcane spec's reconcile reused (amended in this change), tested with and without JEI |
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts on this ticket):
-
-| Arcane contract | Met by |
-|---|---|
-| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "The block": `vftv:crucible` is `ordinary`, gated by `vftv:crucible` |
-| Stage 1 arcane recipes meet the Stage 1 affordability test | None is in Stage 1. The vessel adds a Stage 2 bootstrap lint at the same bound, plus a real material path (`minecraft:` ingredients only) and its research in #35's path. |
-
-**Wands, vis and nodes** places no contract on this ticket; "Resonant Brass" supplies the ingot its Stage 2 recipes need.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35):
-- **Entries:** `vftv:crucible` (a `note`, parents `vftv:distillation` and `vftv:arcane_crafting`) gates the arcane recipe `vftv:crucible` and carries its `vftv:recipe` page. `vftv:resonant_brass` (a `note`, parent `vftv:crucible`) gates `vftv:resonant_brass_ingot` and carries its page.
-- **Ancestry:** `vftv:singing_wands` has `vftv:resonant_brass` in its transitive parents, because the chime rod and cap need the ingot, so no progression cycle is possible. The essentia spec's `vftv:essentia_jars` is a child of `vftv:crucible`, so the jars and Alembic can follow the vessel before Brass.
-- **Prose** never presents any essentia combination, Aer + Perditio → Vacuos included; the taught view is notebook theory only ([research, Links](research.md#links)). It teaches filling and heating, ordinary against sneak drops, `SHORT`, safe extraction (jars and an Alembic, learnable right after the vessel) and the price of emptying, with every number in fact spans.
-- **Fact fields** for `vftv:crucible`: `output`, `inputs`, `aspects`, `flux` and `status`, in the formats under "The authoritative preview", with the targeted-crucible context, its typed availability and its live dependencies. The research spec's fact grammar and live-value rule now admit a preview context (amended here).
-- **The affordability artifact:** `content/research/path-stage2.json` learns `vftv:crucible`, then `vftv:resonant_brass`, before any step that needs a Brass item; the crucible content's `content/crucible/first_brass.json` is reviewed beside it as the essentia half of the proof.
-
-**[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)**
-- It pulls from a crucible **only through the capability under "Essentia out"**, inside a transaction, honouring nested rollback, the argument preconditions and the unavailable handler, and closing its transactions promptly: while one is open the crucible is transaction-busy. The crucible's suction is 0.
-- **It meets the aspects spec's label contract:** jars and tubes carry a glyph label as well as tint; tint alone is not enough.
-- **Extensions need explicit proposals.** Any insert path into a crucible, and any essentia combiner, is #20's to propose: it counts toward `pool.capacity` and the 64-entry bound, and treats Vacuos as a true primal (never made from Aer + Perditio).
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- It supplies the pure **`essentiaFlux(spilled, cause)`**: integer 0–1,000,000, a function only of the spilled map, the cause and its synced rule record, with the typed zero as the fallback until it lands. It generates flux equal to it **once** on `CrucibleEvent(SPILLED)`, and owns no second crucible spill producer. GameTest: the HUD's previewed spill equals the generated flux (amended from "applied": retention is reported separately).
-- It adds no flux from dissolving, crafting, refusing or extraction.
-- **Bounds:** a spill's input is a valid format-1 pool, ≤ 10,000 in total; dormant records are never inputs.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate for every cause, so the `EMPTIED` preview is also what removal generates; one `HIGHEST` listener; the equality is of generated flux, with retained, pending and overflow reported (amended above).*
-
-**[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- A golem that drops items into a crucible **as crafting input** sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online and alive (in any level: the thrower resolves server-wide, see "Selection"), with the research learned. FEED's owner rule is therefore "online and alive"; the level clause and its GameTest row go. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.
-- **Exempt** (amended by the [golems spec](golems.md#feed-and-tip)): a deliberate **Tip** drop has no thrower, exactly as a dropper's, so its items always dissolve. It is the golem's explicit dissolve path, not crafting input. This changes no crucible behaviour.
-- `api`'s `SpillCause` gains **`DIED`**, posted only by the golems spec's `GolemEvent(SPILLED)`. The crucible's own spills, producers and bounds are unchanged.
-- Golems touch the pool only through the capability under "Essentia out". Their own crucible recipes, if any, live in their own content files with the recipe type's body.
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- **Hand entries** for `vftv:crucible` and `vftv:resonant_brass_ingot`.
-- **Round-trip non-amplification** includes **every** built-in crucible recipe across all content files, and every reversible conversion, the arcane `vftv:crucible` recipe included, counting vis as no material input ([arcane crafting, Contracts](arcane.md#contracts-on-sibling-specs)).
-- **Brass supply:** values for every item in `content/crucible/first_brass.json`, so that a feasible sequence fitting the default pool, with its prerequisites, reaches the Brass cost before any Brass exists; every cost aspect keeps at least 3 accessible sources.
-
-**[Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40)**
-- `vftv:chime_rod` and `vftv:resonant_brass_cap` take `vftv:resonant_brass_ingot` (frozen here).
-
-**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) and [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- Their crucible recipes use the recipe type's body with their own `research`, in their own content files, under the common validation and the global non-amplification test. This includes the [warp spec's](warp.md) `vftv:stilling_draught`, bound by the common validation and the global non-amplification test like every other.
-- Any essentia combination they add keeps Vacuos a true primal, and their book pages stay truthful about it.
+| Needs from | What | Met at |
+|---|---|---|
+| research | `vftv:crucible`: a `note`, parents `vftv:distillation` and `vftv:arcane_crafting`, carrying the `vftv:recipe` page `vftv:crucible` | [research, Entry files](research.md#entry-files) |
+| research (#35) | `vftv:resonant_brass`: a `note`, parent `vftv:crucible`, gating and paging `vftv:resonant_brass_ingot`; `vftv:singing_wands` has it among its transitive parents | **not stated:** the [roster](research.md#roster) lists Resonant Brass without kind or parent; no spec gives `vftv:singing_wands`'s parents |
+| research | `path-stage2.json` learns `vftv:crucible`, then `vftv:essentia_jars`, and `vftv:resonant_brass` before any Brass-gated step | [research, Affordability and recovery](research.md#affordability-and-recovery) |
+| research (#35) | prose for `vftv:crucible` teaches filling, heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying, every number in a fact span | **not stated** |
+| research | the crucible's fact fields (`output`, `inputs`, `aspects`, `flux`, `status`) admitted by the `recipe` source | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | a `recipe` page and fact span may take a preview context (the targeted crucible), which is then a live dependency | [research, Page descriptors](research.md#page-descriptors), [Prose and fact references](research.md#prose-and-fact-references) |
+| research | prose never presents an essentia combination; puzzle links are notebook theory only | [research, Links](research.md#links) |
+| arcane | the shared cost-cell rule, for the JEI cost panel | [arcane, The screen](arcane.md#the-screen) |
+| arcane | the order-independent JEI reconcile, reused unchanged | [arcane, JEI](arcane.md#jei) |
+| essentia | lines and Alembics pull only through "Essentia out", in roots closed within the call; nothing inserts into a crucible or combines essentia | [essentia, The Alembic](essentia.md#the-alembic), [Transactions](essentia.md#transactions) |
+| essentia | the block tags `vftv:essentia_endpoints` and `vftv:alembic_bases`, defaults including `vftv:crucible` | [essentia, Tags](essentia.md#tags) |
+| essentia | jars and tubes carry a glyph label, not tint alone | [essentia, Labels](essentia.md#labels) |
+| Hush | the pure `essentiaFlux(spilled, cause)`, 0–1,000,000, the typed zero without rules, one rate for every cause; generated once on `CrucibleEvent(SPILLED)`; no flux from dissolving, crafting, refusing or extraction | [Hush, The pinned functions](hush.md#the-pinned-functions), [Sources](hush.md#sources) |
+| golems | FEED drops with the owner as thrower, only while the owner is online and alive, and documents the handoff window; TIP drops with no thrower | [golems, Feed and Tip](golems.md#feed-and-tip) |
+| golems | `SpillCause.DIED` only through `GolemEvent(SPILLED)`; the pool touched only through "Essentia out" | [golems, Events](golems.md#events), [Roles](golems.md#roles) |
+| aspects (#30) | non-amplification over every crucible recipe and reversible conversion; at least 3 accessible sources per aspect | [aspects, Coverage and supply](aspects.md#coverage-and-supply) |
+| aspects (#30) | hand entries for `vftv:crucible` and `vftv:resonant_brass_ingot`; values for every `first_brass.json` item that reach the Brass cost | **not stated** |
+| wands (#40) | `vftv:chime_rod` and `vftv:resonant_brass_cap` take `vftv:resonant_brass_ingot` | **not stated:** [wands, Recipes](wands.md#recipes) freezes their ids and gates only |
+| any spec with crucible recipes | the type's body with its own `research`, in its own content file, under the common validation and non-amplification | [warp, Stilling](warp.md#stilling), [golems, Recipes](golems.md#recipes); [eldritch](eldritch.md#the-items) and infusion ship none |
 
 ## Production tickets
 
@@ -854,7 +792,7 @@ This spec settles every decision. Two required child tickets deliver the assets 
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Crucible assets** | The generator `tools/art/crucible.py`. **Block textures,** 16×16, Stage 2 row of [art style §5](art-style.md#5-tone-ramp-by-stage): `assets/vftv/textures/block/crucible_side.png`, `crucible_top.png`, `crucible_inner.png` and `crucible_bottom.png` (a brass-banded vessel, the teal tick as a small inlaid pip on the rim). **Liquid:** `assets/vftv/textures/block/crucible_liquid.png`, a 16×64 strip of 4 frames in light neutral steps (`glass1`, `hush3`) for runtime tinting, with `crucible_liquid.png.mcmeta` = `{"animation": {"frametime": 5, "interpolate": false}}`. **Model** `assets/vftv/models/block/crucible.json`: 5 cuboids (floor `[0,0,0]–[16,4,16]`, walls `[0,4,0]–[2,16,16]`, `[14,4,0]–[16,16,16]`, `[2,4,0]–[14,16,2]` and `[2,4,14]–[14,16,16]`), textures `side`, `top`, `inner`, `bottom` and `particle` (= side). **Blockstate** `assets/vftv/blockstates/crucible.json`: the 4 variants of `water` × `boiling`, all on that model (the liquid is the renderer's). **Item definitions** `assets/vftv/items/crucible.json` (`minecraft:model` of `vftv:block/crucible`) and `assets/vftv/items/resonant_brass_ingot.json`. **Resonant Brass:** `assets/vftv/textures/item/resonant_brass_ingot.png` by the chime-bar rule ([art style §4](art-style.md#4-silhouette-language)), from the prototype, and `assets/vftv/models/item/resonant_brass_ingot.json` (parent `minecraft:item/generated`). **HUD sprite:** `assets/vftv/textures/gui/sprites/hud/crucible_missing.png` (16×16; the frame reuses `vftv:hud/vis_frame`). **Sounds** under "Sound and particles": `assets/vftv/sounds/crucible/fill.ogg`, `empty.ogg`, `spill.ogg`, `refuse.ogg`, `dissolve_0.ogg` … `dissolve_2.ogg`, `craft_0.ogg` … `craft_2.ogg`, `boil_0.ogg` … `boil_2.ogg` (≤ 3 s, faded tails), with the `sounds.json` entries `crucible.fill`, `crucible.empty`, `crucible.spill`, `crucible.dissolve`, `crucible.craft`, `crucible.refuse` and `crucible.boil` naming `subtitles.vftv.crucible.<event>`, no volume or pitch overrides; the playback rules (category, volume, pitch, cooldowns, one step sound per step) are this spec's. **Review:** a contact sheet at GUI scale 2 with the crucible and the ingot beside vanilla's cauldron and copper ingot, and every tint of the liquid; Blender renders of the model, dry and filled; **worst-case HUD mockups** composed from the reused frame, the icons and the vanilla font: 12 cells with 4-digit amounts and the more line on a 320 × 240 scaled screen, the wide-font fallback, a long test translation, a dormant record, missing ids and unheard aspects, and the frame clamped over the vis HUD. Provenance rows. | none |
+| **Crucible assets** | The generator `tools/art/crucible.py`. **Block textures,** 16×16, Stage 2 row of [art style §5](art-style.md#5-tone-ramp-by-stage): `assets/vftv/textures/block/crucible_side.png`, `crucible_top.png`, `crucible_inner.png` and `crucible_bottom.png` (a brass-banded vessel, the teal tick as a small inlaid pip on the rim). **Liquid:** `assets/vftv/textures/block/crucible_liquid.png`, a 16×64 strip of 4 frames in light neutral steps (`glass1`, `hush3`) for runtime tinting, with `crucible_liquid.png.mcmeta` = `{"animation": {"frametime": 5, "interpolate": false}}`. **Model** `assets/vftv/models/block/crucible.json`: 5 cuboids (floor `[0,0,0]–[16,4,16]`, walls `[0,4,0]–[2,16,16]`, `[14,4,0]–[16,16,16]`, `[2,4,0]–[14,16,2]` and `[2,4,14]–[14,16,16]`), textures `side`, `top`, `inner`, `bottom` and `particle` (= side). **Blockstate** `assets/vftv/blockstates/crucible.json`: the 4 variants of `water` × `boiling`, all on that model (the liquid is the renderer's). **Item definitions** `assets/vftv/items/crucible.json` (`minecraft:model` of `vftv:block/crucible`) and `assets/vftv/items/resonant_brass_ingot.json`. **Resonant Brass:** `assets/vftv/textures/item/resonant_brass_ingot.png` by the chime-bar rule ([art style §4](art-style.md#4-silhouette-language)), from the prototype, and `assets/vftv/models/item/resonant_brass_ingot.json` (parent `minecraft:item/generated`). **HUD sprite:** `assets/vftv/textures/gui/sprites/hud/crucible_missing.png` (16×16; the frame reuses `vftv:hud/vis_frame`). **Sounds** under "Sound and particles": `assets/vftv/sounds/crucible/fill.ogg`, `empty.ogg`, `spill.ogg`, `refuse.ogg`, `dissolve_0.ogg` … `dissolve_2.ogg`, `craft_0.ogg` … `craft_2.ogg`, `boil_0.ogg` … `boil_2.ogg` (≤ 3 s, faded tails), with the `sounds.json` entries `crucible.fill`, `crucible.empty`, `crucible.spill`, `crucible.dissolve`, `crucible.craft`, `crucible.refuse` and `crucible.boil` naming `subtitles.vftv.crucible.<event>`, no volume or pitch overrides; the playback rules (category, volume, pitch, cooldowns, one step sound per step) are this spec's. **Review:** a contact sheet at GUI scale 2 with the crucible and the ingot beside vanilla's cauldron and copper ingot, and every tint of the liquid; Blender renders of the model, dry and filled; **worst-case HUD mockups** composed from the reused frame, the icons and the vanilla font: 12 cells with 4-digit amounts and the more line on a 320 × 240 scaled screen, the wide-font fallback, a long test translation, an unreadable record, missing ids and unheard aspects, and the frame clamped over the vis HUD. Provenance rows. | none |
 | **Crucible content** | `content/crucible/recipes.json` (`vftv:crucible_recipes/1`, exactly the two recipes under "Authored content, Recipes": their ingredients, costs and Brass aspects chosen within those rules), `content/crucible/first_brass.json` (`vftv:crucible_dose_plan/1`, a dose plan that passes the reachability test against #30's values, each `why` reviewed), and `content/lang/en_us/crucible.json` (`vftv:lang/1`) with every key under "Lang keys". Its review supplies the bootstrap, material and source proof, and checks that the messages teach filling, heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying. | [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the dose plan replays its values) |
 
 [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) consume the entry ids, recipe ids, fact fields and the ingot id frozen here.

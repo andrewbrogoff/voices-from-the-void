@@ -13,7 +13,8 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [architecture spec](architecture.md) for the code layout, the data and sync rules and the seams;
 - the [quality gates](quality-gates.md) for every gate;
 - the [aspects spec](aspects.md) for aspect names, the unheard rule and values;
-- the [research spec](research.md) for research gates, recipe pages, fact spans, `mix64` and `fold`;
+- the [research spec](research.md) for research gates, recipe pages and fact spans;
+- the [shared conventions](conventions.md) for raw-record retention, operation guards, `fold` and phases, Rules records and the authored-content envelope;
 - the [wands spec](wands.md) for interaction precedence, the coalesced flush and the part data;
 - the [arcane crafting spec](arcane.md) for the `vftv:arcane` recipe type and the Worktable;
 - the [crucible spec](crucible.md) for the `vftv:crucible` recipe type, thrower resolution, the provisional-spawn pattern, the HUD frame rules and the spill boundary;
@@ -111,7 +112,7 @@ A synced datapack registry, **`vftv:golem_material`**, following [ADR 0003](../a
 | `vftv:golem_core` | a core item id (`ResourceKey<Item>` codec) | no core fitted |
 | `vftv:golem_state` | `{"format": 1, "marks": [<mark>, …], "carry"?: <carry>, "health": <float>}` (see "Sync and state") | a fresh golem: no marks, no carry, full health |
 
-- **Decoding never fails.** A `vftv:golem_state` that is unknown or out of bounds is kept as its raw tag and written back unchanged; the item is **dormant**: it can't be placed, takes no core, and shows `tooltip.vftv.golem.unreadable`.
+- **An unreadable `vftv:golem_state`** follows [conventions](conventions.md#raw-record-retention) (the component travels whole): the item can't be placed, takes no core, and shows `tooltip.vftv.golem.unreadable`.
 - **Its name** is `item.vftv.golem` with the material's name (`golem_material.<ns>.<path>`), or `golem.vftv.unknown_body`.
 - **Its model** selects on `vftv:golem_body` (see "Rendering and sound").
 
@@ -152,7 +153,7 @@ By inventory click, the [foci spec's attach pattern](foci.md#attaching-and-detac
 | # | Golem item | The other | Effect | Returns |
 |---|---|---|---|---|
 | 1 | any | any, where the slot's `allowModification(player)` is false | vanilla | `false` |
-| 2 | dormant | a core, or empty | refused: `message.vftv.golem.unreadable` | `true` |
+| 2 | unreadable | a core, or empty | refused: `message.vftv.unreadable` | `true` |
 | 3 | carrying anything | a core, or empty | refused: `message.vftv.golem.carrying` | `true` |
 | 4 | no core | a core stack of any count | **fitted:** one core leaves the other stack (the stack shrinks; an emptied cursor or slot becomes empty) | `true` |
 | 5 | a core fitted | a core stack of count 1 | **swapped:** the fitted core takes the other's place, the other's core is fitted | `true` |
@@ -170,7 +171,7 @@ By inventory click, the [foci spec's attach pattern](foci.md#attaching-and-detac
 The golem item's `useOn` on a block face, reached after vanilla's spawn protection, `mayInteract`, `RightClickBlock` and the block's own use, like a spawn egg (`MC:server/level/ServerPlayerGameMode.java:383–418`). **The spawn cell** is the clicked position offset by the clicked face; the golem stands at its bottom centre.
 
 1. **Refusals,** first match, each on the [status line](accessibility.md#r5-the-status-line), returning `FAIL` and changing nothing:
-   - a dormant item: `message.vftv.golem.unreadable`; no body or an unknown material: `.unknown_body`; no core: `.no_core`; a core whose item or job isn't registered: `.unknown_core`;
+   - an unreadable item: `message.vftv.unreadable`; no body or an unknown material: `.unknown_body`; no core: `.no_core`; a core whose item or job isn't registered: `.unknown_core`;
    - the spawn cell isn't in a loaded, entity-ticking chunk (`ServerLevel#isPositionEntityTicking`, `MC:server/level/ServerLevel.java:1823`), is outside the world border, or is outside the build height: `.not_here`;
    - `golems.max_per_chunk` golems are already loaded in the spawn cell's chunk: `.crowded`. **This is admission only,** not a resident cap: golems walking home or reloading can gather more in one chunk, which the load scenarios measure;
    - the golem's box at the spawn point collides: `.no_room`.
@@ -182,7 +183,7 @@ The golem item's `useOn` on a block face, reached after vanilla's spawn protecti
 ### Picking up
 
 The owner's sneak-use with the Baton on their golem (see "The Baton"). First match:
-1. **Refusals:** dormant: `message.vftv.golem.unreadable`; its operation guard is held: `.busy`; the player has no empty inventory slot (`Inventory#getFreeSlot` = −1, `MC:world/entity/player/Inventory.java:101`): `.no_room_inventory`. A golem item never stacks, so it needs an empty slot.
+1. **Refusals:** unreadable: `message.vftv.unreadable`; its operation guard is held: `message.vftv.busy`; the player has no empty inventory slot (`Inventory#getFreeSlot` = −1, `MC:world/entity/player/Inventory.java:101`): `.no_room_inventory`. A golem item never stacks, so it needs an empty slot.
 2. **Claim** the record once: the golem is marked picked up and leaves every queue; no act or think can start.
 3. **Build** the item from the claimed record: `vftv:golem_body`, `vftv:golem_core`, and `vftv:golem_state` with the marks, carry and health. Home, cursor and backoffs aren't kept.
 4. **Discard** the entity, **then** hand the item over with `Inventory#placeItemBackInInventory`. There is never a moment when both exist.
@@ -229,7 +230,7 @@ A **mark** is `{pos, face, role, filter?}`: a face of a block, what to do there,
 | any | provisional or picked up | nothing | `PASS` |
 | use or sneak-use | not yours | nothing on the server; the client turns the golem card's page | `SUCCESS` |
 | sneak-use | yours | **pick up** (see "Picking up") | `SUCCESS`, or `FAIL` with its refusal |
-| use | yours, any state (dormant and inert included) | **attune**: the component becomes this golem and level; `baton.attune` plays; `message.vftv.golem.attuned` (1 arg: the golem's name); the client turns the card's page | `SUCCESS` |
+| use | yours, any state (unreadable and inert included) | **attune**: the component becomes this golem and level; `baton.attune` plays; `message.vftv.golem.attuned` (1 arg: the golem's name); the client turns the card's page | `SUCCESS` |
 
 **On a block,** in `Item#onItemUseFirst`, which runs after `RightClickBlock` and before the block's own use, so a chest is marked rather than opened (`MC:server/level/ServerPlayerGameMode.java:383–403`). It runs only when the event's item use isn't denied. **Denied block use:** `onItemUseFirst` would still run when only the block's use is denied, and listener priority can't promise a final value, since listeners of one priority run in registration order and a later one may still deny. So the Baton reads **the live event after its dispatch has completed**: `CommonHooks.onRightClickBlock` returns only after every listener (`NF:common/CommonHooks.java:870–873`), before `onItemUseFirst` is called (`MC:server/level/ServerPlayerGameMode.java:383–397`).
 - **The click record:** a `RightClickBlock` listener stores, per player, **a reference to the event itself** with the level, hand, position, face and game time, **replacing** any earlier record on every click.
@@ -244,7 +245,7 @@ First match, each refusal on the status line and returning `FAIL` (no block use 
 | 2 | the click record is missing or mismatched, or its event's final `getUseBlock()` is `FALSE` | refused: `message.vftv.golem.denied` |
 | 3 | the attuned golem isn't loaded in this level (`ServerLevel#getEntity(UUID)`), or the attunement names another level | refused: `.not_here` |
 | 4 | the player isn't its owner now | refused: `.not_yours` |
-| 5 | the golem is dormant, inert, or its operation guard is held | refused: `.unreadable`, `.inert` or `.busy` |
+| 5 | the golem is unreadable, inert, or its operation guard is held | refused: `message.vftv.unreadable`, `message.vftv.golem.inert` or `message.vftv.busy` |
 | 6 | sneaking, on an existing mark (same pos and face) | off hand holds something: its **filter** is set, if valid (`.filter_set`, 2 args: the number and the filter's name), else refused `.bad_filter`, nothing changes; off hand empty: the filter is **cleared** (`.filter_cleared`, 1 arg: the mark's number), `baton.mark_remove` plays. Never removes the mark |
 | 7 | sneaking, no mark there | **home** becomes the cell in front of the face, whatever the off hand holds, if it is in a loaded chunk (`.home_set`, 3 args: x, y, z), else refused `.home_unloaded`; marks now out of range stay, faulted |
 | 8 | on an existing mark | its **role** cycles to the next valid role of the job, in the job's order (`.role`, 2 args: the number and the role); **after the last role the mark is removed** (`.mark_removed`, 1 arg; `baton.mark_remove` plays). Carrying: TAKE → GIVE → FEED → TIP → COLLECT → removed; decanting: TAKE → GIVE → removed |
@@ -313,13 +314,13 @@ Not in v1: harvesting, guarding, felling, fishing, using items, fluids and openi
 
 ### Scheduling
 
-- **Think ticks:** a golem thinks on ticks where `gameTime mod think.interval = phase`, with **`phase = remainderUnsigned(fold([0x474F4C45, uuidMsb, uuidLsb]), think.interval)`** (`0x474F4C45` is "GOLE"; [research, `fold` and `mix64`](research.md#generating-a-note)).
+- **Think ticks:** a golem thinks on ticks where `gameTime mod think.interval = phase`, with **`phase` = [`phase(GOLE, [UUID], think.interval)`](conventions.md#phases)**.
 - **A per-level think queue** of entries (due tick, UUID, golem generation), ordered by due tick then UUID. Each golem has at most one live entry. At the end of each server tick, entries due at or before now are popped in order:
   - **every pop counts** toward `MAX_THINK_POPS_PER_TICK` (64), stale or not; a stale entry (a removed, picked-up or retired golem) is dropped;
   - at most **`MAX_THINKS_PER_TICK` (32)** thinks run.
 
   Entries left over keep their **original due time** and run first next tick. A think reschedules its golem at its next phase tick under the tuning then in force.
-- **No re-entry:** a think never starts while its golem's operation guard is held, and a golem never thinks twice in a tick.
+- **No re-entry:** a think never starts while its golem's operation guard is held ([conventions, Re-entry](conventions.md#re-entry): it waits for its next phase tick), and a golem never thinks twice in a tick.
 
 **Vectors** (reference implementation; `phase` at interval 10 and 20):
 
@@ -331,7 +332,7 @@ Not in v1: harvesting, guarding, felling, fishing, using items, fluids and openi
 | `8000000000000000`, `0000000000000000` | 6 | 6 |
 
 **One think does exactly one thing,** first match:
-1. **Inert, dormant or provisional:** nothing.
+1. **Inert, unreadable or provisional:** nothing.
 2. **A target is in flight:** a **travel check** (see "Travel and arrival"), which may become the act.
 3. **Otherwise:** a **selection** (below). A selection never acts in the same think.
 
@@ -479,8 +480,8 @@ First match:
 
 ### The operation guard
 
-Each golem has **one operation guard**, acquired **before** anything that can run foreign code: the `GolemWorkEvent`, a probe, a capability call or a spawn. It is released in a `finally`, on every path. While it is held:
-- the Baton's edits and pickup refuse (`message.vftv.golem.busy`);
+Each golem has **one [operation guard](conventions.md#operation-guards)**, taken before the `GolemWorkEvent`, a probe, a capability call or a spawn. While it is held:
+- the Baton's edits and pickup refuse (`message.vftv.busy`);
 - no think starts for this golem;
 - a death **defers its settlement** to the release (see "Damage, death and regeneration").
 
@@ -539,7 +540,7 @@ A false return is `REFUSED`; a barrier failure `RETIRED`; a throw or a changed e
 | the golem dies | the items and the core drop; essentia spills once (see "Damage, death and regeneration") |
 | upgraded by infusion | kept: `transmute` keeps the components |
 | its chunk unloads | saved with the golem |
-| dormant | kept as the raw record |
+| unreadable | kept as the raw record |
 | **external drop loss:** a `LivingDropsEvent` listener cancels or changes the death drops (`MC:world/entity/LivingEntity.java:1597–1599`); a drop's spawn is refused; a full-inventory pickup drop is refused | lost without a spill. These are other mods' and vanilla's decisions about drops, as for every container ([essentia, Removal and drops](essentia.md#removal-and-drops)). |
 | discarded by a command or another mod (`remove(DISCARDED)`), or removed as `KILLED` without dying | lost silently, as a jar item's expiry is |
 
@@ -581,7 +582,7 @@ The book lists every loss row (see the contracts on #35).
 
 - **It never attacks.**
 - **Damage:** the environment and mobs, as vanilla. Damage whose responsible player (`DamageSource#getEntity`, so a projectile's owner counts) isn't the owner is refused unless the level allows PvP (`ServerLevel#isPvpAllowed`, reading the PvP game rule, `MC:server/level/ServerLevel.java:1905–1906`). The owner may always hurt their own golem.
-- **Dormant golems** are invulnerable except to damage in `#minecraft:bypasses_invulnerability` (`/kill`, the void).
+- **Unreadable golems** are invulnerable except to damage in `#minecraft:bypasses_invulnerability` (`/kill`, the void).
 - **Regeneration:** one health point every material `regen` ticks, once the golem has gone `regen.quiet` ticks unhurt. There is no repair item; health persists through pickup and upgrade.
 - **Death is settled at `dropAllDeathLoot`** (`MC:world/entity/LivingEntity.java:1586–1599`), which the golem overrides **whole**. Vanilla's version always posts `LivingDropsEvent`, even for an empty collection (`NF:common/CommonHooks.java:400–401`), so overriding only `dropEquipment` would post it twice for a deferred death. A golem has no loot table, no equipment and no experience, so nothing of vanilla's is skipped.
   - **The capture:** the death's level and position, the damage source and whether a player hit it recently, taken when `dropAllDeathLoot` is called.
@@ -633,7 +634,7 @@ Each page ends with `hud.vftv.golem.page` (page, 4).
 | `UNREACHABLE` | the last target couldn't be reached | `.unreachable` 1: the mark's number |
 | `HOME_UNREACHABLE` | home couldn't be reached | `.home_unreachable` 0 |
 | `INERT` | a missing material, core or job | `.inert` 0 |
-| `UNREADABLE` | a dormant record | `.unreadable` 0 |
+| `UNREADABLE` | an unreadable record | `.unreadable` 0 |
 
 ### The marks overlay
 
@@ -709,7 +710,7 @@ No custom item-model property is registered. The cores and the Baton have plain 
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails its type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#the-envelope).
 
 ```
 content/golems/materials.json     the five materials
@@ -725,7 +726,7 @@ content/lang/en_us/golems.json    every key under "Lang keys"
 | `recipes.json` | `vftv:golem_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `bootstrap.json` | `vftv:golem_bootstrap/1` | nothing: read by the review and a lint |
 | `fixtures.json` | `vftv:golem_fixtures/1` | nothing: read by the unit tests |
-| `lang/<lang>/golems.json` | `vftv:lang/1` | its `strings` merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `lang/<lang>/golems.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 A recipe id declared in two `content/` files, of any type, fails datagen.
 
@@ -776,16 +777,16 @@ A recipe id declared in two `content/` files, of any type, fails datagen.
 
 ### The bootstrap
 
-`{"schema": "vftv:golem_bootstrap/1", "recipes": {<id>: {"items": [{"item": <id>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for **every** recipe id in `recipes.json`.
+The [bootstrap](conventions.md#bootstrap) is `{"schema": "vftv:golem_bootstrap/1", "recipes": {<id>: {"items": [{"item": <id>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, for **every** recipe id in `recipes.json`.
 
 - **Coverage:** `items` lists every ingredient, catalyst, centre and component item of that recipe (for a tag, the alternative the review names), and `aspects` every crucible or infusion aspect (empty for arcane recipes, whose vis is checked by the lint).
 - **Review:** each `why` says how the thing is obtained in its recipe's Stage without a golem, and for an aspect which matter dissolves into it in a crucible ([aspects, Coverage and supply](aspects.md#coverage-and-supply)). The review checks the sequence is non-circular.
 
-**Rejected:** a missing recipe, item or aspect; an empty `why`.
+**Rejected,** beyond the convention: a missing recipe.
 
 ### Fixtures
 
-`{"schema": "vftv:golem_fixtures/1", "phase": [<phase>, …], "range": [<range>, …], "scenarios": {<name>: <scenario>}}`, transcribing every vector table in this spec exactly: the phase and range tables, and the scenarios `delivery`, `fairness`, `budget` and `eligibility`. Scenario marks are **not** real marks: they model a mark and its handler. The unit tests replay them against the `model` code; that consumer is build work.
+`{"schema": "vftv:golem_fixtures/1", "phase": [<phase>, …], "range": [<range>, …], "scenarios": {<name>: <scenario>}}`, transcribing every vector table in this spec exactly: the phase and range tables, and the scenarios `delivery`, `fairness`, `budget` and `eligibility`. Scenario marks are **not** real marks: they model a mark and its handler. The [fixtures convention](conventions.md#fixtures) applies.
 
 | Record | Fields (required unless a default is given) |
 |---|---|
@@ -822,11 +823,11 @@ A recipe id declared in two `content/` files, of any type, fails datagen.
    {"tick": 130, "op": "idle", "work": 3, "cursor": 0}]}
 ```
 
-**Rejected:** a missing or unknown field; a value out of range; a field that doesn't belong to its `op` or role; a scenario, phase or range vector that differs from this spec's tables.
+**Rejected,** beyond the convention: a field that doesn't belong to its `op` or role.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach the Baton's gestures, roles and filters, that fitting a core clears marks, FEED's owner rule **with the complete handoff warning**, TIP as the dissolve path, no suction routing, and every carry-loss row.
+[Lang files](conventions.md#lang); every key below is required in `en_us`. The English is the intended sense; the content ticket writes the final text, and its review checks that the messages teach the Baton's gestures, roles and filters, that fitting a core clears marks, FEED's owner rule **with the complete handoff warning**, TIP as the dissolve path, no suction routing, and every carry-loss row.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -844,7 +845,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen.
 | `tooltip.vftv.golem_core.job` | 1 | "Gives a golem the %s job." |
 | `tooltip.vftv.baton.attuned` | 1 | "Attuned to %s" |
 | `tooltip.vftv.baton.unattuned` | 0 | "Not attuned" |
-| `message.vftv.golem.unreadable`, `.unknown_body`, `.no_core`, `.unknown_core`, `.inert`, `.not_here`, `.crowded`, `.no_room`, `.not_yours`, `.busy`, `.no_room_inventory`, `.carrying`, `.denied`, `.out_of_range`, `.too_many_marks`, `.bad_filter`, `.home_unloaded`, `.swap_one` | 0 | the refusals named above (`.no_room_inventory`: "I have nowhere to carry it.") |
+| `message.vftv.golem.unknown_body`, `.no_core`, `.unknown_core`, `.inert`, `.not_here`, `.crowded`, `.no_room`, `.not_yours`, `.no_room_inventory`, `.carrying`, `.denied`, `.out_of_range`, `.too_many_marks`, `.bad_filter`, `.home_unloaded`, `.swap_one` | 0 | the refusals named above (`.no_room_inventory`: "I have nowhere to carry it.") |
 | `message.vftv.golem.attuned`, `.mark_removed`, `.filter_cleared` | 1 | "Attuned to %s.", "Mark %s removed.", "Mark %s takes anything now." |
 | `message.vftv.golem.mark_added`, `.role`, `.filter_set` | 2 | "Mark %s: %s.", "Mark %s: %s.", "Mark %s: only %s." |
 | `message.vftv.golem.home_set` | 3 | "Home is now %s, %s, %s." |
@@ -862,9 +863,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen.
 | `subtitles.vftv.golem.step`, `.work`, `.place`, `.pickup`, `.hurt`, `.death` | 0 | "Golem steps", "Golem works", "Golem wakes", "Golem lifted", "Golem hurts", "Golem breaks" |
 | `subtitles.vftv.baton.attune`, `.mark_add`, `.mark_remove` | 0 | "Baton attunes", "Baton marks", "Baton unmarks" |
 
-**Used, not declared here:** item, aspect and player names; `essentia.vftv.unheard` and `essentia.vftv.missing`.
-
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
+**Used, not declared here:** item, aspect and player names; `essentia.vftv.unheard` and `essentia.vftv.missing`; the shared [`message.vftv.busy` and `.unreadable`](conventions.md#message-keys).
 
 ## Events
 
@@ -901,7 +900,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | the attunement | the `vftv:baton_attunement` component `{golem: <UUID>, dimension: <level key>}` | as items are |
 | the think and search queues, operation guards, targets, resume points, overlay subscriptions, the per-player click record (one event reference, consumed by the next Baton use or replaced by the next click) | per-level or per-player memory | never |
 | the marks overlay | built from the record | **`GolemMarks`** and **`GolemMarksClear`**, S2C, to subscribers only |
-| golem rules | the tuning record, the admin cap and the fixed limits | **`GolemRules`** S2C to every player through `OnDatapackSyncEvent` (join and `/reload`; `NF:event/OnDatapackSyncEvent.java:64–81`), and again when a server config change alters the cap ([configuration spec, Publishing a change](config.md#publishing-a-change)) |
+| golem rules | the tuning record, the admin cap and the fixed limits | **`GolemRules`**, a [Rules record](conventions.md#rules-records) |
 | materials | the `vftv:golem_material` registry | every player, through its network codec |
 
 **The record:** `{"format": 1, "body": <material id>, "core": <item id>, "home": [x, y, z], "marks": [<mark>, …], "generation": 0–2³¹−1, "carry"?: <carry>, "cursor": −1–15, "backoff": [{"mark": 0–15, "until": <long>}, …], "faults": [<fault>, …], "owner_name": <string>}`.
@@ -909,10 +908,10 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **`<carry>`:** `{"item": <item stack, count 1–64>}` or `{"aspect": <id>, "amount": 1–1,000}`.
 - **Invariants,** checked against format bounds only, **never against current materials or tuning:** 0–16 marks; distinct (pos, face); coordinates within ±30,000,000 horizontally and the level's build height; `cursor` < the mark count (−1 with none); ≤ 16 backoffs on distinct marks that exist; `faults` exactly one per mark; `owner_name` ≤ 16 characters; ids ≤ 256 characters. A carry over the material's cap, a mark out of tuning range, or a role invalid for the job is **readable** and handled at run time (kept and delivered, faulted, or skipped).
 - **Defaults** for a fresh golem: no marks, generation 0, no carry, cursor −1, no backoffs.
-- **Missing ids:** a material, core item or job the registries don't hold makes the golem **inert**: kept and written back unchanged, no thinks, status `INERT`; restoring the pack restores it. A filter naming a missing id faults its mark `UNKNOWN_FILTER`. A carried aspect the registry doesn't hold is kept and can be delivered nowhere.
-- **Dormant:** an unknown format, out of bounds or a failed invariant keeps the raw tag and writes it back unchanged, with one log line. The golem is inert and invulnerable (as above), its status `UNREADABLE`; the Baton's edits and pickup refuse; dying (to `/kill`) drops nothing it can't read, with a warning.
+- **Missing ids:** a material, core item or job the registries don't hold makes the golem [inert](conventions.md#missing-ids-are-inert-not-unreadable): no thinks, status `INERT`. A filter naming a missing id faults its mark `UNKNOWN_FILTER`. A carried aspect the registry doesn't hold is kept and can be delivered nowhere.
+- **Unreadable records** follow [conventions](conventions.md#raw-record-retention); a failed invariant is unreadable too. The golem does nothing and is invulnerable (as above), its status `UNREADABLE`; dying (to `/kill`) drops nothing it can't read.
 
-**`vftv:golem_state`:** `{"format": 1, "marks": [<mark>, …], "carry"?: <carry>, "health": 0 < h ≤ 100}`, under the same bounds and invariants; dormant items as under "The golem item".
+**`vftv:golem_state`:** `{"format": 1, "marks": [<mark>, …], "carry"?: <carry>, "health": 0 < h ≤ 100}`, under the same bounds and invariants; unreadable items as under "The golem item".
 
 **Entity data** (synced to trackers): the material id and core item id (≤ 256 characters); the status and its number (bytes); the target's mark index (−1–15) and role; the mark count; the carry display (a copy of one item with the exact count, or an aspect id and an amount); the owner's name (≤ 16 characters).
 
@@ -923,9 +922,9 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 | Change | Effect |
 |---|---|
-| Tuning (`/reload`) | a new record; `GolemRules` re-sent; resume points cleared; `think.interval` applies at each golem's next schedule; `range` at its next eligibility check; `path.max_length` at its next search; backoffs already set keep their end ticks |
+| Tuning (`/reload`) | a new record; resume points cleared; `think.interval` applies at each golem's next schedule; `range` at its next eligibility check; `path.max_length` at its next search; backoffs already set keep their end ticks |
 | Tags and recipes (`/reload`) | nothing of ours: the recipe types' own rules apply |
-| Server config (`golems.max_per_chunk`) | the cap applies at the next placement only: no golem is removed and no schedule reset; `GolemRules` re-sent |
+| Server config (`golems.max_per_chunk`) | the cap applies at the next placement only: no golem is removed and no schedule reset |
 | The material, item or aspect registries | need the world reopened |
 | Resource reload | models, sprites, the card's layout and names rebuild |
 
@@ -1010,7 +1009,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the work budget:** yield and resumption inside a source scan and **inside destination probes**; revalidation charges on resume; resume cleared by each edit kind; the per-level ceiling;
 - **backoff:** a refused first source never starves later ones;
 - **cursor:** removal before, at and after the cursor;
-- **codecs:** the record, the item state, the attunement, `GolemMarks`, `GolemMarksClear`, `GolemRules` and the tuning file, with every bound and invariant, defaults, missing ids and the raw round trip; a carry above a lowered material cap stays readable;
+- **codecs:** the record, the item state, the attunement, `GolemMarks`, `GolemMarksClear`, `GolemRules` and the tuning file, with every bound and invariant, defaults, and the [raw-retention template](conventions.md#tests), missing ids included; a carry above a lowered material cap stays readable;
 - **every `content/` rejection rule** and lint (the `vis` bound, the crucible cost bound, the Echo body's exact result, the bootstrap's coverage, non-amplification).
 
 **GameTest:**
@@ -1018,7 +1017,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **placing:** a committed placement; each refusal; a cancelled join; **a join listener that empties or swaps the placer's hand, kills the placer or moves them to another level, fills the spawn cell, unloads or borders it off, or adds golems up to the cap** (our entity discarded, nothing consumed); the admission cap, our provisional entity excluded from it and from the collision test;
 - **pickup:** the round trip keeps marks, carry and health; refused while busy and **with a full inventory**; a removal callback that fills the inventory meanwhile (the item drops at the player); no duplication;
 - **fitting a core:** in both orientations: fitting from a stack of 16 into an empty socket (15 left); a swap from a stack of 1; **a swap from a stack of 16 refused with nothing changed**; removal to an empty cursor and to an empty slot; refusal while carrying; a primary click (vanilla); marks cleared; a locked slot;
-- **the Baton:** every row of both tables, including a chest marked rather than opened; **with a torch in the off hand, plain clicks add a mark and cycle its role through every role to removal**, and a sneak-click on a mark sets the filter; a sneak-click on a mark with an empty off hand clears the filter and never removes the mark; a sneak-click elsewhere sets home whatever the off hand holds; a cancelled `RightClickBlock`, **a denied item use, and a denied block use alone**; **a block-use denial set by a second `LOWEST` listener registered after ours** (refused); **a denied click then an allowed click at the same position in one tick** (the second marks); a re-entrant click from inside a listener (fail closed); a cancelled `EntityInteract`; a non-owner; **a copied attuned Baton used by another player**; an unloaded golem; another level; an invalid essentia filter (no change); dormant, inert and busy golems;
+- **the Baton:** every row of both tables, including a chest marked rather than opened; **with a torch in the off hand, plain clicks add a mark and cycle its role through every role to removal**, and a sneak-click on a mark sets the filter; a sneak-click on a mark with an empty off hand clears the filter and never removes the mark; a sneak-click elsewhere sets home whatever the off hand holds; a cancelled `RightClickBlock`, **a denied item use, and a denied block use alone**; **a block-use denial set by a second `LOWEST` listener registered after ours** (refused); **a denied click then an allowed click at the same position in one tick** (the second marks); a re-entrant click from inside a listener (fail closed); a cancelled `EntityInteract`; a non-owner; **a copied attuned Baton used by another player**; an unloaded golem; another level; an invalid essentia filter (no change); unreadable, inert and busy golems;
 - **carrying:** chest to chest with exact counts; partial delivery across two destinations; a filled jar moved keeps its components; pedestal loading, **promised-stack restoration** by GIVE, and refusal on a claimed pedestal; Singing Bowl loading;
 - **FEED and TIP:** FEED crafts as the owner; **a carry of 64 is fed one item per act**, the remainder kept in the carry; FEED waits while the owner is offline or dead, and **keeps feeding while the owner is in another dimension**; **at a boiling crucible, the owner logging out after the drop and before the crucible's step: the catalyst dissolves** (the warned handoff); TIP dissolves a learned catalyst; a cancelled spawn and a listener that changes our entity: no loss, no duplication;
 - **COLLECT:** lowest id first; an ineligible low-id entity doesn't block an eligible one; a listener that removes the planned entity after the hook; **a planned stack of 24 reduced to 1 before arrival, and reduced to 1 inside the hook: exactly 1 credited**; a different entity at the planned id (`RETIRED`);
@@ -1028,7 +1027,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **re-entry:** a `GolemWorkEvent` listener that picks the golem up, edits its marks, kills it, or moves it to another level; the act refuses or retires and nothing duplicates; **a death inside an act settles once at the release, on commit and on abort, posting exactly one `LivingDropsEvent` and, when it is cancelled, dropping nothing**; `GolemWorkEvent` cancel gives `REFUSED` and its backoff;
 - **death:** **exactly one `LivingDropsEvent`** on a normal death, then the drops, then the single `SPILLED`, then `DIED`, in that order; `LivingDropsEvent` cancelled; a throwing `LivingDropsEvent`, `SPILLED` or `DIED` listener (the later steps still run); non-owner player and projectile damage with PvP off and on; a wither attacking a golem;
 - **pathing:** a block flood raises requests within the search caps (≤ 2 searches per tick); only queue service searches; `path.max_length` 64 after a reload stays within 1,024 nodes, **and a `FOLLOW_RANGE` modifier from another mod changes nothing**; the queue never holds more entries than loaded golems; **marks on the east, top and bottom faces reached and acted on at `interact.reach_tenths` 15** (the finishing steer), and a path that succeeds without arrival is not an act; UNREACHABLE and its backoff; never a teleport; a target retired by a mark edit clears its request;
-- **persistence:** **a chunk unloaded and reloaded mid-carry**; save, quit and reload mid-carry and mid-travel; a golem walking toward a non-ticking chunk; never despawns (peaceful, far away, empty server); a lowered material capacity keeps the carry; dormant and inert records survive save unchanged;
+- **persistence:** **a chunk unloaded and reloaded mid-carry**; save, quit and reload mid-carry and mid-travel; a golem walking toward a non-ticking chunk; never despawns (peaceful, far away, empty server); a lowered material capacity keeps the carry; unreadable and inert records survive save unchanged;
 - **bounds:** no chunk is loaded anywhere; the queues hold their caps under 256 golems; a stale-queue flood;
 - every test id in the discovery guard.
 
@@ -1043,89 +1042,24 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts on this ticket):
-
-| Arcane contract | Met by |
-|---|---|
-| No golem arcane-crafts in v1; a future automated path keeps the research gate and the spend | the Worktable has no capability or container ([arcane, Multiplayer and automation](arcane.md#multiplayer-and-automation)), and no role reaches it ("What golems don't do"); the future-jobs contract restates the condition |
-| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "Authored content, Recipes": the four bodies, the Baton and the blank core are `ordinary`, gated by `vftv:golems` |
-| Stage 1 arcane recipes meet the Stage 1 affordability test | none is in Stage 1; each adds the chime-capacity lint, and the bootstrap covers every recipe |
-
-**Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)'s contracts on this ticket):
-
-| Crucible contract | Met by |
-|---|---|
-| A golem dropping items into a crucible sets each `ItemEntity`'s thrower to its owning player; the golem spec documents or prevents delivery while the owner is offline, dead or elsewhere | **FEED:** the thrower is the owner; the drop is **prevented** unless the owner is online and alive, resolved server-wide as the crucible now resolves the thrower (amended there in this change), checked at selection, at arrival and after the spawn; one item per act; the **complete handoff window** after the drop, until the crucible processes the item, is **documented** in the spec, the messages and the book ("Feed and Tip"), with its GameTest. **TIP** is exempt by the crucible spec's amendment in this change: a deliberate, no-thrower dissolve path. |
-| Golems touch the pool only through "Essentia out"; their own crucible recipes live in their own content files with the body | decanting TAKE through the essentia capability on a non-`UP` face ("Roles"); the cores in `content/golems/recipes.json` |
-
-**Met here** (the [Essentia logistics spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)'s contracts on this ticket):
-
-| Essentia contract | Met by |
-|---|---|
-| Moves essentia only through the essentia capability, in roots closed within the call | "Acts": one root per act and per selection's probes, closed within the call; the `Lifecycle.NONE` guard (`DEFERRED`); indexed probes and transfers charged to the work budget; the operation guard before every callback and **a barrier after every foreign callback**, aborting the open root on any change (`RETIRED`); the four exits; outcomes read from the ledger even when the root's close throws; COLLECT's amount recomputed after the hook against the entity's identity; death settled once at `dropAllDeathLoot`, deferred to the guard's release on commit and abort |
-| A golem that routes by suction applies the rule explicitly | golems carry where marked and route nothing, as infusion's direct draws don't ("Roles"); the book says so |
-| A golem carrying a filled jar keeps its components intact | `ItemResource` keeps components; GameTest |
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)'s contracts on this ticket):
-
-| Infusion contract | Met by |
-|---|---|
-| Golems may load pedestals and bowls and restore promised stacks through the item capability or the container path, under its rules; no golem starts an infusion | GIVE through `Capabilities.Item.BLOCK`, whose registered handler enforces claims and exact restoration; GameTests; no role strikes |
-
-**Met here** (the [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)'s contracts on this ticket):
-
-| Foci contract | Met by |
-|---|---|
-| No golem casts or uses the Lathe in v1; golems may move foci and wands as items | no role casts or opens a menu; carrying moves any item with its components |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts, which bind Golems through the arcane block for its recipes):
-
-| Research contract | Met by |
-|---|---|
-| **Gate:** `research` on each gated recipe; the server refuses every processing and output path until it is learned; a GameTest with an unlearned player | every golem recipe rides `vftv:arcane`, `vftv:crucible` or `vftv:infusion`, whose gates apply with their own unlearned GameTests; FEED crafting is gated by the owner's research inside the crucible; placing and running are ungated by design ("Stage") |
-| Recipe-page validator; one authoritative preview; JEI by the learned gate | each recipe sits on its gating entry's page; costs come from the three recipe types' previews and JEI categories; golem stats are the `golem` and `golem_material` fact sources, with complete keys, formats, absence and live dependencies (the research spec amended) |
-| The Stage 2 content ticket is blocked by Golems | "Stage" freezes the ids and fact keys for #35, and the Stage 3 entry for #36 |
-
-**Met here** (the [progression spec](progression.md#tc4-systems-kept-redesigned-cut)): golems are kept, with mark-based jobs ("Control", "Roles"), survival across chunk reloads ("Chunks and persistence"), deterministic pathing ("Pathing", "Selection", "Travel and arrival": one target, no retargeting, refusal recovery) and inspectable state ("Inspection and teaching"), answering pain point 5.
-
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a replenished workload, a share, hot paths with bounded work and an allocation budget ("Performance").
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** places no contract on this ticket.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36):
-- **Entries:** the three notes under "Stage", with their parents and gates, each carrying `vftv:recipe` pages for the recipes it gates.
-- **Fact sources:** `golem` and `golem_material`, with their keys, formats, absence and live dependencies.
-- **Prose** teaches the Baton's gestures, home and range, roles and filters, that fitting a core clears the marks, FEED's owner rule **with the complete handoff warning** (the owner online at the drop and at processing, in any dimension, any loss between dissolving the item even at a boiling crucible), that FEED and TIP drop one item per act, TIP as the deliberate dissolve path, **the v1 farm pattern** (a vanilla observer-and-piston farm with a COLLECT mark at its drop point, harvesting golems arriving in v1.1), no suction routing, refusal backoff, and **every carry-loss row** under "Carry conservation", with every number in a `golem`, `golem_material` or `recipe` fact span.
-- **The affordability artifact:** `path-stage2.json` learns `vftv:golems` after `vftv:resonant_brass`, and `vftv:golem_decanting` after `vftv:essentia_jars`; `path-stage3.json` learns `vftv:echo_golems` after `vftv:infusion`. The review reads them beside `content/golems/bootstrap.json`, the material half of the proof.
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)** (amended in this change)
-- `api`'s `SpillCause` gains **`DIED`**, posted only by `GolemEvent(SPILLED)`.
-- The thrower is resolved server-wide (`server.getPlayerList().getPlayer(uuid)`, online only), so a FEED owner in another dimension still crafts.
-- Its contract on golems now exempts a deliberate **TIP** drop, which has no thrower and always dissolves. Crucible behaviour is unchanged.
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- `essentiaFlux(spilled, DIED)` is generated **once** on `GolemEvent(SPILLED)`, at the level and death position the event carries (amended from "applied": what an aura retains is reported separately); the typed zero until #26 lands.
-- **Bounds:** a golem spill is one aspect, ≤ 1,000 units, within the crucible contract's ≤ 10,000 input and 0–1,000,000 output.
-- No other golem flux.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one `HIGHEST` listener depositing at the event's death position; generated, retained, pending and overflow reported.*
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for the `vftv:golem` entity type and item, the three cores and the Baton.
-- **Round-trip non-amplification** over every golem recipe: the arcane recipes (vis counting as no material input), the two crucible cores and the Echo infusion. Components and carry add no aspect value ([aspects, Coverage and supply](aspects.md#coverage-and-supply)).
-
-**Future world-affecting jobs** (v1.1's `HARVEST`, or any spec, such as [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28))
-- Harvesting, guarding or any act that changes blocks or hurts entities is a spec amendment with its own act-specific design: an owner attribution, protection events for each act (for blocks, NeoForge's `event.level.block.BreakBlockEvent` and the placement events, through the player's own paths as the [foci spec](foci.md#multiplayer-and-automation) uses them), and an offline-owner rule (FEED's is the model). For harvesting all three exist in v1; its shape is under "What golems don't do". A fake player alone is not a protection promise. No casting and no arcane crafting without the [foci](foci.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) conditions.
-
-**Mod compatibility**
-- `GolemWorkEvent` is the claim-mod hook: its timing (inside the operation guard, after arrival, before any capability call or spawn), its cancellation (REFUSED with `refuse.backoff`) and the revalidation after it are as under "An act".
-
-**Configuration**
-- The admin cap `golems.max_per_chunk` (default 16, 1–256), applied at placement only.
-
-**API**
-- `GolemLimits`, the payload records of `GolemEvent` and `GolemWorkEvent`, the `vftv:golem_job` and `vftv:golem_material` registry keys, and the component keys live in `api`. The job contract (a job type's carry kind and roles, a core's binding, the loader-free planner returning bounded plans, and execution behind the platform layer) is as under "Cores and jobs"; no transfer type reaches `core`. Public in `api`: `GolemJob`, `GolemCarryKind`, `GolemRole`, `GolemCore` and `GolemKeys` (the typed job key with `vftv:carry` and `vftv:decant`). The planner, execution and every service are internal ([API spec, Golem jobs](api.md#golem-jobs)).
+| Needs from | What | Met at |
+|---|---|---|
+| arcane | the `vftv:arcane` body, with a static result template carrying components | [arcane, The recipe type](arcane.md#the-recipe-type) |
+| crucible | the `vftv:crucible` body in this spec's own content file; the provisional-spawn pattern | [crucible, The recipe type](crucible.md#the-recipe-type), [Committing a craft](crucible.md#committing-a-craft) |
+| crucible | the thrower resolved server-wide, online and alive, so a FEED owner in another dimension still crafts; a TIP drop, with no thrower, always dissolves | [crucible, Selection](crucible.md#selection), [Multiplayer and automation](crucible.md#multiplayer-and-automation) |
+| crucible, API | `SpillCause.DIED`, posted only by `GolemEvent(SPILLED)` | [crucible, Contracts on sibling specs](crucible.md#contracts-on-sibling-specs), [API, The events](api.md#the-events) |
+| essentia | the essentia capability, its transactions and snapshot journal, and labels naming an aspect | [essentia, Contents and the handler](essentia.md#contents-and-the-handler), [Transactions](essentia.md#transactions), [Labels](essentia.md#labels) |
+| infusion | the `vftv:infusion` body with `transmute`; pedestals and bowls enforcing claims and restoring promised stacks through their item handler | [infusion, The recipe type](infusion.md#the-recipe-type), [Holding items](infusion.md#holding-items-the-item-handler-and-the-container) |
+| foci | the inventory-click attach pattern | [foci, Attaching and detaching](foci.md#attaching-and-detaching) |
+| research | the three entries under "Stage", with their parents and recipe pages | [research, Roster](research.md#roster) (the recipe pages are not stated) |
+| research | the `golem` and `golem_material` fact sources | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | `path-stage2.json` learns `vftv:golems` after `vftv:resonant_brass` and `vftv:golem_decanting` after `vftv:essentia_jars`; `path-stage3.json` learns `vftv:echo_golems` after `vftv:infusion` | **not stated** in [research, Affordability and recovery](research.md#affordability-and-recovery) or its production tickets |
+| research (#35, #36) | prose teaching the Baton's gestures, home and range, roles and filters, that fitting a core clears the marks, FEED's owner rule **with the complete handoff warning**, one item per FEED or TIP act, TIP as the dissolve path, the v1 farm pattern, no suction routing, refusal backoff and every row under "Carry conservation", every number in a `golem`, `golem_material` or `recipe` span | [research, Roster](research.md#roster) (the handoff warning and the loss rows; the rest by reference to this table) |
+| Hush | `essentiaFlux(spilled, DIED)` generated once on `GolemEvent(SPILLED)`, at the event's level and death position | [Hush, Sources](hush.md#sources) |
+| compatibility | `GolemWorkEvent` as the claim-mod hook | [compatibility, Claim mods](compat.md#claim-mods) |
+| configuration | `golems.max_per_chunk` (16, 1–256), applied at placement only | [configuration, Server keys](config.md#server-keys) |
+| API | `GolemLimits`, the payload records, the registry and component keys in `api`; `GolemJob`, `GolemCarryKind`, `GolemRole`, `GolemCore` and `GolemKeys` public; the planner and execution internal | [API, Golem jobs](api.md#golem-jobs), [The inventory](api.md#the-inventory) |
+| [vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) | hand entries or exemptions for the golem entity and item, the three cores and the Baton; round-trip non-amplification over every golem recipe | not yet stated in any spec |
 
 ## Production tickets
 

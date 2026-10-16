@@ -233,13 +233,13 @@ Each collection's size is read and checked **before anything is allocated**. Out
 
 Vanilla clicks cannot craft: the preview is not a slot, the output refuses insertion, and the menu is not a recipe-book menu.
 
-**Server checks,** on the server thread (the architecture's `enqueueWork` rule), first failure refusing:
+**Server checks,** on the server thread (the architecture's `enqueueWork` rule), first failure refusing. Checks 1–3 and the spend's echo recompute are the [checked commit's](conventions.md#checked-commits):
 
 | # | Check | On failure |
 |---|---|---|
-| 1 | **Rate:** at most 1 `WorktableCraft` per player per server tick | dropped, no reply |
-| 2 | not a spectator; the open menu is a `WorktableMenu` with this `containerId`; `stillValid` | dropped, no reply (there is no menu to report to) |
-| 3 | the menu's change check (see "Preview revision") runs; then `revision` equals the menu's revision | `STALE` |
+| 1 | rate: 1 per player per tick | dropped, no reply |
+| 2 | context: not a spectator, a `WorktableMenu` with this `containerId`, `stillValid` | dropped, no reply |
+| 3 | change check, then `revision` (see "Preview revision") | `STALE` |
 | 4 | the wand slot holds a `vftv:wand` | `NO_WAND` |
 | 5 | the wand is not inert ([wands, Vis storage](wands.md#vis-storage)) | `INERT_WAND` |
 | 6 | **selection** on the server's grid (see "Selection") selects a recipe — **this is the research gate, before any slot changes** | `NO_RECIPE` |
@@ -257,17 +257,12 @@ The order of checks 4–10 is the status line's precedence, so a refusal names e
 
 ### Preview revision
 
-A server-owned **32-bit counter per open menu**, starting at 0, sent in data slots 1 and 2. The client echoes the value it holds when it sends a craft. It catches what a recipe id and a cost cannot: a `/reload` that changes a recipe's ingredients or result at the same id and price, or a slot the client hadn't yet seen change.
+The menu's [surface revision](conventions.md#the-revision), sent in data slots 1 (low 16 bits) and 2 (high 16 bits) and echoed by each craft. It catches what a recipe id and a cost cannot: a `/reload` that changes a recipe's ingredients or result at the same id and price, or a slot the client hadn't yet seen change.
 
-- **It bumps** (+1, wrapping) on:
-  - any change to a menu container slot: grid, wand or output, including the wand's vis written by a spend;
-  - a change to the player's research (the research attachment's `revision` differs from the one last seen);
-  - a replaced `ArcaneRecipeSnapshot`;
-  - a replaced `VisRules` record (a tuning `/reload`).
-- **Detection:** slot changes through the menu's `slotsChanged` and container listeners, at once. The other three are an **O(1) change check** comparing the stored research revision, snapshot instance and `VisRules` instance (and the price inputs below, which only clear the refusal), run in the menu's `broadcastChanges` (every server tick while open), at check 3 of every payload, and before every later batch iteration.
-- **Every bump clears the refusal.** **Price inputs** (the discount attribute's value, and #25's factor for `ORDINARY` and `VOID`) never bump the revision: the quote echo catches a stale price. The same O(1) change check compares them, and a change **clears the refusal without bumping**, so a `SHORT` or `EXCEEDS_CAPACITY` made obsolete by gear or warp never lingers.
+- **It bumps** on a change to a menu slot (grid, wand or output, including the wand's vis written by a spend), to the player's research `revision`, to the `ArcaneRecipeSnapshot` instance or to the `VisRules` instance. Price inputs (the discount attribute, #25's factor for `ORDINARY` and `VOID`) never bump it.
+- **The change check** runs in the menu's `broadcastChanges` (every server tick while open), at check 3 of every payload and before every later batch iteration; slot listeners fire at once. Every bump clears the refusal, and so does a price-input change, without bumping, so a `SHORT` or `EXCEEDS_CAPACITY` made obsolete by gear or warp never lingers.
 - **Suppression during a commit, ended at the apply boundary.** While a spend applies or restores slot changes, the menu only marks itself dirty: no preview recomputation, no bump and no broadcast happens per slot. The menu passes the spend its **apply boundary** ([wands, The spend](wands.md#the-spend)), which runs once the swap or its rollback is complete and **before `VisSpentEvent` is posted**: it ends suppression, bumps the revision **once** if anything was marked, and on a commit records that value as the handler's own. Anything a `VisSpentEvent`, `ItemCraftedEvent` or criterion listener changes afterwards therefore produces its own, external bump. The final state is broadcast when the payload ends. A rollback may cost the client one `STALE`; it never exposes an intermediate output.
-- **Torn reads are harmless.** The two halves arrive in separate data updates; a client that echoes a half-updated value is refused as `STALE`, never crafts wrongly.
+- **Torn reads are harmless:** a half-updated echo is refused as `STALE`.
 
 ### Planning
 
@@ -318,7 +313,7 @@ The effect is a list of the wands spec's prepared slot changes `(container, slot
 | 5 | `EXCEEDS_CAPACITY` | client; check 9; spend "short" with `exceeds_capacity` | `status.vftv.worktable.exceeds_capacity` | 0 |
 | 6 | `SHORT` | client; check 9; spend "short" otherwise | `message.vftv.spend.short` (the wands spec's) | 1: the short aspects, joined |
 | 7 | `OUTPUT_FULL` | client; check 10 | `status.vftv.worktable.output_full` | 0 |
-| 8 | `STALE` | server only: checks 3 and 7; spend "stale" (a changed cost, or a slot that no longer matches `expectedBefore`) | `message.vftv.spend.stale` (the wands spec's) | 0 |
+| 8 | `STALE` | server only: checks 3 and 7; spend "stale" (a changed cost, or a slot that no longer matches `expectedBefore`) | `message.vftv.cost_changed` ([shared](conventions.md#message-keys)) | 0 |
 | 9 | `ERROR` | server only: a spend that threw in step 6 and was rolled back | `status.vftv.worktable.error` | 0 |
 
 - **Client precedence** (first match): `NO_WAND`, `INERT_WAND`; then an empty grid shows no status line; then `NO_RECIPE`, `LEFTOVER`, `EXCEEDS_CAPACITY`, `SHORT`, `OUTPUT_FULL`, else `READY`.
@@ -386,7 +381,7 @@ A soft dependency ([architecture, Soft dependencies](architecture.md#soft-depend
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen, which writes the resources into `src/generated/resources`. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails the recipe type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#authored-content).
 
 ```
 content/arcane/recipes.json       the arcane recipes this spec owns
@@ -396,7 +391,7 @@ content/lang/en_us/arcane.json    every key under "Lang keys"
 | Input | Schema | Generated output |
 |---|---|---|
 | `recipes.json` | `vftv:arcane_recipes/1` | each recipe `<ns>:<path>` → `data/<ns>/recipe/<path>.json`, its body unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
-| `lang/<lang>/arcane.json` | `vftv:lang/1` | its `strings` object merged into `assets/vftv/lang/<lang>.json`; a duplicate key across all `content/lang` files fails datagen |
+| `lang/<lang>/arcane.json` | `vftv:lang/1` | merged by the [lang pipeline](conventions.md#lang) |
 
 Other specs' arcane recipes live in their own content files (for example `content/wands/recipes.json`) with this body.
 
@@ -460,7 +455,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `subtitles.vftv.worktable.convert` | 0 | "Worktable tuned" |
 | `subtitles.vftv.worktable.craft` | 0 | "Worktable chimes" |
 
-**Used, not declared here:** `message.vftv.spend.inert` (0), `message.vftv.spend.short` (1) and `message.vftv.spend.stale` (0) belong to the wands spec's file; `container.inventory` is vanilla's.
+**Used, not declared here:** `message.vftv.spend.inert` (0) and `message.vftv.spend.short` (1) belong to the wands spec's file; `message.vftv.cost_changed` (0) is [shared](conventions.md#message-keys); `container.inventory` is vanilla's.
 
 ```json
 {"schema": "vftv:lang/1", "strings": {
@@ -613,57 +608,23 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
+What this spec needs from its siblings. Each row is an acceptance criterion in the sibling's ticket.
 
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)'s contracts on this ticket):
-
-| Wands contract | Met by |
-|---|---|
-| Every vis charge through `VisService.spend` with the recipe id as `source`, `kind` `ORDINARY` or `VOID`, `research` the recipe's gate, `expected` echoed from the preview, and prepared slot changes for each consumed and output slot; all or nothing; `VisSpentEvent` after. GameTests: a stale quote, a full output slot, and a slot changed between preview and commit each refuse and change nothing | "The cost", "The craft payload" (checks 3–11, with the echoed quote **and** a server-owned preview revision, so a same-id, same-price reload is caught), "Planning", "Committing" (suppression ended at the spend's apply boundary, before `VisSpentEvent`; `COMMITTED_NOTIFY_FAILED` treated as committed, never as `ERROR`). "Batch" re-reads the live wand and menu and reuses the original echo. The wands spec's spend contract gains the boundary and that outcome in the same change. GameTests for each, plus the throwing commit, a throwing `VisSpentEvent` listener, listener-mutated batches from `VisSpentEvent` and `ItemCraftedEvent`, and same-id replacement. |
-| The cost preview embeds `VisService.quote` unchanged | "The authoritative preview": the complete `VisQuote`. The wands spec is amended in the same change so the quote also exposes its resolved factors `cap`, `discount` and `warp`, with its vectors, fixtures and event payload updated; equality is unchanged. |
-| Stage 1 affordability: every Stage 1 arcane recipe ≤ 32 per aspect (a unit test over recipe data); the first craft's materials and research reachable before it | The Stage 1 affordability unit test, reading the bound from the Wellspring's data and requiring `ordinary`; the Bell's pre-iron ingredients; and a named artifact on [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34): its `path-stage1.json` learns `vftv:tapping` and then `vftv:arcane_crafting` (see below). The E2E first-session flow proves it in-world. |
-| The arcane type carries the Stage 2 recipes at the wands spec's ids and gates; its schema is their body | "The recipe type": the body, now frozen as `"type": "vftv:arcane"` in the wands spec's "Authored content, Recipes" (amended in the same change) |
-| Base vis costs validated at load: vis aspects only, 0–1000 | Registry-aware decode: vis aspects only, 1–1000 (a subset of 0–1000: a zero-cost aspect is simply left out), and created results checked too. There is no second validation pass. |
-| The wand slot accepts only `vftv:wand` and never charges it; turning a block is its own right-click listener, working with a focused wand; the wand passes on non-node blocks | "The menu" (slot 0), "Turning a table" (before `onItemUseFirst`, any wand, not sneaking, so the focus path is untouched; denied uses honoured; the target rechecked after `BreakBlockEvent`) |
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| **Gate:** each research-gated recipe carries `research`; the server refuses every processing and output path until it is learned; a GameTest with an unlearned player | `research` is required; "Selection" sees learned recipes only; check 6 runs **before any slot changes**; no other path crafts ("Not vanilla crafting", "Multiplayer and automation"). Taking committed output is moving owned inventory, not a crafting path, so revocation never confiscates it. GameTests: unlearned crafts refused, and every vanilla path tried. |
-| **Recipe-page validator:** an entry's recipe page shows a recipe ungated or gated within its closure, else `preview: true` | `research` is a top-level field the build-phase validator reads; `vftv:bell` is gated by `vftv:arcane_crafting` and sits on its own page. The `preview: true` exception stands for forward-looking pages. |
-| **One authoritative cost preview** per type: base and effective vis, flux spill and every decision cost, capped modifiers flagged; backs the page and the fact fields | `ArcanePreview`: typed availability, the visible reference wand, frozen fact formats, live dependencies; the flags in the cost tooltip |
-| **JEI** filters by the learned gate, updates on grant, revoke, login and logout, marks unaffordable recipes accurately; everything works without JEI | "JEI": an order-independent reconcile against the current learned set at runtime start and on every arrival, stale objects hidden on replacement, caches cleared at logout, reference-wand affordability. E2E with and without JEI. |
-
-**Met here** (the [progression spec](progression.md#the-first-hour)): the first arcane craft within the first session is the Bell or the Lathe, both behind `vftv:arcane_crafting`, at costs the Wellspring alone pays (the Stage 1 affordability test covers both).
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
-- `api.VisQuote` carries the resolved per-mille factors `cap`, `discount` and `warp`; echo equality is unchanged; the vectors, fixtures and `VisSpentEvent` payload show them.
-- `VisService.spend` takes an optional **apply boundary**, called once after step 6's swap or rollback and before `VisSpentEvent`, and returns **`COMMITTED_NOTIFY_FAILED`** (never a rollback, never a rethrow) when posting `VisSpentEvent` throws after a commit; its tests cover both.
-- `content/wands/recipes.json` bodies use the recipe type's format verbatim, with `"type": "vftv:arcane"`. [Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) is unblocked by it.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)**, handed to [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) and [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35):
-- `vftv:arcane_crafting` (Stage 1 `note`) gates turning a table, `vftv:bell` and the foci spec's `vftv:lathe`; its entry carries `vftv:recipe` pages for `vftv:bell` and `vftv:lathe`, side by side. No additional arcane-specific entry is needed; `vftv:tapping` and the existing research ancestors remain prerequisites.
-- **The affordability artifact:** `content/research/path-stage1.json` learns `vftv:tapping` and then `vftv:arcane_crafting` within its Stage 1 replay, and its reviewed sources include `vftv:starter` (the Wellspring that fills the wand). The Bell's materials (copper, amethyst, wood) are reachable before iron; #34's ticket reviews that list.
-- **Fact fields** for `vftv:arcane`: `output`, `inputs`, `vis`, `vis_effective` and `flux`, in the formats above, priced with the reference wand and shown as the absent text when there is none; they re-resolve on the preview's live dependencies.
-- **Recipe sync** of `vftv:arcane` is this spec's, so the research spec's recipe-page sync needs nothing more for it.
-
-**[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19), [Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24), [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`. `kind: void` only behind a Stage 4 gate. A recipe needing warp on craft must propose an extension (a #25 preview echoed in the same commit); v1 has none.
-- Their Stage 1 arcane recipes, if any, meet the Stage 1 affordability test.
-
-**[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- No golem arcane-crafts in v1. Adding it means proposing an automated path that keeps the research gate (whose research, for an unattended craft) and the spend (which wand, outside any menu).
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- `vis_factor` as already contracted in the wands spec; the station displays its resolved per-mille part and the `clamped` flag. Its synced inputs are among the preview's live dependencies.
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
-- `spill` as already contracted in the wands spec, generated once on `VisSpentEvent` (amended from "applied": what an aura retains is reported separately); no second arcane flux publisher. **A quote's spill is at most 1,000,000**, the craft echo's wire bound.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one listener generating the event's own `spill`; at most 80,000 by construction, clipped at 1,000,000.*
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for `vftv:worktable` and `minecraft:bell`. The **round-trip** non-amplification checks include every built-in `vftv:arcane` recipe, counting vis as no material input, and the crafting table → Worktable conversion.
+| Needs from | What | Met at |
+|---|---|---|
+| wands | `VisService.quote`, whose `VisQuote` carries the resolved per-mille factors `cap`, `discount` and `warp`, with echo equality on the cost fields | [wands, The quote](wands.md#the-quote) |
+| wands | `VisService.spend` over prepared slot changes, with an optional apply boundary called once before `VisSpentEvent`, and `COMMITTED_NOTIFY_FAILED` when a listener throws after a commit | [wands, The spend](wands.md#the-spend) |
+| wands | inert wands, and vis aspects as the exposed primals | [wands, Vis storage](wands.md#vis-storage) |
+| wands | the Stage 2 recipes in `content/wands/recipes.json` as `vftv:arcane` bodies | [wands, Recipes](wands.md#recipes) |
+| wands | the Wellspring's per-aspect amount in node-type data, which bounds Stage 1 costs | [wands, Node types](wands.md#node-types) |
+| research | `vftv:arcane_crafting`, a Stage 1 `note` after `vftv:tapping`, gating turning a table, `vftv:bell` and `vftv:lathe`, its page showing the Bell and the Lathe side by side | [research, Roster](research.md#roster) |
+| research | the Stage 1 path replays the chain with `vftv:starter` among its sources, so the first craft is reachable | [research, Affordability and recovery](research.md#affordability-and-recovery), [Affordability paths](research.md#affordability-paths) |
+| research | `vftv:recipe` pages, the `preview: true` exception and `{fact:recipe:…}` spans resolved through the owning preview | [research, Page descriptors](research.md#page-descriptors), [Prose and fact references](research.md#prose-and-fact-references) |
+| crucible, infusion, foci, armor, Eldritch | every Worktable recipe is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | [crucible, The block](crucible.md#the-block), [infusion, Recipes](infusion.md#recipes), [foci, The block](foci.md#the-block), [armor, Recipes](armor.md#recipes), [Eldritch, The items](eldritch.md#the-items) |
+| golems | no golem arcane-crafts | [golems, Multiplayer and automation](golems.md#multiplayer-and-automation) |
+| warp | `vis_factor`, whose synced inputs are among the preview's live dependencies | [warp, The dials](warp.md#the-dials) |
+| Hush | the quote's spill, at most 1,000,000, generated once on `VisSpentEvent` | [Hush, The pinned functions](hush.md#the-pinned-functions), [Sources](hush.md#sources) |
+| aspects | value-table entries for `vftv:worktable` and `minecraft:bell`, and round-trip checks that include every built-in `vftv:arcane` recipe and the table conversion | [aspects, Coverage and supply](aspects.md#coverage-and-supply) |
 
 ## Production tickets
 
@@ -674,4 +635,4 @@ This spec settles every decision. Two required child tickets deliver the assets 
 | **Worktable assets** | The generator `tools/art/worktable.py`. **Block textures**, 16×16, Stage 1 row of [art style §5](art-style.md#5-tone-ramp-by-stage): `assets/vftv/textures/block/worktable_top.png`, `worktable_side.png` and `worktable_bottom.png` (a crafting table turned to sound: acoustic tools, never saws; the teal tick on the top face, outside any object). The **model** `assets/vftv/models/block/worktable.json` (parent `minecraft:block/cube_bottom_top`), the **blockstate** `assets/vftv/blockstates/worktable.json` (one variant) and the **item definition** `assets/vftv/items/worktable.json` (`minecraft:model` of `vftv:block/worktable`). **GUI:** the background `assets/vftv/textures/gui/container/worktable.png` (176×220 used on a 256×256 sheet, every well at the positions under "The menu" and "The screen"); sprites under `assets/vftv/textures/gui/sprites/`: `worktable/preview_idle.png`, `preview_ready.png`, `preview_hover.png` and `preview_disabled.png` (26×26 each), `worktable/cost_cell.png` and `worktable/cost_cell_short.png` (40×18), `worktable/beyond.png` (9×9) and `container/slot/wand.png` (16×16). **Sounds:** `assets/vftv/sounds/worktable/convert.ogg` and `craft_0.ogg` … `craft_2.ogg`, with the `sounds.json` entries `worktable.convert` and `worktable.craft` naming `subtitles.vftv.worktable.convert` and `subtitles.vftv.worktable.craft`, no volume or pitch overrides. A contact sheet at GUI scale 2: the block beside vanilla's crafting table, and the screen (composed from the sheet and sprites, every preview state, a short cell and the beyond glyph) beside vanilla's crafting screen. Provenance rows. | none |
 | **Arcane crafting content** | `content/arcane/recipes.json` (`vftv:arcane_recipes/1`, exactly `vftv:bell` under "Authored content, Recipes": its ingredients, count and costs chosen within those rules) and `content/lang/en_us/arcane.json` (`vftv:lang/1`) with every key under "Lang keys" | none |
 
-[Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) is unblocked by the recipe type's format. [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) and [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) consume `vftv:arcane_crafting`, `vftv:bell`, the fact fields and the affordability artifact above.
+[Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) is unblocked by the recipe type's format. [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) and [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) consume `vftv:arcane_crafting`, `vftv:bell` and the fact fields; #34's `path-stage1.json` learns `vftv:tapping` and then `vftv:arcane_crafting`, with `vftv:starter` among its sources and the Bell's copper, amethyst and wood reachable before iron.

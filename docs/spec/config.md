@@ -96,7 +96,7 @@ All 19 keys of `vftv-server.toml`. **Applies** is the first read of a changed va
 | 19 | `aspects.derive_modded` | bool | | `true` | the next server data load (a start or `/reload`), which rebuilds the `DerivedAspects` table, or leaves it empty when off ([aspects, Data maps](aspects.md#data-maps); [compatibility, Aspect values for modded items](compat.md#aspect-values-for-modded-items)) | none: the table itself is synced with the other aspect maps | [aspects](aspects.md#data-maps) |
 
 - **`/vftv warp fire`** keeps the [warp spec's](warp.md#commands) rule: it skips eligibility, so it ignores keys 3–9, but not suppression, so it obeys key 2.
-- **No other system has a key.** The [Eldritch tier](eldritch.md#contracts-on-sibling-specs) relies on peaceful and the warp and Hush switches; [worldgen](worldgen.md#contracts-on-sibling-specs) disables ruins through the structure set; the [Choristers](choristers.md#events) have no command and no option; aspects (beyond key 19), arcane, crucible, essentia and infusion keep their numbers in tuning.
+- **No other system has a key.** The [Eldritch tier](eldritch.md#contracts-on-sibling-specs) relies on peaceful and the warp and Hush switches; [worldgen](worldgen.md#placement) disables ruins through the structure set; the [Choristers](choristers.md#events) have no command and no option; aspects (beyond key 19), arcane, crucible, essentia and infusion keep their numbers in tuning.
 - **Defaults** are the mod as designed, except `hush.unattended` off, so chunkloaded empty servers never rot (pain points §3). `research.mode` is `standard` ([progression](progression.md)); `nodes.starter` is `best_effort`, so a world with no candidate still opens and its first operator is told how to place the Wellspring ("The starter opt-out"); `aspects.derive_modded` is on, so modded items have values in play without an export.
 
 ## Client keys
@@ -187,7 +187,7 @@ Then, once the server is up, place the Wellspring with `/vftv node starter <pos>
 |---|---|---|
 | 1 | the source's level is the overworld, where the bootstrap and the sounding promise live ([wands, Identity and reconciliation](wands.md#identity-and-reconciliation)) | `commands.vftv.node.starter_overworld` |
 | 2 | `pos` is loaded and inside the build height, by vanilla's `BlockPosArgument.getLoadedBlockPos` | `argument.pos.unloaded`, `argument.pos.outofworld` (`MC:commands/arguments/coordinates/BlockPosArgument.java:24–25,32–42`) |
-| 3 | the `vftv_nodes` SavedData is readable, not kept as a raw tag ([wands, Sync and state](wands.md#sync-and-state)) | `commands.vftv.node.dormant` |
+| 3 | the `vftv_nodes` SavedData is readable ([conventions](conventions.md#retention-per-site), [wands, Sync and state](wands.md#sync-and-state)) | `commands.vftv.node.unreadable` |
 | 4 | `starter` is absent or its id is `REMOVED` | `commands.vftv.node.starter_exists` (the id) |
 | 5 | `pos` is inside the world border; its block `isAir`; its cell holds fewer than 8 nodes; no indexed node is within `node.min_spacing` (the ring's rules 1, 2 and 6) | `commands.vftv.node.starter_blocked` |
 
@@ -262,17 +262,16 @@ The spec promises no warning count on either branch, only usable, corrected valu
 
 - **The server never reads client config.** A dedicated server never loads it, and `CONFIG_SIDES` keeps server code away from it on an integrated server, so a host's accessibility choices never change an outcome.
 - **No client-to-server payload carries a config value.** (`VoiceQuiet` is screen state.)
-- **The client never reads server config,** although NeoForge syncs the file to remote clients ("Publishing a change"). It learns exactly what it needs from the owners' records:
+- **The client never reads server config,** although NeoForge syncs the file to remote clients ("Publishing a change"). It learns exactly what it needs from the owners' records, sent, dropped at disconnect and read as `[?]` before arrival under [conventions, Rules records](conventions.md#rules-records):
 
-  | Record | Server values it carries | Sent |
-  |---|---|---|
-  | `WarpRules` | `warp.voices.enabled`, `warp.tax`, `warp.amplifier`, `warp.gear` (the book's `switch.*` facts and the dials, [research, Prose and fact references](research.md#prose-and-fact-references)) | join, `/reload`, and a publish that changed one of them |
-  | `FluxRules` | `hush.spread`, `hush.hollows`, `hush.unattended` | join, `/reload`, a changed publish |
-  | `GolemRules` | `golems.max_per_chunk` (the `limits.max_per_chunk` fact) | join, `/reload`, a changed publish |
-  | `quotes` | `research.mode`, as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`; any other value is rejected at decode | to an **open** Commonplace Book only: when it opens, and on a changed publish |
+  | Record | Server values it carries |
+  |---|---|
+  | `WarpRules` | `warp.voices.enabled`, `warp.tax`, `warp.amplifier`, `warp.gear` (the book's `switch.*` facts and the dials, [research, Prose and fact references](research.md#prose-and-fact-references)) |
+  | `FluxRules` | `hush.spread`, `hush.hollows`, `hush.unattended` |
+  | `GolemRules` | `golems.max_per_chunk` (the `limits.max_per_chunk` fact) |
+  | `quotes` (not a Rules record: to an open book only, [research, Sync and state](research.md#sync-and-state)) | `research.mode`, as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`; any other value is rejected at decode |
 
   Keys 3–9, 16, 18 and 19 are absent from our owner payloads (NeoForge still syncs the whole file, which the client ignores).
-- **At disconnect** the client drops every rules record and quote it holds, so a fact reads `[?]` until the next server sends its own, as each owner's "until the first … arrives" rule already says.
 - **Client options are cosmetic by construction.** Turning `voices.phantoms` off removes apparitions, which stand for nothing in the world ([warp, Phantoms](warp.md#phantoms)); no option reveals anything the server hides.
 
 ## The config screen
@@ -371,7 +370,7 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 - every server key **off and on**, owned and already required by its owner: [warp](warp.md#tests) (every switch), [Hush](hush.md#tests) (spread, Hollows, unattended spread, and a **Pealing Bell with no player near it** idle with `hush.unattended` off and pealing with it on), [foci](foci.md#tests) (`foci.block_effects` off refuses Delve and **ends a running Delve Beam at its next pulse with the paid pulses kept**), [golems](golems.md#tests) (placement up to the cap; a lowered cap removes no golem), [research](research.md#tests) (each preset and skip; a mode switch mid-note keeps the snapshot);
 - **the starter modes**, with an impossible candidate set: `best_effort` (the default, with no file present) starts with one WARN and no starter, retries at the next start, sends the first joining level-2 player one status line naming `/vftv node starter <pos>` and a level-0 player and a second level-2 player none; `required` throws `IllegalStateException` from the `ServerStartedEvent` listener with the three remedies and the active file's path; `off` is silent, with no notice; an existing starter is untouched by every mode;
 - **`aspects.derive_modded`**, owned by [aspects](aspects.md#tests): on, a modded item with a recipe and no authored entry gets a derived value after a data load; off and `/reload`, it has none; an authored entry and `{}` win either way;
-- **`/vftv node starter`:** places a Wellspring with one `NodeEvent(CREATED, COMMAND)` and the starter, index and dirty state set before it; refuses a second; refuses a nether source, an unloaded and an out-of-world position, a dormant `vftv_nodes`, a non-air block, a position outside the border, a full cell and a node within spacing, each with its message, reserving no id;
+- **`/vftv node starter`:** places a Wellspring with one `NodeEvent(CREATED, COMMAND)` and the starter, index and dirty state set before it; refuses a second; refuses a nether source, an unloaded and an out-of-world position, an unreadable `vftv_nodes`, a non-air block, a position outside the border, a full cell and a node within spacing, each with its message, reserving no id;
 - **commands:** a level-0 source can neither run nor see `/vftv`; a level-2 source runs every command except `aspects derive`, which it can neither run nor see, and a level-4 source runs that too; every bounded argument rejects its neighbours (stage 5, progress 4, amount 0 and 1,000,001, radius 5 and 17, `add` ±1,001, `set` 10,001); `flux clear` with radius 4 beside unloaded chunks loads none of them; `hush restore` across an unloaded chunk loads none and reports the continuation index;
 - each test id in the discovery guard.
 
@@ -385,17 +384,19 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 
 ## Contracts on sibling specs
 
-Each spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
-
-- **[Architecture](architecture.md):** "Seams" (the config row: per-feature records, the guarded publish and the `equals`-gated re-sends), "Data and code" (client config, the boundary, a link here), "Threading" (config publication) and "Enforcement" (`CONFIG_SIDES`).
-- **[Wands](wands.md):** "The starter" (`best_effort` by default with the op join notice, the sounding line and the `starter` fact; `required` as an opt-in `IllegalStateException` naming the three remedies and the active file's path; the terrain wording instead of a categorical void claim; no later-start warning);
-- **[Aspects](aspects.md):** the `DerivedAspects` table behind `aspects.derive_modded`; "Identity and reconciliation" and "Creation, removal and sharing" (the command birth); `/vftv node starter` and its lang keys; `vis_hud.x` and `vis_hud.y`; the tests and the acceptance row.
-- **[Research](research.md):** `quotes.mode` and its re-send; the reload table's server-config row; the command lang keys.
-- **[Golems](golems.md):** `GolemRules` re-sent on a changed cap; the reload table's server-config row.
-- **[Warp](warp.md):** `WarpRules` carries exactly four switches; the reload row's apply points; the client options' on-change behaviour.
-- **[Hush](hush.md):** the reload event and row; spread and bell attendance under `hush.unattended`; the commands' loaded-only regions.
-- **[API](api.md):** a pointer from "What each release may change" to "Compatibility" here.
-- **Unchanged:** foci's pulse contract, armor's live derived values, every tuning file, progression, quality gates and `CONTEXT.md` stay authoritative, and this spec conforms to them.
+| Needs from | What | Met at |
+|---|---|---|
+| architecture | the config row: per-feature records filled in `neoforge.config`, no config type in `core` | [architecture, Seams](architecture.md#seams) |
+| architecture | the boundary: admin switches in server config, presentation in client config | [architecture, Data and code](architecture.md#data-and-code) |
+| architecture | a `Reloading` event published through the side's own thread | [architecture, Threading](architecture.md#threading) |
+| architecture | the ArchUnit rule `CONFIG_SIDES` | [architecture, Enforcement](architecture.md#enforcement) |
+| wands | `nodes.starter` modes: `best_effort` with the op join notice and the `starter` fact, `required` throwing `IllegalStateException` with three remedies | [wands, The starter](wands.md#the-starter) |
+| wands | `/vftv node starter <pos>` as a birth, and its lang keys; `vis_hud.x`, `vis_hud.y` | [wands, Identity and reconciliation](wands.md#identity-and-reconciliation), [Creation, removal and sharing](wands.md#creation-removal-and-sharing), [Lang keys](wands.md#lang-keys), [Display](wands.md#display) |
+| aspects | the `DerivedAspects` table behind `aspects.derive_modded` | [aspects, Data maps](aspects.md#data-maps) |
+| research | `quotes.mode`, re-sent on a changed `research.mode` | [research, Sync and state](research.md#sync-and-state) |
+| warp, Hush, golems | `WarpRules` carries exactly the four switches, `FluxRules` the three Hush keys, `GolemRules` the cap; each re-sent after a changed publish | [conventions, Rules records](conventions.md#rules-records) |
+| Hush | spread and bell attendance read at service; commands loaded-only | [Hush, Where it begins](hush.md#where-it-begins), [Pealing](hush.md#pealing), [Commands](hush.md#commands) |
+| API | a pointer from the release-change rules to "Compatibility" here | [API, What each release may change](api.md#what-each-release-may-change) |
 
 ## Production tickets
 

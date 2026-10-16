@@ -19,6 +19,7 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [warp spec](warp.md) for the checked commit, Silencing, the dials, the place query and the ending lines;
 - the [worldgen spec](worldgen.md) for the Reliquary, the Answerers, the template pipeline and the Choir-site query;
 - the [Hush spec](hush.md) for the player-caused guarantee, attendance and the Hollow;
+- the [shared conventions](conventions.md) for raw-record retention, operation guards, checked commits, Rules records and the authored-content envelope;
 - the [art style](art-style.md) for every asset.
 
 Resolved in [Eldritch tier and the Choir's Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/28). Inputs: [TC4 world and endgame](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-endgame/docs/research/tc4-endgame.md) (§3 the eldritch dimension and its bosses, §7 the obelisk and the cult), [TC4 core loop](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-core/docs/research/tc4-core.md) (Void-tier crafting), [community pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md) (§1 warp, §8 hidden gating, §10 the unfinished endgame), [NeoForge 26.2 research](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/neoforge-26-2/docs/research/neoforge-26-2.md) (dimensions, portals, travel).
@@ -203,17 +204,17 @@ Their layers are cases **appended** to `assets/vftv/items/wand.json` after the [
 
 ### Ringing the Hollow Bell
 
-**Listening is a rite with an instrument** ([lore, Listening and warp](lore.md#listening-and-warp)). The Hollow Bell is used by holding use for `bell.toll` ticks (**60**), with `ItemUseAnimation.TOOT_HORN` (`MC:world/item/ItemUseAnimation.java:25`), tolling every 20 ticks. Releasing early does nothing. Rows 2 and 3 are also checked when use **starts**; the server decides everything when it **finishes**, under the player's **road guard**, held across every row and callback and released in `finally`. First match:
+**Listening is a rite with an instrument** ([lore, Listening and warp](lore.md#listening-and-warp)). The Hollow Bell is used by holding use for `bell.toll` ticks (**60**), with `ItemUseAnimation.TOOT_HORN` (`MC:world/item/ItemUseAnimation.java:25`), tolling every 20 ticks. Releasing early does nothing. Rows 2 and 3 are also checked when use **starts**; the server decides everything when it **finishes**, under the player's **road guard**, an [operation guard](conventions.md#operation-guards) held across every row and callback. First match:
 
 | # | Case | Message (`road.vftv.*`) | Effect |
 |---|---|---|---|
-| 0 | the road guard is held | none | none |
+| 0 | the road guard is held | `message.vftv.busy` | none |
 | 1 | the player already travelled this tick | none | none |
 | 2 | `vftv:hollow_bell` not learned | `.bell_mute` | none |
 | 3 | riding, a passenger, sleeping, or the item on cooldown | `.not_now` | none |
 | 4 | **in Vuulas** | | **return** ("Coming back") |
 | 5 | not in a Void-touched place: `WarpService.inVoidTouchedPlace(level, pos)` is false | `.dull` | none |
-| 6 | the `vftv:road` record is unreadable | `.lost` | none |
+| 6 | the `vftv:road` record is unreadable | `message.vftv.unreadable` | none |
 | 7 | the level `vftv:vuulas` is missing | `.closed` | none |
 | 8 | `travel.cooldown` hasn't passed since the player's last Road travel | `.not_now` | none |
 | 9 | after loading every chunk the landing's checks read, the landing isn't safe ("Safe standing") | `.closed` | none |
@@ -359,17 +360,18 @@ Each template is exactly **47 × 40 × 47** with origin (−23, floor − 8, −
 
 | # | Gesture | Case | Message (`road.vftv.*`) | Effect |
 |---|---|---|---|---|
-| 0 | any | the road guard is held, or the player already travelled or rang this tick | none | none |
-| 1 | any | the `vftv:road` record is unreadable, and the gesture isn't a sneak-use of Step 1's bell | `.lost` | none |
-| 2 | sneak-use | Step 1 | | **return** ("Coming back") |
-| 3 | sneak-use | Step *k* > 1, or the Heart | `.up` | **up** to the previous station's landing (the Heart's goes to Step 3) |
-| 4 | use or sprint-use | the Heart's bell | `.up` | up to Step 3's landing |
-| 5 | sprint-use | `progress` ≥ *k*, an encounter is running here | `.step_listening` | none |
-| 6 | sprint-use | `progress` ≥ *k* | | **a rematch:** start the encounter ("The rise"), which changes no one's progress |
-| 7 | use | `progress` ≥ *k* | `.down` | **down** to the next station's landing (Step 3's goes to the Heart) |
-| 8 | use or sprint-use | `progress` < *k* − 1 (reached only by a command or a pearl) | `.step_not_mine` | none |
-| 9 | use or sprint-use | an encounter is running at this Step | `.step_listening` | none: walking into the ring joins it |
-| 10 | use or sprint-use | otherwise (`progress` = *k* − 1) | | **start the encounter** ("The rise") |
+| 0 | any | the road guard is held | `message.vftv.busy` | none |
+| 1 | any | the player already travelled or rang this tick | none | none |
+| 2 | any | the `vftv:road` record is unreadable, and the gesture isn't a sneak-use of Step 1's bell | `message.vftv.unreadable` | none |
+| 3 | sneak-use | Step 1 | | **return** ("Coming back") |
+| 4 | sneak-use | Step *k* > 1, or the Heart | `.up` | **up** to the previous station's landing (the Heart's goes to Step 3) |
+| 5 | use or sprint-use | the Heart's bell | `.up` | up to Step 3's landing |
+| 6 | sprint-use | `progress` ≥ *k*, an encounter is running here | `.step_listening` | none |
+| 7 | sprint-use | `progress` ≥ *k* | | **a rematch:** start the encounter ("The rise"), which changes no one's progress |
+| 8 | use | `progress` ≥ *k* | `.down` | **down** to the next station's landing (Step 3's goes to the Heart) |
+| 9 | use or sprint-use | `progress` < *k* − 1 (reached only by a command or a pearl) | `.step_not_mine` | none |
+| 10 | use or sprint-use | an encounter is running at this Step | `.step_listening` | none: walking into the ring joins it |
+| 11 | use or sprint-use | otherwise (`progress` = *k* − 1) | | **start the encounter** ("The rise") |
 
 - **Up and down** are same-level teleports to the target landing, refused while `travel.cooldown` hasn't passed (`.not_now`), accepted as for the descent (the player, alive, at the landing), and they set `last_station` and the travel cooldown.
 - **Nobody needs the bell item to leave:** sneak-using Step 1's bell returns them, and every station's bell goes up. A player further down **walks back up** to help a friend.
@@ -427,7 +429,7 @@ One **encounter slot** per Step (three), in memory in the server's Road service,
 
 ### The rise
 
-A Step Bell's row 6 (a rematch) or row 10 starts an encounter. Under the station guard and the player's road guard, first match:
+A Step Bell's row 7 (a rematch) or row 11 starts an encounter. Under the station guard and the player's road guard, first match:
 
 | # | Case | Message (`road.vftv.*`) |
 |---|---|---|
@@ -470,7 +472,7 @@ The Chorister's **confirmed death**, `Encounter.onConfirmedDeath` ("The split": 
 4. **One keepsake** to each credited player, whoever already passed: `Inventory.add`, any remainder through `Player.drop(stack, false)` (the [worldgen hand-out](worldgen.md#handing-out)). A cancelled drop loses that copy; an exception is caught and logged once, and the rest go on.
 5. The boss bar is cleared; `RoadEncounterEvent(DEFEATED)` is posted.
 
-- **Keepsakes have no ledger:** a lost one is recovered by another defeat, a rematch rung alone included ("The Step Bells", row 6), and farming is bounded by fighting. Re-fighting a passed Step pays a keepsake and nothing else.
+- **Keepsakes have no ledger:** a lost one is recovered by another defeat, a rematch rung alone included ("The Step Bells", row 7), and farming is bounded by fighting. Re-fighting a passed Step pays a keepsake and nothing else.
 - **Keepsakes are never a currency beyond the Void rod and cap.** Wuuren can be beaten at range by a patient archer, which is harmless while a keepsake buys only three wand parts; no later spec or content may hang another recipe, trade or material on keepsakes. If one is ever wanted, give Wuuren Suhlaa's exhale first, never a change of cadence.
 - **Who killed it doesn't matter:** a command or a fall credits the participants present.
 
@@ -503,12 +505,13 @@ One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`),
 
 | # | Case | Message (`heart.vftv.*`) |
 |---|---|---|
-| 0 | the road guard is held, or a second attempt this tick | none |
-| 1 | the `vftv:road` record is unreadable | `road.vftv.lost` |
-| 2 | `progress` < 3 | `.not_yet` |
-| 3 | the warp record is unreadable | `message.vftv.warp.unreadable` |
-| 4 | **already chosen** ("The ending authority") | `.answered` (Joined) or `.silenced` |
-| 5 | otherwise | opens **`HeartMenu`** |
+| 0 | the road guard is held | `message.vftv.busy` |
+| 1 | a second attempt this tick | none |
+| 2 | the `vftv:road` record is unreadable | `message.vftv.unreadable` |
+| 3 | `progress` < 3 | `.not_yet` |
+| 4 | the warp record is unreadable | `message.vftv.unreadable` |
+| 5 | **already chosen** ("The ending authority") | `.answered` (Joined) or `.silenced` |
+| 6 | otherwise | opens **`HeartMenu`** |
 
 **`HeartMenu`** is a block-bound menu, not the book ([research, Contracts](research.md#contracts-on-sibling-specs): the choice is made in the world). It holds no items. `stillValid` is vanilla's 8-block reach to the Heart.
 
@@ -529,20 +532,21 @@ One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`),
 
 ### The choice
 
-**C2S `HeartChoose(containerId, revision, choice, echo)`**: `choice` one byte (0 Joining, 1 Silencing); `echo` the full `WarpPreview` the confirm showed. Out-of-bounds values are rejected at decode. The server, first match:
+**C2S `HeartChoose(containerId, revision, choice, echo)`**, a [checked commit](conventions.md#checked-commits) in its reference shape: `choice` one byte (0 Joining, 1 Silencing); `echo` the full `WarpPreview` the confirm showed. Out-of-bounds values are rejected at decode. The server, first match:
 
 | # | Case | Effect |
 |---|---|---|
 | 0 | a second attempt this tick | nothing |
 | 1 | `containerId` isn't this player's open `HeartMenu`, or it fails `stillValid` | nothing |
-| 2 | the road guard is held | `.busy` ("Not now.") |
-| 3 | `revision` isn't the menu's current one | `.cost_changed` and a fresh quote |
+| 2 | the road guard is held | `BUSY` |
+| 3 | `revision` isn't the menu's current one | `STALE` |
 | 4 | `progress` < 3, the Road record unreadable, or already chosen | that row's message; the menu closes |
-| 5 | `echo` isn't the current preview | `.cost_changed` and a fresh quote |
-| 6 | **Joining:** `WarpService.commit(player, (0, 0, J), MILESTONE(vftv:joining), echo)`, with J read now | `OK` → row 8; `STALE` → `.cost_changed` and a fresh quote; `BUSY` → `.busy`; `INVALID` or `UNREADABLE` → `message.vftv.warp.unreadable` |
+| 5 | `echo` isn't the current preview | `STALE` |
+| 6 | **Joining:** `WarpService.commit(player, (0, 0, J), MILESTONE(vftv:joining), echo)`, with J read now | `OK` → row 8; `STALE` or `BUSY` as above; `INVALID` or `UNREADABLE` → `message.vftv.unreadable` |
 | 7 | **Silencing:** `WarpService.silence(player, echo)` (amended: checked, returning `OK`, `STALE`, `BUSY` or `UNREADABLE`) | `OK` → row 8; the rest as row 6 |
 | 8 | **chosen** | award `vftv:end/joined` or `vftv:end/silenced`; close the menu; send `EndingCue` ("The ending scene"); post `EndingChosenEvent`; release the guard in `finally` |
 
+- **`BUSY`** shows `message.vftv.busy`; **`STALE`** shows `message.vftv.cost_changed` and sends a fresh quote ([conventions, The shape](conventions.md#the-shape)).
 - **A retuned milestone:** the warp spec requires `vftv:joining` in `permanent.milestones` (amended there), so J always exists. A warp tuning reload while a confirm is open re-sends the quote with the next revision, so the old confirmation is refused (row 3), and the new J shows before anyone can commit.
 - **One checked change, made by the warp spec.** The milestone commit and the silencing are each one guarded write with its event posted while warp's guard is held ([warp, The commit](warp.md#the-commit)); this spec writes no ending record of its own, so a listener or a crash can never observe a half-made choice.
 - **A throwing `EndingChosenEvent` listener** is logged once; the choice stands.
@@ -677,7 +681,7 @@ There is no ending command: the warp spec's own commands are the only way to cha
 
 ## Authored content
 
-The content tickets deliver authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, a duplicate JSON key, or an entry that fails its rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#the-envelope).
 
 ```
 content/eldritch/templates/<name>.json   the five templates (the templates ticket)
@@ -703,7 +707,7 @@ content/lang/en_us/eldritch.json         every key under "Lang keys"
 | `bootstrap.json` | `vftv:eldritch_bootstrap/1` | nothing: read by the review |
 | `tags.json` | `vftv:eldritch_tags/1` | `data/vftv/tags/item/usable_on_the_road.json`, `…/item/forbidden_on_the_road.json`, `data/vftv/tags/block/unsafe_return.json` |
 | `fixtures.json` | `vftv:eldritch_fixtures/1` | nothing: read by the unit tests |
-| `lang/<lang>/eldritch.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |
+| `lang/<lang>/eldritch.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 The stem, the generator's codec entry, the dimension type's fixed fields, the biome, the advancements, `#vftv:choir_sites`' new member, the fixed structure fields and the tuning file `data/vftv/tuning/eldritch.json` (from the record's defaults) are written by datagen from code. They are not authored content.
 
@@ -770,7 +774,7 @@ The wands spec's `vftv:wand_parts/1`, with exactly rod `vftv:void` (`item` `vftv
 
 ### The bootstrap
 
-`{"schema": "vftv:eldritch_bootstrap/1", "recipes": {<id>: {"items": [{"item": <item id or #tag>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, the [armor spec's](armor.md#the-bootstrap) record, for exactly the three recipes. **Coverage:** every centre, component and essentia aspect. **Review:** each `why` says how the thing is obtained **in Stage 4 without Vuulas** for `vftv:hollow_bell`, and after the Steps for the keepsake ("a Chorister's credit, Step 1 onwards"); for an aspect, which matter dissolves into it. The sequence is non-circular. **Rejected:** a missing recipe, item or aspect; an empty `why`.
+`{"schema": "vftv:eldritch_bootstrap/1", "recipes": {<id>: {"items": [{"item": <item id or #tag>, "why": <one line>}, …], "aspects": [{"aspect": <id>, "why": <one line>}, …]}}}`, the [armor spec's](armor.md#the-bootstrap) record, for exactly the three recipes. **Coverage:** every centre, component and essentia aspect. **Review:** each `why` says how the thing is obtained **in Stage 4 without Vuulas** for `vftv:hollow_bell`, and after the Steps for the keepsake ("a Chorister's credit, Step 1 onwards"); for an aspect, which matter dissolves into it. The sequence is non-circular. **Rejected,** beyond the [bootstrap convention](conventions.md#bootstrap): a missing recipe.
 
 ### Tags
 
@@ -783,7 +787,7 @@ The wands spec's `vftv:wand_parts/1`, with exactly rod `vftv:void` (`item` `vftv
 
 ### Fixtures
 
-`{"schema": "vftv:eldritch_fixtures/1", "placement": [...], "health": [...], "admission": [...], "target": [...], "decay": [...], "amplifier": [...], "arrival": [...]}`. **All seven sections are required.** Together they transcribe every vector table in this spec exactly.
+`{"schema": "vftv:eldritch_fixtures/1", "placement": [...], "health": [...], "admission": [...], "target": [...], "decay": [...], "amplifier": [...], "arrival": [...]}`: seven sections under the [fixtures convention](conventions.md#fixtures).
 
 | Record | Fields |
 |---|---|
@@ -840,11 +844,11 @@ The wands spec's `vftv:wand_parts/1`, with exactly rod `vftv:void` (`item` `vftv
  "arrival": [{"expect": ["step_1", "step_2", "step_3", "heart"]}]}
 ```
 
-JSON object keys are strings, so the `target` and `decay` maps key ids as decimal strings. **Rejected:** a section missing; an unknown field; a value outside its range; a row of a vector table missing or altered. The file above is the one the content ticket ships. The [warp spec's](warp.md#fixtures) `amplifier` section transcribes the same seven rows.
+JSON object keys are strings, so the `target` and `decay` maps key ids as decimal strings. The file above is the one the content ticket ships. The [warp spec's](warp.md#fixtures) `amplifier` section transcribes the same seven rows.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review applies the research spec's number-word lint.
+[Lang files](conventions.md#lang); every key below is required in `en_us`. The English is the intended sense; the content ticket writes the final text, and its review applies the research spec's number-word lint.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -853,9 +857,9 @@ JSON object keys are strings, so the `target` and `decay` maps key ids as decima
 | `wand_rod.vftv.void`, `wand_cap.vftv.void` | 0 | "Lirhas", "Ohshaal" |
 | `structure.vftv.threshold` | 0 | "Threshold" |
 | `dimension.vftv.vuulas` | 0 | "Vuulas" |
-| `road.vftv.bell_mute`, `.not_now`, `.dull`, `.lost`, `.closed`, `.down`, `.up`, `.returned`, `.caught` | 0 | "The bell is only metal to me.", "Not now.", "It rings dull here.", "I can't find my way.", "The way is closed.", "Down.", "Up.", "Back.", "The silence gives me back." |
+| `road.vftv.bell_mute`, `.not_now`, `.dull`, `.closed`, `.down`, `.up`, `.returned`, `.caught` | 0 | "The bell is only metal to me.", "Not now.", "It rings dull here.", "The way is closed.", "Down.", "Up.", "Back.", "The silence gives me back." |
 | `road.vftv.step_not_mine`, `.step_listening`, `.stand_back`, `.step_occupied`, `.step_silent`, `.step_full` | 0 | "This step is not yet mine.", "It is already listening.", "Stand back from the step.", "Something stands on the step.", "The step stays silent.", "The step can hear no more." |
-| `heart.vftv.title`, `.joining`, `.silencing`, `.not_yet`, `.answered`, `.silenced`, `.busy`, `.cost_changed`, `.confirm`, `.cancel`, `.close`, `.final` | 0 | "The Heart", "Join them", "Silence them", "The heart does not hear me yet.", "I have answered.", "I have silenced them.", "Not now.", "The cost has changed.", "Confirm", "Cancel", "Close", "This cannot be undone in this world." |
+| `heart.vftv.title`, `.joining`, `.silencing`, `.not_yet`, `.answered`, `.silenced`, `.confirm`, `.cancel`, `.close`, `.final` | 0 | "The Heart", "Join them", "Silence them", "The heart does not hear me yet.", "I have answered.", "I have silenced them.", "Confirm", "Cancel", "Close", "This cannot be undone in this world." |
 | `heart.vftv.joining.permanent`, `.joining.bonus` | 1 | "%s permanent warp", "My Void workings hear %s more, always." |
 | `heart.vftv.joining.voices`, `.joining.listen`, `.joining.never`, `.silencing.voices`, `.silencing.listen`, `.silencing.hush`, `.silencing.never` | 0 | "The Voices go on.", "Only I can still listen: Bargains and the Listen rite stay open to me.", "I can never be Silenced.", "The Voices end, for good.", "Bargains and the Listen rite close to me for good.", "The Hush can't hear me…", "I can never Join." |
 | `heart.vftv.silencing.removed` | 2 | "%s temporary and %s lasting warp, stilled" |
@@ -865,11 +869,11 @@ JSON object keys are strings, so the `target` and `decay` maps key ids as decima
 | `commands.vftv.road.progress`, `.evacuate` | 2, 1 | "%s: progress %s.", "Returned %s." |
 | `subtitles.vftv.<event>` for every sound event above | 0 | "Hollow bell tolls", "Descends", "Returns", "Silence catches", "Step bell rings", "Step bell is still", "Heart answers", "Heart falls silent" |
 
-**Used, not declared here:** the research spec's prose keys for the seven entries (#37's), `message.vftv.warp.unreadable`, the warp spec's ending lines, aspect and player names, the Choristers' names (their spec's).
+**Used, not declared here:** the research spec's prose keys for the seven entries (#37's), the shared [`message.vftv.busy`, `.unreadable` and `.cost_changed`](conventions.md#message-keys), the warp spec's ending lines, aspect and player names, the Choristers' names (their spec's).
 
-**Where messages go:** every `road.vftv.*` message and every `heart.vftv.*` refusal of a use (the Hollow Bell, the Step Bells, the Heart's first-match table) goes to the [status line](accessibility.md#r5-the-status-line); inside the Heart screen, a refusal shows in the screen and its quote refreshes. The Void-tongue names above are protected text: every locale keeps them exactly ([localisation, Protected text](accessibility.md#protected-text)).
+**Where messages go:** every `road.vftv.*` message, every `heart.vftv.*` refusal of a use (the Hollow Bell, the Step Bells, the Heart's first-match table) and every shared key they show goes to the [status line](accessibility.md#r5-the-status-line) ([conventions, Feedback routing](conventions.md#feedback-routing)); inside the Heart screen, a refusal shows in the screen and its quote refreshes. The Void-tongue names above are protected text: every locale keeps them exactly ([localisation, Protected text](accessibility.md#protected-text)).
 
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here; a Void-tongue name that isn't 1–2 lexicon words, capitalised as a proper item name, passing the lexicon's phonology lint.
+**Rejected:** a Void-tongue name that isn't 1–2 lexicon words, capitalised as a proper item name, passing the lexicon's phonology lint.
 
 ## Events
 
@@ -896,7 +900,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | `last_station`, guards, attempt counts, travel cooldowns, encounters, the template cache | memory | never; encounters show through the boss bar and the Choristers' entity data |
 | the Road and Thresholds | chunk data (vanilla) | vanilla |
 | page claims | the worldgen spec's `vftv:choir_claims` | never |
-| `RoadRules` | `data/vftv/tuning/eldritch.json` | S2C to every player on join and `/reload` (`OnDatapackSyncEvent`), for fact spans |
+| `RoadRules` | `data/vftv/tuning/eldritch.json` | every player, as a [Rules record](conventions.md#rules-records), for fact spans |
 | Heart quotes | the menu | `HeartQuote`, to the menu's owner |
 
 **The record `vftv:road`:**
@@ -907,7 +911,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 - **Default:** absent means `{format 1, progress 0}`, with no return point.
 - **Bounds:** `pos` finite doubles, x and z within ±30,000,000, y within −2,048 to 2,048; `rot` finite floats; `dim` a syntactically valid id. A `dim` naming no loaded level is kept as it is and falls back to the default spawn at return.
-- **Unreadable** means an unknown or future `format`, a duplicate or unknown key, a bound broken or a value of the wrong type. It keeps its raw tag and is written back unchanged, with one warning, and **every Road path treats it the same way:** the descent refuses (row 6); the return goes to the default spawn and writes nothing; every Step Bell gesture but Step 1's return refuses; credit skips the player; the Heart refuses; `progress` refuses. The catch never reads it.
+- **Unreadable records** follow [conventions](conventions.md#raw-record-retention), and **every Road path treats one the same way:** the descent refuses (row 6); the return goes to the default spawn and writes nothing; every Step Bell gesture but Step 1's return refuses; credit skips the player; the Heart refuses; `progress` refuses. The catch never reads it.
 - **Saving:** player attachments are written with the player at every save, so no dirty flag is needed.
 
 **Payloads:** `HeartQuote` (`containerId`; `revision` a `long`; `status` one byte; two `WarpPreview`s, each three values −1,000 to 1,000 and a boolean); `HeartChoose` (`containerId`, `revision`, `choice` 0–1, one `WarpPreview`); `EndingCue` (`choice` 0–1). Out-of-bounds values are rejected at decode. Each C2S value has a hostile-input GameTest.
@@ -916,7 +920,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 | Change | Effect |
 |---|---|
-| Tuning (`/reload`) | a new `RoadRules`, re-sent; a toll in progress keeps the duration it started with; set cooldowns stand; encounters read `encounter.refresh`, `threat.interval`, `threat.keep_pm` and `encounter.reset` at their next use; entry health only at a rise; the catch reads `catch.depth` each tick; open Heart menus get fresh quotes |
+| Tuning (`/reload`) | a new `RoadRules`; a toll in progress keeps the duration it started with; set cooldowns stand; encounters read `encounter.refresh`, `threat.interval`, `threat.keep_pm` and `encounter.reset` at their next use; entry health only at a rise; the catch reads `catch.depth` each tick; open Heart menus get fresh quotes |
 | The warp tuning | open Heart menus get fresh quotes; the Joining bonus applies at once, through the dial |
 | Templates, the stem, the dimension type, the biome, the structure | need the world reopened; the template cache is never rebuilt live |
 | Tags | re-resolved, applied at the next interaction |
@@ -1014,7 +1018,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - `RoadGeometry` over `RoadLayout`'s constants: arrival, station from a bell's position, the arena predicate on its boundaries, the Road's column, `last_station` at login;
 - the catch: below and at `catch.depth`, the order with `last_station`, creative and spectator exempt;
 - the capstone predicates over the warp record, including a record holding both;
-- codecs: the `vftv:road` record (defaults, bounds, unknown and future formats kept raw, duplicate and unknown keys), `HeartQuote`, `HeartChoose`, `EndingCue`, the tuning file and every `content/` schema and rejection rule;
+- codecs: the `vftv:road` record (defaults, bounds, and the [raw-retention template](conventions.md#tests)), `HeartQuote`, `HeartChoose`, `EndingCue`, the tuning file and every `content/` schema and rejection rule;
 - **the lenient-stem regression** ("Existing worlds and removing the mod");
 - **entry health at the tuning extremes** (`per_player_pm` 1000, `max_players` 16, base 1000: capped at 1024) and the boss bar's fraction against the capped value;
 - **the arena candidate index:** insertion and removal only on a change; more than 64 candidates, with eligible incumbents beyond the first 64 kept, and newcomers taken from the first 64 only;
@@ -1050,106 +1054,23 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| Ships `vftv:find/choirs_road` | "The find": hidden, parentless, `inventory_changed` on one page by exact component |
-| Places the Stage 4 Choir pages in the same kind of per-player block | "Stage 4 Choir pages": the worldgen Reliquary, sites `vftv:threshold` and `vftv:road`, positional claims with no eviction and free reissue, successive and global |
-| Keeps the Joining and Silencing choice in the world; the book only documents it | "The Heart": a block-bound menu; `vftv:the_heart`, `vftv:heard` and `vftv:unheard` document it |
-| Publishes its Stage 4 sources as #27 does | "Stage 4 Choir pages": the opener acquired at the end of Stage 3, the tip-ins in Stage 4 with their `requires`, and pages past an encounter excluded |
-| The recipe-gate, recipe-page, one-preview and JEI contracts for its own recipe types (through the arcane block) | no recipe type of ours: the infusion type carries all three; each recipe is paged on its gating entry |
-| (Production) Stage 4 content: note warp with every gate proved in order; `learning_the_tongue` | "Stage": the amounts frozen, the L + P 6 gate paid by `vftv:hollow_bell`'s lasting before it; `learning_the_tongue` untouched |
-
-**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)'s contracts):
-
-| Warp contract | Met by |
-|---|---|
-| Joining commits `vftv:joining` through `commit` with the preview it shows, once | "The choice": the checked commit with the echoed preview; the milestone is the authority, so a second Joining is refused |
-| Silencing calls `silence(player)` | "The choice": `silence(player, echo)`, amended to be checked and to return its status; nothing of ours is written after it |
-| The dimension in `context.dimensions`; the road registers a place query | Vuulas in the default list (amended); `RoadPlaceQuery`, O(1); Thresholds through `#vftv:choir_sites` |
-| Void gear adds `vftv:gear_warp` values | "Gear warp": none of this tier's items carries any, with the reason; the Void armour's stand |
-| Plays the `joining` and `silencing` pools at the choice | "The ending scene": all three lines in id order, with precedence, holding and clearing |
-| Eldritch names use the lexicon's words | "Names": existing words only, four `uses` additions |
-
-**Met here** (the [Worldgen and mobs spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)'s contracts):
-
-| Worldgen contract | Met by |
-|---|---|
-| May add site kinds, Reliquaries, `#vftv:choir_sites` members and reuse `#vftv:answerers`; publishes its Stage 4 sources and reachability | "The Threshold", "Stage 4 Choir pages" |
-| Structure nodes share the two structure places per cell; templates follow the processor rules and the parsed-NBT no-Hush check | no node in any template, so no quota is claimed; the family rules under "Templates", and the no-Hush test over all five |
-| Owns the stale-dimension note | "Existing worlds and removing the mod" |
-
-**Met here** (the [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)): `vftv:void_foci` follows `vftv:choirs_road`; scaling stays the warp spec's, whose amplifier now adds the Joining bonus (Foci amended); the Void effects' names are the lexicon's, and every eldritch name here uses the same lexicon.
-
-**Met here** (the [Armor and trinkets spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)): no Void weapons, so nothing more draws on `gear.max` 12; the optional repair-tag extension is not used (echo shards stay the repair material); no Void armour name needs a new word.
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)): the three bodies (`vftv:hollow_bell` among them, the id amended there) carry their own `research`, live in `content/eldritch/recipes.json`, and are `kind: void` behind Stage 4 gates; no runic augmentation and no Void stability rule is proposed.
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)): the Stage 4 tier is two data entries with no code, merged with duplicate rejection; their model cases are appended after #49 (amended there); no node is placed; Vacuos stays out of the vis aspects, since no extension is proposed.
-
-**Met here** (the [Flux and the Hush spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)): Void work's flux is `VisSpentEvent`'s spill and nothing else; the one other Hush interaction, Silencing's attendance and Hollow rules, is proposed explicitly and amended there; no template places a hushed block, node, Hollow or aura.
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)): no Worktable recipe ships, so no `kind: void` arcane body exists to gate; no warp on craft.
-
-**Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)): no crucible recipe and no combining extension; `vftv:the_road`'s prose follows the crucible spec's Vacuos statement.
-
-**Met here** (the [Golems spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)): no world-affecting job; a golem can't be placed in Vuulas ("No building").
-
-**Met here** (the [progression](progression.md#endgame) and [lore](lore.md#cosmology) specs): Stage 4 opened by a find; the journey to where the Choir went, with fights along the way and a choice, not a boss, at the end; Joining's lasting Void power and permanent warp, Silencing's removal and its own capstone; per player and final; play continuing after; existing worlds and removal accounted for; doom or release left to each player; Void-tongue for eldritch things only.
-
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with fixed limits at every allowed tuning, allocation budgets, disclosed native terms, and generation time accounted separately.
-
-**[Choristers of the Road](#the-split)** (the new spec ticket): every contract under "The split". *Met by the [Choristers spec](choristers.md#contracts-on-sibling-specs), which amended "The split" (`isEligibleParticipant`, `eligibleParticipants`, "no invulnerable phase"), "The layout" (the choir walk) and the code placement under "Events".*
-
-**[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)** (amended in this change)
-- `context.dimensions` defaults to `["vftv:vuulas"]`.
-- **The Joining bonus:** `amplifier_warp` adds `joining.amplifier_bonus` (10, 0–50) for a Joined Listener, across "Total warp", "The dials", "Stilling", "Joining and Silencing", the tuning, a `warp_rules` fact key, the fixtures' new `amplifier` section and the tests.
-- `silence(player, expected)` is checked and returns `OK`, `STALE`, `BUSY` or `UNREADABLE`.
-- Its tuning validation requires `vftv:joining` in `permanent.milestones`; the Heart reads its current amount, J, for every quote and commit; the dials' inputs name `milestones_paid`.
-- `WarpService.inVoidTouchedPlace(level, pos)` (the third context clause alone) and `isSilenced(player)`, both pure; `RoadPlaceQuery` registered.
-
-**[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)** (amended in this change)
-- The spread's attendance counts only players who aren't Silenced; the Pealing Bell's still counts them.
-- A Hollow never acquires a Silenced target and drops one at its next revalidation.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 3 research content #36](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) and [Stage 4 research content #37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37):
-- **Entries:** the seven under "Stage", with their kinds, parents, warp, secrets and hints; `vftv:hollow_bell` and `vftv:void_wands` carry `vftv:recipe` pages for the recipes they gate.
-- **The fact source `road`** over `RoadRules`, and the `warp_rules` key `joining.amplifier_bonus`.
-- **Sources:** `path-stage3.json` ends by acquiring `vftv:find/choirs_road`; `path-stage4.json` uses the Threshold page and the first two Road pages; no Stage 4 note may need pages 3–5's rewards. #37 freezes the five Road pages' narrative order.
-- **#36's hint:** the last Stage 3 page in its narrative order is `vftv:choirs_road`'s `hinted_by`, and its prose points at bells hung over nothing.
-- **Prose** (#37) teaches the descent and where it works, the Steps and their bells (use to go down, crouch to go up, sprint to ring a rematch at a Step already passed), that nobody is stranded, the catch, no building, the encounters (anyone may help; credit only for those in the ring at the end; only those in the ring can hurt a Chorister; a knell is jumped, an inhale fled and an exhale met close or far; a lock fixes the aim, and a strike can break a shield, with no Chorister number in the prose: [Choristers, Contracts](choristers.md#contracts-on-sibling-specs)), and both endings with every consequence in a `warp`, `warp_rules`, `entry` or `road` span.
-
-**[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)** (amended in this change)
-- `#vftv:choir_sites` holds `vftv:threshold` too.
-- `vftv:template/1`'s rules are family-scoped: its eight-file, role, count, connector, `vftv:` block and entity rules are the `choir_ruin` family's; other families follow their own spec's rules; the format, namespace, Hush and attachment rules apply to every family.
-- The built-in site checks (pages in Stage 3, `beneath_the_notes` first, no Stage 3 page missing) apply to `vftv:choir_ruin` only.
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change): the Stage 4 rod and cap are named among the later tiers; the `items/wand.json` appends run #38, #47, #49, then the Eldritch assets ticket.
-
-**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)** (amended in this change): the Hollow Bell's recipe id is `vftv:hollow_bell`.
-
-**[Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)** (amended in this change): `w` is the warp spec's `amplifier_warp`, which adds the Joining bonus; Joined rows join the magnitude vectors.
-
-**The lexicon** (amended in this change): `uses` gains `"name"` for *vuulas*, *suhlaa*, *yoorel* and *shohrel*.
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for `vftv:hollow_bell`, `vftv:void_rod`, `vftv:void_cap`, `vftv:keepsake`, `vftv:step_bell`, `vftv:heart` and the `vftv:chorister` entity.
-- **Round-trip non-amplification** over the three infusion bodies, with their actual outputs and essentia.
-
-**Configuration**
-- No server switch of ours: peaceful and the warp and Hush switches suffice.
-
-**API**
-- In `api`, Stable:
-  - `RoadLayout` (constants only), `RoadLimits`, and the payload records with `EncounterOutcome` and `Ending`;
-  - `EldritchKeys`: the dimension, level, biome, generator, structure, site, tag and advancement keys, the `vftv:road` attachment's id, and the `vftv:chorister` registry key with its three instance keys.
-  - The [Choristers spec](choristers.md#contracts-on-sibling-specs) adds `ChoristerLimits` and the `Chorister` marker interface.
-- In `api`, `@Internal`: the `RoadRules` record.
-- In `api.neoforge`: the three event classes. The `vftv:road` `AttachmentType` is **not** public: its id is published, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
-- Services stay implementations, all internal in v1.
+| Needs from | What | Met at |
+|---|---|---|
+| Choristers | every obligation under "The split": peaceful, `noSave()`, persistence, knockback resistance, no heal, block change, summon or randomness, no invulnerable phase; difficulty-scaled, telegraphed damage types outside the bypass and Baffle-ignore tags; `targetFor` only, and the leash; the rise box and entry health; `onConfirmedDeath`; its share | [Choristers, The entity type](choristers.md#the-entity-type), [Attributes](choristers.md#attributes), [Created, owned and reported](choristers.md#created-owned-and-reported), [Damage types and difficulty](choristers.md#damage-types-and-difficulty), [Fairness limits](choristers.md#fairness-limits), [Who can hurt it](choristers.md#who-can-hurt-it), [Each tick, in order](choristers.md#each-tick-in-order), [Performance](choristers.md#performance) |
+| warp | `context.dimensions` defaulting to `vftv:vuulas`; `registerPlaceQuery`, `inVoidTouchedPlace` and `isSilenced` | [warp, Context](warp.md#context), [Tuning and limits](warp.md#tuning-and-limits), [Joining and Silencing](warp.md#joining-and-silencing) |
+| warp | the Joining bonus on `amplifier_warp`, with its fixtures section; `vftv:joining` required in `permanent.milestones`; the dials reading `milestones_paid` | [warp, The dials](warp.md#the-dials), [Permanent warp](warp.md#permanent-warp), [Fixtures](warp.md#fixtures) |
+| warp | `silence(player, expected)`, checked, returning `OK`, `STALE`, `BUSY` or `UNREADABLE` | [warp, Joining and Silencing](warp.md#joining-and-silencing) |
+| Hush | spread attendance excluding Silenced players, the Pealing Bell still counting them; Hollows never targeting a Silenced player | [Hush, Where it begins](hush.md#where-it-begins), [The creature](hush.md#the-creature) |
+| infusion | `kind: void` bodies with their own `research` | [infusion, The recipe type](infusion.md#the-recipe-type) |
+| research | the seven entries under "Stage"; `vftv:recipe` pages on `vftv:hollow_bell` and `vftv:void_wands` | [research, Roster](research.md#roster), [Entry files](research.md#entry-files) (the `vftv:void_wands` pages are not stated) |
+| research | the `road` fact source; the `warp_rules` key `joining.amplifier_bonus` | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | `path-stage3.json` ending on `vftv:find/choirs_road`; `path-stage4.json` using the Threshold page and the first two Road pages; pages 3–5 never sources; #36's hint; #37 freezing the Road pages' order | [research, Affordability paths](research.md#affordability-paths), [Production tickets](research.md#production-tickets) |
+| research | #37's prose teaching the descent, the Steps and their bells, the catch, no building, the encounters and both endings, every number in a span | [research, Production tickets](research.md#production-tickets) (the endings and the Chorister lessons only) |
+| worldgen | `vftv:threshold` in `#vftv:choir_sites`; family-scoped `vftv:template/1` rules; the built-in site checks on `vftv:choir_ruin` only | [worldgen, The structure](worldgen.md#the-structure), [Authored content, Templates](worldgen.md#authored-content), [Site kinds](worldgen.md#site-kinds) |
+| wands | the Void rod and cap among the later tiers; the `items/wand.json` append order | [wands, Parts](wands.md#parts), [Components](wands.md#components) |
+| foci | `w` as the warp spec's `amplifier_warp`, with the Joined magnitude rows | [foci, Magnitude](foci.md#magnitude) |
+| API | `RoadLayout`, `RoadLimits`, `EldritchKeys`, the payload records and `RoadRules` in `api`; the three events in `api.neoforge`; the `vftv:road` `AttachmentType` not public | [API, The inventory](api.md#the-inventory), [Attachments and data components](api.md#attachments-and-data-components) |
+| [vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) | hand entries or exemptions for the Hollow Bell, the Void rod and cap, the keepsake, the Step Bell, the Heart and the Chorister; round-trip non-amplification over the three infusion bodies | not yet stated in any spec |
 
 ## Production tickets
 

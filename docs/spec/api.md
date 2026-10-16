@@ -282,8 +282,8 @@ The one code registry addons may extend, because a job type is a declaration wit
 | the two views | the logical server thread, for a `ServerPlayer` | live answers; don't keep results across ticks |
 | event payloads | inside the listener call | live handles valid only during dispatch (see "Events") |
 
-- **Missing ids:** an entry a pack removed, or an addon's id after the addon is removed, behaves as its owner spec states (inert, dormant or refused). The API adds no rule of its own.
-- **Unsupported direct storage mutation:** our attachments and data components are discoverable by id at runtime, and NeoForge's `removeData` accepts their wildcard handles (`NF:registries/NeoForgeRegistries.java:43`; `NF:attachment/IAttachmentHolder.java:87–110`). Reading or writing them that way bypasses our operation guards and journals. **It is unsupported**, carries no compatibility promise, and can corrupt state. Publishing ids only is a **support boundary, not a protection**.
+- **Missing ids:** an entry a pack removed, or an addon's id after the addon is removed, is [inert](conventions.md#missing-ids-are-inert-not-unreadable), with its owner's refusal. The API adds no rule of its own.
+- **Unsupported direct storage mutation:** our attachments and data components are discoverable by id at runtime, and NeoForge's `removeData` accepts their wildcard handles (`NF:registries/NeoForgeRegistries.java:43`; `NF:attachment/IAttachmentHolder.java:87–110`). Reading or writing them that way bypasses our [operation guards](conventions.md#operation-guards) and journals. **It is unsupported**, carries no compatibility promise, and can corrupt state. Publishing ids only is a **support boundary, not a protection**.
 
 ## Registry element types
 
@@ -447,7 +447,7 @@ The two read-only queries addons need that events can't give: research events ca
   - **javac inlines them** ([architecture, Public API](architecture.md#public-api)): an addon keeps the value it compiled against even after a minor changes ours. Javadoc says so on each class.
   - **Which values may change:** a limit that bounds a public data format (a field range, an entry count or an aggregate cap a pack can hit) may only **widen** within a major. A limit on runtime work (per-tick caps and the like) may change in any minor. Each limit's Javadoc says which kind it is.
   - **`RoadLayout`** holds only constants. Its geometry functions are `core.road.RoadGeometry`.
-- **`*Rules` records** are tuning snapshots, and none is Stable:
+- **`*Rules` records** are tuning snapshots ([conventions, Rules records](conventions.md#rules-records)), and none is Stable:
   - **`FluxRules`** is `@Experimental`, because `InfusionEvent.fluxRules()` exposes it. No Stable record has it as a component.
   - **`WarpRules`, `ArmorRules` and `RoadRules`** sit in `api` for cross-feature wiring and are `@Internal`, as are **`WarpCost`** and **`CommitResult`** (the warp commit's argument and result).
   - Every other rules record (`VisRules`, `EssentiaRules`, `InfusionRules`, `GolemRules`, `FociRules`) lives in `core`.
@@ -474,7 +474,7 @@ Every API type, by feature. Tier: **bold** types are on the Stable allowlist (`S
 | | `ArmorRules` | I |
 | flux ([Hush](hush.md)) | `FluxSource`, `FluxClearSource`, `FluxRules` | X |
 | hush ([Hush](hush.md)) | **`HushKeys`** (`#vftv:hushed`, `#vftv:hush_immune`, the `vftv:hushed` node type, the `vftv:hollow` entity type, the `vftv:aura` attachment id, `FORMS`); **`HushedForm`**; **`HushLimits`**; `HushSpreadKind`, `HushChange`, `HushOrigin`, `HushSpreadPayload`, `FluxPayload`; nf `HushSpreadEvent`, `FluxEvent` | X, S |
-| worldgen ([worldgen](worldgen.md)) | **`ChoirSite`**; **`WorldgenKeys`** (as [worldgen, Contracts](worldgen.md#contracts-on-sibling-specs) lists, with the `vftv:choir_claims` attachment id); **`WorldgenLimits`** | S |
+| worldgen ([worldgen](worldgen.md)) | **`ChoirSite`**; **`WorldgenKeys`** (as [worldgen, Events](worldgen.md#events) lists, with the `vftv:choir_claims` attachment id); **`WorldgenLimits`** | S |
 | road ([Eldritch tier](eldritch.md), [Choristers](choristers.md)) | **`Chorister`**; **`EldritchKeys`** (as the Eldritch tier lists, with the three Chorister keys and the `vftv:road` attachment id); **`RoadLimits`**; **`ChoristerLimits`**; **`RoadLayout`**; `RoadStepPassedPayload`, `RoadEncounterPayload`, `EncounterOutcome`, `EndingChosenPayload`, `Ending`; nf `RoadStepPassedEvent`, `RoadEncounterEvent`, `EndingChosenEvent` | X, S |
 | | `RoadRules` | I |
 
@@ -634,20 +634,18 @@ The gates above, all in `check` or the `build` job ([quality gates, CI](quality-
 
 ## Contracts on sibling specs
 
-Each system spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
-
-- **[Architecture](architecture.md):** "Public API", "Build layout", "Essentia and capabilities" and "Enforcement" point here, and gain the ArchUnit rules.
-- **[Quality gates](quality-gates.md):** "Shipping artifact" sets the v1 gates and names the `1.0.0` release ticket's; the `build` job runs them; definition-of-done item 7 asks for an effective, documented tier (Experimental unless allowlisted).
-- **Every events section** links to "Events" here for the common contract and keeps its own ordering, guards and fields. The [foci](foci.md#events), [golems](golems.md#events) and [Hush](hush.md#events) sections also state their pre-event failure rule.
-- **Every "Whether they are exposed in `api` is the API spec's call"** now reads that services are internal in v1, with the [research](research.md#events) and [armor](armor.md#events) views as the exceptions. Each spec's non-service keys and records stay as listed here.
-- **[Foci](foci.md#composition):** behaviour types are internal in v1; addons and packs add entries over the built-in types. `FocusService.kind` stays in `core`.
-- **[Golems](golems.md#cores-and-jobs):** addon job types and core bindings are public through `GolemJob`, `GolemCore` and the typed `vftv:golem_job` key.
-- **[Warp](warp.md#contracts-on-sibling-specs):** the `vftv:voice_event_type` Java key is internal, while its JSON ids stay Stable; `WarpCost`, `CommitResult` and `WarpRules` are `@Internal`.
-- **[Armor](armor.md#contracts-on-sibling-specs), [Hush](hush.md#contracts-on-sibling-specs), [worldgen](worldgen.md#contracts-on-sibling-specs), [Eldritch tier](eldritch.md#contracts-on-sibling-specs):** attachment handles become ids. Armor reads through `BaffleView`. `FluxRules` is `@Experimental`, `ArmorRules` and `RoadRules` `@Internal`.
-- **[Eldritch tier](eldritch.md#tuning-and-limits) and [Choristers](choristers.md#contracts-on-sibling-specs):** `RoadLayout` holds constants only, with its functions in `core.road.RoadGeometry`. The Chorister entry and move records live in `core`, behind the `Chorister` marker.
-- **[Essentia](essentia.md#suction):** `EssentiaResource` and the `vftv:essentia` capability live in `api.neoforge.essentia`.
-- **[Aspects](aspects.md#tuning), [research](research.md#tuning), [wands](wands.md#tuning):** their fixed limits move into `AspectLimits`, `ResearchLimits` and `VisLimits`. The wands spec's model limitation is resolved under "Known limitations".
-- **No change** to `CONTEXT.md`, `NOTICE.md` or any ADR.
+| Needs from | What | Met at |
+|---|---|---|
+| architecture | the `api` source set and its jars; tiers and exposure deferred here | [architecture, Build layout](architecture.md#build-layout), [Public API](architecture.md#public-api) |
+| architecture | `EssentiaResource` and the essentia capability in `api.neoforge.essentia` | [architecture, Essentia and capabilities](architecture.md#essentia-and-capabilities) |
+| architecture | the API ArchUnit rules | [architecture, Enforcement](architecture.md#enforcement) |
+| quality gates | the v1 and `1.0.0` API gates in "Shipping artifact"; a documented tier for every new declaration | [quality gates, Shipping artifact](quality-gates.md#shipping-artifact), [Definition of done](quality-gates.md#definition-of-done) |
+| every system spec | its services internal in v1, the [research](research.md#events) and [armor](armor.md#events) views excepted; its events section keeps its own ordering, guards and fields | each spec's "Events", e.g. [wands](wands.md#events), [golems](golems.md#events) |
+| aspects, research, wands | fixed limits in `AspectLimits`, `ResearchLimits`, `VisLimits` | [aspects, Tuning](aspects.md#tuning), [research, Tuning](research.md#tuning), [wands, Tuning](wands.md#tuning) |
+| golems | addon job types through `GolemJob` and `GolemCore` | [golems, Cores and jobs](golems.md#cores-and-jobs) |
+| Eldritch tier | `RoadLayout` holds constants only; functions in `core.road.RoadGeometry` | [eldritch, The layout](eldritch.md#the-layout) |
+| warp, Hush, armor, Eldritch tier | `WarpRules`, `ArmorRules`, `RoadRules` `@Internal`; `FluxRules` `@Experimental` | [conventions, Rules records](conventions.md#rules-records) |
+| warp | the `vftv:voice_event_type` Java key internal; `WarpCost` and `CommitResult` `@Internal` | [warp, Commit and apply](warp.md#commit-and-apply); [Events](warp.md#events) |
 
 ## Build-phase note
 

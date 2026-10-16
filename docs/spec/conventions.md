@@ -34,7 +34,7 @@ Decoding gives one of two results:
 3. **The thing does nothing its record would drive.** It runs no tick, step, spill, check or capability (its handler is unavailable), and its contents are never synced.
 4. **Every use that would read or write the record is refused** with `message.vftv.unreadable` on the status line, and nothing changes. Descriptive surfaces (a tooltip, a HUD line, a status row, a command reply) show the owner's `<prefix>.unreadable` key with the text "I can't read …", naming the thing.
 5. **Synced views carry an `unreadable` flag, never the raw tag.** The one exception is an item's data component: it travels whole, as vanilla sends components.
-6. **Only two things replace it:** a build that reads the format (the record decodes on the next load), or an operator's repair command where the owner provides one (`/vftv flux repair`, [Hush, Pending and dormant](hush.md#pending-and-dormant)). A repair logs the raw tag before replacing it. No build ever discards a newer build's record unasked.
+6. **Only two things replace it:** a build that reads the format (the record decodes on the next load), or an operator's repair command where the owner provides one (`/vftv flux repair`, [Hush, Pending and unreadable](hush.md#pending-and-unreadable)). A repair logs the raw tag before replacing it. No build ever discards a newer build's record unasked.
 
 ### Removal
 
@@ -54,10 +54,13 @@ A readable record that names a registry entry a pack removed is **inert**. It is
 
 | Owner | What it adds |
 |---|---|
-| a `SavedData` store ([Hush](hush.md#pending-and-dormant), [wands](wands.md#sync-and-state)) | the degraded behaviour while the whole store is unreadable: the Hush counts overflow in memory, and node commands refuse with `commands.vftv.node.unreadable` |
+| a `SavedData` store ([Hush](hush.md#pending-and-unreadable), [wands](wands.md#sync-and-state)) | the degraded behaviour while the whole store is unreadable: the Hush counts overflow in memory, and node commands refuse with `commands.vftv.node.unreadable` |
 | [warp](warp.md#kinds-and-the-record) | an unreadable player record leaves every dial neutral and runs no check; `commit` and `apply` return `UNREADABLE` |
 | [wands](wands.md#vis-storage) | an unreadable `vftv:vis` makes the wand **inert** as a whole, and the spend refuses it with `message.vftv.spend.inert`, because the spend reports one outcome per wand |
 | [eldritch](eldritch.md#sync-and-state) | its list of what every Road path does with an unreadable `vftv:road` |
+| [infusion](infusion.md#sync-and-state) | **site difference:** a bowl or pedestal record naming a removed aspect, item, enchantment or entry is treated as **unreadable**, not inert, so its pedestal claims stay unresolved until the pack returns; an inert record would count the claims as live |
+
+**Other recorded site differences.** [Infusion's upset draws](infusion.md#upsets) reduce with `Long.remainderUnsigned` directly rather than `bounded` or `weighted`, so their vectors stand. [The Hush](hush.md#scheduling) recomputes every queued due tick on `/reload`, because its phase depends on the tuned interval.
 
 ## Operation guards
 
@@ -304,7 +307,7 @@ A **Rules record** is the client's copy of one owner's tuning, and of the few se
 | [arcane](arcane.md#authored-content) | `arcane_recipes` |
 | [crucible](crucible.md#authored-content) | `crucible_recipes`, `crucible_dose_plan` |
 | [essentia](essentia.md#authored-content) | `essentia_recipes`, `essentia_client` |
-| [infusion](infusion.md#authored-content) | `infusion_recipes`, `wand_parts`, `multiblocks`, `echo_bootstrap` (renamed `infusion_bootstrap`, under "Divergences resolved") |
+| [infusion](infusion.md#authored-content) | `infusion_recipes`, `wand_parts`, `multiblocks`, `infusion_bootstrap` (the file `bootstrap.json`) |
 | [foci](foci.md#authored-content) | `focus_effects`, `focus_media`, `focus_modifiers`, `foci_recipes`, `damage_types`, `foci_fixtures` |
 | [golems](golems.md#authored-content) | `golem_materials`, `golem_recipes`, `golem_bootstrap`, `golem_fixtures` |
 | [armor](armor.md#authored-content) | `wearables`, `armor_recipes`, `enchantments`, `armor_tags`, `curios_slots`, `void_armor`, `armor_bootstrap`, `armor_fixtures` |
@@ -361,7 +364,7 @@ The later phase's work list. Each spec replaces its copy with a citation and mak
 | [eldritch](eldritch.md#the-step-bells), Step Bell row 0 | "road guard held, **or** already travelled or rang this tick": no message | split: guard held → `message.vftv.busy`; same-tick duplicate → silent |
 | [eldritch](eldritch.md#the-block-and-the-screen), Heart use row 0 | "road guard held, or a second attempt this tick": no message | split, as for the Step Bell |
 | [eldritch](eldritch.md#the-choice), `HeartChoose` | `heart.vftv.busy`, `heart.vftv.cost_changed` | `message.vftv.busy`, `message.vftv.cost_changed`; drop both owner keys |
-| [eldritch](eldritch.md#ringing-the-hollow-bell), rows 6 and 1 | `road.vftv.lost` ("I can't find my way.") for an unreadable `vftv:road` | `message.vftv.unreadable`; drop `.lost` |
+| [eldritch](eldritch.md#ringing-the-hollow-bell), its unreadable-record rows | `road.vftv.lost` ("I can't find my way.") for an unreadable `vftv:road` | `message.vftv.unreadable`; drop `.lost` |
 | [worldgen](worldgen.md#using-it), Reliquary row 0 | guard held: `busy`, no message | `message.vftv.busy` |
 | [worldgen](worldgen.md#using-it), Reliquary rows 2 and 3 | an unreadable block record shares `.silent` with an unresolved site; an unreadable claims record uses `reliquary.vftv.unreadable` | unreadable records → `message.vftv.unreadable`; an unresolved site stays `.silent` (inert) |
 | [foci](foci.md#checks), cast check 2 and the Beam pulse | re-entrant cast refused silently | `message.vftv.busy`, at most once per player per tick |

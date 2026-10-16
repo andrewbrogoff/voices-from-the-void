@@ -15,7 +15,8 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [wands spec](wands.md) for the quote, `VisSpentEvent` and `NodeService`;
 - the [crucible](crucible.md), [essentia](essentia.md), [infusion](infusion.md) and [golems](golems.md) specs for the spill events;
 - the [warp spec](warp.md) for the place query;
-- the [research spec](research.md) for entries, fact spans, `mix64` and `fold`;
+- the [research spec](research.md) for entries and fact spans;
+- the [shared conventions](conventions.md) for raw-record retention, operation guards, `fold`, streams and phases, Rules records and the authored-content envelope;
 - the [art style](art-style.md) for every asset.
 
 Resolved in [Flux and the Hush spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/26). Inputs: [TC4 world and endgame](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-endgame/docs/research/tc4-endgame.md) (§4, Flux and taint), [community pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md) (§3, taint), [TC4 core loop](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-core/docs/research/tc4-core.md) (§5, nodes), [NeoForge 26.2 research](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/neoforge-26-2/docs/research/neoforge-26-2.md).
@@ -85,7 +86,7 @@ essentiaFlux(spilled, cause)           = essentiaFlux(spilled, cause, the curren
 - **Essentia:** one rate for every cause. The crucible HUD's "Emptying it spills *n*" is then also exactly what breaking it spills (its HUD previews `EMPTIED` only), and the bound is exact: `essentiaFluxBound(u)` equals `essentiaFlux(m)` for every `m` totalling `u`, and is monotone in `u`. `cause` stays in the signature the siblings froze.
 - **Inputs:** `total` sums every amount, **missing ids included** ([crucible, The pool](crucible.md#the-pool)), in `long`. A total above `MAX_ESSENTIA_SPILL` (640,000, [essentia's](essentia.md#contracts-on-sibling-specs)) or a negative amount is the caller's data error and throws. `effective` and `neutral` hold at most 8 entries of 0–10,000.
 - **Bounds:** crucible ≤ 10,000 in → ≤ 10,000 out; essentia ≤ 640,000 → ≤ 640,000; infusion ≤ 8,000; golem ≤ 1,000; Pealing Bell ≤ 1,000; a vis spill ≤ 80,000 by construction (8 × 10,000 at 1000 ‰). All within 0–1,000,000.
-- **Rules:** **`FluxRules`** (see "Sync and state") carries every key of "Tuning and limits". Until it arrives on a client, every client preview of flux is the typed zero; a server echo then refuses the stale quote ("The cost has changed."), as for any changed quote input ([wands, The quote](wands.md#the-quote)).
+- **Rules:** **`FluxRules`** (see "Sync and state") carries every key of "Tuning and limits", as a [Rules record](conventions.md#rules-records).
 
 **Vectors** (default rates: `tax_pm` 1000, `void_pm` 250, `essentia_pm` 1000; `quote.min_multiplier` 0.50, `quote.max_multiplier` 4.00; `cap`, `d` and `w` per mille as in the wands quote):
 
@@ -133,7 +134,7 @@ generated = spent + cleared + retained + pending + overflow
 | `steps` | any `long` | 0 | attempts made: the stream index |
 | `taken` | any `long` | 0 | blocks converted: the Hollow turn |
 
-- **Decoding checks format bounds only.** An unknown `format`, an out-of-bounds value, or a `seep` outside the chunk keeps the raw tag, written back unchanged with one warning: the aura is **dormant**. A dormant aura is never a candidate, never cleared and never written, and deposits for its chunk go to pending (see "Pending and dormant").
+- **Unreadable records** follow [conventions](conventions.md#raw-record-retention); a `seep` outside the chunk also makes the aura unreadable. An unreadable aura is never a candidate, never cleared and never written, and deposits for its chunk go to pending (see "Pending and unreadable").
 - `steps` and `taken` increment with wrapping 64-bit arithmetic and are read as unsigned words, so they never overflow into an error and the stream never replays.
 
 ### Depositing
@@ -142,17 +143,17 @@ generated = spent + cleared + retained + pending + overflow
 1. `generated` < 0: throws (a caller's data error; the listener logs it once).
 2. `generated` = 0: **a strict no-op**: no seep move, no attribution, no wake, no event.
 3. The chunk at `pos` is loaded (`ServerChunkCache.getChunkNow`, `MC:server/level/ServerChunkCache.java:184`) and its aura is readable or absent: `retained = min(generated, FLUX_FORMAT_MAX − flux)`; if `retained` > 0, `flux += retained`, `seep = pos`, `spiller` = the player if one is given (an unattributed deposit keeps the **last known** spiller), the chunk's saturation is cleared and it is offered to the due queue (a chunk already queued **keeps its due**, so an overdue entry stays overdue; only a new candidate enters at the next aligned tick after `g`); `overflow = generated − retained`.
-4. Otherwise (unloaded, which no producer above should reach, or dormant): add to the level's pending entry for that chunk as far as `FLUX_FORMAT_MAX` and the table allow (see below); the rest is overflow.
+4. Otherwise (unloaded, which no producer above should reach, or unreadable): add to the level's pending entry for that chunk as far as `FLUX_FORMAT_MAX` and the table allow (see below); the rest is overflow.
 5. Mark the chunk unsaved (`ChunkAccess.markUnsaved()`, `MC:world/level/chunk/ChunkAccess.java:264`) and dirty for the coalesced sync; add overflow to the level's total; post **`FluxEvent(ADDED)`** with all four amounts.
 
 Every producer fires in a loaded chunk (a player, a ticking entity or a block entity is there), so step 4 is a fallback, never a path. **No chunk is ever loaded.**
 
-### Pending and dormant
+### Pending and unreadable
 
 - **Per-level SavedData `vftv_flux_pending`**: `{format 1, overflow: long ≥ 0 (saturating), entries: [{chunk: long, flux: 1–1,000,000, seep: long, spiller?: UUID}]}`, at most **`MAX_PENDING` = 4,096** entries with distinct chunks. A deposit adds to its chunk's entry (moving its seep and spiller) or creates one if there is room; what doesn't fit is overflow.
-- **Merging:** `ChunkEvent.Load` on a server level queues the chunk; at the start of the next server tick, each queued chunk still returned by `getChunkNow`, in ascending `ChunkPos.pack()`, has its entry merged into a readable or absent aura (retained up to the bound, the rest overflow) and removed. An entry for a dormant aura stays.
-- **Repair:** a dormant aura is changed only by **`/vftv flux repair <pos>`**: it logs the raw tag, replaces it with an empty readable record and merges any pending entry. A newer build's record is never discarded without an operator's say.
-- **An unreadable store** (either SavedData with an unknown format or out of bounds) keeps its raw tag, written back unchanged, with one warning. While `vftv_flux_pending` is unreadable, deposits that would need it are overflow, counted in memory for the session only, and merging is off.
+- **Merging:** `ChunkEvent.Load` on a server level queues the chunk; at the start of the next server tick, each queued chunk still returned by `getChunkNow`, in ascending `ChunkPos.pack()`, has its entry merged into a readable or absent aura (retained up to the bound, the rest overflow) and removed. An entry for an unreadable aura stays.
+- **Repair:** **`/vftv flux repair <pos>`** is the aura's repair command ([conventions](conventions.md#what-an-unreadable-record-does)): it replaces an unreadable aura with an empty readable record and merges any pending entry.
+- **An unreadable store** (either SavedData) follows [conventions](conventions.md#raw-record-retention). While `vftv_flux_pending` is unreadable, deposits that would need it are overflow, counted in memory for the session only, and merging is off.
 - **Options considered:** decay, as TC4's goo lost units; diffusion to neighbouring chunks. **Why not:** a timer is not a choice, and decay makes the Hush toothless for anyone who waits ([pain points §3](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md), both camps); diffusion moves the Hush away from what caused it. Flux leaves a chunk only by being spent or cleared, so the land the Hush can take is bounded by what was spilled.
 
 ## The Hush
@@ -167,7 +168,7 @@ Every producer fires in a loaded chunk (a player, a ticking entity or a block en
 
 ### Scheduling
 
-**Per level, one due queue**: an ordered set of `(due, ChunkPos.pack())` with a map from chunk to its `due`, so a chunk is in it **at most once**. `phase(c) = Long.remainderUnsigned(fold([0x48555348 ("HUSH"), ChunkPos.pack(c)]), hush.interval)`, with the research spec's [`fold` and `mix64`](research.md#generating-a-note); a chunk enters at the first tick `t > g` with `t mod hush.interval = phase(c)`.
+**Per level, one due queue**: an ordered set of `(due, ChunkPos.pack())` with a map from chunk to its `due`, so a chunk is in it **at most once**. `phase(c)` = [`phase(HUSH, [ChunkPos.pack(c)], hush.interval)`](conventions.md#phases); a chunk enters at the first tick `t > g` with `t mod hush.interval = phase(c)`.
 
 - **Membership changes** on a retaining deposit, a clear, a merge, a chunk's load (queued to the next tick) and unload, and saturation: each an O(log n) insert or removal. A chunk that stops being a candidate leaves.
 - **Service**, in the server-side `LevelTickEvent.Post` (`NF:event/tick/LevelTickEvent.java:57–64`, server levels only), **only while `hush.spread` is on**: pop in `(due, pack)` order while `due ≤ g`, up to **`MAX_POPS_PER_TICK` (64)** pops and **`MAX_VISITS_PER_TICK` (32)** visits:
@@ -179,9 +180,9 @@ Every producer fires in a loaded chunk (a player, a ticking entity or a block en
 
 ### An attempt
 
-**Stream:** `h = fold([0x48555348, worldSeed, ChunkPos.pack(c), steps])`, with `worldSeed = server.overworld().getSeed()`; `next() = { s += 0x9E3779B97F4A7C15; return mix64(s) }`, as the [wands spec's natural spread](wands.md#natural-spread). Then `steps + 1`, whatever the outcome. From `p = seep`, for `j` in `0 … hush.walk − 1`:
+**Stream:** [`stream(h)`](conventions.md#streams) with `h = fold([HUSH, world seed, ChunkPos.pack(c), steps])`. Then `steps + 1`, whatever the outcome. From `p = seep`, for `j` in `0 … hush.walk − 1`:
 
-1. `k = (next() >>> 1) % 6`; `q = p + Direction.from3DDataValue(k)`, the order DOWN, UP, NORTH, SOUTH, WEST, EAST (`MC:core/Direction.java:33–38`).
+1. `k = bounded(next(), 0, 5)`; `q = p + Direction.from3DDataValue(k)`, the order DOWN, UP, NORTH, SOUTH, WEST, EAST (`MC:core/Direction.java:33–38`).
 2. `|q − seep|² > hush.radius²`, or `q` outside the build height: **stay** (`p` unchanged; the step is spent).
 3. `getChunkNow(q)` is null, or that chunk's full status is below `BLOCK_TICKING` (a client could not be sent the change, `MC:world/level/Level.java:268–270`): **miss, `UNLOADED`**; the attempt ends.
 4. `q`'s state is a **source** of the hushed-form table (see "Hushed blocks"), not in `#vftv:hush_immune`, and `flux ≥ hush.block_cost`: **block target**.
@@ -315,12 +316,12 @@ Listeners of `NodeEvent(CHANGED)` may then capture, move, remove or retype the n
 
 ### The operation
 
-Every Hush mutation (a block converted, a node hushed or restored, a Hollow risen, a Pealing Bell's restore, a Clearing Bell's restore) runs as one **operation**:
-1. **Guards first:** the level's Hush guard and, for a node, the id's guard. Re-entry from any foreign callback is refused (a miss, or a skipped cell). **Trusted nesting:** a ring or a peal takes the level guard once for its whole run, and its own per-cell restores run under that held guard as the same operation, so they never refuse themselves; only code reached through a foreign callback is refused.
-2. **Authorise:** post the cancellable event for the actor (below). This is the one point where foreign code runs before the write.
-3. **Revalidate everything after it:** the chunk is still loaded and `BLOCK_TICKING`; the cell still holds exactly the state (or node id and type) read before; the rule that chose the target still holds; **for paid spread only** (a conversion, a hushed node, a rise), the source aura is still readable and holds the cost; for a Clearing Bell, the player is still online, alive, in the level and holding the same bell stack object; for a Pealing Bell, its block entity is the same instance and not removed (its fuel is already reserved, see "Pealing"). Restores pay nothing and read no aura. A cell a listener replaced is skipped.
-4. **Write** with no foreign code between: the swap, or `update` with its boundary; then the debit, counters and dirty marks.
-5. **Then notify:** post-events after the writes are settled. A failure of one of our posts is logged once; nothing committed is repeated or rolled back, and our later posts still run. The remaining subscribers of the post that failed are NeoForge's dispatch, not ours to resume.
+Every Hush mutation (a block converted, a node hushed or restored, a Hollow risen, a Pealing Bell's restore, a Clearing Bell's restore) runs as one [guarded operation](conventions.md#the-operation). What is the Hush's own:
+- **Guards:** the level's Hush guard and, for a node, the id's guard. A ring or a peal takes the level guard once for its whole run, and its per-cell restores nest under it ([trusted nesting](conventions.md#the-operation)). [Re-entry](conventions.md#re-entry) with no player is a miss, or a skipped cell.
+- **Authorise:** the cancellable event for the actor (under "Claims").
+- **Revalidate:** the chunk is still loaded and `BLOCK_TICKING`; the cell still holds exactly the state (or node id and type) read before; the rule that chose the target still holds; **for paid spread only** (a conversion, a hushed node, a rise), the source aura is still readable and holds the cost; for a Clearing Bell, the player is still online, alive, in the level and holding the same bell stack object; for a Pealing Bell, its block entity is the same instance and not removed (its fuel is already reserved, see "Pealing"). Restores pay nothing and read no aura. A cell a listener replaced is skipped.
+- **Write:** the swap, or `update` with its boundary; then the debit, counters and dirty marks.
+- **Notify:** our later posts still run after one of ours fails.
 
 ### Claims
 
@@ -341,7 +342,7 @@ Every Hush mutation (a block converted, a node hushed or restored, a Hollow rise
 
 | Line | Text |
 |---|---|
-| 1, first match | no `FluxRules` yet, or no status known for the player's chunk yet (see "Sync and state": every watched chunk gets one) → `hud.vftv.hush.unknown` (0); dormant → `hud.vftv.hush.dormant` (0); no aura or 0 flux → `hud.vftv.hush.none` (0); `flux < threshold` → `hud.vftv.hush.quiet` (2: flux, threshold); else `hud.vftv.hush.hushing` (2: flux, blocks) |
+| 1, first match | no `FluxRules` yet, or no status known for the player's chunk yet (see "Sync and state": every watched chunk gets one) → `hud.vftv.hush.unknown` (0); unreadable → `hud.vftv.hush.unreadable` (0); no aura or 0 flux → `hud.vftv.hush.none` (0); `flux < threshold` → `hud.vftv.hush.quiet` (2: flux, threshold); else `hud.vftv.hush.hushing` (2: flux, blocks) |
 | 2 | `hud.vftv.hush.seep` (3: x, y, z), iff line 1 is `quiet` or `hushing` |
 
 **`blocks`** is the tight upper bound on blocks the flux can still pay for: 0 below `threshold`, else `1 + floorDiv(flux − threshold, block_cost)`. It is an upper bound, never a promise, because nodes, Hollows and saturation can take less; the text says "up to". **Vectors** (onset, cost, flux → blocks): 50, 2, 200 → 76 (the defaults); 50, 5, 200 → 31; 50, 5, 49 → 0; 50, 5, 50 → 1; 0, 5, 6 → 1; 0, 5, 4 → 0; 10, 3, 11 → 1.
@@ -370,7 +371,7 @@ Every Hush mutation (a block converted, a node hushed or restored, a Hollow rise
 
 **`vftv:pealing_bell`**, a block with a block entity, four horizontal facings, `PushReaction.BLOCK`. The infusion recipe `vftv:pealing_bell` behind `vftv:the_hush`. "Set up once" cleanup, fed the way a Node Tap is ([wands, Cultivation](wands.md#cultivation)).
 
-**Block entity record:** `{format 1, sonus: 0–1,000, cursor: 0–35,936}`, defaults 0 and 0. An unknown format or an out-of-bounds value keeps the raw tag, written back unchanged with one warning: the bell is **dormant** (no insertion, no pealing, no spill) and drops as a plain bell.
+**Block entity record:** `{format 1, sonus: 0–1,000, cursor: 0–35,936}`, defaults 0 and 0. An [unreadable](conventions.md#raw-record-retention) bell accepts no insertion, never peals or spills, and drops as a plain bell.
 
 ### Feeding
 
@@ -382,8 +383,8 @@ Every Hush mutation (a block converted, a node hushed or restored, a Hollow rise
 
 ### Pealing
 
-- **Indexed per level** by block-entity load and removal, with its own due queue of `(due, BlockPos.asLong())` at `phase = Long.remainderUnsigned(fold([0x5045414C ("PEAL"), BlockPos.asLong()]), peal.interval)`, at most once per bell. Every **initial and re-due tick is the next tick strictly after `g`** with `t mod peal.interval = phase`. Served in `LevelTickEvent.Post`, oldest due first. **Every pop counts** against `MAX_PEAL_POPS_PER_TICK` (16), including a bell skipped because it is unattended (the rule under "Where it begins", whatever `hush.spread` says, except that a Silenced player **does** attend a bell), empty, transaction-busy or dormant; at most **`MAX_PEALS_PER_TICK` (4)** of those pops may peal. The rest stay due and are served first next tick.
-- **A peal** is one operation that owns the bell. Under the bell's guard and the level's Hush guard (trusted nesting), first failure re-dues without pealing: dormant; transaction-busy; `sonus` < 1. Then:
+- **Indexed per level** by block-entity load and removal, with its own due queue of `(due, BlockPos.asLong())` at [`phase(PEAL, [BlockPos.asLong()], peal.interval)`](conventions.md#phases), at most once per bell. Every **initial and re-due tick is the next tick strictly after `g`** with `t mod peal.interval = phase`. Served in `LevelTickEvent.Post`, oldest due first. **Every pop counts** against `MAX_PEAL_POPS_PER_TICK` (16), including a bell skipped because it is unattended (the rule under "Where it begins", whatever `hush.spread` says, except that a Silenced player **does** attend a bell), empty, transaction-busy or unreadable; at most **`MAX_PEALS_PER_TICK` (4)** of those pops may peal. The rest stay due and are served first next tick.
+- **A peal** is one operation that owns the bell. Under the bell's guard and the level's Hush guard (trusted nesting), first failure re-dues without pealing: unreadable; transaction-busy; `sonus` < 1. Then:
   1. **reserve** one Sonus: `sonus − 1` is held aside, and the handler goes unavailable (see "Feeding");
   2. **clear** `min(flux, peal.flux)` from each readable aura of the 3 × 3 loaded chunks around the bell, in ascending `ChunkPos.pack()`, clearing each one's saturation; absent auras are never created, and a peal that only restores creates none;
   3. **scan** from `cursor` through the cube of side `2 · peal.radius + 1` in `(y, z, x)` order, wrapping, **at most `peal.scan` cells**, restoring up to `peal.restore` hushed blocks and, separately, 1 hushed node **only if this peal's clear (step 2) removed nothing** (a node takes a whole peal's `peal.flux`, as it takes a whole ring), each under "The operation" with `HushSpreadEvent(RESTORE)`. The scan stops early only when **both** caps are met. `cursor` advances by **the cells actually examined** (cells in unloaded chunks count as examined); with a changed `peal.radius`, `cursor` is taken modulo the new cube. If a callback removed the bell, the scan stops at once;
@@ -394,7 +395,7 @@ Every Hush mutation (a block converted, a node hushed or restored, a Hollow rise
 ### Removal
 
 - **Drops itself, empty** (loot table `vftv:blocks/pealing_bell`, surviving explosions).
-- **Its Sonus spills:** the removal hook (`BlockEntity#preRemoveSideEffects`) deposits `essentiaFlux({vftv:sonus: sonus}, REMOVED)` at its position, source `ESSENTIA(REMOVED)`, once. **While a peal owns the bell or a transaction is open on it,** the hook records one pending removal and does nothing else; it runs when **both** scopes have settled (the peal's reservation committed or refunded, the transaction committed or aborted), so the spill is the final balance, once, as the [crucible's removal](crucible.md#removal) does for transactions. Dormant: nothing spills, with a warning. A removal path that suppresses block-entity side effects (flag 256) loses the Sonus without a spill; stated, as the crucible does.
+- **Its Sonus spills:** the removal hook (`BlockEntity#preRemoveSideEffects`) deposits `essentiaFlux({vftv:sonus: sonus}, REMOVED)` at its position, source `ESSENTIA(REMOVED)`, once. **While a peal owns the bell or a transaction is open on it,** the hook records one pending removal and does nothing else; it runs when **both** scopes have settled (the peal's reservation committed or refunded, the transaction committed or aborted), so the spill is the final balance, once, as the [crucible's removal](crucible.md#removal) does for transactions. Unreadable: nothing spills, and the record is lost ([conventions, Removal](conventions.md#removal)). A removal path that suppresses block-entity side effects (flag 256) loses the Sonus without a spill; stated, as the crucible does.
 - **Options considered:** keeping the Sonus in the dropped item, as a jar does. **Why not:** a second path through item destruction for an amount that is a cleaning fuel, not a store. A radius scrubber clearing everything at once (TC4's). **Why not:** unbounded per-tick work and no material price.
 
 ## The place query and the senses
@@ -431,14 +432,14 @@ The Hush is never natural, and that is tested:
 
 ## Commands
 
-`/vftv flux …` and `/vftv hush …`, permission level 2, under the [configuration spec's](config.md#commands) root. A target must be in a loaded chunk; otherwise `commands.vftv.flux.not_loaded` and nothing changes. **No command loads a chunk:** around a loaded target, `flux clear` skips every unloaded chunk in its square, and `hush restore` skips the cells of unloaded chunks, counting them as examined (as a peal's scan does), so its continuation index still advances. Dormant auras and stores are never changed except by `flux repair`.
+`/vftv flux …` and `/vftv hush …`, permission level 2, under the [configuration spec's](config.md#commands) root. A target must be in a loaded chunk; otherwise `commands.vftv.flux.not_loaded` and nothing changes. **No command loads a chunk:** around a loaded target, `flux clear` skips every unloaded chunk in its square, and `hush restore` skips the cells of unloaded chunks, counting them as examined (as a peal's scan does), so its continuation index still advances. Unreadable auras and stores are never changed except by `flux repair`.
 
 | Command | Effect |
 |---|---|
 | `flux get [<pos>]` | the aura at `pos` (default the executor's position): status, flux, seep, spiller, `steps`, `taken`, saturation, and the level's pending count and overflow total |
 | `flux add <pos> <amount 1–1,000,000>` | `deposit(level, pos, amount, COMMAND, executor-or-none)`, reporting the four amounts |
 | `flux clear <pos> [<radius 0–4>]` | clears every readable aura in a loaded chunk within Chebyshev `radius` **chunks** (default 0); `FluxEvent(CLEARED, COMMAND)` per chunk |
-| `flux repair <pos>` | a dormant aura becomes an empty readable one (the raw tag logged), and its pending entry merges |
+| `flux repair <pos>` | an unreadable aura becomes an empty readable one (the raw tag logged), and its pending entry merges |
 | `hush restore <pos> <radius 0–16> [<from>]` | walks the ball of `radius` **blocks** around `pos` in the ball tables' order (ascending `(d², dy, dz, dx)`), starting at index `from` (default 0), examining at most 4,096 cells and making at most 64 restores of hushed blocks and journaled nodes; it reports the restores and **the next index** to pass as `from` (or "done" at the ball's end), so repeated calls finish the ball. No claim events: it is the operator's act |
 
 ## Rendering and sound
@@ -480,7 +481,7 @@ The Hush is never natural, and that is tested:
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, or an entry that fails its type's rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#the-envelope).
 
 ```
 content/hush/recipes.json        the Clearing Bell and the Pealing Bell
@@ -494,7 +495,7 @@ content/lang/en_us/hush.json     every key under "Lang keys"
 | `recipes.json` | `vftv:hush_recipes/1` | `data/vftv/recipe/clearing_bell.json`, `data/vftv/recipe/pealing_bell.json`, bodies unchanged except the [compatibility spec's ingredient widening](compat.md#consumed) |
 | `node_types.json` | the wands spec's `vftv:node_types/1` | `data/vftv/vftv/node_type/hushed.json`; datagen merges node-type files and rejects an id declared twice |
 | `fixtures.json` | `vftv:hush_fixtures/1` | nothing: read by the unit tests |
-| `lang/<lang>/hush.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |
+| `lang/<lang>/hush.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 The tuning file `data/vftv/tuning/hush.json` is written by datagen from the record's defaults ("Tuning and limits"); it is not authored content.
 
@@ -535,7 +536,7 @@ The tuning file `data/vftv/tuning/hush.json` is written by datagen from the reco
 
 ### Fixtures
 
-`{"schema": "vftv:hush_fixtures/1", "spill": [...], "essentia": [...], "phase": [...], "stream": [...], "kernel": [...], "scheduler": [...], "hud": [...], "ball": [...]}`. **All eight sections are required**, and together they transcribe every vector table in this spec exactly, one row per vector. The unit tests replay them against the `model` code; that consumer is build work. Every field is required unless a default is given or it is marked conditional.
+`{"schema": "vftv:hush_fixtures/1", "spill": [...], "essentia": [...], "phase": [...], "stream": [...], "kernel": [...], "scheduler": [...], "hud": [...], "ball": [...]}`: eight sections under the [fixtures convention](conventions.md#fixtures). Every field is required unless a default is given or it is marked conditional.
 
 **Types used below:** *int* is a JSON integer; *hex* is a string `"0x"` followed by 1–16 uppercase hex digits, read as a 64-bit word (every `long`); a *cell* is `[x, y, z]` of ints with x and z in −30,000,000…30,000,000 and y in −64…319; a *chunk* is `[x, z]` of ints in −1,875,000…1,875,000. Where a field shares a tuning key's meaning, it **inherits that key's range** from "Tuning and limits".
 
@@ -608,37 +609,35 @@ The tuning file `data/vftv/tuning/hush.json` is written by datagen from the reco
   {"radius": 8, "expect": {"count": 2109, "first": [[0, 0, 0], [-1, 0, 0], [0, -1, 0], [0, 0, -1], [0, 0, 1], [0, 1, 0], [1, 0, 0], [-1, -1, 0]], "last": [8, 0, 0]}}]}
 ```
 
-**Rejected:** a section missing; an unknown field; a conditional field present when its condition is false, or absent when true; a vector of the wrong length; a value outside its type or range; a row of a vector table missing or altered; a `world` other than `flat63`. The file above is the one the content ticket ships, so it passes every rule. Fixtures model arithmetic, streams and the walk only; scheduling, callbacks, caps and persistence are proved by the GameTests.
+**Rejected:** a `world` other than `flat63`. The file above is the one the content ticket ships. Fixtures model arithmetic, streams and the walk only; scheduling, callbacks, caps and persistence are proved by the GameTests.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review checks that the HUD lines read as an instrument's exact reading and that "up to" is kept.
+[Lang files](conventions.md#lang); every key below is required in `en_us`. The English is the intended sense; the content ticket writes the final text, and its review checks that the HUD lines read as an instrument's exact reading and that "up to" is kept.
 
 | Key | Args | Sense |
 |---|---|---|
 | `block.vftv.hushed_grass_block`, `.hushed_dirt`, `.hushed_stone`, `.hushed_deepslate`, `.hushed_sand`, `.hushed_gravel`, `.hushed_short_grass`, `.hushed_oak_log`, `.hushed_birch_log`, `.hushed_spruce_log`, `.hushed_oak_leaves`, `.hushed_birch_leaves`, `.hushed_spruce_leaves`, `block.vftv.pealing_bell` | 0 | "Hushed Grass Block", …, "Pealing Bell" |
 | `item.vftv.clearing_bell`, `item.vftv.hush_ash`, `entity.vftv.hollow`, `node_type.vftv.hushed` | 0 | "Clearing Bell", "Hush Ash", "Hollow", "Hushed" |
-| `hud.vftv.hush.unknown`, `.dormant`, `.none` | 0 | "I can't read this ground yet.", "This ground's record is unreadable.", "Nothing pools here." |
+| `hud.vftv.hush.unknown`, `.unreadable`, `.none` | 0 | "I can't read this ground yet.", "This ground's record is unreadable.", "Nothing pools here." |
 | `hud.vftv.hush.quiet` | 2 | "This ground holds %s flux. It begins to hush at %s." |
 | `hud.vftv.hush.hushing` | 2 | "This ground holds %s flux: enough to hush up to %s blocks." |
 | `hud.vftv.hush.seep` | 3 | "It pools at %s, %s, %s." |
 | `message.vftv.hush.nothing` | 0 | "Nothing here is hushed." |
 | `status.vftv.pealing_bell` | 2 | "Sonus: %s of %s." (sneak-use with an empty hand, built on the server) |
-| `status.vftv.pealing_bell.dormant` | 0 | "This bell's record is unreadable." |
+| `status.vftv.pealing_bell.unreadable` | 0 | "This bell's record is unreadable." |
 | `commands.vftv.flux.get` | 9 | "%s: %s flux, seep %s, by %s, %s attempts, %s taken, %s; pending %s, overflow %s" |
 | `commands.vftv.flux.added` | 4 | "Generated %s: retained %s, pending %s, overflow %s." |
 | `commands.vftv.flux.cleared` | 1 | "Cleared %s flux." |
 | `commands.vftv.hush.restored` | 2 | "Restored %s; continue from %s." |
 | `commands.vftv.hush.restored_done` | 1 | "Restored %s; the ball is done." |
-| `commands.vftv.flux.repaired`, `.not_loaded`, `.not_dormant` | 0 | |
-| `commands.vftv.flux.status.readable`, `.dormant`, `.none`, `.saturated`, `.waiting` | 0 | |
+| `commands.vftv.flux.repaired`, `.not_loaded`, `.not_unreadable` | 0 | |
+| `commands.vftv.flux.status.readable`, `.unreadable`, `.none`, `.saturated`, `.waiting` | 0 | |
 | `options.vftv.hush.muffle`, `.hud` | 0 | "Muffle in the Hush", "Hush reading" |
 | `hush.vftv.fact.on`, `.off` | 0 | "on", "off" (the research spec's `hush` switch facts) |
 | `subtitles.vftv.<event>` for every sound event above | 0 | "Hushed steps", "Bell rings", "A great bell peals", "Colour returns", "A Hollow rises", "Hollow hurts", "Hollow falls apart" |
 
 **Used, not declared here:** aspect and player names; the arcane and infusion recipe pages.
-
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
 
 ## Events
 
@@ -660,9 +659,9 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 | State | Storage | Synced to |
 |---|---|---|
-| the aura | `vftv:aura` chunk attachment | players tracking the chunk, through an `AttachmentSyncHandler` (`NF:attachment/AttachmentType.java:263–266`; `AttachmentSyncHandler.java:57,67`) writing **`{status: NONE \| READABLE \| DORMANT, flux: 0–1,000,000, seep?: long}`** only, for every later change of an existing aura; NeoForge's own initial send on `ChunkWatchEvent.Sent` (`NF:attachment/AttachmentSync.java:162–180,203–207`) covers **existing** attachments only |
+| the aura | `vftv:aura` chunk attachment | players tracking the chunk, through an `AttachmentSyncHandler` (`NF:attachment/AttachmentType.java:263–266`; `AttachmentSyncHandler.java:57,67`) writing **`{status: NONE \| READABLE \| UNREADABLE, flux: 0–1,000,000, seep?: long}`** only, for every later change of an existing aura; NeoForge's own initial send on `ChunkWatchEvent.Sent` (`NF:attachment/AttachmentSync.java:162–180,203–207`) covers **existing** attachments only |
 | the chunk's status at watch | none (derived) | S2C **`HushChunkStatus`** `{chunk: long, status, flux, seep?}`, the same envelope plus the chunk's identity, sent to the watching player on `ChunkWatchEvent.Sent` for **every** chunk, including one with no aura (`NONE`, flux 0), so pristine ground reads "nothing pools here" rather than "unknown" |
-| `FluxRules` | the tuning record, the server switches and the fixed limits | S2C to every player through `OnDatapackSyncEvent` (`NF:event/OnDatapackSyncEvent.java:20–22,50–51`: join and `/reload`), and again when a server config change alters a Hush switch (`FML:event/config/ModConfigEvent.java:23–42`; [configuration spec, Publishing a change](config.md#publishing-a-change)) |
+| `FluxRules` | the tuning record, the server switches and the fixed limits | every player, as a [Rules record](conventions.md#rules-records) |
 | hushed blocks, Hollows | blocks, entities | vanilla's |
 | the Pealing Bell | its block entity | trackers: initial data, then on a change of `sonus` (the status line is built on the server; the client draws nothing from it) |
 | pending deposits, the overflow total | `vftv_flux_pending` (per level) | never |
@@ -671,9 +670,9 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 - **In-place mutation, coalesced sync:** the aura is created once by the first retaining deposit; after that every write mutates it in place and marks the chunk in a per-level dirty set, flushed once per tick after the level ticks with one `LevelChunk.syncData(vftv:aura)` per chunk (`MC:world/level/chunk/LevelChunk.java:749–750`). `setData` is never called again, since it would sync on every write. **Creation** auto-syncs once (`NF:attachment/AttachmentHolder.java:74–81,97–102`), so **the creation tick may carry two sends**, the creation's and the coalesced flush; every later tick at most one. Initial delivery to a newly watching player (`HushChunkStatus`, plus NeoForge's attachment send for an existing aura) is separate.
 - **The client's knowledge:** a per-level map from chunk to the last status received (from `HushChunkStatus` or an attachment update, whichever came last), pruned, whenever the local player's chunk changes, to the square of the client's render distance + 1 chunks around it (no unload hook is needed: a chunk is always re-sent, with a fresh `HushChunkStatus`, before the player can stand in it, so a stale entry is never read), and cleared entirely on a level change and at logout.
-- **`FluxRules`** is a fixed record: `format` 1, a `generation` (`long`: `fold([0x464C5558 ("FLUX"), format, every value in key order, the switches as 0 or 1])`, so equal rules share a generation across restarts and a changed value changes it, which is what the [infusion spec's](infusion.md#abandoning) persisted abandon arm compares), every tuning key, the three server switches and the fixed limits the client needs. Its `Codec` is what the [infusion spec](infusion.md#sync-and-state) freezes into a run; a run's record is validated against the format bounds only.
-- **Bounded codecs:** the aura, the sync payload and `HushChunkStatus` (status one byte, flux 0–1,000,000, an optional seep) as above; `vftv_flux_pending` ≤ 4,096 entries; `vftv_hushed_nodes` ≤ 65,536 entries, type ids ≤ 256 characters; the bell's record; `FluxRules` a fixed record. Out of bounds is rejected at decode, and a persisted record then stays raw (dormant).
-- **Raw retention everywhere:** the aura, both SavedData and the bell keep an unreadable record verbatim and write it back unchanged, with one warning each.
+- **`FluxRules`** is a fixed record: `format` 1, a `generation` (salt `FLUX`, [conventions, Rules records](conventions.md#rules-records)), which is what the [infusion spec's](infusion.md#abandoning) persisted abandon arm compares, every tuning key, the three server switches and the fixed limits the client needs. Its `Codec` is what the [infusion spec](infusion.md#sync-and-state) freezes into a run; a run's record is validated against the format bounds only.
+- **Bounded codecs:** the aura, the sync payload and `HushChunkStatus` (status one byte, flux 0–1,000,000, an optional seep) as above; `vftv_flux_pending` ≤ 4,096 entries; `vftv_hushed_nodes` ≤ 65,536 entries, type ids ≤ 256 characters; the bell's record; `FluxRules` a fixed record. Out of bounds is rejected at decode, and a persisted record is then unreadable.
+- **Raw retention:** the aura, both SavedData and the bell follow [conventions](conventions.md#raw-record-retention).
 - **Saving:** every write marks its holder dirty (`markUnsaved`, `setDirty`, `setChanged`).
 - **Removing the mod** leaves hushed blocks and Hollows to NeoForge's missing-registry handling; stated.
 
@@ -681,8 +680,8 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 
 | Change | Effect |
 |---|---|
-| Tuning (`/reload`) | a new record (a new generation if any value changed), re-sent; due queues rebuilt and saturation cleared; quotes re-resolve, so stale echoes are refused; infusion runs keep their frozen record |
-| Server config | `hush.spread` at the next service (off keeps the backlog; on resumes it in due order); `hush.hollows` at the next rise; `hush.unattended` at the next spread service and the next Pealing Bell service, with no wake. Nothing already converted, restored or risen is reversed. `FluxRules` re-sent if a switch changed. |
+| Tuning (`/reload`) | a new record (a new generation if any value changed); due queues rebuilt and saturation cleared; quotes re-resolve, so stale echoes are refused; infusion runs keep their frozen record |
+| Server config | `hush.spread` at the next service (off keeps the backlog; on resumes it in due order); `hush.hollows` at the next rise; `hush.unattended` at the next spread service and the next Pealing Bell service, with no wake. Nothing already converted, restored or risen is reversed. |
 | Resource reload | the HUD and models rebuild |
 
 ## Tuning and limits
@@ -779,14 +778,14 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the due queue: one entry per chunk under repeated deposits, oldest-due-first carry with no starvation, the 2-slot reservation on a Hollow turn, attendance flips and rebuilds;
 - the hushed-form table: bijective, property-complete, light properties equal per state, support-tag parity with vanilla's tag data;
 - deposits: zero is a no-op; clipping at `FLUX_FORMAT_MAX`; a full pending table; the conservation identity over random sequences of deposits, attempts, clears and merges;
-- codecs: the aura (bounds, defaults, the raw round trip), its sync payload, both SavedData, the bell's record, `FluxRules`, the tuning file;
+- codecs: the aura (bounds, defaults), its sync payload, both SavedData, the bell's record, `FluxRules`, the tuning file;
 - every `content/` rejection rule: recipe ingredient lists and bounds, no Hush Ash, the fixture schema.
 
 **GameTest:**
 - **previewed spill = generated flux** for an arcane craft and a cast at warp 20 and a `VOID` cast ([wands](wands.md#contracts-on-sibling-specs), [arcane](arcane.md#contracts-on-sibling-specs), [foci](foci.md#contracts-on-sibling-specs)); the crucible HUD's `EMPTIED` preview = the generated flux on emptying **and** on breaking; a destroyed jar stack generates once; an upset under frozen rules and an abandon under current ones; a pre-#26 run's `UPSET` generates 0 while its abandon generates under current rules; a golem's death at its death position;
 - **at the caps:** an aura at 999,999 plus a spill of 10 retains 1 and reports 9 overflow, for an ordinary and a frozen-rule event; a full pending table;
 - **each once,** with a throwing addon listener registered after ours; the documented limitation with an earlier `HIGHEST` thrower;
-- an unloaded target chunk goes to pending, merges at load, and no chunk is ever loaded; a dormant aura holds its pending entry until `flux repair`;
+- an unloaded target chunk goes to pending, merges at load, and no chunk is ever loaded; an unreadable aura holds its pending entry until `flux repair`;
 - onset and costs; **every form converted and restored, state for state**; swaps at an unloaded chunk boundary in both directions with nothing loaded; flora, vines, snow layers and leaves beside swapped cells survive; the swap itself schedules no falling tick on restored sand (a tick queued before the swap, or a later update, may still drop it);
 - **the operation:** a cancelled `HushSpreadEvent` changes and spends nothing; a listener that replaces the cell, unloads the chunk or drains the aura makes it a miss; a listener that rings a bell is refused by the guard;
 - `hush.spread` off (zero conversions in 6,000 ticks with 10,000 flux), `hush.hollows` off, unattended chunks idle, `hush.unattended` on; **walking back to an old pool wakes it**; the per-tick caps under the flood; saturation and each of its exits;
@@ -794,14 +793,14 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **Hollows:** each rise rule in turn (peaceful, the cap, flux, the spot, players, the event, the insertion check), flux debited only on a counted rise; a join listener that moves ours; pursuit dropped when the target leaves home; return home; persistence; a reload above the cap; the shipped stats (health 30, attack 5, speed 0.26);
 - **Silenced players** (the [Eldritch tier's](eldritch.md#the-capstones) capstone): a pool beside only a Silenced player doesn't spread; beside a Silenced and an unsilenced player it does; with `hush.unattended` on it does; a Silenced player's spill still deposits; a Pealing Bell beside only a Silenced player still peals; a Hollow never acquires a Silenced player, drops its target the tick after that player is Silenced, and still hunts an unsilenced one beside them;
 - **the Clearing Bell:** each HUD line; ringing (clear, restore, both, nothing), cooldown, **a node beside a pool** (the first rings clear and restore blocks but not the node; the first ring that clears nothing restores it, and a peal likewise), durability and creative, spawn protection and a cancelled `BreakBlockEvent`; **one ring attempt per tick** at cooldown 0, a second use in the tick, including on empty ground, scanning nothing; radius 8; `bell.restore` 0 still restoring a node; a ring's own restores not refused by its held guard;
-- **the Pealing Bell:** feeding through a transaction that rolls back and one that commits; suction on exactly the handler's faces, and the handler unavailable during a peal; pealing, the reservation committed on first work and refunded on none; a cursor-only scan marked dirty with no event; a lowered capacity; **a restore listener that removes the bell after the first successful work** (one spill of the final balance after the peal settles, the reservation committed, no debit of a detached entity); **a listener that opens an insertion transaction mid-peal** (refused: the handler is unavailable); removal during an open transaction; every pop counted, including unattended, empty, busy and dormant bells; dormant;
+- **the Pealing Bell:** feeding through a transaction that rolls back and one that commits; suction on exactly the handler's faces, and the handler unavailable during a peal; pealing, the reservation committed on first work and refunded on none; a cursor-only scan marked dirty with no event; a lowered capacity; **a restore listener that removes the bell after the first successful work** (one spill of the final balance after the peal settles, the reservation committed, no debit of a detached entity); **a listener that opens an insertion transaction mid-peal** (refused: the handler is unavailable); removal during an open transaction; every pop counted, including unattended, empty, busy and unreadable bells; the [raw-retention template](conventions.md#tests) for the aura, both SavedData and the bell;
 - **chunk status:** a pristine watched chunk reads `none`, not `unknown`; `HushChunkStatus` on watch, pruned outside the render square, cleared on level change and logout; an aura created and mutated again in the same tick sends at most two updates;
 - the restore command's continuation index finishing a radius-16 ball over repeated calls;
 - the place query (true on and in hushed ground, false with the chunk unloaded); the player-caused world (0 flux after 6,000 ticks); persistence of the aura, pending, the journal and the bell through save and reload; every command; every test id in the discovery guard.
 
 **E2E:**
 - an emptied crucible's Hush growing (screenshots at 0, 30 and 60 s, and a dump of the aura and the converted positions);
-- the HUD against the dump (unknown, none, quiet, hushing, dormant) beside the vis frame at 320 × 240 with a long test translation (the [localisation fixtures](accessibility.md#fixtures)): more than four lines wrapping, every number whole, the outer pose scale ≥ 0.75;
+- the HUD against the dump (unknown, none, quiet, hushing, unreadable) beside the vis frame at 320 × 240 with a long test translation (the [localisation fixtures](accessibility.md#fixtures)): more than four lines wrapping, every number whole, the outer pose scale ≥ 0.75;
 - a ring restoring blocks (screenshots, dump); Hollows rendered, fought and returning home;
 - muffling: entering and leaving the Hush changes the category gains in the sound-state dump, an already-playing sound follows, the option off restores 1.0, and an engine reset reapplies it;
 - sync on join, reconnect and `/reload` (aura status, `FluxRules`);
@@ -809,94 +808,25 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)'s contracts on this ticket):
-
-| Wands contract | Met by |
-|---|---|
-| `spill(inputs, ctx)`: pure, used inside the quote, a function of the resolved inputs and `effective`, never of a quote; 0 until #26 lands | "The pinned functions": `visSpill` over `effective`, the quote's own `neutral` and the synced rates, all resolved inputs (the wands spec amended); the typed zero while `FluxRules` is absent |
-| Flux applied on `VisSpentEvent` equal to that event's `spill`; GameTest: previewed spill = applied flux | "Sources": the event's own `quote.spill` is the generated flux, one `HIGHEST` listener; "Generated, retained and overflow": the equality is of generated flux (amended in place), retention reported; "Tests" |
-| No flux from tapping, relays, regeneration, cultivation and capture | "Sources", not sources |
-| Hush node types are `vftv:node_type` entries with `natural: false`; nodes changed only through `update` and `remove`, relay members only by ordinary block removal; never rewrites an id; no autonomous natural Hush source | "Hushed nodes": `vftv:hushed`, `update` only with a journal written first, never `remove`; relay members are never targets; "The player-caused guarantee" |
-
-**Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)): `spill` applied once on `VisSpentEvent`, no second arcane publisher ("Sources"); a quote's spill ≤ 1,000,000 (≤ 80,000 by construction, clipped at `MAX_SPILL_FLUX`).
-
-**Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)'s contracts):
-
-| Crucible contract | Met by |
-|---|---|
-| A pure `essentiaFlux(spilled, cause)`: integer 0–1,000,000, a function of the map, the cause and the synced rule record; the typed zero until it lands; generated **once** on `CrucibleEvent(SPILLED)`; no second crucible producer; GameTest: the HUD's previewed spill equals the generated flux | "The pinned functions" (one rate, so `EMPTIED`'s preview is also `REMOVED`'s); "Sources"; "Generated, retained and overflow" (the wording amended in place); "Tests" |
-| No flux from dissolving, crafting, refusing or extraction | "Sources" |
-| A spill's input is a valid format-1 pool ≤ 10,000; dormant records are never inputs | "The pinned functions": any total ≤ 640,000 is accepted, and the crucible supplies only readable pools |
-| `SpillCause` gains `DESTROYED`, `UPSET`, `ABANDONED` and `DIED` through their own events; the crucible's bounds unchanged | "Sources" handles all six causes; this spec adds none |
-
-**Met here** (the [Essentia logistics spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)): generated once on `EssentiaEvent(SPILLED)` for `DESTROYED` and `REMOVED`; the input up to 640,000 in `long`, the output 0–1,000,000, the typed zero until it lands ("The pinned functions"); no other essentia flux ("Sources"); GameTest: a destroyed stack generates its flux once, with retention reported ("Tests").
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)'s contracts):
-
-| Infusion contract | Met by |
-|---|---|
-| `essentiaFlux(spilled, cause, rules)` for `UPSET`, `ABANDONED` and `REMOVED`, once on `InfusionEvent(SPILLED)` with the rules the event carries | "Sources": `UPSET` with the run's frozen record (0 for a pre-#26 run), `ABANDONED` and `REMOVED` with the current record the event carries |
-| A pure `essentiaFluxBound(units, cause, rules)`, 0–1,000,000, ≥ `essentiaFlux(m)` for every valid map up to `units` (≤ 1,000) | "The pinned functions": exact and monotone; the upset bound vector 300 (`upset.spill` 50); the exhaustive unit test |
-| A versioned, synced, codec-backed rules record with a generation, so a run can freeze it; the two-argument form is the current-rules case | "Sync and state": `FluxRules` with its `Codec`, `StreamCodec` and generation |
-| An infusion spill is ≤ 8 aspects and ≤ 8,000; no flux for drawing, absorbing, stalls, pauses or finishing | "The pinned functions", "Sources" |
-
-**Met here** (the [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)): foci add no direct producer; indirect breaks trigger the sibling's own event ("Sources").
-
-**Met here** (the [Golems spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)): `essentiaFlux(spilled, DIED)` generated once on `GolemEvent(SPILLED)` at the event's level and death position; ≤ 1,000 units of one aspect within the crucible bounds; no other golem flux ("Sources", "The pinned functions").
-
-**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)): a place query for hushed ground, pure, loaded-only and bounded (two reads of one loaded chunk), registered by `core.hush` with no reverse import; no warp from the Hush ("The place query and the senses").
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)): no recipe type of our own, so the arcane and infusion types carry the gate, preview and JEI; both recipes paged on their gating entries; every number the prose needs is a `hush` fact (the research spec amended).
-
-**Met here** (the [progression spec](progression.md#tc4-systems-kept-redesigned-cut)): caused only by the player ("Sources", "The player-caused guarantee"); bounded (conservation, the radius, the caps); intense locally (the threshold and the walk); counterplay available early, provably buildable spill-free ("Stage", "Authored content, Recipes"); no collateral loss beyond the hushed cells ("The swap").
-
-**Met here** (the [lore spec](lore.md#the-hush-replaces-taint) and the [art style](art-style.md#5-tone-ramp-by-stage)): desaturated and silent, never purple, glossy or fleshy; Azanor's coinages renamed; hushed blocks keep their shapes and lose their colour, untinted; sound subtracted by muffling.
-
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with fixed limits and their aggregate, disclosed native terms and an allocation budget ("Performance"); configs proven by GameTests and no chunkloader-only processing ([pain points §3](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md)).
-
-**[Aspects and scanning](https://github.com/andrewbrogoff/voices-from-the-void/issues/15)** and **[Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)** place no contract on this ticket; the Baffle adds no flux.
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
-- The quote computes `neutral` (the same multiplier, rounding and clamp at `w = 1000`) alongside `effective`, and `QuoteInputs` carries `flux.tax_pm` and `flux.void_pm` from synced `FluxRules`; `spill` is `visSpill` over them. Its spill vectors are this spec's table; a `FluxRules` arrival is a quote-input change that invalidates client quotes and caches.
-- `vftv:hushed` joins the built-in node types, `natural: false`.
-- The `VisSpentEvent` contract's equality means generated flux.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36):
-- **Entries:** the two under "Stage", with their parents; `vftv:clearing_bell` carries the recipe page for `vftv:clearing_bell`, `vftv:the_hush` the page for `vftv:pealing_bell`.
-- **The fact source `hush`:** its grammar, every key (each tuning key, the derived threshold and seconds, the registration facts `bell.durability`, `hollow.health`, `hollow.attack`, `hollow.xp` and `hollow.drops_max`, and the three switches), formats, typed absence and arrival, in the research spec's "Prose and fact references".
-- **Affordability:** `path-stage2.json` learns `vftv:clearing_bell` immediately after `vftv:resonant_brass`; #35 is also blocked by #26.
-- **Prose** teaches: what spills and what never does, with the previews to read first; that flux pools where it spilled and doesn't fade; the threshold; that the Hush grows only from a seep and only so far, through walls; that ringing restores hushed land exactly and clears flux; Hollows rise from deep Hush and keep near it; hushed nodes ring faint until restored, and a node takes a whole ring, so the pool is cleared first; the Pealing Bell's Sonus; and that the bell reads "up to", never a promise. Every number in a `hush`, `recipe` or `vis` span.
-
-**[Architecture](architecture.md)** (amended in this change)
-- `core.flux` is a **leaf feature**: it imports only `api` and the JDK, never another `core` feature (the `archTest` rule `FLUX_LEAF`). `core.vis`, `core.crucible`, `core.infusion` and `core.hush` may import it.
-- The `archTest` rule **`FLUX_ENTRY_POINTS`**: only `neoforge.hush` and `core.hush` call `FluxService.deposit`. It checks callers, not delivery or conservation, which the GameTests prove.
-
-**[Arcane crafting](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)**, **[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)**, **[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)**, **[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)** and **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)** (amended in this change)
-- Their "previewed = applied" wording now reads "previewed = generated flux", with retention reported under "Generated, retained and overflow".
-
-**[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
-- No feature, structure, processor or loot places a hushed block, a `vftv:hushed` node, a Hollow or an aura, checked by parsing its generated files **and** its structure templates' NBT palettes and embedded block-entity and entity data. Its Choir-site place query is independent of ours.
-- *Met by the [worldgen spec](worldgen.md#templates): a datagen-phase test parses every generated template's NBT (palette, block-entity and entity data, rejecting any `neoforge:attachments`) and every generated worldgen, processor and loot file; its template and loot rejection rules and `vftv:roll_node` never produce a hushed block, node type or item, Hush Ash or a Hollow; its place query reads structure references only.*
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Its Void work's flux is `VisSpentEvent`'s spill at `flux.void_pm`, nothing else; any other Hush interaction is an extension it must propose.
-- *Met by the [Eldritch tier spec](eldritch.md#contracts-on-sibling-specs): no flux of its own and no hushed block, node, Hollow or aura in any template; its one proposed interaction, Silencing's capstone, is amended here: the spread's attendance and Hollow targeting exclude Silenced players (`WarpService.isSilenced`, a pure read, so `core.hush` gains no dependency on the Road), while spills, other players, `hush.unattended` and the Pealing Bell are unchanged.*
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand entries (or reviewed exemptions) for the 13 hushed blocks, `vftv:hush_ash` (a Silentium and Vacuos source), `vftv:clearing_bell`, `vftv:pealing_bell` and the Hollow; round-trip non-amplification over both recipes, outputs and remainders included, and over the source → hushed (Silk Touch) → restored loop, so a hushed block is never worth more than its source.
-
-**Configuration**
-- The three server switches and two client options under "Tuning and limits", as named.
-
-**API**
-- In `api`:
-  - **Stable:** `HushLimits`, `FluxSource`, `FluxClearSource`, the event payload records, and `HushKeys`. `HushKeys` holds the `#vftv:hushed` and `#vftv:hush_immune` tag keys, the `vftv:hushed` node-type key, the `vftv:hollow` entity-type key, the `vftv:aura` attachment's id, and `FORMS`, an unmodifiable list of `HushedForm(source id, form id)` describing the hushed-form table.
-  - **`@Experimental`:** `FluxRules`, whose codec and generation stay as above.
-- In `api.neoforge`: `HushSpreadEvent` and `FluxEvent`.
-- The `vftv:aura` `AttachmentType` is **not** public: its id is published for diagnostics, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
-- Concrete forms and every service stay in `core`.
+| Needs from | What | Met at |
+|---|---|---|
+| wands | the quote computes `neutral` beside `effective`; `QuoteInputs` carries `flux.tax_pm` and `flux.void_pm` from `FluxRules`; `spill` is `visSpill`; a `FluxRules` arrival invalidates client quotes | [wands, The quote](wands.md#the-quote), [Sync and state](wands.md#sync-and-state) |
+| wands | `vftv:hushed` among the built-in node types, not natural, declared only in `content/hush/node_types.json` | [wands, Node types](wands.md#node-types) |
+| wands | `NodeService.update`'s apply boundary, after the write and before `NodeEvent(CHANGED)`, with its results | [wands, Events](wands.md#events) |
+| wands | `VisSpentEvent`'s spill equality reads "previewed = generated flux" | [wands, Contracts on sibling specs](wands.md#contracts-on-sibling-specs) |
+| arcane, crucible, essentia, infusion, golems | each spill generated once on its own event, with the equality read as generated flux | [arcane](arcane.md#contracts-on-sibling-specs), [crucible](crucible.md#the-boundary-with-flux-and-the-hush), [essentia](essentia.md#contracts-on-sibling-specs), [infusion](infusion.md#contracts-on-sibling-specs), [golems](golems.md#contracts-on-sibling-specs) |
+| crucible, essentia, infusion, golems | the `SPILLED` events and their causes; `InfusionEvent.fluxRules()`; a golem's death position | [crucible, Events](crucible.md#events), [essentia, Events](essentia.md#events), [infusion, Events](infusion.md#events), [golems, Events](golems.md#events) |
+| infusion | a run freezes `FluxRules`; the abandon arm compares its generation | [infusion, Sync and state](infusion.md#sync-and-state), [Abandoning](infusion.md#abandoning) |
+| research | the two entries under "Stage", with their parents and recipe pages | [research, Roster](research.md#roster) |
+| research | the `hush` fact source | [research, Prose and fact references](research.md#prose-and-fact-references) |
+| research | `path-stage2.json` learns `vftv:clearing_bell` right after `vftv:resonant_brass` | [research, Affordability and recovery](research.md#affordability-and-recovery) |
+| architecture | `core.flux` a leaf feature (`FLUX_LEAF`); `FLUX_ENTRY_POINTS` | [architecture, Layers](architecture.md#layers), [Enforcement](architecture.md#enforcement) |
+| warp | `WarpService.registerPlaceQuery` and `isSilenced` | [warp, Context](warp.md#context), [Joining and Silencing](warp.md#joining-and-silencing) |
+| worldgen | no feature, structure, processor, template or loot places a hushed block, `vftv:hushed` node, Hollow or aura, checked on parsed NBT | [worldgen, Templates](worldgen.md#templates) |
+| eldritch | Void work's flux only through `VisSpentEvent`; no Hush in its templates | [eldritch, The items](eldritch.md#the-items), [The template](eldritch.md#the-template) |
+| configuration | the three server switches and two client options under "Tuning and limits" | [configuration, Server keys](config.md#server-keys), [Client keys](config.md#client-keys) |
+| API | `HushLimits`, `HushKeys`, `FluxSource`, `FluxClearSource` and the payloads in `api`; `FluxRules` `@Experimental`; `HushSpreadEvent` and `FluxEvent` in `api.neoforge`; the `vftv:aura` `AttachmentType` not public | [API, The inventory](api.md#the-inventory), [Attachments and data components](api.md#attachments-and-data-components) |
+| [vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) | hand entries or exemptions for the 13 hushed blocks, `vftv:hush_ash` (Silentium and Vacuos), both bells and the Hollow; round-trip non-amplification over both recipes and the Silk Touch loop | not yet stated in any spec |
 
 ## Production tickets
 

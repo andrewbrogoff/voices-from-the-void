@@ -15,6 +15,7 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [lore](lore.md) and [progression](progression.md) specs for the Choir and what the Voices may do;
 - the [armor spec](armor.md) for the Baffle, the [foci spec](foci.md) for target rechecks around callbacks, and the [warp spec](warp.md) for context danger and phantoms;
 - the [worldgen spec](worldgen.md) for the creature-spec conventions this spec follows (frozen geometry, one predicate everywhere);
+- the [shared conventions](conventions.md) for the authored-content envelope and fixtures;
 - the [art style](art-style.md) for every asset.
 
 Resolved in [Choristers of the Road spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/69). Inputs: [TC4 world and endgame](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-endgame/docs/research/tc4-endgame.md) (§7, the bosses and the boss room), [community pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md) (§1, hostile things on top of the player; §10, the unfinished endgame).
@@ -407,7 +408,7 @@ Stage 4 register ([art style §7](art-style.md#7-sound-palette)): breath through
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, a duplicate JSON key, or an entry that fails its rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+Authored inputs follow the [authored-content envelope](conventions.md#the-envelope).
 
 ```
 content/eldritch/choristers.json          the three instances and the four damage types
@@ -419,7 +420,7 @@ content/lang/en_us/choristers.json        every key under "Lang keys"
 |---|---|---|
 | `choristers.json` | `vftv:choristers/1` | `data/vftv/vftv/chorister/<path>.json` for each instance; `data/vftv/damage_type/<path>.json` for each type, with `message_id` `vftv.<path>` and `scaling` `always` written by datagen; the four types in `data/minecraft/tags/damage_type/no_knockback.json` (`"replace": false`) |
 | `chorister_fixtures.json` | `vftv:chorister_fixtures/1` | nothing: read by the unit tests |
-| `lang/<lang>/choristers.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |
+| `lang/<lang>/choristers.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` ([conventions, Lang](conventions.md#lang)) |
 
 ### The registry
 
@@ -511,7 +512,7 @@ No other field is allowed on a type: `lock` and `shield_seconds` only on `strike
 
 ### Fixtures
 
-`{"schema": "vftv:chorister_fixtures/1", …}` with **every section required**. Together they transcribe every vector in this spec exactly, and the reference prints them (`python3 -I choristers_ref.py --fixtures`).
+`{"schema": "vftv:chorister_fixtures/1", …}`, under the [fixtures convention](conventions.md#fixtures); the reference prints it (`python3 -I choristers_ref.py --fixtures`).
 
 | Section | Record |
 |---|---|
@@ -675,11 +676,11 @@ Decimals compare to 6 places. **The complete file:**
   {"game_time": 1006, "expect": {"t": 4, "origin_time": 1002, "client_t": 4}}]}
 ```
 
-**Rejected:** a section missing; an unknown field; a value outside its range; a row of a vector table missing or altered; a `schedule` or `waves` instance not in `choristers.json`; a `live_at` or `slots` naming no `waves` record.
+**Rejected,** beyond the convention: a `schedule` or `waves` instance not in `choristers.json`; a `live_at` or `slots` naming no `waves` record.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders, and **the text shown is the shipped text**.
+[Lang files](conventions.md#lang); every key below is required in `en_us`, and **the text shown is the shipped text**.
 
 | Key | Args | Text |
 |---|---|---|
@@ -706,7 +707,7 @@ Decimals compare to 6 places. **The complete file:**
 - **The names** are the lexicon's words, each with `"name"` among its `uses` already, capitalised as proper names and linted for membership and phonology ([warp, The lexicon](warp.md#the-lexicon)). The lexicon is unchanged.
 - **No `.player` variants:** every hit has a causing entity, so vanilla never asks for them.
 
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key; a Void-tongue name failing the lint.
+**Rejected:** a Void-tongue name failing the lint.
 
 ## Events
 
@@ -810,65 +811,18 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Eldritch tier spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)'s contracts under ["The split"](eldritch.md#the-split)):
-
-| Eldritch contract | Met by |
-|---|---|
-| allowed in peaceful | "The entity type": no `notInPeaceful` (`MC:Mob.java:715–718`) |
-| built with `noSave()` | "The entity type" |
-| persistence-required while it lives | "The entity type": `requiresCustomPersistence`; `setPersistenceRequired` at creation |
-| knockback resistance 1.0 | "Attributes", with explosion knockback resistance 1.0 too |
-| changes no blocks | "The entity type": no goals, a set position, no block interaction |
-| summons nothing | "The entity type"; "Particles": vanilla dust and sounds only |
-| never heals | "The entity type": `heal` does nothing, beneficial effects refused, absorption 0 |
-| never invulnerable | **no invulnerable phase** ("Fairness limits"); damage caused by a non-creative player who isn't an eligible participant now is refused ("Who can hurt it"), worded in the frame (amended) |
-| draws no randomness | "The schedule": no decision reads a random source; no `finalizeSpawn`; fixed pitch. Vanilla's ambient roll on the entity's own `random` disclosed (`MC:Mob.java:296`) |
-| every move's damage type difficulty-scaled, zero in peaceful | "Damage types and difficulty": `always`; `Player.java:723,739` |
-| outside `#minecraft:bypasses_armor` and `#vftv:baffle_ignores` | "Damage types and difficulty": outside every `bypasses_*` tag too, inside `no_knockback`, checked at open and at every tag bind |
-| every move telegraphed | "Fairness limits" (windup ≥ 20, lock ≥ 16); "Marks" on the floor's top and on raised surfaces; "Poses"; "Sound" with subtitles; body and head drawn from the facing |
-| targets only `targetFor`, every tick | "Each tick, in order", step 4; "Targets and hits" |
-| returns to its rise cell below the floor − 8 or outside the arena | "The choir walk": the leash |
-| its box fits the rise box at every instance's scale | "Attributes": `scale` ≤ 1.4, vectors |
-| its maximum health accepts the entry health (≤ 1024) | "Attributes" (`Attributes.java:68–69`) |
-| calls `onConfirmedDeath` exactly so; nothing else reports | "Created, owned and reported" |
-| 0.04 / 0.13 ms server, 0.04 client, own workload, hot paths, allocation budgets | "Performance" |
-| size, attributes, AI goals and movement in the arena | "The entity type", "Attributes", "The choir walk" |
-| each move's windup, recovery, cadence, reach, area, damage and damage type | "The moves", "The schedule", "Damage" |
-| the three instances of the synced registry, its schema; `health` 1–1000 | "Authored content, The registry" |
-| rendering, poses, particles, sound, its own assets and content | "Rendering and sound"; "Production tickets" |
-| fixtures for every move; its own performance share | "Authored content, Fixtures"; "Performance" |
-| the completion interface (`ChoristerFactory.create`, `targetFor`, `isParticipant`, `arena`) | "Created, owned and reported"; "Targets and hits" (with `isEligibleParticipant` and `eligibleParticipants`, amended); "The choir walk" |
-| never saved; the slot resets on removal | "Created, owned and reported" |
-| the encounters' particles are this spec's | "Particles" |
-| the Choristers' names from the lexicon | "Lang keys" |
-
-**Met here** (other specs):
-- [Armor](https://github.com/andrewbrogoff/voices-from-the-void/issues/24): the Baffle absorbs Chorister damage after armour; none of the types is in `#vftv:baffle_ignores`.
-- [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22): its target rechecks around callbacks, and its record-before-callback bookkeeping for wave attempts; the Joined amplifier untouched.
-- [Warp](https://github.com/andrewbrogoff/voices-from-the-void/issues/25): no warp; context danger (`pressing_dark`, Slowness only) stays active, and the dodge margins assume its Slowness.
-- [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26): Silencing exempts nothing here; no Hush source is added.
-- [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27): one predicate everywhere, applied to incoming player damage too; the apparition and Answerer line-up.
-- [Art style](art-style.md) and [quality gates](quality-gates.md): the Stage 4 row, the palette and the sound chain with 3 variants for every frequent sound; three test layers, allocation budgets and a share.
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)** (amended in this change)
-- **A1, the completion interface:** `Encounter.isEligibleParticipant(player)`, admitted **and** eligible now, the one predicate for the target, credit, every hit and incoming player damage; and `int Encounter.eligibleParticipants(int[] out)`, which fills an array of capacity at least `MAX_PARTICIPANTS` with those players' entity ids, ascending, and returns the count (≤ 16): a pure read with zero allocation.
-- **A2, the contract "is never invulnerable"** becomes "**has no invulnerable phase**: it takes damage at every tick from every source, except damage caused by a player (directly or through a projectile they own) who isn't in creative mode and fails `isEligibleParticipant` at that moment".
-- **A3, the layout:** the row "**choir walk** (Steps 1–3): every cell with 81 ≤ d² ≤ 225 at y 1–5 is air", in the template rules, the [Road and Threshold templates #70](https://github.com/andrewbrogoff/voices-from-the-void/issues/70)'s rejection rules and preview, and the datagen template test.
-- **Code placement:** the frame and the creature share the feature `core.road`, so no feature cycle.
-- **#37's handoff:** `vftv:the_road`'s prose teaches the fights' lessons.
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 4 research content #37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37): `vftv:the_road`'s prose teaches that a knell is jumped, that an inhale is fled and an exhale is met close or far, that a lock means the aim is fixed and a shield can be broken, and that only Listeners standing in the ring can hurt a Chorister. **It states no Chorister number:** there is no `chorister` fact source, so prose that needs a number is rejected by its review.
-
-**CONTEXT** gains **knell** and **choir walk**.
-
-**[Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30):** the `vftv:chorister` entity's values or reviewed exemption, already handed off by the Eldritch tier; nothing new.
-
-**API**
-- In `api`: `ChoristerLimits` and the marker interface `Chorister`, the registry's element type. The registry and instance keys stay in `EldritchKeys`. The entry record and its move records live in `core.road`, behind the marker ([API spec, Registry element types](api.md#registry-element-types)).
-- The registry is **override-only** for packs, as "The registry" says; its JSON, move types included, is a public data format.
-- No event of ours, and no public service.
+| Needs from | What | Met at |
+|---|---|---|
+| eldritch | the completion interface: `ChoristerFactory.create`, `targetFor`, `isParticipant`, `arena`, `isEligibleParticipant`, `eligibleParticipants` and `onConfirmedDeath`; "has no invulnerable phase" as worded here | [eldritch, The split](eldritch.md#the-split) |
+| eldritch | the rise cell and box, the arena and the **choir walk** row (81 ≤ d² ≤ 225, y 1–5, air at Steps 1–3), with the templates rejecting a blocked walk | [eldritch, The layout](eldritch.md#the-layout), [Templates](eldritch.md#templates) |
+| eldritch | entry health, admission, threat, reset and every other encounter number; `RoadEncounterEvent` | [eldritch, Encounters](eldritch.md#encounters), [Tuning and limits](eldritch.md#tuning-and-limits), [Events](eldritch.md#events) |
+| eldritch | the frame and the creature in the one feature `core.road` | [eldritch, Events](eldritch.md#events) |
+| research (#37) | `vftv:the_road`'s prose teaches that a knell is jumped, an inhale fled and an exhale met close or far, that a lock fixes the aim and a strike can break a shield, and that only Listeners in the ring can hurt a Chorister, **stating no Chorister number** (there is no `chorister` fact source) | [research, Production tickets](research.md#production-tickets) |
+| warp | context danger stays Slowness only, which the dodge margins assume | [warp, Danger](warp.md#danger) |
+| armor | the Baffle absorbs Chorister damage after armour, outside `#vftv:baffle_ignores` | [armor, Absorbing](armor.md#absorbing) |
+| API | `ChoristerLimits` and the marker `Chorister` in `api`; the registry and instance keys in `EldritchKeys` | [API, Registry element types](api.md#registry-element-types), [The inventory](api.md#the-inventory) |
+| [`CONTEXT.md`](../../CONTEXT.md) | the terms **knell** and **choir walk** | `CONTEXT.md` |
+| [vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) | the `vftv:chorister` entity's values or a reviewed exemption | not yet stated in any spec |
 
 ## Production tickets
 

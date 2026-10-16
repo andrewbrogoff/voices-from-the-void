@@ -12,8 +12,9 @@ Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [architecture spec](architecture.md) for the code layout, the data and sync rules and the seams;
 - the [quality gates](quality-gates.md) for every gate;
 - the [lore](lore.md) and [progression](progression.md) specs for the Choir, the Answerers and the Stage rule;
-- the [research spec](research.md) for Stage openers, Choir pages, affordability paths, `mix64` and `fold`;
-- the [wands spec](wands.md) for the node block, node state, minting and the natural spread's stream;
+- the [shared conventions](conventions.md) for raw-record retention, operation guards, hashing, streams and authored content;
+- the [research spec](research.md) for Stage openers, Choir pages and affordability paths;
+- the [wands spec](wands.md) for the node block, node state and minting;
 - the [warp spec](warp.md) for the place query and its danger rules;
 - the [Hush spec](hush.md) for the player-caused guarantee;
 - the [art style](art-style.md) for every asset.
@@ -59,7 +60,7 @@ Resolved in [Worldgen and mobs spec](https://github.com/andrewbrogoff/voices-fro
   - It mirrors Stage 1's geode ("vanilla amethyst already chimes"), so natural philosophy keeps its register until the Choir appears in Stage 3.
   - Obtaining it is the find, as with the shard. So it is per player, can't be griefed, and works with only NeoForge installed.
 - **Where:** pointed dripstone generates in dripstone caves (`MC:BiomeDefaultFeatures.java:41–45`, `OverworldBiomes.java:927`). The book teaches **exploring caves** for it. Wandering traders also sell it in their common pool (`MC:data/minecraft/tags/villager_trade/wandering_trader/common.json:69`). That is an alternative, not a promised wait or a guaranteed trade.
-- **The affordability source** for the end of Stage 1's path is under "Contracts on sibling specs".
+- **The affordability source** for the end of Stage 1's path is in [research, Affordability paths](research.md#affordability-paths).
 - **Options considered:**
 
   | Option | Why not |
@@ -74,7 +75,7 @@ Resolved in [Worldgen and mobs spec](https://github.com/andrewbrogoff/voices-fro
 **`vftv:find/ruins`:** `inventory_changed` with `vftv:choir_page`.
 
 - Pages come only from Reliquaries ("The Reliquary") or from another player's hand ("obtaining counts as finding", [research, Stage](research.md#stage)). The find is earned at a ruin's heart, past its Answerers. It can't be griefed, and it needs no polling, no structure lookup and no location trigger.
-- **Acquisition and tip-in are separate.** Holding a page latches the Stage 3 opener's find, which can happen in Stage 2. Tipping a page in is the research spec's act and needs Stage 3 ([research, Choir pages](research.md#choir-pages)). So Stage 2's path ends by acquiring a page, and Stage 3's path tips it in ("Contracts on sibling specs").
+- **Acquisition and tip-in are separate.** Holding a page latches the Stage 3 opener's find, which can happen in Stage 2. Tipping a page in is the research spec's act and needs Stage 3 ([research, Choir pages](research.md#choir-pages)). So Stage 2's path ends by acquiring a page, and Stage 3's path tips it in ([research, Affordability paths](research.md#affordability-paths)).
 - **Options considered:** entering a ruin through vanilla's `location` predicate with `structures`. **Why not:** it calls `StructureManager.getStructureWithPieceAt` (`MC:advancements/predicates/LocationPredicate.java:56`) every 20 ticks per player (`MC:server/level/ServerPlayer.java:758–759`), the non-loaded-only path the [warp spec](warp.md#context) rejects. A code criterion polling "The Choir-site place query" was also considered. **Why not:** it is code and polling, for a find the page already gives.
 
 ### The Answerers' find
@@ -112,7 +113,7 @@ is `vftv:find/answerers`.
 - **No infusion craft criterion:** every criterion is `inventory_changed` or `player_killed_entity`, asserted by a datagen test ([infusion spec, Contracts](infusion.md#contracts-on-sibling-specs)).
 - **No opener cycle:**
   - Structurally: no advancement has a parent, and every criterion names an ungated vanilla trigger over an ungated item or entity.
-  - Behaviourally: the research spec's affordability replay acquires each find from its published source in the Stage before ("Contracts on sibling specs") and must end with the next opener latched.
+  - Behaviourally: the research spec's affordability replay acquires each find from its published source in the Stage before ([research, Affordability paths](research.md#affordability-paths)) and must end with the next opener latched.
 
 ## Choir ruins
 
@@ -145,6 +146,7 @@ is `vftv:find/answerers`.
 - **Vanilla's algorithm** (`MC:levelgen/structure/placement/RandomSpreadStructurePlacement.java:62–71`, `MC:levelgen/WorldgenRandom.java:66–69`, `LegacyRandomSource.java`, `BitRandomSource.java:17–34`): region `(rx, rz) = (floorDiv(cx, 36), floorDiv(cz, 36))`. The seed is `rx·341873128712 + rz·132897987541 + worldSeed + salt` (wrapping `long`). Two `nextInt(22)` draws give the offsets in x then z, and the start is `(36·rx + ox, 36·rz + oz)`. A start is kept only if the start's surface biome is in the tag.
 - **Separation by construction:** starts of distinct regions are at least `separation + 1` = **15** chunks apart by Chebyshev distance. The reference's minimum over 6,400 regions is 15. So ruins never overlap.
 - **The salt is fixed in content and never tuned:** changing it moves every ruin in unexplored land. `spacing` and `separation` are content (`choir_ruin.json`); the separation proofs below hold for the shipped values.
+- **No config option.** A pack disables ruins by overriding the structure set (for example `frequency` 0.0). Peaceful keeps the defenders and makes them harmless ("Placement and persistence").
 - **Rarity:** one start attempt per 576×576 blocks, kept on land only. This is a hypothesis, measured by the pregeneration scenario under "Performance", not a promise. `/locate structure vftv:choir_ruin` works natively.
 - **Findability** (TC4's cult portals were hard to find, TE §7): every chancel has a broken bell tower whose top is at least 20 blocks above its floor, visible over the treeline.
 
@@ -263,15 +265,14 @@ A successful roll replaces the clarity and the maxes and currents. **Every fallb
 **The roll.** It is pure and keyed by position, and it touches no level state on worldgen threads.
 
 ```
-h = fold([0x43484F52 ("CHOR"), worldSeed, BlockPos.asLong(target)])        // the research spec's fold and mix64
-stream: s = h;  next() = { s = s + 0x9E3779B97F4A7C15L; return mix64(s) }   // the wands spec's stream
-clarity = weighted(next(), [faint, steady, clear])                          // the wands spec's weighted
-for each aspect of the type, ascending id:  max = bounded(next(), min, max) // the wands spec's bounded
+h = fold([CHOR, worldSeed, BlockPos.asLong(target)])
+clarity = weighted(next(), [faint, steady, clear])                          // next() of stream(h)
+for each aspect of the type, ascending id:  max = bounded(next(), min, max)
 ```
 
-- **`worldSeed`** comes from `WorldGenLevel#getSeed()` (`MC:world/level/WorldGenLevel.java`). During generation the level is a `WorldGenRegion`; under `/place` it is the `ServerLevel`, and both implement it. A level that doesn't is never seen in practice. It keeps the complete template record unrolled, logged once.
-- **A missing type** (removed by a pack): the complete template record is kept unrolled, logged once, and the node is dormant under the wands spec's pack rules.
-- **`BlockPos.asLong`** packs x in 26 bits at offset 38, z in 26 bits at offset 12 and y in 12 bits at offset 0 (`MC:core/BlockPos.java:48–55,110–114`).
+`fold`, the words, `stream`, `bounded` and `weighted` are the [conventions'](conventions.md#streams); `CHOR` is in its [salt table](conventions.md#salts).
+- **`worldSeed`:** during generation the level is a `WorldGenRegion`; under `/place` it is the `ServerLevel`, and both implement `WorldGenLevel#getSeed()`. A level that doesn't is never seen in practice. It keeps the complete template record unrolled, logged once.
+- **A missing type** (removed by a pack): the complete template record is kept unrolled, logged once, and the node is [inert](conventions.md#missing-ids-are-inert-not-unreadable).
 - **Draws:** one clarity draw and one per aspect, so at most 7 for the 6-aspect maximum.
 
 **Vectors** (seed `0x0123456789ABCDEF`, type `vftv:choir` as shipped):
@@ -341,7 +342,7 @@ A **server-only datapack registry, `vftv:choir_site`** (`data/<ns>/vftv/choir_si
 | `pages` | yes | 1–64 distinct entry ids | the pages this kind gives, in the order it gives them |
 | `pages_per_claim` | yes | 1–8 | how many a player's first claim at one site takes |
 
-- **The required built-in key** (`WorldgenKeys` in `api`) is `vftv:choir_ruin`. Its `pages` are every Stage 3 entry in `vftv:choir_pages`, with **`vftv:choir/beneath_the_notes` first** and the rest in the narrative order the [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) freezes. `pages_per_claim` is **6**, so two ruins hold every Stage 3 page and the Stage 3 path reaches every commit from at most two batches ("Contracts on sibling specs").
+- **The required built-in key** (`WorldgenKeys` in `api`) is `vftv:choir_ruin`. Its `pages` are every Stage 3 entry in `vftv:choir_pages`, with **`vftv:choir/beneath_the_notes` first** and the rest in the narrative order the [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) freezes. `pages_per_claim` is **6**, so two ruins hold every Stage 3 page and the Stage 3 path reaches every commit from at most two batches ([research, Affordability paths](research.md#affordability-paths)).
 - **Load validation**, after the research registry. It refuses the world with a clear error naming the entry on: an id that isn't a `find` entry in `vftv:choir_pages`; a duplicate id; a range broken; the built-in key missing.
   - **For the built-in `vftv:choir_ruin` only** (a test failure): a page outside Stage 3; `beneath_the_notes` not first; a Stage 3 Choir page missing.
 - #28 adds its own kinds for Stage 4 pages, `vftv:threshold` and `vftv:road`, under its [own rules](eldritch.md#sites); the rules above that aren't scoped to `vftv:choir_ruin` apply to them too.
@@ -360,7 +361,7 @@ A **server-only datapack registry, `vftv:choir_site`** (`data/<ns>/vftv/choir_si
 - **No eviction, ever.**
 - **Keyed by the Reliquary's position,** not the structure, so a claim survives the ruin being mined, the block being removed by an operator, and the chunk being regenerated.
 - **Unknown page ids** (a pack removed the entry) are **kept** in the record and filtered out of every offer, so a page restored by a pack is still claimed. No blank or unknown page is ever handed out.
-- **Raw retention:** an unreadable record keeps its raw tag and is written back unchanged, with one warning; the player's Reliquary uses then refuse (row 3 below). Unreadable means an unknown or future format, a duplicate key, a bound broken or an id that doesn't parse.
+- **Unreadable records** follow [conventions](conventions.md#raw-record-retention); the player's Reliquary uses then refuse (row 2 below).
 - **Saving:** the attachment is part of the player's saved data, written with it at every player save. There is no separate dirty mark for player attachments.
 - **The "claimed anywhere" set** is the union of a player's claimed pages. It lives in memory per online player, built at login in O(sites × 8) and kept in step with every claim.
 
@@ -368,12 +369,12 @@ A **server-only datapack registry, `vftv:choir_site`** (`data/<ns>/vftv/choir_si
 
 Any hand, not a spectator. Vanilla's `useItemOn` checks and NeoForge's `PlayerInteractEvent.RightClickBlock` come first, so spawn protection and claim mods govern it ([wands, Creation, removal and sharing](wands.md#creation-removal-and-sharing) states the same for nodes). Then **the first matching row** decides. `R` is the claimed pages at this site that exist in the research registry and that the player has neither latched nor learned (`isLatchedOrLearned`, the research spec amended):
 
-| # | Outcome | Case | Message (`reliquary.vftv.*`) | Effect |
+| # | Outcome | Case | Message (`.x` is `reliquary.vftv.x`) | Effect |
 |---|---|---|---|---|
-| 0 | `busy` | the player's operation guard is held (re-entry from a callback during a hand-out) | none | none |
-| 1 | `attempt_cap` | the player has already made `MAX_USES_PER_PLAYER_PER_TICK` (1) attempts this tick; counted before anything below | none | none |
-| 2 | `silent` | the block entity's record is unreadable, or its `site` resolves to no `vftv:choir_site` | `.silent` | none; logged once per block |
-| 3 | `unreadable` | the player's `vftv:choir_claims` is unreadable | `.unreadable` | none; logged once per player |
+| 0 | `busy` | the player's Reliquary guard is held (re-entry from a callback during a hand-out) | `message.vftv.busy` ([re-entry](conventions.md#re-entry)) | none |
+| 1 | `attempt_cap` | the player has already made `MAX_USES_PER_PLAYER_PER_TICK` (1) attempts this tick; counted before anything below | none (a rate cap) | none |
+| 2 | `unreadable` | the block entity's record, or the player's `vftv:choir_claims`, is unreadable | `message.vftv.unreadable` | none ([conventions](conventions.md#raw-record-retention)) |
+| 3 | `silent` | the block entity's `site` resolves to no `vftv:choir_site` ([inert](conventions.md#missing-ids-are-inert-not-unreadable)) | `.silent` | none; logged once per block |
 | 4 | `done` | the player has a claim at this position and `R` is empty | `.done` | none |
 | 5 | `reissued` | the player has a claim at this position and `R` is not empty | `.reissued` | hand out `R` |
 | 6 | `all_held` | no claim here; `B` (the first `pages_per_claim` pages of the site's `pages` that exist in the registry and that the player has neither latched nor learned **nor claimed at any site**) is empty | `.all_held` | **nothing recorded**, so a page a pack adds later can still be given |
@@ -417,11 +418,11 @@ Any hand, not a spectator. Vanilla's `useItemOn` checks and NeoForge's `PlayerIn
 
 ### Handing out
 
-Under the player's **operation guard**. It is taken right after rows 0 and 1 pass, held across the whole decision (rows 2–8) and every callback below, and released on **every** exit, a thrown exception included:
+Under the player's **Reliquary guard** ([conventions, Operation guards](conventions.md#operation-guards)), taken right after rows 0 and 1 pass and held across the whole decision (rows 2–8) and every callback below:
 
 1. **The claim is written first** (row 8 only).
 2. For each id, in order: a `vftv:choir_page` stack with the `vftv:page` component. `Inventory.add`; any remainder goes to `Player.drop(stack, false)` (`MC:world/entity/player/Player.java:597–599`), which posts the cancellable `ItemTossEvent` before the item enters the world (`NF:common/CommonHooks.java:446–460`). A cancelled or failed drop loses that copy; the claim stands, and row 5 gives it back at the next use.
-3. **An exception** from a callback is caught and logged once. The claim stands, and the remaining items are still attempted.
+3. **An exception** from a callback is logged once; the claim stands, and the remaining items are still attempted.
 4. The `reliquary.give` sound, then the message, which goes to the [status line](accessibility.md#r5-the-status-line).
 
 **The recovery promise, narrowly:**
@@ -599,7 +600,7 @@ v1 has no integration with a named claim mod ([compatibility, Claim mods](compat
 | `vftv:reliquary.give` | 2 | rows 5 and 8 | at the block; `SoundSource.BLOCKS`, volume 1.0 |
 | `vftv:reliquary.empty` | 1 | rows 2, 3, 4, 6 and 7 | at the block; `BLOCKS`, volume 0.6 |
 
-The Cantor shares the Answerer's ambient, hurt and death sounds. Rows 0 and 1 are silent.
+The Cantor shares the Answerer's ambient, hurt and death sounds. Rows 0 and 1 play no sound.
 
 **Files:** `assets/vftv/sounds/answerer/mutter_0` … `mutter_2`, `hurt_0` … `hurt_2`, `death_0`, `death_1`; `cantor/chant_0` … `chant_2`; `reliquary/give_0`, `give_1`, `empty`.
 - The variant is vanilla's uniform choice among a `sounds.json` entry's files; entries carry no volume or pitch overrides and name `subtitles.vftv.<event>`.
@@ -608,7 +609,7 @@ The Cantor shares the Answerer's ambient, hurt and death sounds. Rows 0 and 1 ar
 
 ## Authored content
 
-The content ticket delivers authored inputs under `content/`, following the research spec's [authored-content conventions](research.md#authored-content): CC-BY-4.0 data, read by future datagen. Every file is one JSON object with a `"schema"` string. Datagen rejects an unknown schema, an unknown or missing required field, a wrong type, a value out of range, a duplicate JSON key, or an entry that fails its rules. **Validators and datagen are build-phase acceptance criteria, not production deliverables.**
+The envelope, the common rejections, fixtures and lang follow [conventions, Authored content](conventions.md#authored-content). Each "Rejected:" below lists only what that schema adds.
 
 ```
 content/worldgen/templates/<name>.json   the eight templates (the templates ticket)
@@ -628,7 +629,7 @@ content/lang/en_us/worldgen.json         every key under "Lang keys"
 | `node_types.json` | the wands spec's `vftv:node_types/1` | `data/vftv/vftv/node_type/choir.json`; datagen merges node-type files and rejects an id declared twice |
 | `loot.json` | `vftv:worldgen_loot/1` | `data/vftv/loot_table/chests/choir_ruin.json`, `…/entities/answerer.json`, `…/entities/answerer_cantor.json` |
 | `fixtures.json` | `vftv:worldgen_fixtures/1` | nothing: read by the unit tests |
-| `lang/<lang>/worldgen.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json`; a duplicate key across `content/lang` fails datagen |
+| `lang/<lang>/worldgen.json` | `vftv:lang/1` | merged into `assets/vftv/lang/<lang>.json` |
 
 The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering`, the fixed structure fields and the tuning file `data/vftv/tuning/worldgen.json` (from the record's defaults) are written by datagen from code. They are not authored content.
 
@@ -647,7 +648,7 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 | `entities` | no, default `[]` | `{"pos": [x, y, z], "type": "vftv:answerer" \| "vftv:answerer_cantor"}`, ints inside `size`, positions unique. `pos` is the **standing cell** the entity occupies; the converter writes its feet at `(x + 0.5, y, z + 0.5)` (the template's entity position) and its block position `(x, y, z)`. So the standing-cell check and the placed entity describe the same space. |
 
 **Rejected** (in the `choir_ruin` family; the format, namespace, Hush and attachment rules in every family):
-- **Format:** an unknown or missing field; a layer, row or string of the wrong length; a character not in the palette; a block state that doesn't parse or omits or adds a property.
+- **Format:** a layer, row or string of the wrong length; a character not in the palette; a block state that doesn't parse or omits or adds a property.
 - **Block entities:** one on a block of another kind, or a block that needs one without it (`minecraft:jigsaw`, `minecraft:chest`, `vftv:reliquary`, `vftv:node`); a jigsaw whose fields differ from its connector's row, or whose position or facing differs from its role's.
 - **Blocks and namespaces:** any namespace other than `minecraft` and `vftv`; `minecraft:structure_block`, any container other than a chest, any spawner or vault; any `vftv:` block other than `vftv:reliquary` and `vftv:node`.
 - **Hush and attachments:** any block in `#vftv:hushed`; a node of type `vftv:hushed`; any entity outside the two types; the key `neoforge:attachments` anywhere.
@@ -682,7 +683,7 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 | `biomes.include` | yes | vanilla biome ids |
 | `biomes.exclude` | yes | map of vanilla biome id to a one-line reason |
 
-**Rejected:** a field out of range; an element missing or extra in a pool; a biome id outside vanilla's `#minecraft:is_overworld`; a biome in both lists; **any of `#minecraft:is_overworld`'s 55 biomes in neither**. The shipped file:
+**Rejected:** an element missing or extra in a pool; a biome id outside vanilla's `#minecraft:is_overworld`; a biome in both lists; **any of `#minecraft:is_overworld`'s 55 biomes in neither**. The shipped file:
 
 ```json
 {"schema": "vftv:choir_ruin/1",
@@ -738,8 +739,7 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 
 **Rejected:**
 - any item outside the `minecraft` namespace (the `vftv:` allowance is empty in v1);
-- explicitly: `vftv:choir_page`, `vftv:hush_ash` and every item of a `#vftv:hushed` block;
-- a body vanilla's codec rejects.
+- explicitly: `vftv:choir_page`, `vftv:hush_ash` and every item of a `#vftv:hushed` block.
 
 A sketch:
 
@@ -761,7 +761,7 @@ A sketch:
 
 ### Fixtures
 
-`{"schema": "vftv:worldgen_fixtures/1", "placement": [...], "roll": [...], "offers": [...]}`. **All three sections are required.** Together they transcribe every vector table in this spec exactly, one row per vector. The unit tests replay them against the code; that consumer is build work. Every field is required unless a default is given.
+`{"schema": "vftv:worldgen_fixtures/1", "placement": [...], "roll": [...], "offers": [...]}`, under the [fixtures convention](conventions.md#fixtures). Every field is required unless a default is given.
 
 **Types:** *int* is a JSON integer; *hex* is a string `"0x"` followed by 1–16 uppercase hex digits, read as a 64-bit word.
 
@@ -828,11 +828,11 @@ A sketch:
     {"use": {"tick": 2, "player": "D", "site": "R3"}, "expect": {"outcome": "all_held"}}]}]}
 ```
 
-**Rejected:** a section missing; an unknown field; a conditional field present when its condition is false, or absent when true; a value outside its type or range; a row of a vector table missing or altered; ticks that decrease. The file above is the one the content ticket ships, so it passes every rule. The fixtures model arithmetic and offer selection only; the guard, callbacks, persistence and generation are proved by the GameTests.
+**Rejected:** ticks that decrease. The file above is the one the content ticket ships. The fixtures model arithmetic and offer selection only; the guard, callbacks, persistence and generation are proved by the GameTests.
 
 ### Lang keys
 
-`{"schema": "vftv:lang/1", "strings": {<key>: <text>}}`. Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders. The English is the intended sense; the content ticket writes the final text, and its review applies the research spec's number-word lint.
+Every key below is required in `en_us`, with exactly the listed number of `%s` placeholders, under the [lang pipeline](accessibility.md#the-lang-pipeline). The English is the intended sense; the content ticket writes the final text. `message.vftv.busy` and `message.vftv.unreadable` are the [shared keys](conventions.md#message-keys), not declared here.
 
 | Key | Args | Sense |
 |---|---|---|
@@ -840,7 +840,6 @@ A sketch:
 | `entity.vftv.answerer`, `entity.vftv.answerer_cantor` | 0 | "Answerer", "Cantor" |
 | `node_type.vftv.choir` | 0 | "Choir" |
 | `reliquary.vftv.silent` | 0 | "The reliquary is silent." |
-| `reliquary.vftv.unreadable` | 0 | "My notes of these places won't come clear." |
 | `reliquary.vftv.done` | 0 | "I have taken all that this reliquary holds for me." |
 | `reliquary.vftv.reissued` | 0 | "It gives back what I lost." |
 | `reliquary.vftv.all_held` | 0 | "I already hold every page these ruins keep." |
@@ -848,7 +847,7 @@ A sketch:
 | `reliquary.vftv.given` | 0 | "The reliquary yields its pages." |
 | `subtitles.vftv.<event>` for every sound event above | 0 | "Answerer mutters", "Answerer hurts", "Answerer dies", "Cantor chants", "Reliquary gives pages", "Reliquary is still" |
 
-**Rejected:** a key outside the table; a required key missing in `en_us`; a placeholder count that differs; an empty string; a duplicate key, including any other spec's key redeclared here.
+**Rejected:** a key outside the table.
 
 ## Events
 
@@ -859,7 +858,9 @@ A sketch:
 
 No sibling needs more.
 
-**Plain `core` services:** `ChoirSitePlaceQuery` (`core.worldgen`, registered with `core.warp`); `ReliquaryService.use(player, pos)` (server only). They are **internal in v1** ([API spec, Services](api.md#services)).
+**Plain `core` services:** `ChoirSitePlaceQuery` (`core.worldgen`, registered with `core.warp`); `ReliquaryService.use(player, pos)` (server only). They are **internal in v1** ([API spec, Services](api.md#services)), as are the models and codecs.
+
+**In `api`:** the marker interface `ChoirSite` (the registry is server-only); `WorldgenKeys` (the `vftv:choir_site` registry key, the `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering` tag keys, the `vftv:choir_ruin` structure and site keys, the `vftv:choir` node-type key and the `vftv:choir_claims` attachment's id); and `WorldgenLimits` ("Tuning and limits"). The `vftv:choir_claims` `AttachmentType` itself is **not** public: its id is published, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
 
 ## Sync and state
 
@@ -879,10 +880,10 @@ No sibling needs more.
 - **The Reliquary's record:**
   - **The owned record** is the block entity's saved tag **minus vanilla's own keys** (`id`, `x`, `y`, `z`, and the components NeoForge and vanilla write for every block entity). Only the owned keys decide what follows.
   - **Absent or empty owned record** (a genuinely data-free placement: a creative player, or `/setblock` without data): it initializes to `{format 1, site vftv:choir_ruin}` on its first server load and calls `setChanged()`. This is the only path that initializes.
-  - **Any non-empty owned record that isn't a readable format-1 record is kept raw**, written back unchanged, and is silent (row 2) with one warning. That covers a missing `format` (for example `{site: "pack:road"}`), a missing `site`, a value of the wrong type, an unknown or future format, a broken bound, or a `site` that doesn't parse. It never becomes a built-in site.
-  - A parseable `site` naming no kind is kept as written and is silent too, so restoring the pack restores it.
+  - **Any other owned record that isn't a readable format-1 record is unreadable** ([conventions](conventions.md#raw-record-retention); row 2), a missing `format` (for example `{site: "pack:road"}`) or a missing `site` included. It never becomes a built-in site.
+  - A parseable `site` naming no kind is inert (row 3), so restoring the pack restores it.
 - **Saving:** the Reliquary marks `setChanged()` on initialization. Claims save with the player. Nothing else of ours persists.
-- **Bounded codecs:** the claims record under "Claims"; the block entity's `site` ≤ 256 characters. Out of bounds is rejected at decode, and the record then stays raw.
+- **Bounds:** the claims record under "Claims"; the block entity's `site` ≤ 256 characters.
 
 **Reloads:**
 
@@ -988,7 +989,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **Unit (`model` tier and codecs):**
 - **every vector** in this spec, replayed from `content/worldgen/fixtures.json`. The placement rows run through vanilla's own `RandomSpreadStructurePlacement#getPotentialStructureChunk`; the roll and the offer rows through ours;
 - **the offer function:** every row of "Using it", including unknown pages filtered while their claims are kept, `all_held` recording nothing, and the attempt cap;
-- **codecs:** the claims record (bounds, defaults, unknown and future formats kept raw, duplicate keys refused, unknown ids kept), the Reliquary record (fresh initialization against raw retention), the site registry entry, the tuning file and every `content/` schema;
+- **codecs:** the claims record (the [raw retention template](conventions.md#tests), defaults, unknown page ids kept), the Reliquary record (fresh initialization against raw retention), the site registry entry, the tuning file and every `content/` schema;
 - **every `content/` rejection rule:** templates (each listed rule, including role counts, footing, paths, connectors and namespaces), `choir_ruin.json` (including the 55-biome coverage), `sites.json`, `node_types.json`, `loot.json` and the fixtures;
 - the Answerers' stats;
 - the place query's allocation budget.
@@ -1005,16 +1006,16 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
   - every row of "Using it" with real players;
   - **reissue at once** after the page is tossed, after a full inventory dropped it, and after a cancelled `ItemTossEvent`;
   - a throwing insertion callback (the claim kept, the rest still attempted);
-  - **re-entry:** a callback that uses the Reliquary again is refused `busy`;
+  - **re-entry** ([template](conventions.md#tests)): a callback that uses the Reliquary again is refused `busy` with `message.vftv.busy`;
   - **two uses in one tick:** the second is `attempt_cap` and scans nothing;
-  - claims through save, reload and death; a dormant claims record (raw kept, row 3);
-  - **the Reliquary record, case by case:** a genuinely data-free `/setblock` initializes to `vftv:choir_ruin`. Each of these stays raw, silent (row 2) and byte-identical through save and reload, never initialized over: a missing `format` (`{site: "pack:road"}`), a missing `site`, a wrong-typed `site`, a future `format`;
+  - claims through save, reload and death; an unreadable claims record (row 2);
+  - **the Reliquary record, case by case:** a genuinely data-free `/setblock` initializes to `vftv:choir_ruin`. Each of these is unreadable (row 2), never initialized over: a missing `format` (`{site: "pack:road"}`), a missing `site`, a wrong-typed `site`, a future `format`;
   - a cancelled `RightClickBlock` changes nothing;
   - survival breaking, a creeper's explosion and a piston leave it in place.
 - **The structure** (`/place structure vftv:choir_ruin`, which assembles pieces without registering references):
   - assembly within the piece envelope;
   - the node minted with `origin: structure` and the rolled record of its position's vector (clarity, maxes and currents replaced; every other field as pinned);
-  - **a missing type** (the test pack removes `vftv:choir`): the placed node's record equals the pinned, unrolled template record field for field, and the node is dormant;
+  - **a missing type** (the test pack removes `vftv:choir`): the placed node's record equals the pinned, unrolled template record field for field, and the node is inert;
   - **two copies of one template get two distinct ids**;
   - **a third structure node in one cell is removed** with a warning;
   - an existing node under a template's node or block is kept (`protected_blocks`);
@@ -1061,68 +1062,24 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 ## Contracts on sibling specs
 
-Acceptance requirements those specs must meet. Each is a criterion in that ticket.
-
-**Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
-
-| Research contract | Met by |
-|---|---|
-| Ships the hidden advancements `vftv:find/distillation` and `vftv:find/ruins` at those ids, attainable with only NeoForge installed; a test proves no opener prerequisite cycle | "The advancements": vanilla triggers on vanilla dripstone and our page, no parents. The cycle test is structural (datagen) **and** behavioural: the research spec's affordability replay acquires each find from the source published below in the Stage before (the research spec amended). |
-| Per-player Choir page blocks: persistent claims once per player per page per site, no eviction, a free reissue for a claimed page neither latched nor learned; one player's claim never consumes another's | "The Reliquary": positional claims on the player, no eviction, raw retention; `reissued` free and immediate, guarded and capped at one attempt a tick; unknown pages filtered, never handed out; no shared state. GameTests: reissue after a toss, a full inventory and a cancelled drop; re-entry; dormant records. |
-| `vftv:choir/beneath_the_notes` obtainable in Stage 3 with no Stage 3 research; a GameTest has two players obtain it independently from one ruin | First in every ruin's order with no `requires`; GameTest with two connected players |
-| Publishes source identities, their prerequisites, quantities and pre-spend reachability for the Stage 2 and 3 affordability paths | The research spec's "World sources" (amended): acquisition of `vftv:find/distillation` ends Stage 1's path, acquisition of `vftv:find/ruins` ends Stage 2's, and the pages are tipped in in Stage 3's, each with its `count`, `requires` and `why`, and batch reachability from distinct ruins |
-| (Tests) the 129th claimant still gets their page | No capped history anywhere; GameTest with 129 distinct fake players |
-
-**Met here** (the [Wands, vis and nodes spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)'s contracts):
-
-| Wands contract | Met by |
-|---|---|
-| Templates save node blocks with the id unset, `origin: structure` and a valid type; ≤ 2 structure nodes per cell across every copy, surplus removed; at most one node-bearing piece per cell; GameTests for two copies and a third node | "Processors, The saved template record": the converter saves a complete node record with id 0 and `structure` (pinned for `vftv:choir`, asserted on the generated NBT), and `roll_node` replaces only the rolled fields. "Structure nodes": one authored node, only in the start piece, and the separation proof (194 > 64). GameTests for both cases. |
-| Places no natural nodes; doesn't remove `vftv:add_nodes`; processors never replace node blocks | "Stage"; "Processors": `protected_blocks` first, weathering confined to vanilla masonry, no `block_rot` or `block_age`, and `roll_node` dropping a node whose target isn't air (the wands spec's air-only rule). GameTests for an existing node under a template and an obstructed target. |
-
-**Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)): no advancement shipped for progression requires an infusion craft criterion. Every criterion is `inventory_changed` or `player_killed_entity` ("The advancements"), checked by a datagen test.
-
-**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)): a place query for Choir sites backed by vanilla's per-chunk structure references written at generation, read and never followed, loaded-only and bounded by 8 lookups ("The Choir-site place query"). v1 has no Voice spawn event, so the Answerers are never Voice spawns.
-
-**Met here** (the [Flux and the Hush spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)): no feature, structure, processor or loot places a hushed block, a `vftv:hushed` node, a Hollow or an aura. This is checked on every generated file **and** on every generated template's parsed NBT palette, block-entity and entity data, including any `neoforge:attachments` ("Templates", "Processors", "Loot"). The place query is independent of the Hush's.
-
-**Met here** (the Stage openers): the [crucible](crucible.md#stage), [essentia](essentia.md#stage), [foci](foci.md#stage), [golems](golems.md#stage), [armor](armor.md#stage), [warp](warp.md#stage), [Hush](hush.md#stage) and [infusion](infusion.md#stage) specs hang their Stage 2 and 3 content off `vftv:distillation` and `vftv:ruins`, whose finds ship here at the exact ids. That adds no placement authority.
-
-**Met here** (the [progression](progression.md#stages) and [architecture](architecture.md#soft-dependencies) specs): every Stage is opened by a find in the world, per player (a geode, dripstone, a ruin's page); nothing needs a soft dependency.
-
-**Met here** (the [lore spec](lore.md#cosmology)): the Answerers are hostile, living, faced, found at Choir sites and renamed from TC4's cult; the Choir's pages come from its ruins.
-
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with fixed limits and disclosed native terms, an allocation budget, and generation time accounted separately ("Performance").
-
-**[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 1](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [Stage 2](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Stage 3](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) research content:
-- **The query** `isLatchedOrLearned(player, entry)` beside `isLearned` and `stage`.
-- **World sources**, in the research spec's "Affordability paths":
-  - **#34:** `path-stage1.json` ends by `use` of `{"advancement": "vftv:find/distillation"}`: Distillation evidence.
-  - **#35:** `path-stage2.json` ends by `use` of `{"advancement": "vftv:find/ruins"}`: acquiring the first ruin's batch latches Ruins. The early Clearing Bell order stays as set.
-  - **#36:** `path-stage3.json` tips the pages in, through `{"choir_page": <id>, "site": "vftv:choir_ruin"}` sources, and reaches every Stage 3 commit from **at most two batches** (two ruins at `pages_per_claim` 6), `beneath_the_notes` first.
-
-  Acquisition and tip-in are one copy each, never published as two guaranteed copies.
-- **#34 and #35** are blocked by this spec. #34's hint for the Stage 2 opener points at stone that weeps into stone (dripstone caves), with traders as an aside. #35's hint for the Stage 3 opener points at bell towers over the treeline in unexplored land, and the Reliquary at their heart.
-- **#36:** the Answerers' find entry is a **leaf** (nobody's `parents` or `hidden_parents`; never a path source). #36 freezes the Stage 3 pages' **narrative order**, `beneath_the_notes` first, which the worldgen content ticket transcribes into `sites.json`.
-
-**[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change): `vftv:choir` joins the built-in node types and the global required-type and name coverage. Its entry and `node_type.vftv.choir` are excluded from the wands spec's own content files and production brief, exactly as `vftv:hushed` is. Datagen checks after merging and rejects duplicates. Minting, quotas and reconciliation are used exactly as written.
-
-**[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- It may add `vftv:choir_site` kinds, place Reliquaries for Stage 4 pages, add structures to `#vftv:choir_sites` and reuse `#vftv:answerers`. It publishes its own Stage 4 sources and reachability.
-- Its structure nodes share the wands spec's two structure places per cell with ruins, reserve nothing, and follow the rules under "Processors". Its templates meet the parsed-NBT no-Hush check, which covers every generated template.
-- It owns the progression spec's stale-dimension note.
-- *Met by the [Eldritch tier spec](eldritch.md#contracts-on-sibling-specs): the site kinds `vftv:threshold` and `vftv:road` on this spec's Reliquary, the Threshold in `#vftv:choir_sites` (amended here) defended by Answerers, and its Stage 4 sources and reachability; no node in any of its templates, so no quota is claimed; its `threshold` and `road` template families under the family scoping amended here, with the no-Hush test over every one; its "Existing worlds and removing the mod". Amended here too: the built-in site checks scoped to `vftv:choir_ruin`.*
-
-**[Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)**
-- Hand values for the entities `vftv:answerer` and `vftv:answerer_cantor`, and a block value or a reviewed exemption for `vftv:reliquary`. No new item or recipe adds a conversion to prove.
-
-**Configuration**
-- No option of ours. Peaceful keeps the defenders and makes them harmless. A pack disables ruins by overriding the structure set (for example `frequency` 0.0).
-
-**API**
-- In `api`: the marker interface `ChoirSite` (the registry is server-only), `WorldgenKeys` (the `vftv:choir_site` registry key, the `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering` tag keys, the `vftv:choir_ruin` structure and site keys, the `vftv:choir` node-type key and the `vftv:choir_claims` attachment's id) and `WorldgenLimits`.
-- The `vftv:choir_claims` `AttachmentType` is **not** public: its id is published, and direct use is unsupported ([API spec, Lifecycle and ownership](api.md#lifecycle-and-ownership)).
-- Services, models and codecs stay implementations, all internal in v1.
+| Needs from | What | Met at |
+|---|---|---|
+| research | owns the Stage 1 find `vftv:find/resonance` | [research, Stage](research.md#stage) |
+| research | the query `isLatchedOrLearned(player, entry)` | [research, Events](research.md#events) |
+| research | world sources: `path-stage1.json` ends by acquiring `vftv:find/distillation`, `path-stage2.json` by acquiring `vftv:find/ruins`, and `path-stage3.json` tips the pages in from at most two batches, one copy each; the Answerers' find is a leaf and never a source | [research, Affordability paths](research.md#affordability-paths) |
+| research | #36 freezes the Stage 3 pages' narrative order, `beneath_the_notes` first; the Stage 2 and 3 openers' hints point at dripstone caves and at bell towers over the treeline | [research, Production tickets](research.md#production-tickets) |
+| research | tipping a page in needs Stage 3; a page already latched or learned is kept for handing on | [research, Choir pages](research.md#choir-pages) |
+| wands | node blocks only placed into air, tagged `minecraft:features_cannot_replace` | [wands, The node block](wands.md#the-node-block) |
+| wands | `vftv:choir` among the built-in types, its entry and name excluded from the wands content | [wands, Node types](wands.md#node-types), [content](wands.md#authored-content), [lang](wands.md#lang-keys) |
+| wands | ids minted only by reconciliation from `origin: structure`, at most 2 structure nodes per cell, surplus removed | [wands, Identity and reconciliation](wands.md#identity-and-reconciliation) |
+| wands | the guarantees file holds only `vftv:starter` | [wands, Guarantees](wands.md#guarantees) |
+| warp | `WarpService.registerPlaceQuery`; no Voice event spawns an entity | [warp, Context](warp.md#context), [Danger](warp.md#danger) |
+| Hush | the ids the no-Hush check rejects: `#vftv:hushed`, the `vftv:hushed` node type, `vftv:hollow`, `vftv:hush_ash` | [Hush, The player-caused guarantee](hush.md#the-player-caused-guarantee) |
+| Eldritch tier | writes `vftv:threshold` into `#vftv:choir_sites`; its site kinds follow the rules not scoped to `vftv:choir_ruin` | [eldritch, A Choir site](eldritch.md#a-choir-site), [Sites](eldritch.md#sites) |
+| Eldritch tier | no node in its templates; the no-Hush test over every one | [eldritch, The template](eldritch.md#the-template), [Tests](eldritch.md#tests) |
+| Eldritch tier | owns the progression spec's stale-dimension note | [eldritch, Existing worlds and removing the mod](eldritch.md#existing-worlds-and-removing-the-mod) |
+| aspects (#30) | hand values for `vftv:answerer` and `vftv:answerer_cantor`, and a block value or a reviewed exemption for `vftv:reliquary` | [aspects, Coverage and supply](aspects.md#coverage-and-supply) |
+| API | `ChoirSite`, `WorldgenKeys` and `WorldgenLimits` in its inventory ("Events" above) | [API, The inventory](api.md#the-inventory) |
 
 ## Production tickets
 
