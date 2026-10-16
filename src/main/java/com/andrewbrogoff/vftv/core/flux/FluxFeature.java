@@ -12,5 +12,7 @@ public final class FluxFeature {
     private FluxFeature() {}
 
     /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    public static void init(Platform platform) {
+        platform.network().clientbound(FluxRulesPayload.TYPE, FluxRulesPayload.STREAM_CODEC);
+    }
 }

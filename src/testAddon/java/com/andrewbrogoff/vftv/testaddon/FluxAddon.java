@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.testaddon;
 
 import com.andrewbrogoff.vftv.api.flux.FluxClearSource;
+import com.andrewbrogoff.vftv.api.flux.FluxRules;
 import com.andrewbrogoff.vftv.api.flux.FluxSource;
 import net.neoforged.bus.api.IEventBus;
 
@@ -15,6 +16,42 @@ final class FluxAddon {
     /** References every clear source; flux has nothing to subscribe or register. */
     static void register(IEventBus modBus, IEventBus gameBus) {
         VftvAddon.consume((Object[]) FluxClearSource.values());
+    }
+
+    /** Reads every accessor of the Experimental rules record, as {@code InfusionEvent} hands it. */
+    static void read(FluxRules rules) {
+        VftvAddon.consume(
+                rules.format(),
+                rules.generation(),
+                rules.fluxEssentiaPm(),
+                rules.fluxTaxPm(),
+                rules.fluxVoidPm(),
+                rules.hushOnset(),
+                rules.hushBlockCost(),
+                rules.hushNodeCost(),
+                rules.hushInterval(),
+                rules.hushWalk(),
+                rules.hushRadius(),
+                rules.hushMaxMisses(),
+                rules.hushPlayerChunks(),
+                rules.hollowEvery(),
+                rules.hollowFlux(),
+                rules.hollowMaxNear(),
+                rules.hollowMinPlayerDistance(),
+                rules.bellFlux(),
+                rules.bellRestore(),
+                rules.bellRadius(),
+                rules.bellCooldown(),
+                rules.pealInterval(),
+                rules.pealFlux(),
+                rules.pealRestore(),
+                rules.pealRadius(),
+                rules.pealScan(),
+                rules.pealCapacity(),
+                rules.pealSuction(),
+                rules.spread(),
+                rules.hollows(),
+                rules.unattended());
     }
 
     /** Reads every variant of a deposit's source. */

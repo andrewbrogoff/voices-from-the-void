@@ -1,1 +1,4 @@
 # The discovery guard's ids for the flux feature: one vftv:flux_<what> id per line.
+vftv:flux_tuning_loaded
+vftv:flux_tuning_reload_rollback
+vftv:flux_rules_sync_unnegotiated
