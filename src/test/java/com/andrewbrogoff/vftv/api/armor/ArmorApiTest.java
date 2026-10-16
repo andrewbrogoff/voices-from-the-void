@@ -67,6 +67,8 @@ class ArmorApiTest {
         rejects("{\"slot\": \"head\", \"vis_discount\": 0.91}");
         rejects("{\"slot\": \"head\", \"baffle\": 21}");
         rejects("{\"slot\": \"head\", \"baffle\": -1}");
+        rejects("{\"slot\": \"head\", \"armor\": 20.9}");
+        rejects("{\"slot\": \"head\", \"armor\": 4294967297}");
     }
 
     @Test

@@ -104,5 +104,10 @@ class VisApiTest {
         assertEquals(7L, placed.node().id());
         assertEquals(where, placed.node().where());
         assertNull(carried.node().where());
+
+        BlockPos.MutableBlockPos moving = new BlockPos.MutableBlockPos(1, 2, 3);
+        NodeRef ref = new NodeRef(8L, GlobalPos.of(overworld, moving));
+        moving.set(9, 9, 9);
+        assertEquals(new BlockPos(1, 2, 3), ref.where().pos());
     }
 }

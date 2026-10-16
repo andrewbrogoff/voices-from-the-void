@@ -54,5 +54,7 @@ class WarpApiTest {
         assertTrue(rejects("-1"), "negative");
         assertTrue(rejects("\"three\""), "not a number");
         assertTrue(rejects("{}"), "an object");
+        assertTrue(rejects("2.5"), "a fraction");
+        assertTrue(rejects("4294967297"), "an int overflow");
     }
 }

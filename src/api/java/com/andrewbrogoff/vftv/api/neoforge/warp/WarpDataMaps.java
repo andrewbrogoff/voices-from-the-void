@@ -3,6 +3,7 @@ package com.andrewbrogoff.vftv.api.neoforge.warp;
 import com.andrewbrogoff.vftv.api.Stable;
 import com.andrewbrogoff.vftv.api.warp.WarpKeys;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.registries.datamaps.DataMapType;
@@ -20,7 +21,26 @@ public final class WarpDataMaps {
      * (not multiplied by its count). Synced to clients, not mandatory.
      */
     public static final DataMapType<Item, Integer> GEAR_WARP =
-            DataMapType.builder(WarpKeys.GEAR_WARP, Registries.ITEM, Codec.intRange(1, 10))
-                    .synced(Codec.intRange(1, 10), false)
+            DataMapType.builder(WarpKeys.GEAR_WARP, Registries.ITEM, exactInt(1, 10))
+                    .synced(exactInt(1, 10), false)
                     .build();
+
+    /** An int codec that rejects a fraction or overflow instead of truncating it. */
+    private static Codec<Integer> exactInt(int min, int max) {
+        return Codec.of(
+                Codec.INT,
+                Codec.DOUBLE.comapFlatMap(
+                        d ->
+                                d == Math.rint(d) && d >= min && d <= max
+                                        ? DataResult.success((int) (double) d)
+                                        : DataResult.error(
+                                                () ->
+                                                        "Not an integer "
+                                                                + min
+                                                                + "-"
+                                                                + max
+                                                                + ": "
+                                                                + d),
+                        Integer::doubleValue));
+    }
 }

@@ -75,6 +75,8 @@ class AspectApiTest {
                                 + " \"vftv:ordo\": 1, \"vftv:perditio\": 1}"),
                 "six aspects");
         assertTrue(rejects("{\"vftv:ignis\": \"three\"}"), "not a number");
+        assertTrue(rejects("{\"vftv:ignis\": 2.5}"), "a fraction");
+        assertTrue(rejects("{\"vftv:ignis\": 4294967297}"), "an int overflow");
         assertTrue(rejects("{\"Not An Id\": 1}"), "not an id");
         assertTrue(rejects("[\"vftv:ignis\"]"), "an array");
         assertTrue(rejects("3"), "a number");

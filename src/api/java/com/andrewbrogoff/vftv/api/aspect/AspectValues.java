@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.SequencedMap;
 import java.util.TreeMap;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.util.ExtraCodecs;
 
 /**
  * The value of the {@code vftv:aspects} and {@code vftv:aspect_defaults} data maps: what a thing is
@@ -29,7 +28,8 @@ public record AspectValues(SequencedMap<ResourceKey<Aspect>, Integer> aspects) {
      * {@link AspectLimits#MAX_ASPECTS_PER_ENTRY} entries. Anything else is an error result.
      */
     public static final Codec<AspectValues> CODEC =
-            Codec.unboundedMap(ResourceKey.codec(AspectKeys.REGISTRY), ExtraCodecs.POSITIVE_INT)
+            Codec.unboundedMap(
+                            ResourceKey.codec(AspectKeys.REGISTRY), exactInt(1, Integer.MAX_VALUE))
                     .validate(
                             map ->
                                     map.size() <= AspectLimits.MAX_ASPECTS_PER_ENTRY
@@ -64,5 +64,24 @@ public record AspectValues(SequencedMap<ResourceKey<Aspect>, Integer> aspects) {
             }
         }
         aspects = Collections.unmodifiableSequencedMap(new TreeMap<>(aspects));
+    }
+
+    /** An int codec that rejects a fraction or overflow instead of truncating it. */
+    private static Codec<Integer> exactInt(int min, int max) {
+        return Codec.of(
+                Codec.INT,
+                Codec.DOUBLE.comapFlatMap(
+                        d ->
+                                d == Math.rint(d) && d >= min && d <= max
+                                        ? DataResult.success((int) (double) d)
+                                        : DataResult.error(
+                                                () ->
+                                                        "Not an integer "
+                                                                + min
+                                                                + "-"
+                                                                + max
+                                                                + ": "
+                                                                + d),
+                        Integer::doubleValue));
     }
 }

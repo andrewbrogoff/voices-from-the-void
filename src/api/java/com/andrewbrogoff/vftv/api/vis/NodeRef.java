@@ -14,5 +14,9 @@ import org.jspecify.annotations.Nullable;
 public record NodeRef(long id, @Nullable GlobalPos where) {
     /** Constructed by vftv only. */
     @Internal
-    public NodeRef {}
+    public NodeRef {
+        if (where != null) {
+            where = GlobalPos.of(where.dimension(), where.pos().immutable());
+        }
+    }
 }

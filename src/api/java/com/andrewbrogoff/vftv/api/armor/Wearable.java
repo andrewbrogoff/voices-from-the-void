@@ -46,7 +46,7 @@ public record Wearable(
                                                     WearableSlot.CODEC
                                                             .fieldOf("slot")
                                                             .forGetter(Wearable::slot),
-                                                    Codec.INT
+                                                    exactInt(0, ArmorLimits.WEARABLE_MAX_ARMOR)
                                                             .optionalFieldOf("armor", 0)
                                                             .forGetter(Wearable::armor),
                                                     Codec.DOUBLE
@@ -60,7 +60,7 @@ public record Wearable(
                                                     Codec.DOUBLE
                                                             .optionalFieldOf("vis_discount", 0.0)
                                                             .forGetter(Wearable::visDiscount),
-                                                    Codec.INT
+                                                    exactInt(0, ArmorLimits.WEARABLE_MAX_BAFFLE)
                                                             .optionalFieldOf("baffle", 0)
                                                             .forGetter(Wearable::baffle))
                                             .apply(i, Wearable::new)));
@@ -105,6 +105,25 @@ public record Wearable(
                             + " decimal places: "
                             + value);
         }
+    }
+
+    /** An int codec that rejects a fraction or overflow instead of truncating it. */
+    private static Codec<Integer> exactInt(int min, int max) {
+        return Codec.of(
+                Codec.INT,
+                Codec.DOUBLE.comapFlatMap(
+                        d ->
+                                d == Math.rint(d) && d >= min && d <= max
+                                        ? DataResult.success((int) (double) d)
+                                        : DataResult.error(
+                                                () ->
+                                                        "Not an integer "
+                                                                + min
+                                                                + "-"
+                                                                + max
+                                                                + ": "
+                                                                + d),
+                        Integer::doubleValue));
     }
 
     /** Encodes with {@code fields}; decodes with it after refusing unknown fields. */
