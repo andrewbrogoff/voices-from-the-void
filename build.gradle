@@ -1,3 +1,10 @@
+buildscript {
+    // The E2E harness plugin, only when local.properties sets harness.dir (settings.gradle).
+    if (gradle.ext.has('harnessDir')) {
+        dependencies { classpath 'com.mcagent.harness:gradle-plugin:0.1.0' }
+    }
+}
+
 plugins {
     id 'java-library'
     id 'net.neoforged.moddev' version '2.0.147'
@@ -170,6 +177,17 @@ neoForge {
             systemProperty 'vftv.contentDir', file('content').absolutePath
             programArguments.addAll('--mod', 'vftv', '--all', '--output', file('src/generated/resources').absolutePath)
         }
+    }
+}
+
+// E2E (quality gates, "E2E"): scenarios live in harness-scenarios/, run with runHarnessScenario.
+// The harness version this repo is tested against is in harness-version.properties.
+if (gradle.ext.has('harnessDir')) {
+    apply plugin: 'com.mcagent.harness'
+    mcAgentHarness.scenarioFile = file('harness-scenarios/boot.json')
+    neoForge.runs.named('harnessClient') {
+        loadedMods = [neoForge.mods.vftv]
+        systemProperty 'vftv.tickBudget', 'true'
     }
 }
 

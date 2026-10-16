@@ -21,3 +21,14 @@ plugins {
 }
 
 rootProject.name = 'vftv'
+
+// Also a regular included build, so build.gradle's classpath and the plugin's own dependencies
+// (companion mod, CLI) substitute from it. build.gradle applies the plugin only when this is set.
+def harnessLocal = new Properties()
+if (file('local.properties').exists()) {
+    file('local.properties').withInputStream { harnessLocal.load(it) }
+}
+if (harnessLocal.getProperty('harness.dir')) {
+    includeBuild(harnessLocal.getProperty('harness.dir'))
+    gradle.ext.harnessDir = harnessLocal.getProperty('harness.dir')
+}
