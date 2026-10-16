@@ -7,6 +7,7 @@ import com.andrewbrogoff.vftv.core.flux.HushConfig;
 import com.andrewbrogoff.vftv.core.flux.model.FluxTuning;
 import com.andrewbrogoff.vftv.neoforge.flux.FluxNeoForge;
 import com.mojang.serialization.DataResult;
+import io.netty.channel.embedded.EmbeddedChannel;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
@@ -15,11 +16,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import net.minecraft.gametest.framework.GameTestHelper;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.world.level.GameType;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
  * The flux feature's GameTests. Name each test {@code flux_<what>}, and list its id {@code
@@ -82,21 +89,38 @@ final class FluxGameTests {
     }
 
     /**
-     * A player whose connection never negotiated the payload (a mock player) joins, and the rules
-     * are re-sent to everyone, without an exception reaching the join or the publish.
+     * A connection that never negotiated the payload (as a mock player's) would make an unguarded
+     * send throw; the rules sync skips it instead. The player is never joined, so no other mod's
+     * join sync runs against it.
      */
-    @SuppressWarnings("removal") // the only helper that joins a player through the PlayerList
     private static void rulesSyncUnnegotiated(GameTestHelper helper) {
         MinecraftServer server = helper.getLevel().getServer();
-        ServerPlayer player = helper.makeMockServerPlayerInLevel();
-        try {
-            helper.assertFalse(
-                    player.connection.hasChannel(FluxRulesPayload.TYPE), "no negotiated channel");
-            FluxNeoForge.sendRules(server);
-        } finally {
-            server.getPlayerList().remove(player);
-        }
+        ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        new ServerGamePacketListenerImpl(
+                server,
+                connection,
+                player,
+                CommonListenerCookie.createInitial(player.getGameProfile(), false));
+        helper.assertFalse(
+                player.connection.hasChannel(FluxRulesPayload.TYPE), "no negotiated channel");
+        FluxRulesPayload payload = new FluxRulesPayload(FluxRulesService.current());
+        helper.assertTrue(
+                throwsUnsupported(() -> PacketDistributor.sendToPlayer(player, payload)),
+                "an unguarded send throws");
+        FluxNeoForge.sendRulesTo(player);
+        FluxNeoForge.sendRules(server);
         helper.succeed();
+    }
+
+    private static boolean throwsUnsupported(Runnable send) {
+        try {
+            send.run();
+            return false;
+        } catch (UnsupportedOperationException e) {
+            return true;
+        }
     }
 
     private static String text(Resource resource) {

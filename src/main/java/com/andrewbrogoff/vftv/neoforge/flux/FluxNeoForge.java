@@ -56,7 +56,7 @@ public final class FluxNeoForge {
      * Sends the rules in force to one player whose connection has negotiated the payload; a
      * connection without it (a mock player) gets nothing rather than an exception.
      */
-    static void sendRulesTo(ServerPlayer player) {
+    public static void sendRulesTo(ServerPlayer player) {
         if (player.connection.hasChannel(FluxRulesPayload.TYPE)) {
             PacketDistributor.sendToPlayer(
                     player, new FluxRulesPayload(FluxRulesService.current()));
