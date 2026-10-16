@@ -72,13 +72,14 @@ def outline(img, name=OUTLINE):
 def check(img):
     used = {"#%02x%02x%02x" % tuple(p[:3]) for p in img.reshape(-1, 4) if p[3]}
     bad = used - HEX
-    assert not bad, f"off-palette colours: {sorted(bad)}"
+    if bad:  # not an assert: the lock must hold under python -O too
+        raise ValueError(f"off-palette colours: {sorted(bad)}")
     return used
 
 
 def save(img, path):
     check(img)
-    os.makedirs(os.path.dirname(path), exist_ok=True)
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     Image.fromarray(img, "RGBA").save(path, optimize=False)
 
 
@@ -95,6 +96,6 @@ if __name__ == "__main__":  # self-check: palette size, no saturated red, outlin
     try:
         check(t)
         raise SystemExit("lock failed")
-    except AssertionError:
+    except ValueError:
         pass
     print("lib ok,", len(PAL), "colours")

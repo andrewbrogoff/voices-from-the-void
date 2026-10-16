@@ -23,7 +23,7 @@ SHADE = {"up": 1.0, "down": 0.5, "north": 0.8, "south": 0.8, "east": 0.6, "west"
 args = sys.argv[sys.argv.index("--") + 1 :]
 root, model_id, out = args[0], args[1], args[2]
 size = int(args[3]) if len(args) > 3 else 512
-jar = zipfile.ZipFile(VANILLA)
+jar = None  # opened on first fallback, so self-contained assets need no vanilla jar
 tmp = tempfile.mkdtemp()
 
 
@@ -36,6 +36,8 @@ def read(ns, rel):
     local = os.path.join(root, ns, rel)
     if os.path.exists(local):
         return open(local, "rb").read()
+    global jar
+    jar = jar or zipfile.ZipFile(VANILLA)
     return jar.read(f"assets/{ns}/{rel}")
 
 
@@ -58,8 +60,9 @@ def resolve(tex, ref, depth=0):
 
 def texture_file(rid):
     ns, path = split(rid)
-    dst = os.path.join(tmp, f"{ns}_{path.replace('/', '_')}.png")
+    dst = os.path.join(tmp, ns, f"{path}.png")  # the id's own structure: no two ids collide
     if not os.path.exists(dst):
+        os.makedirs(os.path.dirname(dst), exist_ok=True)
         open(dst, "wb").write(read(ns, f"textures/{path}.png"))
     return dst
 

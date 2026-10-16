@@ -121,7 +121,7 @@ def main():
             c.alpha_composite(r, (8, 8))
             cells.append(c)
         rows.append((path.rsplit("/", 1)[-1], cells))
-    width = max(sum(c.width + 8 for c in cells) for _, cells in rows) + 16
+    width = max(max(sum(c.width + 8 for c in cells), int(font.getlength(name))) for name, cells in rows) + 16
     height = sum(max(c.height for c in cells) + 32 for _, cells in rows) + 16
     sheet = Image.new("RGBA", (width, height), "#2b2b33")
     d = ImageDraw.Draw(sheet)
