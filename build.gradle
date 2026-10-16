@@ -1,0 +1,277 @@
+plugins {
+    id 'java-library'
+    id 'net.neoforged.moddev' version '2.0.147'
+    id 'com.diffplug.spotless' version '8.10.4'
+    id 'net.ltgt.errorprone' version '5.1.1'
+    id 'jacoco'
+}
+
+def modVersion = providers.gradleProperty('mod_version').get()
+def neoVersion = providers.gradleProperty('neo_version').get()
+version = modVersion
+group = 'com.andrewbrogoff'
+base.archivesName = 'vftv'
+
+java { toolchain.languageVersion = JavaLanguageVersion.of(25) }
+
+repositories { mavenCentral() }
+
+// ADR 0001: one project. `api` compiles alone; `main` (core, neoforge, datagen) sees it.
+// `gameTest` and `testAddon` are dev-only mods that are never shipped.
+sourceSets {
+    api
+    gameTest
+    testAddon
+}
+sourceSets.main.resources.srcDir 'src/generated/resources'
+
+tasks.named('processResources', ProcessResources) {
+    def props = [mod_version: modVersion]
+    inputs.properties(props)
+    filesMatching('META-INF/neoforge.mods.toml') { expand(props) }
+}
+
+def manifestAttributes =['Vftv-Version': modVersion, 'Vftv-NeoForge-Version': neoVersion]
+
+tasks.named('jar', Jar) {
+    from sourceSets.api.output
+    manifest.attributes(manifestAttributes)
+}
+def apiJar = tasks.register('apiJar', Jar) {
+    archiveClassifier = 'api'
+    from sourceSets.api.output
+    from('LICENSE-API')
+    manifest.attributes(manifestAttributes)
+}
+def apiSourcesJar = tasks.register('apiSourcesJar', Jar) {
+    archiveClassifier = 'api-sources'
+    from sourceSets.api.allJava
+    from('LICENSE-API')
+    manifest.attributes(manifestAttributes)
+}
+tasks.named('assemble') { dependsOn apiJar, apiSourcesJar }
+
+dependencies {
+    implementation sourceSets.api.output
+    gameTestImplementation sourceSets.main.output
+    gameTestImplementation sourceSets.api.output
+    // The example addon sees the built api jar only, never `main` (API spec, "The fixtures").
+    testAddonCompileOnly files(apiJar)
+
+    errorprone 'com.google.errorprone:error_prone_core:2.50.0'
+    errorprone 'com.uber.nullaway:nullaway:0.14.2'
+}
+
+neoForge {
+    version = neoVersion
+    addModdingDependenciesTo sourceSets.api
+    addModdingDependenciesTo sourceSets.gameTest
+    addModdingDependenciesTo sourceSets.testAddon
+
+    mods {
+        vftv {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.api
+        }
+        vftv_gametest { sourceSet sourceSets.gameTest }
+        vftv_addon { sourceSet sourceSets.testAddon }
+    }
+
+    unitTest {
+        enable()
+        testedMod = mods.vftv
+    }
+
+    runs {
+        client {
+            client()
+            loadedMods = [mods.vftv]
+        }
+        server {
+            server()
+            loadedMods = [mods.vftv]
+        }
+        gameTestServer {
+            type = 'gameTestServer'
+            loadedMods = [mods.vftv, mods.vftv_gametest]
+            gameDirectory = file('run/gametest')
+            systemProperty 'vftv.tickBudget', 'true'
+            programArguments.addAll('--report', file('build/gametest/vftv.xml').absolutePath)
+        }
+        addonGameTestServer {
+            type = 'gameTestServer'
+            loadedMods = [mods.vftv, mods.vftv_addon]
+            gameDirectory = file('run/gametest-addon')
+            programArguments.addAll('--report', file('build/gametest/vftv_addon.xml').absolutePath)
+        }
+        // One data run only: every provider, client and server, registers on GatherDataEvent.Client.
+        // Two runs into one output folder would each purge the other's files (HashCache deletes
+        // every file its own providers did not write).
+        clientData {
+            clientData()
+            loadedMods = [mods.vftv]
+            systemProperty 'vftv.contentDir', file('content').absolutePath
+            programArguments.addAll('--mod', 'vftv', '--all', '--output', file('src/generated/resources').absolutePath)
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+    options.compilerArgs += ['-Xlint:all', '-Werror']
+    options.errorprone {
+        disableWarningsInGeneratedCode = true
+        excludedPaths = '.*/build/generated/.*'
+        error('NullAway', 'DefaultLocale', 'StringCaseLocaleUsage')
+        option('NullAway:OnlyNullMarked', 'true')
+        option('NullAway:JSpecifyMode', 'true')
+        // Production packages must each be @NullMarked; test packages need no package-info.
+        if (name in ['compileJava', 'compileApiJava']) {
+            error('RequireExplicitNullMarking')
+        }
+    }
+}
+
+// Javadoc for the API: a missing comment, broken reference or bad HTML fails the build.
+def apiJavadoc = tasks.register('apiJavadoc', Javadoc) {
+    source = sourceSets.api.allJava
+    classpath = sourceSets.api.compileClasspath
+    destinationDir = layout.buildDirectory.dir('docs/apiJavadoc').get().asFile
+    options.encoding = 'UTF-8'
+    options.addBooleanOption('Xdoclint:all', true)
+    options.addBooleanOption('Werror', true)
+}
+
+spotless {
+    java {
+        // Datagen output lives in src/generated/resources, outside this target.
+        target 'src/*/java/**/*.java'
+        googleJavaFormat('1.36.1').aosp() // 1.37.0 breaks Spotless 8.10.4 (spotless#3126)
+        formatAnnotations()
+    }
+}
+
+testing.suites {
+    // The FML-booted unit suite.
+    test {
+        useJUnitJupiter('6.1.3')
+        targets.configureEach {
+            testTask.configure {
+                systemProperty 'vftv.tickBudget', 'true'
+                systemProperty 'vftv.projectDir', layout.projectDirectory.asFile.absolutePath
+            }
+        }
+    }
+    // ArchUnit in its own JVM: it cannot run under FML, and never sees the Minecraft classpath.
+    archTest(JvmTestSuite) {
+        useJUnitJupiter('6.1.3')
+        dependencies {
+            // The shipped jar itself: main and api classes, as players get them.
+            implementation files(tasks.named('jar'))
+            implementation 'com.tngtech.archunit:archunit-junit5:1.5.1'
+        }
+    }
+    // The shipping-jar checks, over the built jars.
+    jarTest(JvmTestSuite) {
+        useJUnitJupiter('6.1.3')
+        targets.configureEach {
+            testTask.configure {
+                def jars = [
+                        mod       : tasks.named('jar', Jar).flatMap { it.archiveFile },
+                        api       : apiJar.flatMap { it.archiveFile },
+                        apiSources: apiSourcesJar.flatMap { it.archiveFile },
+                ]
+                jars.each { name, file -> inputs.file(file) }
+                def projectDir = layout.projectDirectory.asFile.absolutePath
+                def paths = jars.collectEntries { name, file -> [name, file.map { it.asFile.absolutePath }] }
+                jvmArgumentProviders.add({
+                    ["-Dvftv.projectDir=${projectDir}"] + paths.collect { name, path -> "-Dvftv.jar.${name}=${path.get()}".toString() }
+                } as CommandLineArgumentProvider)
+            }
+        }
+    }
+}
+
+// Coverage: the unit suite only; gated on the model tier (quality gates, "Coverage").
+jacoco { toolVersion = '0.8.15' }
+tasks.named('test') {
+    jacoco { includes = ['com.andrewbrogoff.vftv.*'] }
+}
+def mainClasses = files(sourceSets.main.output.classesDirs)
+tasks.named('jacocoTestReport', JacocoReport) {
+    dependsOn 'test'
+    classDirectories.setFrom(mainClasses, files(sourceSets.api.output.classesDirs))
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification) {
+    dependsOn 'test'
+    classDirectories.setFrom(mainClasses.asFileTree.matching { include 'com/andrewbrogoff/vftv/**/model/**' })
+    violationRules {
+        rule {
+            element = 'BUNDLE'
+            limit {
+                counter = 'LINE'
+                minimum = 0.90
+            }
+            limit {
+                counter = 'BRANCH'
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+// GameTest discovery guard: the expected set of our test ids ran and passed. A count is not
+// enough, because vanilla's tests run alongside ours (quality gates, "GameTest").
+abstract class VerifyGameTests extends DefaultTask {
+    @InputFile abstract RegularFileProperty getReport()
+    @InputFile abstract RegularFileProperty getExpected()
+    @Input abstract Property<String> getNamespace()
+
+    @TaskAction
+    void verify() {
+        def expectedIds = expected.get().asFile.readLines()*.trim().findAll { it && !it.startsWith('#') } as Set
+        def results = [:]
+        new groovy.xml.XmlSlurper().parse(report.get().asFile).'**'.findAll { it.name() == 'testcase' }.each {
+            results[it.@name.toString()] = it.children().size() == 0
+        }
+        def ours = results.findAll { id, passed -> id.startsWith(namespace.get() + ':') }
+        def missing = expectedIds - ours.keySet()
+        def unexpected = ours.keySet() - expectedIds
+        def failed = ours.findAll { id, passed -> !passed }.keySet()
+        if (missing || unexpected || failed) {
+            throw new GradleException("GameTest guard failed: missing ${missing}, unexpected ${unexpected}, failed ${failed}")
+        }
+        logger.lifecycle("GameTest guard: all ${ours.size()} expected ${namespace.get()} tests ran and passed")
+    }
+}
+
+[
+        [run: 'runGameTestServer', report: 'build/gametest/vftv.xml', expected: 'src/gameTest/expected-tests.txt', namespace: 'vftv'],
+        [run: 'runAddonGameTestServer', report: 'build/gametest/vftv_addon.xml', expected: 'src/testAddon/expected-tests.txt', namespace: 'vftv_addon'],
+].each { guard ->
+    def reportFile = file(guard.report)
+    def verify = tasks.register("verify${guard.run.substring(3)}", VerifyGameTests) {
+        dependsOn guard.run
+        report = reportFile
+        expected = file(guard.expected)
+        namespace = guard.namespace
+    }
+    tasks.named(guard.run) {
+        doFirst {
+            reportFile.delete()
+            reportFile.parentFile.mkdirs()
+        }
+        outputs.upToDateWhen { false }
+        finalizedBy verify
+    }
+}
+
+tasks.named('check') {
+    dependsOn testing.suites.archTest, testing.suites.jarTest
+    dependsOn 'jacocoTestCoverageVerification', 'jacocoTestReport'
+    dependsOn apiJavadoc, 'testAddonClasses'
+}

@@ -1,0 +1,23 @@
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        maven { url = 'https://maven.neoforged.net/releases' }
+    }
+    // mc-agent-harness is optional and local: it has no public remote yet, so CI runs without it.
+    // Set harness.dir in the ignored local.properties to build its plugin for local E2E runs.
+    def local = new Properties()
+    def localFile = file('local.properties')
+    if (localFile.exists()) {
+        localFile.withInputStream { local.load(it) }
+    }
+    def harnessDir = local.getProperty('harness.dir')
+    if (harnessDir) {
+        includeBuild(harnessDir)
+    }
+}
+
+plugins {
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '1.0.0'
+}
+
+rootProject.name = 'vftv'

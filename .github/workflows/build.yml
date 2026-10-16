@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Quality gates, "CI", job 1. The e2e job waits for mc-agent-harness to be published: CI cannot
+  # check out a private local repo, so settings.gradle includes the harness only when
+  # local.properties sets harness.dir.
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # 21 for NeoForge's build tooling, 25 builds the mod. Not a test matrix.
+      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            25
+
+      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+        with:
+          cache-provider: basic
+
+      - name: Static gates, unit, ArchUnit and shipping-jar tests, coverage, Javadoc, testAddon
+        run: ./gradlew --continue spotlessCheck check
+
+      - name: GameTests with the discovery guard
+        run: ./gradlew runGameTestServer
+
+      - name: Example-addon GameTests with the discovery guard
+        run: ./gradlew runAddonGameTestServer
+
+      - name: Datagen output is committed and current
+        run: tools/check-datagen.sh
+
+      - name: The packaged jar boots on a dedicated server
+        run: tools/boot-packaged-jar.sh
+
+      - name: Upload reports and logs
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: build-reports
+          if-no-files-found: warn
+          path: |
+            build/reports/
+            build/test-results/
+            build/gametest/
+            run/gametest/logs/
+            run/gametest-addon/logs/
+            build/packaged-server/*.log

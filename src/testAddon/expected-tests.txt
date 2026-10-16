@@ -1,0 +1,2 @@
+# The discovery guard's set for runAddonGameTestServer: every vftv_addon GameTest id.
+vftv_addon:api_present

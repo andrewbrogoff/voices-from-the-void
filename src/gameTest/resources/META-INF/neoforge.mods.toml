@@ -1,0 +1,16 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MPL-2.0"
+
+[[mods]]
+modId = "vftv_gametest"
+version = "0.0.0"
+displayName = "Voices From The Void GameTests"
+description = "Dev-only: the vftv GameTests. Never shipped."
+
+[[dependencies.vftv_gametest]]
+modId = "vftv"
+type = "required"
+versionRange = "*"
+ordering = "AFTER"
+side = "BOTH"
