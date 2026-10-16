@@ -50,7 +50,7 @@ public final class TextViewport extends AbstractTextAreaWidget {
     @Override
     public void setMessage(Component message) {
         super.setMessage(message);
-        lines = font.split(message, getWidth());
+        lines = font.split(message, getWidth() - totalInnerPadding());
         refreshScrollAmount();
     }
 
@@ -67,9 +67,10 @@ public final class TextViewport extends AbstractTextAreaWidget {
         return super.keyPressed(event);
     }
 
+    /** One pixel: vanilla's scissor insets the viewport by 1 px on every side. */
     @Override
     protected int innerPadding() {
-        return 0;
+        return 1;
     }
 
     @Override
@@ -85,9 +86,9 @@ public final class TextViewport extends AbstractTextAreaWidget {
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         for (int i = 0; i < lines.size(); i++) {
-            int top = getY() + i * CaptionBand.LINE;
+            int top = getInnerTop() + i * CaptionBand.LINE;
             if (withinContentAreaTopBottom(top, top + CaptionBand.LINE)) {
-                graphics.text(font, lines.get(i), getX(), top, colour, false);
+                graphics.text(font, lines.get(i), getInnerLeft(), top, colour, false);
             }
         }
     }

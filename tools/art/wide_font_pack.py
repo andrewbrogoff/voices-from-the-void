@@ -4,9 +4,10 @@ Usage: python3 wide_font_pack.py [out.zip]   (default: build/fixtures/vftv-wide-
 
 Replaces minecraft:default with a bitmap provider whose glyphs for U+0021-U+007E and U+00A1-U+00FF
 all advance 9 px (vanilla's digits advance 6), plus a space provider giving U+0020 and U+00A0 the
-same 9 px. Each glyph is an 8x8 cell drawn from Pillow's built-in font so screenshots stay legible;
-a near-invisible pixel (alpha 1) in the cell's last column makes vanilla measure every glyph 8 wide,
-so its advance is 8 + 1 = 9. Byte-identical on re-run (fixed zip timestamps).
+same 9 px. Each glyph is a 16x16 cell drawn from Pillow's built-in font and shown at half scale, so
+screenshots stay legible; a near-invisible pixel (alpha 1) in the cell's last column makes vanilla
+measure every glyph 16 wide, so its advance is 16 / 2 + 1 = 9. Byte-identical on re-run (fixed zip
+timestamps).
 """
 
 import io
@@ -18,7 +19,8 @@ import zipfile
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-CELL = 8
+CELL = 16  # drawn at height 8: half scale, so a cell 16 wide advances (int)(0.5 + 16 * 0.5) + 1 = 9
+HEIGHT = 8
 PACK_FORMAT = 88  # Minecraft 26.2's resource pack version
 CHARS = [c for c in range(0x21, 0x7F)] + [c for c in range(0xA1, 0x100)]
 ROW = 16
@@ -27,10 +29,10 @@ ROW = 16
 def glyph_sheet():
     rows = (len(CHARS) + ROW - 1) // ROW
     sheet = np.zeros((rows * CELL, ROW * CELL, 4), np.uint8)
-    font = ImageFont.load_default(8)
+    font = ImageFont.load_default(13)
     for i, c in enumerate(CHARS):
         cell = Image.new("L", (CELL, CELL), 0)
-        ImageDraw.Draw(cell).text((0, -1), chr(c), fill=255, font=font)
+        ImageDraw.Draw(cell).text((1, 0), chr(c), fill=255, font=font)
         ink = np.asarray(cell) >= 128
         y, x = divmod(i, ROW)
         block = sheet[y * CELL : (y + 1) * CELL, x * CELL : (x + 1) * CELL]
@@ -48,7 +50,7 @@ def font_json(rows):
     return {
         "providers": [
             {"type": "space", "advances": {" ": 9, " ": 9}},
-            {"type": "bitmap", "file": "vftv_fixture:font/wide.png", "ascent": 7, "height": CELL, "chars": grid},
+            {"type": "bitmap", "file": "vftv_fixture:font/wide.png", "ascent": 7, "height": HEIGHT, "chars": grid},
         ]
     }
 
