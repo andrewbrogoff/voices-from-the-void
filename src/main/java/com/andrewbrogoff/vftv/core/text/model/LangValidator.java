@@ -265,7 +265,8 @@ public final class LangValidator {
                     continue;
                 }
                 int j = i + 1;
-                while (j < value.length() && Character.isDigit(value.charAt(j))) {
+                // ASCII only, as vanilla's grammar: a fullwidth digit is not an index.
+                while (j < value.length() && value.charAt(j) >= '0' && value.charAt(j) <= '9') {
                     j++;
                 }
                 if (j == i + 1 && j < value.length() && value.charAt(j) == '%') {

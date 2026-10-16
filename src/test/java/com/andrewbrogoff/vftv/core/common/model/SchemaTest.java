@@ -110,6 +110,9 @@ class SchemaTest {
         rejects(base + "\"count\": 11}", "$.count: 11 outside 0..10");
         rejects(base + "\"count\": -1}", "$.count: -1 outside 0..10");
         rejects(base + "\"count\": 1, \"weight\": 1.5}", "$.weight: 1.5 outside");
+        rejects(
+                base + "\"count\": 1, \"weight\": 1.0000000000000001}",
+                "$.weight: 1.0000000000000001 outside");
         rejects(base + "\"count\": 1, \"tags\": []}", "$.tags: 0 entries, outside 1..2");
         rejects(base + "\"count\": 1, \"tags\": [\"a\", \"a\"]}", "$.tags[1]: duplicate");
         rejects(

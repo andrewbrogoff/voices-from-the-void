@@ -146,6 +146,9 @@ class LangValidatorTest {
                 "index must be 1 or more",
                 english("voices.json", strings("\"voice.a\": \"%0$s\"")));
         rejects("mixes %s and %n$s", english("voices.json", strings("\"voice.a\": \"%s %1$s\"")));
+        rejects(
+                "unsupported placeholder",
+                english("voices.json", strings("\"voice.a\": \"%１$s\"")));
     }
 
     @Test

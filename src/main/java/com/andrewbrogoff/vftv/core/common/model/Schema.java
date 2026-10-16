@@ -148,7 +148,8 @@ public record Schema(String id, List<Field> fields, Function<JsonObject, List<St
                 BigDecimal n = number(value);
                 if (n == null) {
                     problems.add(path + ": not a number");
-                } else if (n.doubleValue() < d.min() || n.doubleValue() > d.max()) {
+                } else if (n.compareTo(BigDecimal.valueOf(d.min())) < 0
+                        || n.compareTo(BigDecimal.valueOf(d.max())) > 0) {
                     problems.add(path + ": " + n + " outside " + d.min() + ".." + d.max());
                 }
             }

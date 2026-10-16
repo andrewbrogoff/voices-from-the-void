@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.util.datafix.DataFixers;
 import net.minecraft.world.level.storage.SavedDataStorage;
 import org.junit.jupiter.api.Test;
@@ -77,6 +78,21 @@ class WorldMigrationsTest {
             WorldMigrations.VERSION.write(storage, new Retained.Read<>(5));
             assertEquals(0, WorldMigrations.runPending(storage, List.of(l -> l.add("a")), log));
             assertEquals(5, version(storage));
+        }
+
+        CompoundTag coerced = new CompoundTag(); // would coerce to readable version 0
+        coerced.putDouble("format", 1.5);
+        coerced.putLong("vftv_data_version", 4294967296L);
+        CompoundTag extraKey = new CompoundTag();
+        extraKey.putInt("format", 1);
+        extraKey.putInt("vftv_data_version", 0);
+        extraKey.putInt("future", 42);
+        for (CompoundTag raw : List.of(coerced, extraKey)) {
+            if (!(WorldMigrations.VERSION_CODEC.parse(NbtOps.INSTANCE, raw).getOrThrow()
+                    instanceof Retained.Unreadable<Integer> u)) {
+                throw new AssertionError(raw + " is unreadable");
+            }
+            assertEquals(raw, u.raw());
         }
 
         CompoundTag future = new CompoundTag();

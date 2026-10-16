@@ -4,11 +4,12 @@ import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
-import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.IntTag;
 import net.minecraft.resources.Identifier;
-import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.level.storage.SavedDataStorage;
 import org.slf4j.Logger;
 
@@ -27,30 +28,40 @@ public final class WorldMigrations {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    private static final Codec<Integer> BOUNDED =
-            RecordCodecBuilder.create(
-                    i ->
-                            i.group(
-                                            Codec.INT
-                                                    .validate(WorldMigrations::knownFormat)
-                                                    .fieldOf("format")
-                                                    .forGetter(v -> FORMAT),
-                                            ExtraCodecs.NON_NEGATIVE_INT
-                                                    .fieldOf("vftv_data_version")
-                                                    .forGetter(v -> v))
-                                    .apply(i, (format, version) -> version));
+    private static final String VERSION_KEY = "vftv_data_version";
 
-    private static DataResult<Integer> knownFormat(int format) {
-        return format == FORMAT
-                ? DataResult.success(format)
-                : DataResult.error(() -> "unknown format " + format);
+    // Strict at the tag level: Codec.INT would coerce a double or long, and a record codec would
+    // drop unknown keys, so either would make a malformed record "readable".
+    private static final Codec<Integer> BOUNDED =
+            CompoundTag.CODEC.comapFlatMap(WorldMigrations::decode, WorldMigrations::encode);
+
+    private static DataResult<Integer> decode(CompoundTag tag) {
+        if (!tag.keySet().equals(Set.of("format", VERSION_KEY))) {
+            return DataResult.error(() -> "unexpected keys " + tag.keySet());
+        }
+        if (!(tag.get("format") instanceof IntTag(int format)) || format != FORMAT) {
+            return DataResult.error(() -> "unknown format " + tag.get("format"));
+        }
+        if (!(tag.get(VERSION_KEY) instanceof IntTag(int version)) || version < 0) {
+            return DataResult.error(() -> "bad version " + tag.get(VERSION_KEY));
+        }
+        return DataResult.success(version);
     }
+
+    private static CompoundTag encode(int version) {
+        CompoundTag tag = new CompoundTag();
+        tag.putInt("format", FORMAT);
+        tag.putInt(VERSION_KEY, version);
+        return tag;
+    }
+
+    static final Codec<Retained<Integer>> VERSION_CODEC = RawRecordCodec.wrap(BOUNDED);
 
     /** The stored version, in {@code data/vftv/data_version.dat}. */
     public static final SavedDataSlot<Retained<Integer>> VERSION =
             new SavedDataSlot<>(
                     Identifier.fromNamespaceAndPath("vftv", "data_version"),
-                    RawRecordCodec.wrap(BOUNDED),
+                    VERSION_CODEC,
                     () -> new Retained.Read<>(0));
 
     private WorldMigrations() {}
