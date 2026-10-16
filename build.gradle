@@ -104,14 +104,11 @@ neoForge {
             gameDirectory = file('run/gametest-addon')
             programArguments.addAll('--report', file('build/gametest/vftv_addon.xml').absolutePath)
         }
+        // One data run only: every provider, client and server, registers on GatherDataEvent.Client.
+        // Two runs into one output folder would each purge the other's files (HashCache deletes
+        // every file its own providers did not write).
         clientData {
             clientData()
-            loadedMods = [mods.vftv]
-            systemProperty 'vftv.contentDir', file('content').absolutePath
-            programArguments.addAll('--mod', 'vftv', '--all', '--output', file('src/generated/resources').absolutePath)
-        }
-        serverData {
-            serverData()
             loadedMods = [mods.vftv]
             systemProperty 'vftv.contentDir', file('content').absolutePath
             programArguments.addAll('--mod', 'vftv', '--all', '--output', file('src/generated/resources').absolutePath)

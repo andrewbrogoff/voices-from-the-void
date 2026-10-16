@@ -192,6 +192,9 @@ class LangValidatorTest {
         assertTrue(problemsFor(key, "bad \\x escape", "en_us").get(0).contains("bad escape"));
         assertTrue(problemsFor(key, "{fact:a", "en_us").get(0).contains("unclosed span"));
         assertTrue(problemsFor(key, "a } b", "en_us").get(0).contains("unmatched }"));
+        assertTrue(
+                problemsFor(key, "Wait {3} days.", "en_us").get(0).contains("not {fact:...}"),
+                "braces cannot hide a digit from the lint");
         assertTrue(problemsFor(key, "{fact:{a}}", "en_us").get(0).contains("nested span"));
         // A % in prose is text, not a placeholder: prose is never parsed as a template.
         assertEquals(

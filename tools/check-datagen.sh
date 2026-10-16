@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 rm -rf src/generated/resources
-./gradlew --console=plain runClientData runServerData
+./gradlew --console=plain runClientData
 
 changes=$(git status --porcelain --untracked-files=all -- src/generated/resources)
 if [ -n "$changes" ]; then

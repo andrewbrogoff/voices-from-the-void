@@ -6,8 +6,9 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 /**
- * The data providers, run by the {@code clientData} and {@code serverData} runs into {@code
- * src/generated/resources}. Each system ticket adds its providers here.
+ * The data providers, run by the {@code clientData} run into {@code src/generated/resources}. Each
+ * system ticket adds its providers here, data providers included: everything registers on {@link
+ * GatherDataEvent.Client}, because a second run into the same folder would purge this one's files.
  */
 public final class VftvData {
     private VftvData() {}

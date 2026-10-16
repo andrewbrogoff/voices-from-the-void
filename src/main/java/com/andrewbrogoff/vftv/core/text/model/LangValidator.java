@@ -354,6 +354,9 @@ public final class LangValidator {
                     if (span == null) {
                         errors.add("unmatched } at " + i);
                     } else {
+                        if (!span.toString().startsWith("fact:")) {
+                            errors.add("a span that is not {fact:...} at " + i);
+                        }
                         spans.add(span.toString());
                         span = null;
                     }
