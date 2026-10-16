@@ -17,10 +17,12 @@ import org.slf4j.Logger;
  * One-shot world migrations (architecture, "State and sync"), keyed off {@code vftv_data_version}:
  * an int in the server's world-wide saved data, absent meaning 0.
  *
- * <p>At server start every pending step runs in order, and the version is written after each, so a
- * crash mid-step reruns only that step. Steps must be idempotent. A version above the steps this
- * build knows was written by a newer build and is left alone; an unreadable record is kept raw and
- * runs nothing.
+ * <p>At server start every pending step runs in order, and the in-memory version advances after
+ * each. The version reaches disk with the world's next save, together with the steps' own changes,
+ * never ahead of them; so a crash before that save reruns every pending step, which is safe because
+ * steps must be idempotent (architecture, "State and sync"). A version above the steps this build
+ * knows was written by a newer build and is left alone; an unreadable record is kept raw and runs
+ * nothing.
  */
 public final class WorldMigrations {
     /** The record's format. */

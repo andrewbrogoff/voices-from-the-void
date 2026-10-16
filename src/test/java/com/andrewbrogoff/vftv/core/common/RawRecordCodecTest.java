@@ -71,7 +71,12 @@ class RawRecordCodecTest {
         missingFormat.putInt("amount", 3);
         CompoundTag wrongType = tag(1, 0);
         wrongType.putString("amount", "lots");
-        for (Tag raw : new Tag[] {tag(2, 5), tag(99, 5), missingFormat, wrongType, tag(1, 1001)}) {
+        CompoundTag unknownKey = tag(1, 5);
+        unknownKey.putString("from_the_future", "kept");
+        for (Tag raw :
+                new Tag[] {
+                    tag(2, 5), tag(99, 5), missingFormat, wrongType, tag(1, 1001), unknownKey
+                }) {
             Retained<Jar> decoded = decode(raw);
             assertTrue(!unreadable(decoded).reason().isEmpty());
             assertEquals(raw, encode(decoded), "written back unchanged");

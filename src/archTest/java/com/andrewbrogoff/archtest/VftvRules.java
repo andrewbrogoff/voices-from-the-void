@@ -310,7 +310,7 @@ final class VftvRules {
             return null;
         }
         String rest = pkg.substring(compatPrefix.length());
-        return rest.substring(0, rest.indexOf('.'));
+        return rest.isEmpty() ? "" : rest.substring(0, rest.indexOf('.'));
     }
 
     ArchRule fluxLeaf() {
