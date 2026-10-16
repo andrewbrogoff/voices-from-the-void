@@ -15,6 +15,7 @@ import com.andrewbrogoff.vftv.neoforge.hush.client.HushNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.infusion.client.InfusionNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.research.client.ResearchNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.road.client.RoadNeoForgeClient;
+import com.andrewbrogoff.vftv.neoforge.text.client.TextNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.vis.client.VisNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.warp.client.WarpNeoForgeClient;
 import com.andrewbrogoff.vftv.neoforge.worldgen.client.WorldgenNeoForgeClient;
@@ -35,6 +36,7 @@ public final class ClientWiring {
     public static void init(IEventBus modBus, ModContainer container, WornSlots worn) {
         Vftv.initClient(new NeoForgeClientNetwork(modBus));
         CommonNeoForgeClient.register(modBus);
+        TextNeoForgeClient.register(modBus);
         FluxNeoForgeClient.register(modBus);
         AspectNeoForgeClient.register(modBus);
         WarpNeoForgeClient.register(modBus);
