@@ -39,7 +39,7 @@ So **no balance number lives in config.** The research presets' numbers stay in 
 
 | Type | File | Holds |
 |---|---|---|
-| `ModConfig.Type.SERVER` | `vftv-server.toml` | the 20 server keys |
+| `ModConfig.Type.SERVER` | `vftv-server.toml` | the 19 server keys |
 | `ModConfig.Type.CLIENT` | `vftv-client.toml` | the 11 client keys |
 
 **No `COMMON` and no `STARTUP` file.** No key is needed before a server exists or on both sides unsynced, and registration is fixed by code and data. One is added only when a key needs it.
@@ -67,6 +67,7 @@ Per [architecture, Seams](architecture.md#seams): **no `ModConfigSpec` type reac
   | `FocusConfig` | `core.focus` | `foci.block_effects` |
   | `GolemConfig` | `core.golem` | `golems.max_per_chunk` |
   | `VisConfig` | `core.vis` | `nodes.starter` |
+  | `AspectConfig` | `core.aspect` | `aspects.derive_modded` |
 
 - **Client records**, each in `core.<feature>.client`: `VisClientConfig`, `ArmorClientConfig`, `HushClientConfig`, `WarpClientConfig`, `ResearchClientConfig`.
 - **Every record has a `DEFAULT`** equal to the tables below. A service holds `DEFAULT` until its first publish, and again after its server stops.
@@ -74,7 +75,7 @@ Per [architecture, Seams](architecture.md#seams): **no `ModConfigSpec` type reac
 
 ## Server keys
 
-All 20 keys of `vftv-server.toml`. **Applies** is the first read of a changed value. **Sync** is how a client learns the value, if it needs it.
+All 19 keys of `vftv-server.toml`. **Applies** is the first read of a changed value. **Sync** is how a client learns the value, if it needs it.
 
 **Changes never reverse committed outcomes;** later operations use the new value at the apply points below. A placed or restored block, a paid Beam pulse, a spawned mob, an applied status effect, a standing Bargain offer and a running infusion's frozen plan all stay as they are. Where an owner says a running activity reads the switch again (a Beam's next pulse, the Hush's next service, a live Baffle capacity), that is its apply point.
 
@@ -82,20 +83,21 @@ All 20 keys of `vftv-server.toml`. **Applies** is the first read of a changed va
 |---|---|---|---|---|---|---|---|
 | 1 | `research.mode` | enum | `gentle`, `standard`, `hard`, `skip` | `standard` | the next `begin`, and `buy`'s recheck at commit; an open note keeps its snapshot and can still be solved, learned or abandoned ([research, Presets and modes](research.md#presets-and-modes)) | `quotes.mode`, to an open Commonplace Book | [research](research.md#presets-and-modes) |
 | 2 | `warp.voices.enabled` | bool | | `true` | the next check (suppression row 3, [warp, Suppression](warp.md#suppression)) | `WarpRules` | [warp](warp.md#tuning-and-limits) |
-| 3–11 | `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_block`, `.phantom_mob`, `.bargain`, `.status`, `.spawn` | bool each | | `true` each | the next check's eligibility: a type that is off is never eligible, so it never fires and the counter is untouched ([warp, Selection and draws](warp.md#selection-and-draws)) | none: eligibility is server-only, and a cue already names its presentation | warp |
-| 12 | `warp.tax` | bool | | `true` | the next vis quote, and the next infusion assessment and start; a running infusion keeps the `Wp` frozen in its plan ([warp, The dials](warp.md#the-dials); [infusion, Stability](infusion.md#stability)) | `WarpRules` | warp |
-| 13 | `warp.amplifier` | bool | | `true` | the next quote and cast; `amplifier_warp` is 0, the Joining bonus included, so a Void wearer's live Baffle capacity follows at once ([armor, Capacity](armor.md#capacity)) | `WarpRules` | warp |
-| 14 | `warp.gear` | bool | | `true` | the next gear sample: the sample is 0 | `WarpRules` | warp |
-| 15 | `hush.spread` | bool | | `true` | the next service; off makes no attempt at all and keeps the backlog, and on resumes it in due order ([Hush, Scheduling](hush.md#scheduling)) | `FluxRules` | [Hush](hush.md#tuning-and-limits) |
-| 16 | `hush.hollows` | bool | | `true` | the next rise | `FluxRules` | Hush |
-| 17 | `hush.unattended` | bool | | `false` | the next spread service **and** the next Pealing Bell service, with no wake needed: attendance is read at service ([Hush, Where it begins](hush.md#where-it-begins), [Pealing](hush.md#pealing)) | `FluxRules` | Hush |
-| 18 | `foci.block_effects` | bool | | `true` | cast check 7, and every Beam pulse's session check: a running Delve Beam ends at its next pulse, and pulses already paid stay paid ([foci, Checks](foci.md#checks), [Beam](foci.md#beam)) | none: a server refusal only | [foci](foci.md#tuning-and-limits) |
-| 19 | `golems.max_per_chunk` | int | 1–256 | 16 | the next placement; admission only, so lowering it removes no golem ([golems, Placing](golems.md#placing)) | `GolemRules` | [golems](golems.md#tuning-and-limits) |
-| 20 | `nodes.starter` | enum | `required`, `best_effort`, `off` | `required` | **the next server start only** ("The starter opt-out") | none | [wands](wands.md#the-starter) |
+| 3–9 | `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_mob`, `.bargain`, `.status` | bool each | | `true` each | the next check's eligibility: a type that is off is never eligible, so it never fires and the counter is untouched ([warp, Selection and draws](warp.md#selection-and-draws)) | none: eligibility is server-only, and a cue already names its presentation | warp |
+| 10 | `warp.tax` | bool | | `true` | the next vis quote, and the next infusion assessment and start; a running infusion keeps the `Wp` frozen in its plan ([warp, The dials](warp.md#the-dials); [infusion, Stability](infusion.md#stability)) | `WarpRules` | warp |
+| 11 | `warp.amplifier` | bool | | `true` | the next quote and cast; `amplifier_warp` is 0, the Joining bonus included, so a Void wearer's live Baffle capacity follows at once ([armor, Capacity](armor.md#capacity)) | `WarpRules` | warp |
+| 12 | `warp.gear` | bool | | `true` | the next gear sample: the sample is 0 | `WarpRules` | warp |
+| 13 | `hush.spread` | bool | | `true` | the next service; off makes no attempt at all and keeps the backlog, and on resumes it in due order ([Hush, Scheduling](hush.md#scheduling)) | `FluxRules` | [Hush](hush.md#tuning-and-limits) |
+| 14 | `hush.hollows` | bool | | `true` | the next rise | `FluxRules` | Hush |
+| 15 | `hush.unattended` | bool | | `false` | the next spread service **and** the next Pealing Bell service, with no wake needed: attendance is read at service ([Hush, Where it begins](hush.md#where-it-begins), [Pealing](hush.md#pealing)) | `FluxRules` | Hush |
+| 16 | `foci.block_effects` | bool | | `true` | cast check 7, and every Beam pulse's session check: a running Delve Beam ends at its next pulse, and pulses already paid stay paid ([foci, Checks](foci.md#checks), [Beam](foci.md#beam)) | none: a server refusal only | [foci](foci.md#tuning-and-limits) |
+| 17 | `golems.max_per_chunk` | int | 1–256 | 16 | the next placement; admission only, so lowering it removes no golem ([golems, Placing](golems.md#placing)) | `GolemRules` | [golems](golems.md#tuning-and-limits) |
+| 18 | `nodes.starter` | enum | `required`, `best_effort`, `off` | `best_effort` | **the next server start only** ("The starter opt-out") | none | [wands](wands.md#the-starter) |
+| 19 | `aspects.derive_modded` | bool | | `true` | the next server data load (a start or `/reload`), which rebuilds the `DerivedAspects` table, or leaves it empty when off ([aspects, Data maps](aspects.md#data-maps); [compatibility, Aspect values for modded items](compat.md#aspect-values-for-modded-items)) | none: the table itself is synced with the other aspect maps | [aspects](aspects.md#data-maps) |
 
-- **`/vftv warp fire`** keeps the [warp spec's](warp.md#commands) rule: it skips eligibility, so it ignores keys 3–11, but not suppression, so it obeys key 2.
-- **No other system has a key.** The [Eldritch tier](eldritch.md#contracts-on-sibling-specs) relies on peaceful and the warp and Hush switches; [worldgen](worldgen.md#contracts-on-sibling-specs) disables ruins through the structure set; the [Choristers](choristers.md#events) have no command and no option; aspects, arcane, crucible, essentia and infusion keep their numbers in tuning.
-- **Defaults** are the mod as designed, except `hush.unattended` off, so chunkloaded empty servers never rot (pain points §3). `research.mode` is `standard` ([progression](progression.md)); `nodes.starter` is `required`, so the [starter guarantee](wands.md#the-starter) holds unless an operator opts out.
+- **`/vftv warp fire`** keeps the [warp spec's](warp.md#commands) rule: it skips eligibility, so it ignores keys 3–9, but not suppression, so it obeys key 2.
+- **No other system has a key.** The [Eldritch tier](eldritch.md#contracts-on-sibling-specs) relies on peaceful and the warp and Hush switches; [worldgen](worldgen.md#contracts-on-sibling-specs) disables ruins through the structure set; the [Choristers](choristers.md#events) have no command and no option; aspects (beyond key 19), arcane, crucible, essentia and infusion keep their numbers in tuning.
+- **Defaults** are the mod as designed, except `hush.unattended` off, so chunkloaded empty servers never rot (pain points §3). `research.mode` is `standard` ([progression](progression.md)); `nodes.starter` is `best_effort`, so a world with no candidate still opens and its first operator is told how to place the Wellspring ("The starter opt-out"); `aspects.derive_modded` is on, so modded items have values in play without an export.
 
 ## Client keys
 
@@ -110,7 +112,7 @@ All 11 keys of `vftv-client.toml`. Each applies at the **next client frame or ti
 | 6 | `hush.hud` | bool | | `true` | the layer is hidden or shown ([Hush, Reading](hush.md#reading)) | Hush |
 | 7 | `voices.text` | bool | | `true` | off hides a line on screen at once; the sound plays on | warp |
 | 8 | `voices.colour_shift` | bool | | `true` | off ramps an active drain out, `intensity = max(0, intensity − 0.013)` per tick with frames interpolated, so even the 65% peak reaches zero within 50 ticks and never steps; on affects the next cue ([warp, Perception effects](warp.md#perception-effects)) | warp |
-| 9 | `voices.phantoms` | bool | | `true` | off removes existing apparitions and disguises silently at the next tick; no new ones | warp |
+| 9 | `voices.phantoms` | bool | | `true` | off removes existing apparitions silently at the next tick; no new ones | warp |
 | 10 | `voices.phantom_sounds` | bool | | `true` | off starts no new phantom sound; one playing finishes (≤ 3 s) | warp |
 | 11 | `book.clear_prose` | bool | | `false` | the overlay is skipped from the next frame; the layout cache is untouched ([research, Prose that degrades with warp](research.md#prose-that-degrades-with-warp)) | research |
 
@@ -123,7 +125,7 @@ All 11 keys of `vftv-client.toml`. Each applies at the **next client frame or ti
 
 ### Loading
 
-- **Server config loads before the server starts:** the dedicated server calls `ServerLifecycleHooks.handleServerAboutToStart` (`MC:server/dedicated/DedicatedServer.java:596`), which loads the active server file (`NF:server/ServerLifecycleHooks.java:78–105`), before `handleServerStarted` (`MC:server/MinecraftServer.java:725–729`). So the starter reads `nodes.starter` correctly at `ServerStartedEvent`.
+- **Server config loads before the server starts:** `ServerLifecycleHooks.handleServerAboutToStart` loads the active server file (`NF:server/ServerLifecycleHooks.java:78–105`, the load at `:102–105`), and runs before `handleServerStarted` (`MC:server/MinecraftServer.java:729`). So the starter reads `nodes.starter` correctly at `ServerStartedEvent`.
 - **`ModConfigEvent.Loading` runs synchronously** on the loader's calling thread; **`ModConfigEvent.Reloading` may run on any thread** (`FML:config/ModConfig.java:75–84`; `FML:event/config/ModConfigEvent.java:23–42`). Both go through "Publishing a change".
 - **When a server stops,** every server-config service resets to `DEFAULT` in our `ServerStoppedEvent` listener, so on an integrated client one world's switches never leak into the next. A remote client also sees config unloads, which is why the reset hangs off the server's own lifecycle instead.
 
@@ -132,7 +134,7 @@ All 11 keys of `vftv-client.toml`. Each applies at the **next client frame or ti
 The server listener, for `Loading` and `Reloading` of the `SERVER` config:
 
 1. **Only a live local server publishes.** If `ServerLifecycleHooks.getCurrentServer()` is null, the event is ignored **before any value is read**. That is the case on a remote client, which receives the server's file through NeoForge's `ConfigSync` on connection and again after each reload, and raises `Reloading` for it (`NF:network/ConfigSync.java:45–65,68–98,103–132`; `FML:config/ConfigTracker.java:200–209`). Memory connections (single player) are skipped by that sync.
-2. **Snapshot:** read every value once and build the six records (pure). Capture the current server.
+2. **Snapshot:** read every value once and build the seven records (pure). Capture the current server.
 3. **Queue a guarded runnable** with `server.execute`. `execute` runs inline when called on the server thread, and also inline once the server has stopped (`MC:util/thread/BlockableEventLoop.java:103–109`; `MC:server/MinecraftServer.java:1506–1508`), so **the runnable guards itself:** it does nothing unless `getCurrentServer()` is still the captured server, that server is not stopped, and it is running on that server's thread. A late publish therefore never overwrites a later world's state.
 4. **Apply:** each feature service swaps its record. For each record that **changed** (`equals`), its owner's re-send runs once:
 
@@ -143,7 +145,7 @@ The server listener, for `Loading` and `Reloading` of the `SERVER` config:
    | `GolemConfig` | `GolemRules` to every player |
    | `ResearchConfig` | `quotes`, with the new `mode`, to every player with the Commonplace Book open, even if no price changed |
 
-   A change to keys 3–11, 18 or 20 alone sends nothing. Unchanged records send nothing.
+   A change to keys 3–9, 16, 18 or 19 alone sends nothing (key 19 reaches clients through the aspect maps at the next data load). Unchanged records send nothing.
 
 **How an operator changes a key:** edit the active `vftv-server.toml` while the server runs (the watcher fires `Reloading`), or in single player use the config screen ("The config screen"). With automatic watching off, restart. There is **no `/vftv config` command**, and **`/reload` never touches config**: it reloads datapacks and tuning only. A config edit needs no `/reload`.
 
@@ -153,24 +155,24 @@ The client listener (in `neoforge.config.client`) builds the five client records
 
 ## The starter opt-out
 
-The [wands spec](wands.md#the-starter) places one Wellspring near spawn at `ServerStartedEvent` whenever `starter` is absent or `REMOVED`, and fails startup when no candidate satisfies its rules. Whether a world has a candidate depends on the terrain around the respawn position, not on its preset. Vanilla's *The Void* preset has a 33 × 33 stone platform spanning x, z −8 to 24, centred on (8, 8), with a cobblestone centre (`MC:world/level/levelgen/feature/VoidStartPlatformFeature.java:11–13,32–43`). The rings centre on the respawn position, not on the platform: with spawn at (0, 0), even ring 17 (active spawn protection 16) includes the platform column (17, 0). The spawn search itself scans a chunk from its minimum x and z (`MC:server/MinecraftServer.java:503–514`; `MC:server/level/PlayerSpawnFinder.java:178–187`). So neither every Void world nor every small skyblock fails; **worlds with no open surface in reach of the rings may need the opt-out.**
+The [wands spec](wands.md#the-starter) places one Wellspring near spawn at `ServerStartedEvent` whenever `starter` is absent or `REMOVED`, when a candidate satisfies its rules. Whether a world has a candidate depends on the terrain around the respawn position, not on its preset. Vanilla's *The Void* preset has a 33 × 33 stone platform spanning x, z −8 to 24, centred on (8, 8), with a cobblestone centre (`MC:world/level/levelgen/feature/VoidStartPlatformFeature.java:11–13,32–43`). The rings centre on the respawn position, not on the platform: with spawn at (0, 0), even ring 17 (active spawn protection 16) includes the platform column (17, 0). The spawn search itself scans a chunk from its minimum x and z (`MC:server/MinecraftServer.java:503–514`; `MC:server/level/PlayerSpawnFinder.java:178–187`). So neither every Void world nor every small skyblock lacks a candidate; **worlds with no open surface in reach of the rings start without a starter, and an operator places one by command.**
 
 ### Modes
 
 `nodes.starter`, read once per start:
 
-| Mode | While `starter` is absent or `REMOVED` | Later-start warning ([wands, The starter](wands.md#the-starter)) |
-|---|---|---|
-| `required` | the ring search; **no candidate fails startup** with the wands spec's error, which names three remedies: lower `spawn-protection`, move the world spawn, or set `nodes.starter` to `best_effort` or `off` in the active `vftv-server.toml` (it names that file's path) | yes |
-| `best_effort` | the same search and placement; no candidate logs that error as **one WARN**, not an error, and the server starts with no starter. It is retried at every start. | no |
-| `off` | no search and no log | no |
+| Mode | While `starter` is absent or `REMOVED` |
+|---|---|
+| `best_effort` (default) | the ring search and placement; no candidate logs **one WARN** naming the radii and the bootstrap, and the server starts with no starter. It is retried at every start. In play, the first player with permission level ≥ 2 to join that server run gets one status line naming `/vftv node starter <pos>`, and an empty sounding says no Wellspring stands ([wands, The starter](wands.md#the-starter)). |
+| `required` (opt-in) | the same search; **no candidate throws `IllegalStateException`** from the `ServerStartedEvent` listener, which the game bus rethrows (`EventBus.java:356–365`), so startup ends in a **crash report**. Its message names three remedies: lower `spawn-protection`, move the world spawn, or set `nodes.starter` to `best_effort` or `off` in the active `vftv-server.toml` (it names that file's path). For curated packs that want the hard check. |
+| `off` | no search, no log, no join notice and no sounding line |
 
-- **An existing starter is never touched** by any mode. Switching to `off` neither removes nor moves it, and `required` can be restored at any later start.
-- **What the opt-out gives up:** only the runtime promise that a Wellspring stands within 180 blocks of the bootstrap ([wands, Contracts on sibling specs](wands.md#contracts-on-sibling-specs)). Every content lint still bounds Stage 1 costs by the Wellspring's 32 per aspect ([arcane, Recipes](arcane.md#recipes); [crucible, Recipes](crucible.md#recipes)), the Wellspring stays unhushable ([Hush, Hushed nodes](hush.md#hushed-nodes)), and the affordability paths still name `vftv:starter`. **Until a starter exists, Stage 1 vis comes only from natural nodes, which a void world may lack, so the world may be unwinnable until an operator runs `/vftv node starter`.** The key's comment says so.
+- **An existing starter is never touched** by any mode, and no mode warns when the spawn or protection later moves. Switching to `off` neither removes nor moves it.
+- **What `best_effort` and `off` give up, where no candidate exists:** only the runtime promise that a Wellspring stands within 180 blocks of the bootstrap ([wands, The starter](wands.md#the-starter)). Every content lint still bounds Stage 1 costs by the Wellspring's 32 per aspect ([arcane, Recipes](arcane.md#recipes); [crucible, Recipes](crucible.md#recipes)), the Wellspring stays unhushable ([Hush, Hushed nodes](hush.md#hushed-nodes)), and the affordability paths still name `vftv:starter`. **Until a starter exists, Stage 1 vis comes only from natural nodes, which a void world may lack, so the world may be unwinnable until an operator runs `/vftv node starter`.** The key's comment says so.
 
 ### Before the first start
 
-A world that would fail `required` must be opted out **before** it first starts:
+Only a pack that opted into `required` needs this: a world that would fail `required` must be opted out **before** it first starts:
 - **One world** (a dedicated server, whose `level-name` folder can be prepared before its first start): create `<world>/serverconfig/vftv-server.toml` containing `[nodes]` and `starter = "best_effort"` (or `"off"`). The rest of the file is filled with defaults when it loads, and the file is backed up and rewritten ("Validation").
 - **Every world of an instance, a pack, or a new single-player world** (which starts as soon as it is created): set the key in `<instance>/config/vftv-server.toml`, or ship it in `defaultconfigs/vftv-server.toml`, which is copied there when the instance file is missing.
 - **After a failed start:** the active file was already loaded, and so written, before the starter ran ("Loading"); edit it and start again.
@@ -191,7 +193,7 @@ Then, once the server is up, place the Wellspring with `/vftv node starter <pos>
 
 **The commit is one birth, exactly as the automatic starter's:** `next_id` is taken; the node block and its block entity are set at `pos` with that id, type `vftv:wellspring`, `origin: starter`; the entry is recorded `PLACED` there; `starter` records the id and the current overworld respawn position as its bootstrap; the index is updated; the SavedData is marked dirty; the block update is sent. **Only then** is `NodeEvent(CREATED, COMMAND)` posted, once, and `commands.vftv.node.starter_placed` (the id and position) reported to the source and operators. The block entity's `onLoad` queues reconciliation, which finds `PLACED` here and does nothing.
 
-**No standing-spot, reach or protection check:** the operator chose the spot. Under `required`, the later-start warning still applies to a starter placed this way.
+**No standing-spot, reach or protection check:** the operator chose the spot. The placement resends `VisRules` with its `starter` flag set, so the book's `{fact:vis:starter}` updates at once.
 
 ## Commands
 
@@ -251,7 +253,7 @@ The native behaviour, which this spec adopts, for **an existing file that parses
 
 The spec promises no warning count on either branch, only usable, corrected values and a rewritten file.
 
-- **A typo'd switch takes its default:** a mistyped `hush.unattended` is **off**, and a mistyped `warp.voices.spawn` is **on**. The warning and the rewritten file are the operator's signal. The `vftv` logger raises no error for any of these ([quality gates, Logging](quality-gates.md#logging)).
+- **A typo'd switch takes its default:** a mistyped `hush.unattended` is **off**, and a mistyped `warp.voices.bargain` is **on**. The warning and the rewritten file are the operator's signal. The `vftv` logger raises no error for any of these ([quality gates, Logging](quality-gates.md#logging)).
 - **The records are built only from corrected values,** so no service ever sees an out-of-range value or a value of the wrong type.
 - **Every key carries an explicit English `.comment()`** ("Lang keys"), stating its effect, its range or allowed values and its default; when it applies is in the key tables ("Server keys", "Client keys"), and `nodes.starter`'s comment also says it is read at server start. The native machinery does not append a range or default to every kind of value (`NF:common/ModConfigSpec.java:372–377,734–758`), so the comment never relies on it.
 - **`nodes.starter` is marked `worldRestart()`** (`NF:common/ModConfigSpec.java:834–840`), so the config screen flags it.
@@ -269,9 +271,9 @@ The spec promises no warning count on either branch, only usable, corrected valu
   | `GolemRules` | `golems.max_per_chunk` (the `limits.max_per_chunk` fact) | join, `/reload`, a changed publish |
   | `quotes` | `research.mode`, as one byte: 0 `gentle`, 1 `standard`, 2 `hard`, 3 `skip`; any other value is rejected at decode | to an **open** Commonplace Book only: when it opens, and on a changed publish |
 
-  Keys 3–11, 18 and 20 are absent from our owner payloads (NeoForge still syncs the whole file, which the client ignores).
+  Keys 3–9, 16, 18 and 19 are absent from our owner payloads (NeoForge still syncs the whole file, which the client ignores).
 - **At disconnect** the client drops every rules record and quote it holds, so a fact reads `[?]` until the next server sends its own, as each owner's "until the first … arrives" rule already says.
-- **Client options are cosmetic by construction.** Turning `voices.phantoms` off shows the real block under a disguise, which is what the fork reveals anyway ([warp, Phantoms](warp.md#phantoms)); no option reveals anything the server hides.
+- **Client options are cosmetic by construction.** Turning `voices.phantoms` off removes apparitions, which stand for nothing in the world ([warp, Phantoms](warp.md#phantoms)); no option reveals anything the server hides.
 
 ## The config screen
 
@@ -284,7 +286,7 @@ The spec promises no warning count on either branch, only usable, corrected valu
 
 Every key and section carries `.translation("options.vftv.<path>")`. Eight keys are owned, and already listed, by their systems' lang tables: `options.vftv.spectacles.card` and `.baffle.hud` ([armor](armor.md#lang-keys)), `.hush.muffle` and `.hush.hud` ([Hush](hush.md#lang-keys)), and `.voices.text`, `.voices.colour_shift`, `.voices.phantoms`, `.voices.phantom_sounds` ([warp](warp.md#lang-keys)). **This spec owns every other `options.vftv.*` key**, below. Its English is final, not a sense: datagen writes these as code-defined UI keys into `assets/vftv/lang/en_us.json`, as the research spec's UI keys are written, so no `content/` file and no production ticket is needed. None has a placeholder. Translations go in `content/lang/<lang>/config.json` ([localisation, Files](accessibility.md#files)).
 
-**Tooltips and enum values** are this spec's too, for all 31 keys, the eight owner-held ones included:
+**Tooltips and enum values** are this spec's too, for all 30 keys, the eight owner-held ones included:
 - **`options.vftv.<path>.tooltip`** for every key: its English is the key's comment below, verbatim.
 - **Enum values:** `options.vftv.research.mode.gentle`, `.standard`, `.hard`, `.skip` ("Gentle", "Standard", "Hard", "Skip: buy research with points") and `options.vftv.nodes.starter.required`, `.best_effort`, `.off` ("Required", "Best effort", "Off").
 
@@ -299,6 +301,7 @@ Every key and section carries `.translation("options.vftv.<path>")`. Eight keys 
 | `options.vftv.foci` | Foci | server |
 | `options.vftv.golems` | Golems | server |
 | `options.vftv.nodes` | Nodes | server |
+| `options.vftv.aspects` | Aspects | server |
 | `options.vftv.vis_hud` | Vis HUD | client |
 | `options.vftv.spectacles` | Tuned Spectacles | client |
 | `options.vftv.baffle` | The Baffle | client |
@@ -315,11 +318,9 @@ Every key and section carries `.translation("options.vftv.<path>")`. Eight keys 
 | `options.vftv.warp.voices.insight` | Insights | "Insight events (aspect points). Off: never chosen. Default: true." |
 | `options.vftv.warp.voices.sound` | Sounds | "Phantom sound events. Off: never chosen. Default: true." |
 | `options.vftv.warp.voices.colour` | Colour drain | "Colour drain events. Off: never chosen. Default: true." |
-| `options.vftv.warp.voices.phantom_block` | Phantom blocks | "Disguised block events. Off: never chosen. Default: true." |
 | `options.vftv.warp.voices.phantom_mob` | Apparitions | "Apparition events. Off: never chosen. Default: true." |
 | `options.vftv.warp.voices.bargain` | Bargains | "Bargain offers. Off: no new offer; a standing one stays. Default: true." |
 | `options.vftv.warp.voices.status` | Status effects | "Status-effect events in context. Off: never chosen. Default: true." |
-| `options.vftv.warp.voices.spawn` | Spawned mobs | "Mob-spawning events in context. Off: never chosen. Default: true." |
 | `options.vftv.warp.tax` | Warp vis tax | "Warp raises vis costs and lowers infusion stability. Off: neither. Running infusions keep their plan. Default: true." |
 | `options.vftv.warp.amplifier` | Warp amplifier | "Warp strengthens Void workings and Void armour. Off: no amplification. Default: true." |
 | `options.vftv.warp.gear` | Gear warp | "Warp from worn and carried gear. Off: gear adds none. Default: true." |
@@ -328,12 +329,13 @@ Every key and section carries `.translation("options.vftv.<path>")`. Eight keys 
 | `options.vftv.hush.unattended` | Spread without players | "Hush spread and Pealing Bells run with no player nearby. Default: false." |
 | `options.vftv.foci.block_effects` | Foci change blocks | "Foci that break or change blocks. Off: refused; a running Beam stops at its next pulse. Default: true." |
 | `options.vftv.golems.max_per_chunk` | Golems per chunk | "Most golems placed in one chunk. Placement only; never removes golems. Range: 1 to 256. Default: 16." |
-| `options.vftv.nodes.starter` | Starter Wellspring | "required: place it near spawn or fail startup. best_effort: place it if possible, else warn. off: never place it. Without one the world may be unwinnable until /vftv node starter <pos>. Read at server start. Default: required." |
+| `options.vftv.nodes.starter` | Starter Wellspring | "best_effort: place it near spawn if possible, else warn and tell the first operator to join. required: place it or crash at startup. off: never place it. Without one the world may be unwinnable until /vftv node starter <pos>. Read at server start. Default: best_effort." |
+| `options.vftv.aspects.derive_modded` | Derive modded aspects | "Give items without authored aspects values derived from their recipes, at each data load. Authored values win; {} suppresses. Off: no derived values. Default: true." |
 | `options.vftv.vis_hud.x` | Vis HUD x | "Left edge of the vis HUD, in GUI pixels. Range: 0 to 4096. Default: 4." |
 | `options.vftv.vis_hud.y` | Vis HUD y | "Top edge of the vis HUD, in GUI pixels. Range: 0 to 4096. Default: 4." |
 | `options.vftv.book.clear_prose` | Clear prose | "Show the Commonplace Book without warp's marginalia and strikeouts. Default: false." |
 
-The eight owner-held keys get comments in the same form: `spectacles.card` "Show the Tuned Spectacles card. Default: true."; `baffle.hud` "Show the Baffle row above the hotbar. Default: true."; `hush.muffle` "Quieten sounds inside the Hush. Default: true."; `hush.hud` "Show the Clearing Bell's reading. Default: true."; `voices.text` "Show the words of every Voice line. Default: true."; `voices.colour_shift` "Let the Voices drain colour from the screen. Default: true."; `voices.phantoms` "Show phantom blocks and apparitions. Default: true."; `voices.phantom_sounds` "Play phantom sounds. Default: true." Enum values show through their translated names (above); the comment text names the TOML values.
+The eight owner-held keys get comments in the same form: `spectacles.card` "Show the Tuned Spectacles card. Default: true."; `baffle.hud` "Show the Baffle row above the hotbar. Default: true."; `hush.muffle` "Quieten sounds inside the Hush. Default: true."; `hush.hud` "Show the Clearing Bell's reading. Default: true."; `voices.text` "Show the words of every Voice line. Default: true."; `voices.colour_shift` "Let the Voices drain colour from the screen. Default: true."; `voices.phantoms` "Show apparitions. Default: true."; `voices.phantom_sounds` "Play phantom sounds. Default: true." Enum values show through their translated names (above); the comment text names the TOML values.
 
 ## Compatibility
 
@@ -350,7 +352,7 @@ A changed default reaches new files only: an existing instance or world file kee
 
 ## Performance
 
-Configuration has **no tick workload and no hot path of its own:** a read is a field load of an immutable record, charged to the owner's hot path that makes it, with no allocation. Its share of the [whole-mod envelope](quality-gates.md#whole-mod-envelope) is 0. **Publishing** is rare and bounded: six records, then at most three rules payloads per player plus one `quotes` per open book. It is measured as an explicit **load scenario**, reported apart from steady state ([quality gates, Reference](quality-gates.md#reference)): the reference stress world's player plus the E2E's connected client, with every server key flipped at once. It adds nothing to the reference stress world's steady-state workload.
+Configuration has **no tick workload and no hot path of its own:** a read is a field load of an immutable record, charged to the owner's hot path that makes it, with no allocation. Its share of the [whole-mod envelope](quality-gates.md#whole-mod-envelope) is 0. **Publishing** is rare and bounded: seven records, then at most three rules payloads per player plus one `quotes` per open book. It is measured as an explicit **load scenario**, reported apart from steady state ([quality gates, Reference](quality-gates.md#reference)): the reference stress world's player plus the E2E's connected client, with every server key flipped at once. It adds nothing to the reference stress world's steady-state workload.
 
 ## Tests
 
@@ -360,14 +362,15 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 - every boolean key is declared through the class-aware `define` overload (a test over the spec's value specs: each boolean's class is `Boolean`);
 - the template branches, asserting corrected, usable records and rewritten output, **with no exact warning count:** a missing active file with a partial template (`[research]`, `mode = "skip"` only) gives `skip` and every other key's default; a malformed active file with that template is backed up and recreated with the same records;
 - the active path: an instance file alone is used; a world override wins over it; a missing instance file is copied from `defaultconfigs/`;
-- publishing: no current server ignores the event before any value is read; a remote synced `Reloading` is ignored; same-thread inline; off-thread queued; a runnable that runs after its server stopped, or after a different server started, does nothing; `equals`-gated re-sends (exactly one per changed record, none when unchanged; keys 3–11, 18 and 20 send nothing); `ServerStoppedEvent` resets every record;
+- publishing: no current server ignores the event before any value is read; a remote synced `Reloading` is ignored; same-thread inline; off-thread queued; a runnable that runs after its server stopped, or after a different server started, does nothing; `equals`-gated re-sends (exactly one per changed record, none when unchanged; keys 3–9, 16, 18 and 19 send nothing); `ServerStoppedEvent` resets every record;
 - `quotes.mode`: each byte round-trips; 4 and 255 are rejected at decode.
 
 **ArchUnit:** `CONFIG_SIDES`, with a fixture for each forbidden direction (server code using a `*ClientConfig`; a `..client..` class using `WarpConfig` or the server spec) and a permitted `neoforge.config.client` adapter.
 
 **GameTest:**
 - every server key **off and on**, owned and already required by its owner: [warp](warp.md#tests) (every switch), [Hush](hush.md#tests) (spread, Hollows, unattended spread, and a **Pealing Bell with no player near it** idle with `hush.unattended` off and pealing with it on), [foci](foci.md#tests) (`foci.block_effects` off refuses Delve and **ends a running Delve Beam at its next pulse with the paid pulses kept**), [golems](golems.md#tests) (placement up to the cap; a lowered cap removes no golem), [research](research.md#tests) (each preset and skip; a mode switch mid-note keeps the snapshot);
-- **the starter modes**, with an impossible candidate set: `required` fails with the three remedies and the active file's path; `best_effort` starts with one WARN and no starter, and retries at the next start; `off` is silent; an existing starter is untouched by every mode;
+- **the starter modes**, with an impossible candidate set: `best_effort` (the default, with no file present) starts with one WARN and no starter, retries at the next start, sends the first joining level-2 player one status line naming `/vftv node starter <pos>` and a level-0 player and a second level-2 player none; `required` throws `IllegalStateException` from the `ServerStartedEvent` listener with the three remedies and the active file's path; `off` is silent, with no notice; an existing starter is untouched by every mode;
+- **`aspects.derive_modded`**, owned by [aspects](aspects.md#tests): on, a modded item with a recipe and no authored entry gets a derived value after a data load; off and `/reload`, it has none; an authored entry and `{}` win either way;
 - **`/vftv node starter`:** places a Wellspring with one `NodeEvent(CREATED, COMMAND)` and the starter, index and dirty state set before it; refuses a second; refuses a nether source, an unloaded and an out-of-world position, a dormant `vftv_nodes`, a non-air block, a position outside the border, a full cell and a node within spacing, each with its message, reserving no id;
 - **commands:** a level-0 source can neither run nor see `/vftv`; a level-2 source runs every command except `aspects derive`, which it can neither run nor see, and a level-4 source runs that too; every bounded argument rejects its neighbours (stage 5, progress 4, amount 0 and 1,000,001, radius 5 and 17, `add` ±1,001, `set` 10,001); `flux clear` with radius 4 beside unloaded chunks loads none of them; `hush restore` across an unloaded chunk loads none and reports the continuation index;
 - each test id in the discovery guard.
@@ -378,14 +381,15 @@ Configuration has **no tick workload and no hot path of its own:** a read is a f
 - two single-player worlds, one with a world override, keep their own values across a switch between them;
 - every client option toggled through the config screen applies live (screenshots and dumps; the colour drain turned off at its 65% peak reaches zero within 50 ticks with no frame-to-frame step above 1.3%); the server section is read-only on a remote server and on a LAN-opened world.
 
-**Language:** every key, section, tooltip, enum value and command key above exists in `en_us`, with matching placeholder counts; each `.tooltip` equals its key's comment. **E2E:** under the localisation pseudo-locale pack the config screen shows translated tooltips and enum values, never the English comment or `name()`.
+**Language:** every key, section, tooltip, enum value and command key above exists in `en_us`, with matching placeholder counts; each `.tooltip` equals its key's comment. The pseudo-locale check of translated tooltips and enum values moves to the second-locale ticket ([localisation](accessibility.md)).
 
 ## Contracts on sibling specs
 
 Each spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
 
 - **[Architecture](architecture.md):** "Seams" (the config row: per-feature records, the guarded publish and the `equals`-gated re-sends), "Data and code" (client config, the boundary, a link here), "Threading" (config publication) and "Enforcement" (`CONFIG_SIDES`).
-- **[Wands](wands.md):** "The starter" (the three remedies with the active file's path, the terrain wording instead of a categorical void claim, the warning under `required` only, the guarantee qualified by `nodes.starter`); "Identity and reconciliation" and "Creation, removal and sharing" (the command birth); `/vftv node starter` and its lang keys; `vis_hud.x` and `vis_hud.y`; the tests and the acceptance row.
+- **[Wands](wands.md):** "The starter" (`best_effort` by default with the op join notice, the sounding line and the `starter` fact; `required` as an opt-in `IllegalStateException` naming the three remedies and the active file's path; the terrain wording instead of a categorical void claim; no later-start warning);
+- **[Aspects](aspects.md):** the `DerivedAspects` table behind `aspects.derive_modded`; "Identity and reconciliation" and "Creation, removal and sharing" (the command birth); `/vftv node starter` and its lang keys; `vis_hud.x` and `vis_hud.y`; the tests and the acceptance row.
 - **[Research](research.md):** `quotes.mode` and its re-send; the reload table's server-config row; the command lang keys.
 - **[Golems](golems.md):** `GolemRules` re-sent on a changed cap; the reload table's server-config row.
 - **[Warp](warp.md):** `WarpRules` carries exactly four switches; the reload row's apply points; the client options' on-change behaviour.

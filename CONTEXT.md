@@ -119,7 +119,7 @@ One of four steps, 0 to 3, of a Listener's total warp (all four kinds together).
 _Avoid_: sanity level, warp tier
 
 **Voice event**:
-Something the Voices do to one Listener: a whisper, a phantom, an offer, or in Void-touched places a danger. Voice events are rationed by a counter that rises as warp is gained.
+Something the Voices do to one Listener: a whisper, a phantom, an offer, or in Void-touched places a danger. Voice events are rationed by a counter that rises as warp is gained, at each Listen rite, and with Void-tier work (which feeds only the counter, never warp).
 _Avoid_: warp event, insanity event
 
 **Voice line**:
@@ -127,8 +127,12 @@ One recorded phrase of the Voices, heard by one Listener with its words shown on
 _Avoid_: whisper (as a proper noun), voice clip (in player-facing text)
 
 **Bargain**:
-An offer from the Voices of power in exchange for more warp. It can always be refused at no cost.
+An offer from the Voices of power in exchange for more warp. It can always be refused at no cost. A Bargain never pays in aspect points.
 _Avoid_: pact, deal
+
+**Listen rite**:
+A deliberate, repeatable listen at a Void-touched place, open from the Ruins Stage (after the Vacuos revelation) to any Listener who hasn't chosen Silencing. It costs lasting warp, shown before the Listener commits, has a cooldown, and draws the Voices' attention at once. It is how warp is turned back up after stilling.
+_Avoid_: ritual, summoning, prayer
 
 **Stilling**:
 Treating lasting warp. It always works and always costs something. Distinct from Silencing, which is an ending.
@@ -164,8 +168,12 @@ An aspect the Listener has met but not yet discovered, because its parents aren'
 _Avoid_: unknown aspect, locked aspect
 
 **Aspect points**:
-A Listener's store of each aspect, earned by striking things for the first time and spent on research. Uncapped.
-_Avoid_: research points, RP
+A Listener's store of each aspect, earned by striking things for the first time and spent only when research is learned or bought; placing aspects on a note costs nothing until then. Uncapped and abundant: knowing aspects and making finds gate research, not points.
+_Avoid_: research points, RP, held points, reserved points
+
+**Derived values**:
+Aspect values the server works out when its data loads, from the recipes of items that no datapack gives values to, such as another mod's items. Any authored value overrides them.
+_Avoid_: derived aspect (a compound is not derived), auto-aspects
 
 **Vis**:
 Free-flowing magical energy: resonance not bound to any object.
@@ -326,7 +334,7 @@ A change set into a focus, such as more force or a wider burst. Each level of a 
 _Avoid_: augment, upgrade (a rank is the upgrade)
 
 **Rank**:
-How many modifier levels a focus can hold, raised at the Lathe for experience and vis. It never falls.
+How many modifier levels a focus can hold, raised at the Lathe for vis only. It never falls.
 _Avoid_: tier (aspects have tiers), level (of a focus)
 
 **Lathe**:

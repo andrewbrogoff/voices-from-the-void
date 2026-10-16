@@ -1,6 +1,6 @@
 # Foci
 
-What a wand casts. A **focus** is set on a wand and works one **effect**, delivered by one **medium** and changed by **modifiers** up to its **rank**. Foci are composed for free at the **Lathe**, their ranks are raised there for experience and vis, and Void-tier effects grow stronger with warp. Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). The code layout, data rules and sync rules come from the [architecture spec](architecture.md), every gate from the [quality gates](quality-gates.md), the vis economy and the one spend from the [wands spec](wands.md), research gates and the book from the [research spec](research.md), the Worktable recipe type from the [arcane crafting spec](arcane.md), and every asset from the [art style](art-style.md).
+What a wand casts. A **focus** is set on a wand and works one **effect**, delivered by one **medium** and changed by **modifiers** up to its **rank**. Foci are composed for free at the **Lathe**, their ranks are raised there for vis, and Void-tier effects grow stronger with warp. Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). The code layout, data rules and sync rules come from the [architecture spec](architecture.md), every gate from the [quality gates](quality-gates.md), the vis economy and the one spend from the [wands spec](wands.md), research gates and the book from the [research spec](research.md), the Worktable recipe type from the [arcane crafting spec](arcane.md), and every asset from the [art style](art-style.md).
 
 Resolved in [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22). Inputs: [TC4 core loop](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-core/docs/research/tc4-core.md), [TC4 alchemy and infusion](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/tc4-alchemy/docs/research/tc4-alchemy.md) (§4, wand foci and the upgrade station), [community pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md), [NeoForge 26.2 research](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/neoforge-26-2/docs/research/neoforge-26-2.md).
 
@@ -10,22 +10,23 @@ Resolved in [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/is
 
 | Stage | What this spec puts there | Find |
 |---|---|---|
-| 1 Resonance | the focus, the Lathe, the effects Kindle and Gust, the media Bolt and Touch | the Stage is opened by the amethyst geode ([research, Stage](research.md#stage)). Inside it, `vftv:foci` follows `vftv:arcane_crafting`, so **the first arcane craft is the step before the first focus** |
+| 1 Resonance | the focus, the Lathe, the effects Kindle and Gust, the media Bolt and Touch | the Stage is opened by the amethyst geode ([research, Stage](research.md#stage)). Inside it, `vftv:arcane_crafting` also gates the Lathe, and `vftv:foci` follows it, so **the first arcane craft is the step before the first focus** |
 | 2 Distillation | ranks 1–2, the modifiers Force, Reach and Breadth; the effects Delve and Rime, the medium Burst | the opener `vftv:distillation` ([Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)'s find) |
 | 3 Ruins | rank 3; the effects Exchange and Mend, the medium Beam | the opener `vftv:ruins` (#27's find) |
 | 4 The Choir's Road | the two Void-tier effects, Unmaking and Undertow | the opener `vftv:choirs_road` ([Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)'s find) |
 
-Five `note` entries, authored by the research content tickets:
+Five `note` entries, authored by the research content tickets, plus one recipe on an entry this spec doesn't own:
 
 | Entry | Stage | Parents | Gates |
 |---|---|---|---|
-| **`vftv:foci`** | 1 | `vftv:arcane_crafting` | the arcane recipes `vftv:lathe` and `vftv:blank_focus`; effects `vftv:kindle`, `vftv:gust`; media `vftv:bolt`, `vftv:touch` |
+| `vftv:arcane_crafting` (the [arcane spec's](arcane.md#stage)) | 1 | as there | also the arcane recipe `vftv:lathe`, so its tutorial page can show the Lathe beside its own recipes and a player can build the instrument before choosing a focus |
+| **`vftv:foci`** | 1 | `vftv:arcane_crafting` | the arcane recipe `vftv:blank_focus`; effects `vftv:kindle`, `vftv:gust`; media `vftv:bolt`, `vftv:touch` |
 | **`vftv:focus_ranks`** | 2 | `vftv:foci`, `vftv:resonant_brass` | ranks 1 and 2; modifiers `vftv:force`, `vftv:reach`, `vftv:breadth` |
 | **`vftv:delving`** | 2 | `vftv:foci`, `vftv:distillation` | effects `vftv:delve`, `vftv:rime`; medium `vftv:burst` |
 | **`vftv:far_workings`** | 3 | `vftv:focus_ranks`, `vftv:ruins` | effects `vftv:exchange`, `vftv:mend`; medium `vftv:beam`; rank 3 |
 | **`vftv:void_foci`** | 4 | `vftv:far_workings`, `vftv:choirs_road` | effects `vftv:unmaking`, `vftv:undertow` |
 
-- **Gate actions, not crafts** ([wands, Stage](wands.md#stage)). The two arcane recipes carry `research` ([arcane crafting, The recipe type](arcane.md#the-recipe-type)). Every other gate is checked **on the server at the action**: a compose checks the effect, the medium and each modifier; a rank-up checks that rank's entry; a cast checks all of a composition's parts, at its start and at every Beam pulse.
+- **Gate actions, not crafts** ([wands, Stage](wands.md#stage)). The two arcane recipes carry `research` (`vftv:lathe` → `vftv:arcane_crafting`, `vftv:blank_focus` → `vftv:foci`) ([arcane crafting, The recipe type](arcane.md#the-recipe-type)). Every other gate is checked **on the server at the action**: a compose checks the effect, the medium and each modifier; a rank-up checks that rank's entry; a cast checks all of a composition's parts, at its start and at every Beam pulse.
 - **Obtaining counts.** A focus or a Lathe can be found, carried or handed over. A focus attaches freely and casts only for a holder who has learned all of its parts.
 - **Options considered:** a Stage 1 find of its own (striking a blaze, or a second geode visit); everything from Stage 2. **Why notes after `vftv:arcane_crafting`:** the progression puts the first magic in the first session ([progression, The first hour](progression.md#the-first-hour)), and another find would add a chore with no decision behind it. Each later Stage's content hangs off that Stage's own opener, so Stages stay find-opened ([progression, Stages](progression.md#stages)).
 
@@ -135,9 +136,9 @@ The built-ins: 8 effects, 4 media, 3 modifiers. Depth comes from combining them,
 | `vftv:kindle` | ordinary | Ignis | Ignis 4 | bolt, touch, burst, beam | damage 3000, `vftv:kindle`, ignite 60 | `vftv:foci` |
 | `vftv:gust` | ordinary | Aer | Aer 3 | bolt, touch, burst | push 1200 | `vftv:foci` |
 | `vftv:rime` | ordinary | Gelum | Aqua 4, Ordo 2 | bolt, touch, burst, beam | damage 2000, `vftv:focus`, slow 100 ticks at amplifier 0 | `vftv:delving` |
-| `vftv:delve` | ordinary | Terra | Terra 3, Perditio 2 | touch, burst, beam | tool `minecraft:iron_pickaxe`, max hardness 3.0 | `vftv:delving` |
+| `vftv:delve` | ordinary | Terra | Terra 3, Perditio 2 | touch, burst, beam | tool `minecraft:iron_pickaxe`, max hardness 4.5 | `vftv:delving` |
 | `vftv:mend` | ordinary | Victus | Aqua 4, Terra 4 | touch, burst, beam | heal 3000 | `vftv:far_workings` |
-| `vftv:exchange` | ordinary | Permutatio | Ordo 3, Perditio 3, Terra 2 | touch, burst | tool `minecraft:iron_pickaxe`, max hardness 3.0 | `vftv:far_workings` |
+| `vftv:exchange` | ordinary | Permutatio | Ordo 3, Perditio 3, Terra 2 | touch, burst | tool `minecraft:iron_pickaxe`, max hardness 4.5 | `vftv:far_workings` |
 | `vftv:unmaking` | void | Vacuos | Perditio 6, Aer 3 | bolt, touch, beam | damage 4000, `vftv:unmaking` | `vftv:void_foci` |
 | `vftv:undertow` | void | Alienis | Aer 4, Perditio 4 | touch, burst | pull 1000 | `vftv:void_foci` |
 
@@ -154,6 +155,7 @@ The built-ins: 8 effects, 4 media, 3 modifiers. Depth comes from combining them,
 | `vftv:reach` | 1150 | 2 | `step` 2.0 | `vftv:focus_ranks` |
 | `vftv:breadth` | 1500 | 2 | `radius_step` 1.0, `block_step_sq` 3 | `vftv:focus_ranks` |
 
+- **Max hardness 4.5** lets Delve and Exchange take deepslate ores (4.5), which most ores below y 0 are; the `tool` gate already handles tier. Obsidian (50), ancient debris (30), reinforced deepslate, anvils and enchanting tables (5.0) stay out.
 - **Names** follow the [lore spec's](lore.md#vocabulary-policy) policy: plain English, none of them TC4's (Kindle rather than Fire, Rime rather than Frost, Delve rather than Excavation, Exchange rather than Equal Trade, Force rather than Potency, Breadth rather than Enlarge). The two Void effects are named in Void-tongue by the [Void-tongue lexicon](warp.md#production-tickets) ticket, through their lang keys; their ids stay English.
 - **Cut from v1:** a temporary passage through walls (it needs a persistent restore queue across chunk unloads and its own suffocation rules) and a ward that makes blocks unbreakable (it needs a per-block owner store and break overrides). Each is a separate system; either is a later proposal. Packs and addons add effects through the registries.
 - **Options considered:** fixed foci, one item per spell (TC4); a free-form glyph language. **Why parts on a simple screen:** the progression asks for composable foci on a simple GUI ([progression, TC4 systems](progression.md#tc4-systems-kept-redesigned-cut)), and the pain-points research found that a programmer-style GUI was resented while composition was loved.
@@ -232,7 +234,7 @@ with one case per built-in effect (the example shows one). **`minecraft:empty`**
 
 ### The block
 
-**`vftv:lathe`**: no block entity; 4 horizontal facings (the front faces the placer); hardness 2.5; `#minecraft:mineable/axe`; drops itself (a loot table); `PushReaction.NORMAL`. It is made at the Worktable from the arcane recipe `vftv:lathe`, gated by `vftv:foci`.
+**`vftv:lathe`**: no block entity; 4 horizontal facings (the front faces the placer); hardness 2.5; `#minecraft:mineable/axe`; drops itself (a loot table); `PushReaction.NORMAL`. It is made at the Worktable from the arcane recipe `vftv:lathe`, gated by `vftv:arcane_crafting`.
 
 **Use** (`useWithoutItem` and `useItemOn` returning `TRY_WITH_EMPTY_HAND`) opens the menu for the player, after vanilla's spawn protection, `mayInteract` and `RightClickBlock`. A sneaking click with an item never reaches it (vanilla), and a sneaking click with a focused wand is that wand's block-targeted cast (see "Casting").
 
@@ -272,29 +274,21 @@ with one case per built-in effect (the example shows one). **`minecraft:empty`**
 | **detail line** | 160×9 | (8, 103) | cooldown, ranges or radius, pulse, magnitude; clipped with "…", complete in its tooltip; an inspection focus target ([localisation, R2](accessibility.md#r2-one-line-fields)) |
 | **Turn** button | 54×18 | (8, 114) | compose; its label under R2 |
 | **Raise rank** button | 54×18 | (114, 114) | rank up; its label under R2 |
-| **Details** button | 18×18 | (170, 114) | opens the rank details ("The complete rank quote"); label `gui.vftv.lathe.rank_details` as its tooltip and narration |
 | **status line** | 160×9 | (8, 136) | one line, clipped with "…", complete in its tooltip; an inspection focus target while it shows text |
 | inventory label | one line | (8, 147) | vanilla `container.inventory` |
 
-**Sprites** (under `assets/vftv/textures/gui/sprites/`): `lathe/choice_idle`, `choice_hover`, `choice_selected`, `choice_disabled` (20×20); `lathe/socket_open`, `socket_closed` (20×20); `lathe/pip_full`, `pip_empty` (5×5); `lathe/button`, `button_hover`, `button_disabled` (54×18); `lathe/details`, `details_hover` (18×18, a lens over lines); `container/slot/focus` (16×16). The rank details panel reuses the research spec's 160×80 confirm panel sprite as a nine-slice ([research, GUI contract](research.md#gui-contract)) and its scrollbar sprites. The cost cells reuse `vftv:worktable/cost_cell`, `cost_cell_short` and `beyond`.
+**Sprites** (under `assets/vftv/textures/gui/sprites/`): `lathe/choice_idle`, `choice_hover`, `choice_selected`, `choice_disabled` (20×20); `lathe/socket_open`, `socket_closed` (20×20); `lathe/pip_full`, `pip_empty` (5×5); `lathe/button`, `button_hover`, `button_disabled` (54×18); `container/slot/focus` (16×16). The cost cells reuse `vftv:worktable/cost_cell`, `cost_cell_short` and `beyond`.
 
 **The draft.** The screen edits a client-side draft: the effect, the medium and the socket contents. On opening, and whenever slot 0 changes, it is reset to the focus's composition (empty for a blank).
 - **Choosing an effect** keeps the medium if it is still valid, else selects the first valid learned medium in ascending id. It then drops any socket whose modifier is no longer valid.
 - **A socket** cycles, on each click, through *none* and then every learned modifier that would keep the draft valid, in ascending id. A modifier whose behaviour type another socket already holds through a **different** entry is never offered (one instance per type, "Validity"). Right-click cycles backwards.
 - **Socket aggregation:** a modifier's level is the number of sockets holding that entry, so two Force sockets are Force 2. Socket order is display only: sockets are drawn sorted by modifier id, then empties.
 
-**What the cost panel prices** (the composition's per-cast cost, or, while **Raise rank** is hovered or focused, the rank-up's vis cost): one cell per base aspect, in ascending aspect id, from the authoritative preview with the wand in slot 1 (see "The authoritative preview"). The cost tooltip is the arcane spec's: the aspect's effective and base cost, the pool, the factors (cap, gear discount, warp, `m`), each flag that is set, and the spill when above 0. With no wand or an inert wand, the cells show the base cost and the tooltip names why. The **Raise rank** tooltip adds the experience price, `tooltip.vftv.lathe.rank_xp` (levels, the player's levels).
+**What the cost panel prices** (the composition's per-cast cost, or, while **Raise rank** is hovered or focused, the rank-up's vis cost): one cell per base aspect, in ascending aspect id, from the authoritative preview with the wand in slot 1 (see "The authoritative preview"). The cost tooltip is the arcane spec's: the aspect's effective and base cost, the pool, the factors (cap, gear discount, warp, `m`), each flag that is set, and the spill when above 0. With no wand or an inert wand, the cells show the base cost and the tooltip names why. **A rank-up's whole price is its vis**, so the cells priced while Raise rank is hovered or focused are the complete rank quote, and **Raise rank's tooltip** is the arcane cost tooltip for that vis (at most three aspects in the shipped ranks), which fits under the localisation fixtures ([localisation, R6](accessibility.md#r6-tooltips)); no separate panel is needed.
 
-**The complete rank quote** is too long for a tooltip under the localisation fixtures (three aspects, each with its cost, pool, factors, flags and spill, then the experience price), so it lives in a **rank details** panel ([localisation, R6](accessibility.md#r6-tooltips)), and Raise rank's tooltip stays short (`tooltip.vftv.lathe.rank_xp` only):
-- **Opened** by the Details button, with the mouse or with Enter or Space while it is focused. It stays usable while Raise rank is disabled, so a price can be read before it can be paid.
-- **Bounds:** a 200×124 panel at (44, 40) on the background; the title `gui.vftv.lathe.rank_details`, one line under R2, at (8, 6); the **body**, a prose viewport ([localisation, R1](accessibility.md#r1-viewports)) at (8, 18), 180×78, with its scrollbar at (190, 18); **Close** (`gui.vftv.lathe.close`), 54×18, at (73, 100).
-- **Body:** the rank-up's vis cost, one block per base aspect in ascending aspect id, each block the cost tooltip's lines in the arcane order; then `tooltip.vftv.lathe.rank_xp`. It is the same preview as the cost panel's, refreshed live while open; the scroll position is kept.
-- **Focus:** opening moves focus to the body; Tab cycles body → Close; Esc or Close closes the panel and returns focus to the Details button. While it is open the rest of the screen ignores input.
-- **Narration:** the title, then every line of the body, exact numbers included.
+Moving focus from Raise rank to the cells returns them to the per-cast cost. **Each cost cell is a focus target** under the arcane spec's rule ([arcane crafting, The screen](arcane.md#the-screen)): on focus it shows its tooltip, and its narration reads every line of it. The tooltips wrap at 170 px and fit 232 px tall under the localisation fixtures ([localisation, R6](accessibility.md#r6-tooltips)).
 
-Moving focus from Raise rank to the cells returns them to the per-cast cost; the rank details keep the rank quote whole. **Each cost cell is a focus target** under the arcane spec's rule ([arcane crafting, The screen](arcane.md#the-screen)): on focus it shows its tooltip, and its narration reads every line of it. The tooltips wrap at 170 px and fit 232 px tall under the localisation fixtures ([localisation, R6](accessibility.md#r6-tooltips)).
-
-**Text colours** ([localisation, Text contrast](accessibility.md#text-contrast)): `ink1` throughout; the title and inventory label strips uniform `brass4`; the detail and status lines' rectangles and the rank details' body uniform `brass5`; button faces `brass4`, `brass5` hovered or focused; the cost cells' number fields as the arcane spec's.
+**Text colours** ([localisation, Text contrast](accessibility.md#text-contrast)): `ink1` throughout; the title and inventory label strips uniform `brass4`; the detail and status lines' rectangles uniform `brass5`; button faces `brass4`, `brass5` hovered or focused; the cost cells' number fields as the arcane spec's.
 
 **State marks** ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)): `choice_selected` carries a 1-px inset `ink1` outline; keyboard focus draws `choice_hover` plus a 1-px outer outline, so a focused selected choice shows both; `choice_disabled` is hatched.
 
@@ -309,8 +303,7 @@ Moving focus from Raise rank to the cells returns them to the per-cast cost; the
 | Mouse wheel over a strip | scroll it by one |
 | Left-click **Turn** | compose the draft |
 | Left-click **Raise rank** | rank up |
-| Left-click **Details** | open the rank details |
-| Tab / Shift+Tab | cycle focus: effect strip → medium strip → sockets → cost cells → Turn → Raise rank → Details → detail line → status line (while it shows text); inside the rank details, body → Close |
+| Tab / Shift+Tab | cycle focus: effect strip → medium strip → sockets → cost cells → Turn → Raise rank → detail line → status line (while it shows text) |
 | Arrow keys | move within the focused strip, between sockets or between cost cells; Left/Right scroll a strip past its ends |
 | Enter or Space | select the focused choice; cycle the focused socket forward; activate the focused button |
 | Shift+Enter or Shift+Space | cycle the focused socket **backward**, as right-click does, without also cycling it forward |
@@ -318,7 +311,7 @@ Moving focus from Raise rank to the cells returns them to the per-cast cost; the
 
 The buttons act only when the local prediction for that action is ready (see "Status and refusals"). They send **at most one `LatheAction` per client tick**.
 
-**Narration:** a choice reads `narration.vftv.lathe.choice` (name, selected or not, available or why not); a socket reads `narration.vftv.lathe.socket` (index, modifier and level, or empty); a button reads its label, then one `narration.vftv.worktable.cost` per cell of the cost it would pay (or the base cost and the availability text when unpriced), and for Raise rank the experience price; then the full status line. The Details button reads its label; the rank details read as above. A disabled button stays focusable and narrates why through the status line. A focused cost cell reads its `narration.vftv.worktable.cost`, then its full tooltip.
+**Narration:** a choice reads `narration.vftv.lathe.choice` (name, selected or not, available or why not); a socket reads `narration.vftv.lathe.socket` (index, modifier and level, or empty); a button reads its label, then one `narration.vftv.worktable.cost` per cell of the cost it would pay (or the base cost and the availability text when unpriced); then the full status line. A disabled button stays focusable and narrates why through the status line. A focused cost cell reads its `narration.vftv.worktable.cost`, then its full tooltip.
 
 ### The Lathe payload
 
@@ -330,7 +323,7 @@ Composing and ranking happen **only** in the server handler of one C2S payload:
 |---|---|
 | `containerId` | VarInt |
 | `revision` | `int`, the 32-bit revision the client holds |
-| `action` | one byte tag, then: **`COMPOSE`**: `effect` and `medium` (ids ≤ 256 characters each) and `modifiers` (0–3 entries of id → level 1–3, **no duplicate keys**); or **`RANK`**: `echo`, the [arcane spec's quote echo](arcane.md#the-craft-payload) (`base` ≤ 8 and `effective` ≤ 8 entries with the same key set and no duplicates, `m` 0–10,000, `spill` 0–1,000,000, the three flags), and `xp` 0–100 |
+| `action` | one byte tag, then: **`COMPOSE`**: `effect` and `medium` (ids ≤ 256 characters each) and `modifiers` (0–3 entries of id → level 1–3, **no duplicate keys**); or **`RANK`**: `echo`, the [arcane spec's quote echo](arcane.md#the-craft-payload) (`base` ≤ 8 and `effective` ≤ 8 entries with the same key set and no duplicates, `m` 0–10,000, `spill` 0–1,000,000, the three flags) |
 
 Each collection's size is read and checked **before anything is allocated**. Out-of-range, oversized or malformed input is rejected at decode.
 
@@ -350,29 +343,20 @@ Each collection's size is read and checked **before anything is allocated**. Out
 | **RANK** | | |
 | 6 | rank < 3 | `MAX_RANK` |
 | 7 | the next rank's `research` is learned | `RANK_UNLEARNED` |
-| 8 | `xp` equals the next rank's levels (`FociRules`), and the player has at least that many levels (skipped under `hasInfiniteMaterials`) | `STALE`; `XP_SHORT` |
-| 9 | slot 1 holds a `vftv:wand` that is not inert | `NO_WAND`; `INERT_WAND` |
-| 10 | the quote for that wand: not `exceeds_capacity`, and affordable | `EXCEEDS_CAPACITY`; `SHORT` |
-| 11 | **the snapshot,** taken before any foreign code runs: the player's level `L₀`, the slot 0 and slot 1 stack objects and a copy of slot 0's stack, the next-rank plan (rank, `xp`, vis, research, from this `FociRules` record) and the menu's revision | |
-| 12 | **the experience hook,** only if `xp` > 0 and not infinite materials: post NeoForge's `PlayerXpEvent.LevelChange(player, −xp)` through the platform seam, the same event `Player#giveExperienceLevels` posts (`MC:world/entity/player/Player.java:1626–1629`). Cancelled, or a listener changed its levels to anything but `−xp` | `XP_REFUSED` |
-| 13 | **the recheck,** after the hook: check 2 again (the same open menu, `containerId` and `stillValid`); the change check, and the revision still equals the snapshot's; slots 0 and 1 hold the same objects and slot 0 still `ItemStack.matches` its copy; the next-rank plan is unchanged; and the player's level is still `L₀`. Anything the hook's listeners changed refuses | `STALE` |
-| 14 | `VisService.spend(...)`, below | its refusal |
+| 8 | slot 1 holds a `vftv:wand` that is not inert | `NO_WAND`; `INERT_WAND` |
+| 9 | the quote for that wand: not `exceeds_capacity`, and affordable | `EXCEEDS_CAPACITY`; `SHORT` |
+| 10 | `VisService.spend(...)`, below | its refusal |
 
 **Committing a compose:** inside the menu's suppression scope, slot 0's stack gets its new `vftv:focus` component (the rank kept), and the scope ends with one bump. **Composing is free**: it costs nothing, so experimenting costs nothing. Then `FocusEvent(COMPOSED)` and `vftv:lathe.turn`.
 
-**Committing a rank-up** is one call: `VisService.spend(player, slot 1 stack, rank vis, VisContext("vftv:rank_<r+1>", ORDINARY, rank research), echo, effect, menu boundary)`. The `effect` holds:
-- one **slot change**: slot 0, from the focus as it is to the same focus with `rank + 1`;
-- one **experience change** `(player, expectedLevel = L₀, after = L₀ − xp)`, the wands spec's typed extension of the prepared spend ([wands, The spend](wands.md#the-spend)), prepared against the **snapshot's** level. It is **omitted** when `xp` is 0 or the player has infinite materials, and so is the hook.
+**Committing a rank-up** is one call: `VisService.spend(player, slot 1 stack, rank vis, VisContext("vftv:rank_<r+1>", ORDINARY, rank research), echo, effect, menu boundary)`. The `effect` holds one **slot change**: slot 0, from the focus as it is to the same focus with `rank + 1` ([wands, The spend](wands.md#the-spend)). The spend's step 5 rechecks the slot, and step 6 writes vis and the slot together or restores both, before `VisSpentEvent`. After either committed outcome: `FocusEvent(RANKED)` and `vftv:lathe.rank`. A rank-up is always `ORDINARY`, even on a Void focus: the Lathe is ordinary craft.
 
-The spend's step 5 rechecks the slot and the level against `L₀`, and step 6 writes vis, the slot and the level together or restores all three, before `VisSpentEvent`. The experience change writes the level directly and posts nothing, because check 12 already resolved the hook. A listener that drains experience during the hook, even to a level that could still pay, fails check 13, and one that drains it later fails step 5: either way the rank-up refuses as stale and never charges a different price. After a committed experience change, the wands spec sends the owner vanilla's experience packet (its current progress, total and level), because a direct level write leaves the total that vanilla's own sync compares unchanged (`MC:server/level/ServerPlayer.java:544–550,748–751`), and posts no second hook. After either committed outcome: `FocusEvent(RANKED)` and `vftv:lathe.rank`. A rank-up is always `ORDINARY`, even on a Void focus: the Lathe is ordinary craft.
-
-- **The hook is asked once, before the commit.** If check 13 or 14 then refuses, a listener has seen a debit that didn't happen, as with any change a later check cancels; the commit never posts it a second time.
-- **Atomic, and nothing can be lost.** The full price (experience and vis) is checked before anything changes, and the rank is one commit. TC4's upgrade station took its price without checking it first and lost the upgrade if the focus was removed mid-way; neither can happen here.
+- **Atomic, and nothing can be lost.** The full price is checked before anything changes, and the rank is one commit. TC4's upgrade station took its price without checking it first and lost the upgrade if the focus was removed mid-way; neither can happen here.
 - **`COMMITTED_NOTIFY_FAILED`** is a committed rank-up, as in the arcane spec. A spend that throws was rolled back by the wands spec and is reported as `ERROR`.
 
 ### Revision and status
 
-**The revision** is the [arcane spec's preview revision](arcane.md#preview-revision), unchanged in mechanism. It is a server-owned 32-bit counter per open menu, starting at 0 and wrapping, sent in data slots 1 and 2. It bumps on a menu slot change (including the wand's vis written by a spend, and an attach or detach), a change to the player's research, and a replaced `FociRules` or `VisRules`. **Price inputs never bump it:** the discount attribute, #25's factor and amplifier inputs, and the player's experience level. The quote echo, check 8 and checks 11–13 catch a stale price; a change to a price input clears the refusal without a bump. The O(1) change check runs in `broadcastChanges`, at check 3, and before every commit. Torn reads of the two halves are refused as `STALE`, never acted on.
+**The revision** is the [arcane spec's preview revision](arcane.md#preview-revision), unchanged in mechanism. It is a server-owned 32-bit counter per open menu, starting at 0 and wrapping, sent in data slots 1 and 2. It bumps on a menu slot change (including the wand's vis written by a spend, and an attach or detach), a change to the player's research, and a replaced `FociRules` or `VisRules`. **Price inputs never bump it:** the discount attribute and #25's factor and amplifier inputs. The quote echo catches a stale price; a change to a price input clears the refusal without a bump. The O(1) change check runs in `broadcastChanges`, at check 3, and before every commit. Torn reads of the two halves are refused as `STALE`, never acted on.
 
 **Status and refusals.** One enum, **`LatheStatus`**, in `core.focus`; its code is the wire value of data slot 0.
 
@@ -387,31 +371,27 @@ The spend's step 5 rechecks the slot and the level against `L₀`, and step 6 wr
 | 6 | `UNCHANGED` | client; compose check 8 | `status.vftv.lathe.unchanged` | 0 |
 | 7 | `MAX_RANK` | client; rank check 6 | `status.vftv.lathe.max_rank` | 0 |
 | 8 | `RANK_UNLEARNED` | client; rank check 7 | `status.vftv.lathe.rank_unlearned` | 0 |
-| 9 | `XP_SHORT` | client; rank check 8 | `status.vftv.lathe.xp_short` | 2: levels needed, levels held |
-| 10 | `NO_WAND` | client; rank check 9 | `status.vftv.lathe.no_wand` | 0 |
-| 11 | `INERT_WAND` | client; rank check 9; spend "inert" | `message.vftv.spend.inert` | 0 |
-| 12 | `EXCEEDS_CAPACITY` | client; rank check 10; spend "short" with `exceeds_capacity` | `status.vftv.worktable.exceeds_capacity` | 0 |
-| 13 | `SHORT` | client; rank check 10; spend "short" | `message.vftv.spend.short` | 1 |
-| 14 | `XP_REFUSED` | server only: rank check 12 | `status.vftv.lathe.xp_refused` | 0 |
-| 15 | `STALE` | server only: checks 3, 8 and 13; spend "stale" | `message.vftv.spend.stale` | 0 |
-| 16 | `ERROR` | server only: a spend that threw and was rolled back | `status.vftv.lathe.error` | 0 |
+| 9 | `NO_WAND` | client; rank check 8 | `status.vftv.lathe.no_wand` | 0 |
+| 10 | `INERT_WAND` | client; rank check 8; spend "inert" | `message.vftv.spend.inert` | 0 |
+| 11 | `EXCEEDS_CAPACITY` | client; rank check 9; spend "short" with `exceeds_capacity` | `status.vftv.worktable.exceeds_capacity` | 0 |
+| 12 | `SHORT` | client; rank check 9; spend "short" | `message.vftv.spend.short` | 1 |
+| 13 | `STALE` | server only: check 3; spend "stale" | `message.vftv.spend.stale` | 0 |
+| 14 | `ERROR` | server only: a spend that threw and was rolled back | `status.vftv.lathe.error` | 0 |
 
-- **Two predictions.** The client predicts each action from synced state in its check order: **Turn** through `NO_FOCUS`, `UNREADABLE`, `INCOMPLETE`, `INVALID`, `UNLEARNED`, `UNCHANGED`, else `READY`; **Raise rank** through `NO_FOCUS`, `UNREADABLE`, `MAX_RANK`, `RANK_UNLEARNED`, `XP_SHORT`, `NO_WAND`, `INERT_WAND`, `EXCEEDS_CAPACITY`, `SHORT`, else `READY`. The status line shows Raise rank's prediction while that button is hovered or focused, otherwise Turn's.
-- **Feedback is separate from eligibility** ([arcane, Status and refusals](arcane.md#status-and-refusals)). A shown refusal never disables a button whose local prediction is ready, so a retry after `STALE`, `SHORT` or `XP_REFUSED` needs no further slot change. Acknowledging, clearing and the forced resync after a refusal are the arcane spec's rules.
+- **Two predictions.** The client predicts each action from synced state in its check order: **Turn** through `NO_FOCUS`, `UNREADABLE`, `INCOMPLETE`, `INVALID`, `UNLEARNED`, `UNCHANGED`, else `READY`; **Raise rank** through `NO_FOCUS`, `UNREADABLE`, `MAX_RANK`, `RANK_UNLEARNED`, `NO_WAND`, `INERT_WAND`, `EXCEEDS_CAPACITY`, `SHORT`, else `READY`. The status line shows Raise rank's prediction while that button is hovered or focused, otherwise Turn's.
+- **Feedback is separate from eligibility** ([arcane, Status and refusals](arcane.md#status-and-refusals)). A shown refusal never disables a button whose local prediction is ready, so a retry after `STALE` or `SHORT` needs no further slot change. Acknowledging, clearing and the forced resync after a refusal are the arcane spec's rules.
 
 ### Ranks
 
-**Rank *r* = *r* modifier levels.** A rank never falls; recomposing keeps it. The cap is **3** (`FocusLimits.MAX_RANK`). Values are tuning (see "Tuning and limits"); these are the shipped values:
+**Rank *r* = *r* modifier levels.** A rank never falls; recomposing keeps it. The cap is **3** (`FocusLimits.MAX_RANK`). **Ranks cost vis only:** essentia is this mod's currency and experience is vanilla's ([infusion](infusion.md)), so nothing here spends levels. Values are tuning (see "Tuning and limits"); these are the shipped values:
 
-A rank whose tuning sets 0 levels costs no experience: no hook is asked and no experience change is prepared.
+| Rank | Vis (base) | Research |
+|---|---|---|
+| 1 | Ordo 8 | `vftv:focus_ranks` |
+| 2 | Ordo 16, Aer 8 | `vftv:focus_ranks` |
+| 3 | Ordo 32, Aer 16, Terra 16 | `vftv:far_workings` |
 
-| Rank | Experience levels | Vis (base) | Research |
-|---|---|---|---|
-| 1 | 4 | Ordo 8 | `vftv:focus_ranks` |
-| 2 | 8 | Ordo 16, Aer 8 | `vftv:focus_ranks` |
-| 3 | 16 | Ordo 32, Aer 16, Terra 16 | `vftv:far_workings` |
-
-Rank 2's vis fits a chime rod (150 per pool), and rank 3's an Echo rod ([infusion, The Echo rod and cap](infusion.md#the-echo-rod-and-cap)) at the default cap.
+Every rank's vis fits a chime rod (150 per pool) at the default cap and the maximum warp tax (rank 3's Ordo 32 × 1.5 = 48).
 
 ## The cost
 
@@ -653,23 +633,23 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 
 - **Bounds before multiplying:** `base` ≤ 20,000 (every scaled param's range), `power_pm` ≤ 4000 and `amp_pm` ≤ 5000, so the product is at most 4 × 10¹¹, well inside a `long`. The **caps** (`FocusLimits`) apply after: 40,000 for damage and heal (40.0 health), 3000 for push and pull (3.0 blocks per tick), 1200 ticks for durations.
 - **`w = amplifier_warp(player)`** is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' input: pure, finite and synced to the owner, so both sides compute the same figure. It is the player's **total warp** in warp points (temporary, lasting, permanent and gear together; [warp spec, Total warp](warp.md#total-warp)), plus the warp spec's **Joining bonus** (`joining.amplifier_bonus`, default 10) for a Joined Listener ([Eldritch tier, The capstones](eldritch.md#the-capstones)), or 0 with the warp server switch `warp.amplifier` off. It is at most 2,250, inside the clamp. Until #25 lands it is 0, so Void effects work at their base magnitude.
-- **The scale:** at the default `per_warp_pm` of 20, each warp point adds 2%, and a Void working doubles at 50 warp, just past the warp spec's third band (40). That is a scale decision made with the warp spec's bands, not proven balance.
+- **The scale:** at the default `per_warp_pm` of 40, each warp point adds 4%, and a Void working doubles at 25 warp, just past the warp spec's third band (24). That is a scale decision made with the warp spec's bands, not proven balance.
 - **Snapshots:** a Bolt freezes its magnitudes at launch; Touch and Burst resolve them at the cast; a Beam resolves them at every pulse.
 - **Units:** health is `out / 1000f`; movement is `out / 1000` blocks per tick; ticks are `out`.
 
-**Vectors** (reference implementation, cross-checked against the JDK; Force step 250; `per_warp_pm` 20 and `max_bonus_pm` 1000 unless stated; the 10 per mille row is a labelled regression, run by the same references):
+**Vectors** (reference implementation, cross-checked against the JDK; Force step 250; `per_warp_pm` 40 and `max_bonus_pm` 1000 unless stated; the 20 per mille row is a labelled regression at the previous default, run by the same references):
 
 | base | Force | w | Void | `power_pm` | `amp_pm` | cap | out |
 |---|---|---|---|---|---|---|---|
 | 3000 | 0 | 0 | no | 1000 | 1000 | 40,000 | 3000 |
 | 3000 | 2 | 40 | no | 1500 | 1000 | 40,000 | 4500 (warp ignored) |
 | 4000 | 0 | 0 | yes | 1000 | 1000 | 40,000 | 4000 |
-| 4000 | 0 | 37 | yes | 1000 | 1740 | 40,000 | 6960 |
-| 4000 | 0 | 50 | yes | 1000 | 2000 | 40,000 | 8000 |
-| 4000, Joined at `total` 37 (bonus 10) | 0 | 47 | yes | 1000 | 1940 | 40,000 | 7760 |
-| 4000, Joined at `total` 5 (bonus 10) | 0 | 15 | yes | 1000 | 1300 | 40,000 | 5200 |
+| 4000 | 0 | 15 | yes | 1000 | 1600 | 40,000 | 6400 |
+| 4000 | 0 | 25 | yes | 1000 | 2000 | 40,000 | 8000 |
+| 4000, Joined at `total` 37 (bonus 10) | 0 | 47 | yes | 1000 | 2000 (bonus capped) | 40,000 | 8000 |
+| 4000, Joined at `total` 5 (bonus 10) | 0 | 15 | yes | 1000 | 1600 | 40,000 | 6400 |
 | 4000, Joined at `total` 37, `warp.amplifier` off | 0 | 0 | yes | 1000 | 1000 | 40,000 | 4000 |
-| 4000, a regression at `per_warp_pm` 10 | 0 | 37 | yes | 1000 | 1370 | 40,000 | 5480 |
+| 4000, a regression at `per_warp_pm` 20 | 0 | 37 | yes | 1000 | 1740 | 40,000 | 6960 |
 | 4000 | 3 | 250 | yes | 1750 | 2000 (bonus capped) | 40,000 | 14,000 |
 | 4000 | 1 | 10,001 | yes | 1250 | 2000 (w clamped) | 40,000 | 10,000 |
 | 60 (ticks) | 1 | 0 | no | 1250 | 1000 | 1200 | 75 |
@@ -677,7 +657,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | 20,000 | 3 | 10,000 | yes | 1750 | 2000 | 40,000 | 40,000 (capped) |
 | 20,000, at the tuning extremes (`per_warp_pm` 1000, `max_bonus_pm` 4000, step 1000) | 3 | 10,000 | yes | 4000 | 5000 | 40,000 | 40,000; the raw product is 400,000,000,000 |
 
-- **The three Joined rows** come from the [Eldritch tier spec's](eldritch.md#the-capstones) references (the Joining bonus is added before this function sees `w`); the magnitude fixtures transcribe them with the rest.
+- **The three Joined rows** take `w` from the [Eldritch tier spec's](eldritch.md#the-capstones) amplifier arithmetic (the Joining bonus is added before this function sees `w`: 37 + 10 = 47, 5 + 10 = 15, and 0 with the switch off); this spec's references compute their outputs, and the magnitude fixtures transcribe them with the rest.
 - **No warp is applied by casting.** Warp is only ever applied by an explicit commit through #25 ([research, Warp on entries](research.md#warp-on-entries)), and a cast is not one. **A carried Void focus is not gear warp** ([warp spec, Gear warp](warp.md#gear-warp)): it already grows with warp, and adding warp for carrying it would compound.
 - **Options considered:** scaling radius or target count; scaling cost down. **Why magnitude only:** it keeps every performance bound fixed, and cost already has #25's `VOID` factor as its own lever (neutral, 1.0, in the warp spec).
 
@@ -693,7 +673,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | **effect** | an effect id | `cost` (the effect's own), `magnitude`, `duration`, `slow_amplifier`, `kind`, `hardness` |
 | **medium** | a medium id | `cost_factor`, `cooldown`, `range`, `radius`, `block_radius_sq`, `pulse`, `speed`, `lifetime` |
 | **modifier** | a modifier id | `cost_factor`, `max_level`, `step_pm` (Force), `step` (Reach), `radius_step` and `block_step_sq` (Breadth) |
-| **rank** | 1–3 | `xp`, `cost`, `cost_effective`, `flux`, `availability`, `wand` |
+| **rank** | 1–3 | `cost`, `cost_effective`, `flux`, `availability`, `wand` |
 
 | Field | Value |
 |---|---|
@@ -735,7 +715,7 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | Key | Renders |
 |---|---|
 | `cost`, `cost_effective` | "*Aspect* *n*" in ascending aspect id, joined by ", " |
-| `flux`, `cooldown`, `pulse`, `lifetime`, `max_level`, `xp`, `duration`, `block_radius_sq`, `block_step_sq` | an integer |
+| `flux`, `cooldown`, `pulse`, `lifetime`, `max_level`, `duration`, `block_radius_sq`, `block_step_sq` | an integer |
 | `slow_amplifier` | the effect level vanilla shows, amplifier + 1, as an integer (amplifier 0 → "1") |
 | `range`, `entity_range`, `block_range`, `radius`, `radius_step`, `speed`, `step`, `hardness` | a decimal with up to 2 places, trailing zeros trimmed (4.0 → "4", 1.5 → "1.5") |
 | `magnitude` | thousandths as a decimal with up to 3 places, trimmed (3000 → "3", 1200 → "1.2") |
@@ -745,13 +725,13 @@ out      = min(cap, floorDiv(base × power_pm × amp_pm, 1_000_000))            
 | `discount_capped`, `clamped`, `exceeds_capacity` | `focus.vftv.fact.yes` or `.no` |
 | `availability`, `castable` | `arcane.vftv.no_wand`, `arcane.vftv.inert_wand` or `focus.vftv.fact.priced`; `focus.vftv.fact.ready` or the failing check's own `message.vftv.*` text |
 | `wand` | the pricing wand's name and the arcane spec's `arcane.vftv.where.*` text, or the absent text |
-| **`focus_rules`** `void.per_warp_pm`, `void.max_bonus_pm` | per mille as the percentage format (20 → "2%", 1000 → "100%") |
+| **`focus_rules`** `void.per_warp_pm`, `void.max_bonus_pm` | per mille as the percentage format (40 → "4%", 1000 → "100%") |
 | **`focus_rules`** `limits.max_rank`, `limits.burst_entities`, `limits.burst_blocks`, `limits.live_bolts` | an integer: 3, 16, 27, 8 |
 
 - A key outside its context's list, a `focus_rules` key outside the last two rows, or any key outside this table is a malformed span, rejected by the validator.
-- **Representative spans** (each validated by the build-phase validator and resolved in a test): "A kindled bolt costs {fact:focus_effect:vftv:kindle:cost} before its medium", "this working costs {fact:focus:cost_effective} each time, or each pulse", "a burst reaches {fact:focus_medium:vftv:burst:radius} blocks, and each breadth adds {fact:focus_modifier:vftv:breadth:radius_step}", "each force adds {fact:focus_modifier:vftv:force:step_pm}", "the second rank asks {fact:focus_rank:2:xp} levels", "what hears me strengthens a Void working by {fact:focus_rules:void.per_warp_pm} for each measure, up to {fact:focus_rules:void.max_bonus_pm}".
+- **Representative spans** (each validated by the build-phase validator and resolved in a test): "A kindled bolt costs {fact:focus_effect:vftv:kindle:cost} before its medium", "this working costs {fact:focus:cost_effective} each time, or each pulse", "a burst reaches {fact:focus_medium:vftv:burst:radius} blocks, and each breadth adds {fact:focus_modifier:vftv:breadth:radius_step}", "each force adds {fact:focus_modifier:vftv:force:step_pm}", "the second rank asks {fact:focus_rank:2:cost}", "what hears me strengthens a Void working by {fact:focus_rules:void.per_warp_pm} for each measure, up to {fact:focus_rules:void.max_bonus_pm}".
 - **Until the first `FociRules` arrives,** a `focus_rules` or `focus_rank` span renders `[?]` without logging. An effect, medium or modifier id a pack removed renders `[?]` and is logged once ([research, Prose and fact references](research.md#prose-and-fact-references)).
-- **JEI:** the Lathe and blank focus are `vftv:arcane` recipes, which the arcane spec's JEI integration already shows. Composing is not a recipe and has no JEI category.
+- **JEI:** the Lathe and the blank focus are `vftv:arcane` recipes, which the arcane spec's JEI integration already shows. Composing is not a recipe and has no JEI category.
 
 ## Multiplayer and automation
 
@@ -837,7 +817,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
     "type": "vftv:delve", "kind": "ordinary", "research": "vftv:delving", "aspect": "vftv:terra",
     "media": ["vftv:touch", "vftv:burst", "vftv:beam"],
     "cost": {"vftv:terra": 3, "vftv:perditio": 2},
-    "params": {"tool": "minecraft:iron_pickaxe", "max_hardness": 3.0}}
+    "params": {"tool": "minecraft:iron_pickaxe", "max_hardness": 4.5}}
 }}
 ```
 
@@ -863,7 +843,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
 
 ### Recipes
 
-`{"schema": "vftv:foci_recipes/1", "recipes": {<id>: <recipe>}}`, holding exactly `vftv:lathe` (result `vftv:lathe`) and `vftv:blank_focus` (result one `vftv:focus` with `{"format": 1, "rank": 0}`). Both bodies use the [arcane recipe type's](arcane.md#the-recipe-type) format verbatim, with `"type": "vftv:arcane"`, `"research": "vftv:foci"` and `"kind": "ordinary"`.
+`{"schema": "vftv:foci_recipes/1", "recipes": {<id>: <recipe>}}`, holding exactly `vftv:lathe` (result `vftv:lathe`) and `vftv:blank_focus` (result one `vftv:focus` with `{"format": 1, "rank": 0}`). Both bodies use the [arcane recipe type's](arcane.md#the-recipe-type) format verbatim, with `"type": "vftv:arcane"` and `"kind": "ordinary"`; `vftv:lathe` has `"research": "vftv:arcane_crafting"` and `vftv:blank_focus` has `"research": "vftv:foci"`.
 
 ```jsonc
 {"schema": "vftv:foci_recipes/1", "recipes": {
@@ -872,7 +852,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
     "result": {"id": "vftv:focus", "count": 1, "components": {"vftv:focus": {"format": 1, "rank": 0}}},
     // … pattern and key, and vis
   }
-  // … and vftv:lathe
+  // … and vftv:lathe, with "research": "vftv:arcane_crafting"
 }}
 ```
 
@@ -894,7 +874,7 @@ content/lang/en_us/foci_void.json  the Void effects' names
  "quote":     [{"base": {"vftv:aqua": 30, "vftv:ordo": 16}, "cap": 850, "discount": 0, "w": 1250,
                 "expect": {"m": 1063, "effective": {"vftv:aqua": 32, "vftv:ordo": 18}}}],
  "magnitude": [{"base": 4000, "force": 3, "step_pm": 250, "w": 250, "void": true,
-                "per_warp_pm": 20, "max_bonus_pm": 1000, "cap": 40000,
+                "per_warp_pm": 40, "max_bonus_pm": 1000, "cap": 40000,
                 "expect": {"power_pm": 1750, "amp_pm": 2000, "out": 14000}}],
  "burst":     [{"centre": [-1, -60, 1], "r2": 4, "expect": {"count": 33, "first": [[-1, -60, 1], [-2, -60, 1]], "last": [0, -59, 2]}}],
  "beam":      [{"start": 103, "pulse": 10, "ticks": [103, 124], "expect": [103, 113, 123]}],
@@ -914,7 +894,6 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 | `item.vftv.focus`, `item.vftv.focus.blank`, `block.vftv.lathe`, `entity.vftv.focus_bolt` | 0 | "Focus", "Blank Focus", "Lathe", "Bolt" |
 | `focus_effect.<ns>.<path>`, `focus_medium.<ns>.<path>`, `focus_modifier.<ns>.<path>` (every entry) | 0 | "Kindle", "Burst", "Force" |
 | `container.vftv.lathe`; `gui.vftv.lathe.turn`, `.raise_rank` | 0 | |
-| `gui.vftv.lathe.rank_details`, `.close` | 0 | "Rank-up cost", "Close" |
 | `status.vftv.lathe.<status>` for every `LatheStatus` with its own key | as its table | |
 | `tooltip.vftv.focus.parts` | 2 | "%s by %s" (effect, medium) |
 | `tooltip.vftv.focus.modifier` | 2 | "%s %s" (modifier, level) |
@@ -925,7 +904,6 @@ Decimal expectations compare to within 0.000001. **Rejected:** a section missing
 | `tooltip.vftv.focus.exchange_warning` | 0 | "If the new block can't be set, the old one is broken all the same." |
 | `tooltip.vftv.focus.blank`, `.unreadable`, `.out_of_tune` | 0 | |
 | `tooltip.vftv.focus.unknown` | 1 | "It rings in a key I don't know: %s" |
-| `tooltip.vftv.lathe.rank_xp` | 2 | "Level cost: %s (I have %s)" (number-agnostic, [localisation, Numbers and plurals](accessibility.md#numbers-and-plurals)) |
 | `message.vftv.focus.unreadable`, `.blank`, `.out_of_tune`, `.unlearned`, `.needs_block`, `.block_effects_off`, `.nothing_answers`, `.nothing_yields`, `.too_much`, `.slipped` | 0 | the refusals above |
 | `message.vftv.focus.unknown` | 1 | |
 | `narration.vftv.lathe.choice` | 3 | |
@@ -976,7 +954,6 @@ NeoForge post-events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-n
 | a beam in progress | the session, in transient per-player memory | **`FocusBeamState(entityId, active)`**, S2C (below) |
 | bolts | `vftv:focus_bolt` entities (`noSave`) | trackers, by vanilla entity tracking plus one `INT` tint |
 | cooldowns | vanilla `ItemCooldowns` | the owner, as vanilla does |
-| experience after a rank-up | the player | the owner, by vanilla's experience packet, sent by the spend's commit ([wands, The spend](wands.md#the-spend)) |
 | the operation guard, bolt counts | transient per-player memory | never |
 | the Lathe menu | the menu's slots and three data slots | the owner, as menus are |
 
@@ -1002,9 +979,9 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 
 | Key | Value | Range | Notes |
 |---|---|---|---|
-| `void.per_warp_pm` | 20 | 0–1000 | amplifier per warp point of `amplifier_warp`, per mille: 2% each, so ×2.00 at 50 warp, just past the warp spec's third band (the scale the warp spec set; not proven balance) |
+| `void.per_warp_pm` | 40 | 0–1000 | amplifier per warp point of `amplifier_warp`, per mille: 4% each, so ×2.00 at 25 warp, just past the warp spec's third band (the scale the warp spec set; not proven balance) |
 | `void.max_bonus_pm` | 1000 | 0–4000 | the amplifier's ceiling above 1000 (×2.00 at the default) |
-| `ranks.1`, `ranks.2`, `ranks.3` | the "Ranks" table | `xp` 0–100; `vis` 1–8 vis aspects of 1–1000; `research` an existing entry | |
+| `ranks.1`, `ranks.2`, `ranks.3` | the "Ranks" table | `vis` 1–8 vis aspects of 1–1000; `research` an existing entry | |
 
 **Other homes:**
 - effect, medium and modifier numbers, **including Force's `step_pm`**: their registry entries (`content/foci/effects.json`, `effects_void.json`, `media.json`, `modifiers.json`), fixed when a world opens;
@@ -1020,7 +997,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 - one player firing Kindle bolts at the cooldown, with 8 live;
 - one player beaming Delve into a stone face that the fixture refills;
 - one player casting Burst Rime (Breadth 2, Force 1) every cooldown into a pen of 40 mobs;
-- one player at the Lathe sending a `LatheAction` every tick, alternating compose and rank-up, with the fixture restoring experience, vis and rank;
+- one player at the Lathe sending a `LatheAction` every tick, alternating compose and rank-up, with the fixture restoring vis and rank;
 - a fixture keeping 32 bolts from 4 more players alive;
 - **Client:** 40 bolts and 2 beams in view, and the Lathe screen (288×234) open with 6 effects, 4 media and 3 filled sockets.
 
@@ -1070,18 +1047,18 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **PvP:** with PvP off, every harmful effect (Gust and Undertow included) spares players; teams; creative and spectator players skipped; Mend affects anyone;
 - **effects:** Kindle on a fire-immune mob neither damages nor ignites it; Rime's slowness only when damage is dealt; Gust and Undertow at a zero vector;
 - **block work:** a cancelled `BreakBlockEvent` skips that position while the others proceed and the vis stays spent; spawn protection, adventure mode (through the `blockActionRestricted` pre-filter), air, `vftv:focus_immune`, obsidian and bedrock refused before the spend; double blocks; Delve drops match an iron pickaxe's eligibility, with a `HarvestCheck` listener overriding it; **a `destroyBlock` that returns true without removal places nothing**; a redirected `BlockPlaceContext` places nothing; a cancelled `EntityMultiPlaceEvent` for a bed restores both halves and the off-hand count, and the broken block stays broken; **an exception during a cancelled placement's restoration leaves both `captureBlockSnapshots` and `restoringBlockSnapshots` at their saved values, and an ordinary placement afterwards works and is protected as usual**; the adapter refuses entry while another capture or restoration is active and leaves its snapshots alone; Delve on a crucible spills as the crucible's removal does; Delve on a claimed pedestal follows infusion's removal;
-- **the Lathe:** every check; a stale revision; a forged echo; out-of-range and duplicate modifiers; unlearned parts; `UNCHANGED`; a retry after `STALE` and after `SHORT` without another slot change; **rank-up atomicity:** vis, slot and level together, a throwing slot change rolling all three back, a throwing `VisSpentEvent` listener (`COMMITTED_NOTIFY_FAILED`), a cancelled `PlayerXpEvent.LevelChange` (`XP_REFUSED`), a listener that changes the levels (`XP_REFUSED`), **a hook listener that drains 10 levels to 8 for a 4-level rank (`STALE`, nothing charged)**, a hook listener that closes the menu or swaps slot 0 or 1 (`STALE`), a drain between the recheck and the commit (`STALE` at step 5), **a rank of 0 levels (no hook, no experience change)**, infinite materials (no experience change), and **the owner's client showing the debited level, progress and total** after a committed rank-up;
-- **the Void tier:** magnitude at `w` 0 and 37 through a stub;
+- **the Lathe:** every check; a stale revision; a forged echo; out-of-range and duplicate modifiers; unlearned parts; `UNCHANGED`; a retry after `STALE` and after `SHORT` without another slot change; **rank-up atomicity:** vis and slot together, a throwing slot change rolling both back, a throwing `VisSpentEvent` listener (`COMMITTED_NOTIFY_FAILED`), and **a rank-up that leaves the player's experience untouched**;
+- **the Void tier:** magnitude at `w` 0, 15 and 25 through a stub;
 - save and reload of both components and of dormant raw tags;
 - every test id in the discovery guard.
 
 **E2E:**
-- the Lathe screen in every status at **320×240**, with every slot, strip, socket, button and the hotbar on screen; keyboard-only use with narration and the focus ring on each region, including Shift+Enter cycling a socket backward, each cost cell's full tooltip, the rank details opened by mouse and by keyboard on a three-aspect rank quote with flags and spill (scrolled to its experience price, closed back to the Details button, narrated whole), and the clipped detail and status lines' full text (the [localisation capture](accessibility.md#fixtures)); long-text tooltips staying inside the view; and the worst-case mockup (8 cost cells with 4-digit amounts, a long translation);
+- the Lathe screen in every status at **320×240**, with every slot, strip, socket, button and the hotbar on screen; keyboard-only use with narration and the focus ring on each region, including Shift+Enter cycling a socket backward, each cost cell's full tooltip, Raise rank's tooltip and narration on a three-aspect rank quote with flags and spill, and the clipped detail and status lines' full text (the [localisation capture](accessibility.md#fixtures)); long-text tooltips staying inside the view; and the worst-case mockup (8 cost cells with 4-digit amounts, a long translation);
 - `focus*` fact spans in a book page re-resolving live: on a hand change, a wand's pools, a `block_interaction_range` change, a `/reload` and a reconnect;
 - tooltips for every effect, a blank, an unreadable and an out-of-tune focus;
 - the wand's third layer for every effect, blank, unknown, unreadable and none, beside the focus items' own models;
 - bolts, beams, burst particles, sounds and subtitles, seen by a second client;
-- a Stage 1 flow: learn `vftv:foci`, craft a Lathe and a blank focus, compose Kindle by Bolt, attach it, and cast at a zombie;
+- a Stage 1 flow: craft a Lathe after `vftv:arcane_crafting`, learn `vftv:foci`, craft a blank focus, compose Kindle by Bolt, attach it, and cast at a zombie;
 - sync on join, reconnect and `/reload` (`FociRules`, facts, the beam signal);
 - the asset, lang and model validators: every key under "Lang keys", every sound event and subtitle, every case of `items/wand.json` and `items/focus.json`.
 
@@ -1106,7 +1083,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Arcane contract | Met by |
 |---|---|
-| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "Recipes": `vftv:lathe` and `vftv:blank_focus`, both `ordinary`, gated by `vftv:foci` |
+| Any recipe made at the Worktable is a `vftv:arcane` body with its own `research`; `kind: void` only behind a Stage 4 gate | "Recipes": `vftv:lathe` (gated by `vftv:arcane_crafting`) and `vftv:blank_focus` (gated by `vftv:foci`), both `ordinary` |
 | A recipe needing warp on craft proposes an extension | none applies warp |
 | Stage 1 arcane recipes meet the Stage 1 affordability test | both are capped at 32 per aspect by a content rejection rule, with pre-iron ingredients from the reviewed list; Stage 1 casts cost at most 4 base per aspect |
 
@@ -1115,10 +1092,10 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 | Research contract | Met by |
 |---|---|
 | **Gate:** `research` on each gated recipe; the server refuses every processing and output path until it is learned; a GameTest with an unlearned player | Foci has no recipe type of its own. Its two recipes carry `research`; composing, ranking and casting are gated per part on the server at the action ("Stage"), each with an unlearned GameTest |
-| **Recipe-page validator** | both recipes sit on `vftv:foci`'s page (handed to #34) |
+| **Recipe-page validator** | `vftv:lathe` sits on `vftv:arcane_crafting`'s page and `vftv:blank_focus` on `vftv:foci`'s (handed to #34) |
 | **One authoritative cost preview**: base and effective vis, spill and every decision cost, capped modifiers flagged; it backs pages and facts | "The authoritative preview": `FocusPreview` with the complete quote (spill and every flag), typed contexts and absence, live dependencies, and the `focus*` fact sources (the research spec amended) |
 | **JEI** by the learned gate | the two recipes ride the arcane spec's JEI; composing is not a recipe |
-| The Stage 2–4 content tickets are blocked by Foci | "Stage": five entries with their gates; #34 now consumes `vftv:foci` too (the research spec amended) |
+| The Stage 2–4 content tickets are blocked by Foci | "Stage": five entries with their gates, and the Lathe recipe on `vftv:arcane_crafting`; #34 now consumes `vftv:foci` too (the research spec amended) |
 
 **Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)): a sneaking wand click on a crucible reaches Foci's block-targeted path. That is "Entry points", and a Delve or Exchange there breaks the crucible through the player mining path, so the crucible's own removal spill applies.
 
@@ -1133,15 +1110,15 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
 - The components table names `vftv:wand_focus`; `items/wand.json` gains the third member, with `vftv:none` mapped to `minecraft:empty` and `unknown` as the fallback; later appends are additive and serialised.
-- **The spend's prepared state** gains a typed **experience change** `(player, expectedLevel, after)`, prepared against the level the consumer snapshotted before resolving `PlayerXpEvent.LevelChange`, checked in step 5, written and restored in step 6, posting nothing, omitted for a zero price, and followed on commit by vanilla's experience packet to the owner.
+- **The spend's typed experience change is withdrawn:** foci ranks cost vis only, so the spend needs no experience change, no `PlayerXpEvent.LevelChange` protocol and no experience packet resend.
 - The wand's use callbacks dispatch to the player's **one session**, a tap or a beam, and the session store exposes its kind for the beam-state signal.
 - Casting is main hand only. `source` for a cast is the effect's id.
 - The wand's `isCorrectToolForDrops` answers for an attached harvesting focus.
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 1](https://github.com/andrewbrogoff/voices-from-the-void/issues/34), [Stage 2](https://github.com/andrewbrogoff/voices-from-the-void/issues/35), [Stage 3](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) and [Stage 4 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/37):
-- **Entries:** the five `note` entries under "Stage", with their parents and gates. `vftv:foci` carries `vftv:recipe` pages for `vftv:lathe` and `vftv:blank_focus`.
+- **Entries:** the five `note` entries under "Stage", with their parents and gates. `vftv:arcane_crafting` gates `vftv:lathe` and carries its `vftv:recipe` page; `vftv:foci` carries the page for `vftv:blank_focus`.
 - **Fact sources:** `focus`, `focus_effect`, `focus_medium`, `focus_modifier`, `focus_rank` and `focus_rules`, as under "The authoritative preview", with their typed absence and live dependencies.
-- **Prose** teaches the two gestures (and that only the crouched one changes the world), the free Lathe and its ranks, the experience price, the warp dial on both kinds, that nothing is ever refunded, and that an Exchange can break without placing. Every number goes in a `focus*` or `vis` fact span.
+- **Prose** teaches the two gestures (and that only the crouched one changes the world), the free Lathe and its ranks paid in vis, the warp dial on both kinds, that nothing is ever refunded, and that an Exchange can break without placing. Every number goes in a `focus*` or `vis` fact span.
 - **The affordability artifact:** `path-stage1.json` learns `vftv:foci` after `vftv:arcane_crafting`.
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
@@ -1149,7 +1126,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `vis_factor(player, VOID)` is as already contracted.
 - It decides whether a carried Void focus is gear warp.
 - Casting applies no warp. Warp on a cast would need #25 to propose a previewed, echoed extension.
-- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), plus the Joining bonus for a Joined Listener (amended with the [Eldritch tier](eldritch.md#the-capstones)), with the scale tested at the amended default of 20 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
+- *Met by the [warp spec](warp.md#the-dials): `amplifier_warp` is total warp in warp points (temporary, lasting, permanent and gear), plus the Joining bonus for a Joined Listener (amended with the [Eldritch tier](eldritch.md#the-capstones)), with the scale tested at the amended default of 40 per mille (the vectors and fixtures above); `vis_factor` is 1.0 for `VOID`; a carried Void focus is **not** gear warp, a balance choice; no cast applies warp.*
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
 - Foci add **no direct flux producer** of their own: their flux is the `spill` applied on `VisSpentEvent`.
@@ -1182,8 +1159,8 @@ This spec settles every decision. Three required child tickets deliver the asset
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Foci assets** | **Generator:** `tools/art/foci.py`.<br>**Focus items** (16×16): `assets/vftv/textures/item/focus/blank.png`, `unknown.png` and one per built-in effect (`kindle`, `gust`, `rime`, `delve`, `mend`, `exchange`, `unmaking`, `undertow`). Each is a small brass bell-disc carrying an essentia bead tinted by its effect's aspect family ([art style §2](art-style.md#2-palette-locked-project-wide-48-colours) allows aspect families on essentia tints), in the Stage row of its research ([art style §5](art-style.md#5-tone-ramp-by-stage)); the two Void foci in the Stage 4 row, teal inside void ink. With item models `vftv:item/focus/<id>` (parent `minecraft:item/generated`) and **`assets/vftv/items/focus.json`** exactly as under "On the wand".<br>**Wand layers:** `assets/vftv/textures/item/wand/focus/<id>.png` for the same ten ids, the focus seated above the top cap, with layer models `vftv:item/wand/focus/<id>` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (the third member, every existing case kept).<br>**The Lathe:** `assets/vftv/models/block/lathe.json` with at most 6 pixel-aligned cuboids and no rotations ([art style §6](art-style.md#6-blocks-and-models)): a base [1,0,2]–[15,4,14], a headstock [2,4,5]–[5,12,11], a tailstock [11,4,6]–[14,10,10], a spindle [5,7,7]–[11,9,9], a bell blank on it [7,6,6]–[9,10,10] and a tool rest [6,4,11]–[10,6,13]. Textures `lathe_side.png`, `lathe_top.png`, `lathe_bottom.png`, `lathe_front.png` (Stage 1 row; the teal tick on the bell blank's top); a blockstate with 4 horizontal facings by rotation; the item definition `assets/vftv/items/lathe.json`.<br>**GUI:** `assets/vftv/textures/gui/container/lathe.png` (288×234 used on a 512×256 sheet, every well, strip, socket row and panel at the positions under "The screen"), and every sprite listed there.<br>**Entity:** `assets/vftv/textures/entity/focus_bolt.png` (16×64, 4 frames, cutout, greyscale for tinting) and `focus_beam.png` (16×16, tiling, greyscale).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound", with its category, volume, pitch and subtitle rules, ≤ 3 s with faded tails.<br>**Review:** a contact sheet at GUI scale 2 beside vanilla's blaze rod, ender pearl and stonecutter, with every focus item and the 10 focused wand layers on a wooden-and-copper wand; a Blender render of the Lathe; **worst-case Lathe mockups** composed from the sprites and the vanilla font: 8 cost cells with 4-digit amounts and a short cell, the beyond glyph, an inert and a missing wand, an unlearned socket choice, `XP_SHORT` and `STALE`, the keyboard focus ring on each region, a long test translation and a long-text tooltip, all as the full 288×234 screen inside a 320×240 view with every slot, control and the hotbar visible. Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) and [Infusion assets #47](https://github.com/andrewbrogoff/voices-from-the-void/issues/47): both write `items/wand.json` first, so the three appends are serialised |
-| **Foci content** (Stages 1–3) | `content/foci/effects.json` (`vftv:focus_effects/1`, the six ordinary effects exactly as the roster), `content/foci/media.json` (`vftv:focus_media/1`), `content/foci/modifiers.json` (`vftv:focus_modifiers/1`), `content/foci/recipes.json` (`vftv:foci_recipes/1`: the two arcane bodies, with materials from the reviewed pre-iron list and costs ≤ 32 per aspect), `content/foci/damage_types.json` (`vftv:damage_types/1`), `content/foci/fixtures.json` (`vftv:foci_fixtures/1`, the vector tables transcribed), and `content/lang/en_us/foci.json` (`vftv:lang/1`) with every key under "Lang keys" except the Void effects' names. Its review checks that the messages teach the two gestures, the free Lathe, the experience price and the Exchange warning. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
+| **Foci assets** | **Generator:** `tools/art/foci.py`.<br>**Focus items** (16×16): `assets/vftv/textures/item/focus/blank.png`, `unknown.png` and one per built-in effect (`kindle`, `gust`, `rime`, `delve`, `mend`, `exchange`, `unmaking`, `undertow`). Each is a small brass bell-disc carrying an essentia bead tinted by its effect's aspect family ([art style §2](art-style.md#2-palette-locked-project-wide-48-colours) allows aspect families on essentia tints), in the Stage row of its research ([art style §5](art-style.md#5-tone-ramp-by-stage)); the two Void foci in the Stage 4 row, teal inside void ink. With item models `vftv:item/focus/<id>` (parent `minecraft:item/generated`) and **`assets/vftv/items/focus.json`** exactly as under "On the wand".<br>**Wand layers:** `assets/vftv/textures/item/wand/focus/<id>.png` for the same ten ids, the focus seated above the top cap, with layer models `vftv:item/wand/focus/<id>` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (the third member, every existing case kept).<br>**The Lathe:** `assets/vftv/models/block/lathe.json` with at most 6 pixel-aligned cuboids and no rotations ([art style §6](art-style.md#6-blocks-and-models)): a base [1,0,2]–[15,4,14], a headstock [2,4,5]–[5,12,11], a tailstock [11,4,6]–[14,10,10], a spindle [5,7,7]–[11,9,9], a bell blank on it [7,6,6]–[9,10,10] and a tool rest [6,4,11]–[10,6,13]. Textures `lathe_side.png`, `lathe_top.png`, `lathe_bottom.png`, `lathe_front.png` (Stage 1 row; the teal tick on the bell blank's top); a blockstate with 4 horizontal facings by rotation; the item definition `assets/vftv/items/lathe.json`.<br>**GUI:** `assets/vftv/textures/gui/container/lathe.png` (288×234 used on a 512×256 sheet, every well, strip, socket row and panel at the positions under "The screen"), and every sprite listed there.<br>**Entity:** `assets/vftv/textures/entity/focus_bolt.png` (16×64, 4 frames, cutout, greyscale for tinting) and `focus_beam.png` (16×16, tiling, greyscale).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound", with its category, volume, pitch and subtitle rules, ≤ 3 s with faded tails.<br>**Review:** a contact sheet at GUI scale 2 beside vanilla's blaze rod, ender pearl and stonecutter, with every focus item and the 10 focused wand layers on a wooden-and-copper wand; a Blender render of the Lathe; **worst-case Lathe mockups** composed from the sprites and the vanilla font: 8 cost cells with 4-digit amounts and a short cell, the beyond glyph, an inert and a missing wand, an unlearned socket choice, `SHORT` and `STALE`, the keyboard focus ring on each region, a long test translation and a long-text tooltip, all as the full 288×234 screen inside a 320×240 view with every slot, control and the hotbar visible. Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) and [Infusion assets #47](https://github.com/andrewbrogoff/voices-from-the-void/issues/47): both write `items/wand.json` first, so the three appends are serialised |
+| **Foci content** (Stages 1–3) | `content/foci/effects.json` (`vftv:focus_effects/1`, the six ordinary effects exactly as the roster), `content/foci/media.json` (`vftv:focus_media/1`), `content/foci/modifiers.json` (`vftv:focus_modifiers/1`), `content/foci/recipes.json` (`vftv:foci_recipes/1`: the two arcane bodies, with materials from the reviewed pre-iron list and costs ≤ 32 per aspect), `content/foci/damage_types.json` (`vftv:damage_types/1`), `content/foci/fixtures.json` (`vftv:foci_fixtures/1`, the vector tables transcribed), and `content/lang/en_us/foci.json` (`vftv:lang/1`) with every key under "Lang keys" except the Void effects' names. Its review checks that the messages teach the two gestures, the free Lathe, ranks paid in vis and the Exchange warning. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
 | **Void foci content** (Stage 4) | `content/foci/effects_void.json` (`vftv:focus_effects/1`, exactly `vftv:unmaking` and `vftv:undertow` as the roster, under the same merge rules) and `content/lang/en_us/foci_void.json` (`vftv:lang/1`: their `focus_effect.*` names in Void-tongue, with no provisional English) | the **Void-tongue lexicon** ticket ([warp spec, Production tickets](warp.md#production-tickets)) |
 
 The research content tickets [#34](https://github.com/andrewbrogoff/voices-from-the-void/issues/34)–[#37](https://github.com/andrewbrogoff/voices-from-the-void/issues/37) consume the entry ids, recipe ids and fact sources frozen here.

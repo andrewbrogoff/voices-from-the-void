@@ -12,7 +12,7 @@ The wands spec owns the arithmetic. This spec never computes a cost: it asks `Vi
 
 | Stage | What this spec puts there | Find |
 |---|---|---|
-| 1 Resonance | the Worktable, the `vftv:arcane` recipe type, and the tutorial recipe `vftv:bell` | the Stage is opened by the amethyst geode ([research, Stage](research.md#stage)). Inside it, the `note` entry **`vftv:arcane_crafting`** (already in the [research roster](research.md#roster), after `vftv:knots_in_the_air`) gates both turning a table and the tutorial recipe. |
+| 1 Resonance | the Worktable, the `vftv:arcane` recipe type, and the tutorial recipe `vftv:bell` | the Stage is opened by the amethyst geode ([research, Stage](research.md#stage)). Inside it, the `note` entry **`vftv:arcane_crafting`** (already in the [research roster](research.md#roster), after `vftv:knots_in_the_air`) gates turning a table, the tutorial recipe and the [foci spec's](foci.md#stage) **Lathe** recipe `vftv:lathe`, so its page shows the Bell and the Lathe side by side and the first arcane craft can be the instrument. |
 | 2–4 | nothing of its own | other specs' recipes ride the same type, each behind its own `research` (the wands spec's Stage 2 recipes; Void-tier recipes behind Stage 4 entries) |
 
 - **Gate the craft, at the one place it happens.** Unlike the vanilla grid, the Worktable commits through a payload this spec owns, so the research gate is checked on the server **before any slot changes** (see "The craft payload"). An unlearned recipe is invisible at the station and in JEI: the Worktable never selects, previews or names it, and JEI hides it. The book keeps the research spec's authorised exception: a recipe page marked `preview: true` may show a forward-looking recipe as a locked preview ([research, Page descriptors](research.md#page-descriptors)).
@@ -117,7 +117,7 @@ Otherwise the listener does nothing. An unlearned player's click opens the craft
 | hover | ready, and hovered or keyboard-focused | `vftv:worktable/preview_hover` | drawn, with its count |
 | ready | otherwise | `vftv:worktable/preview_ready` | drawn, with its count |
 
-The result item is drawn at (5, 5) inside the frame. The preview's tooltip is the result's own tooltip plus `tooltip.vftv.worktable.preview`.
+The result item is drawn at (5, 5) inside the frame. The preview's tooltip is the result's own tooltip plus `tooltip.vftv.worktable.preview`, then, when priced and the quote's spill is above 0, the **batch total** `tooltip.vftv.worktable.batch_flux` (*n*, *n* × spill), where *n* = min(`MAX_BATCH`, the crafts every pool of the live wand can pay at the current effective cost, the smallest occupied grid stack, the results the output slot has room for). It is an upper bound: a batch can stop early ("Batch"), never spill more. With the Bell at total warp 10 above, a full wand and full stacks: "A batch of 64 spills 320 flux."
 
 **Cost cells** (40×18): the aspect's 16×16 icon ([aspects, icons](aspects.md#icons)) at (1, 1); the cost as text in the **number field x = 18…38**, right-aligned to x = 38 at y = 5, drawn at the scale min(1, 20 / its measured width) and centred on the unscaled line, so it never reaches the icon: 4 digits are 24 px in the vanilla font, and a resource-pack font may be wider. Only the number scales; the icon and sprite never do. The sprite is `vftv:worktable/cost_cell`, or `vftv:worktable/cost_cell_short` when the wand's pool is below the effective cost; `cost_cell_short` carries a 3 × 3 `ink1` notch in its top-right corner, so the state never rests on hue ([localisation, Colour and contrast](accessibility.md#colour-and-contrast)). Both sprites' number fields are uniform `brass5` under `ink1` numbers; the title and inventory label strips are uniform `brass4`, the status line's rectangle `brass5`, and the preview's count corner `ink1` under vanilla's white count ([localisation, Text contrast](accessibility.md#text-contrast)). A cost has at most 4 digits; a cost above 9,999 can only be an extreme that exceeds every rod's capacity, so the cell draws the 9×9 glyph `vftv:worktable/beyond` at (29, 4) instead. **The tooltip is always exact and unscaled.** This is the **shared cost-cell rule**: JEI's arcane category and the [crucible spec's](crucible.md#jei) JEI category draw their cells by it. With no wand or an inert wand, cells show the base cost on `cost_cell`.
 
@@ -310,7 +310,7 @@ The effect is a list of the wands spec's prepared slot changes `(container, slot
 
 | Code | Status | Raised by | Lang key | Args |
 |---|---|---|---|---|
-| 0 | `READY` (as a refusal: none) | client only | `status.vftv.worktable.ready` | 1: the result's name |
+| 0 | `READY` (as a refusal: none) | client only | `status.vftv.worktable.ready`, or **`status.vftv.worktable.ready_taxed`** when the quote's `warp` is above 1000 or its `spill` above 0 | 1: the result's name; `ready_taxed` 3: the result's name, `warp` and `spill` |
 | 1 | `NO_WAND` | client; check 4 | `status.vftv.worktable.no_wand` | 0 |
 | 2 | `INERT_WAND` | client; check 5; spend "inert" | `message.vftv.spend.inert` (the wands spec's) | 0 |
 | 3 | `NO_RECIPE` | client; check 6; spend "unlearned" | `status.vftv.worktable.no_recipe` | 0 |
@@ -322,6 +322,7 @@ The effect is a list of the wands spec's prepared slot changes `(container, slot
 | 9 | `ERROR` | server only: a spend that threw in step 6 and was rolled back | `status.vftv.worktable.error` | 0 |
 
 - **Client precedence** (first match): `NO_WAND`, `INERT_WAND`; then an empty grid shows no status line; then `NO_RECIPE`, `LEFTOVER`, `EXCEEDS_CAPACITY`, `SHORT`, `OUTPUT_FULL`, else `READY`.
+- **The tax is on the face of the screen.** A taxed `READY` names the warp factor and the flux one craft spills on the status line itself, not only in the cost tooltip, so the tax is never hidden ([lore, Listening and warp](lore.md#listening-and-warp)). For example, with the illustrative Bell (Aer 8, Ordo 6, Terra 4), copper caps, no discount and the [warp spec's](warp.md#the-dials) tax of 20‰ per point: at total warp 10, `w` = 1000 + 10 × 20 = 1200, so `m` = 1200, effective Aer ⌈9.6⌉ = 10, Ordo ⌈7.2⌉ = 8, Terra ⌈4.8⌉ = 5 against neutral 8, 6, 4; the surcharge is 2 + 2 + 1 = 5 and the spill at `tax_pm` 1000 is **5**, so the line reads "Ready to make Bell. Warp ×1.20, spills 5 flux." At total warp 25 (`w` 1500, the +50% cap), effective 12, 9, 6, surcharge 4 + 3 + 2 = 9, spill **9**.
 - **`SpendResult` mapping** (by the wands spec's outcome): inert → `INERT_WAND`; unlearned → `NO_RECIPE`; stale → `STALE`; short → `EXCEEDS_CAPACITY` if the recomputed quote has `exceeds_capacity`, else `SHORT`; a step-6 throw → `ERROR`. `SPENT` and `COMMITTED_NOTIFY_FAILED` are both committed crafts and set no refusal.
 - **Feedback is separate from eligibility.** The refusal is feedback only: while data slot 0 is non-zero and not yet acknowledged, the **status line** shows that refusal instead of the predicted status. Whether the preview can be activated depends **only on the local prediction**: a locally `READY` preview stays ready (and activatable) while a refusal is shown, so a `STALE` refusal set after the change that caused it never blocks a retry with the current revision and echo. Arguments (the short aspects) are computed by the client from synced state, which the refusal's forced resync has just made the server's.
 - **Acknowledging:** activating the preview acknowledges the shown refusal on the client at once, and the server clears data slot 0 at the start of every activation. A new refusal is always delivered by `sendAllDataToRemote()`, which re-sends data slot 0 even when its value is unchanged; any received value for it ends the client's acknowledgement.
@@ -363,7 +364,7 @@ Aspect names are the localised names; numbers follow "Number formats" under "The
 
 A soft dependency ([architecture, Soft dependencies](architecture.md#soft-dependencies)), never on the progression path. **Every JEI class lives in `…neoforge.compat.jei.client`**, since JEI's drawing uses client classes; the NeoForge crafting hook and the shapeless matcher stay behind their platform seams.
 
-- **One category** for `vftv:arcane`, 160×104: the grid at (0, 0) with 18-px slots; the result at (106, 18); the cost panel at (0, 58), 4 × 2 cells of 40×18 drawn exactly as the station's, priced through `ArcanePreview` with the reference wand (short aspects on `cost_cell_short`); `arcane.vftv.priced_with` or the absent text at (0, 96). Title `jei.vftv.category.arcane`. The Worktable item is its catalyst. **No transfer handler**: there is no "+" placement path.
+- **One category** for `vftv:arcane`, 160×114: the grid at (0, 0) with 18-px slots; the result at (106, 18); the cost panel at (0, 58), 4 × 2 cells of 40×18 drawn exactly as the station's, priced through `ArcanePreview` with the reference wand (short aspects on `cost_cell_short`); `arcane.vftv.priced_with` or the absent text at (0, 96); and, when priced with `warp` above 1000 or spill above 0, `arcane.vftv.taxed` at (0, 106), the same facts as the station's `ready_taxed` line. Title `jei.vftv.category.arcane`. The Worktable item is its catalyst. **No transfer handler**: there is no "+" placement path.
 - **API used** (verified in the JEI 30.38 common API sources): `IRecipeManager.addRecipes`, `hideRecipes` and `unhideRecipes`, and `IModPlugin.onRuntimeAvailable` and `onRuntimeUnavailable`. Ordering of runtime start against recipe arrival was not exercised; it is the build's E2E obligation below.
 - **Reconcile, order-independent.** One function, **`GatedRecipeDiff`** in `core.research.model`, computes the desired state from whatever is present now: the runtime, the client's recipe snapshot and the learned set.
   - Recipe objects from the current snapshot not yet added are added.
@@ -432,6 +433,9 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `block.vftv.worktable` | 0 | "Worktable" (also its item's name) |
 | `container.vftv.worktable` | 0 | "Worktable" (the screen title) |
 | `status.vftv.worktable.ready` | 1 | "Ready to make %s." (the result's name) |
+| `status.vftv.worktable.ready_taxed` | 3 | "Ready to make %s. Warp ×%s, spills %s flux." (the result's name, `warp`, spill) |
+| `tooltip.vftv.worktable.batch_flux` | 2 | "A batch of %s spills %s flux." (*n*, total spill) |
+| `arcane.vftv.taxed` | 2 | "Warp ×%s, spills %s flux." (`warp`, spill) |
 | `status.vftv.worktable.no_wand` | 0 | "Place a wand here." |
 | `status.vftv.worktable.no_recipe` | 0 | "Nothing I know how to make." |
 | `status.vftv.worktable.leftover` | 0 | "Something would be left over." |
@@ -567,7 +571,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **selection:** the learned filter; an unlearned overlapping recipe never hiding a learned one; lowest id among several learned matches; the mirror; shapeless with a custom ingredient;
 - **planning:** a remainder with count 1 and with more; an invalid remainder; output empty, merge, merge over the maximum, and mismatched components;
 - **the payload codec:** every bound, sizes rejected before allocation, duplicate and mismatched aspect keys, spill out of range;
-- **status:** the precedence over every combination; the `SpendResult` mapping for each outcome, `COMMITTED_NOTIFY_FAILED` included; refusal clearing on each bump source, on each price input without a bump, on activation and on a committed craft, and survival through its own resync; a shown refusal never disabling a locally ready preview;
+- **status:** the precedence over every combination; `READY` against `ready_taxed` at `warp` 1000 with spill 0, `warp` 1001, and spill 1 at `warp` 1000 (a `VOID` spill), with the taxed Bell examples above (spill 5 at warp 10, 9 at warp 25) through a stub factor; the batch total's *n* limited in turn by `MAX_BATCH`, the wand, the smallest grid stack and the output room; the `SpendResult` mapping for each outcome, `COMMITTED_NOTIFY_FAILED` included; refusal clearing on each bump source, on each price input without a bump, on activation and on a committed craft, and survival through its own resync; a shown refusal never disabling a locally ready preview;
 - **allocation:** the selection ceilings at 64, 512 and 4,096 candidates of each kind, including rejected non-simple shapeless candidates; the constant per-iteration amount;
 - **the preview:** each availability; the reference-wand order (hand, offhand, inventory, an inert wand skipped, all inert); every fact field's format, including counts and absent values; the number formats at their edges;
 - **the quote factors** against the wands spec's vectors;
@@ -595,7 +599,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- every status state, the clipped status line with its full-text tooltip, and the cost tooltip (screenshots + a state dump of the menu and quote), including a **long test translation**;
+- every status state, `ready_taxed` included, and the preview tooltip's batch total, the clipped status line with its full-text tooltip, and the cost tooltip (screenshots + a state dump of the menu and quote), including a **long test translation**;
 - **a 4-digit cost cell** (9,999) with the vanilla font and with a wide resource-pack font: the scaled number stays inside x = 18…38 and the tooltip is exact;
 - craft by mouse and by keyboard, one and batch;
 - **keyboard and narration** under the [localisation fixtures](accessibility.md#fixtures): Tab through the preview, each cost cell (its tooltip shown on focus, its narration holding the cost, pool, factors, flags and spill) and the clipped status line (its full text); `cost_cell_short`'s notch visible in the greyscale contact sheet;
@@ -631,7 +635,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 | **One authoritative cost preview** per type: base and effective vis, flux spill and every decision cost, capped modifiers flagged; backs the page and the fact fields | `ArcanePreview`: typed availability, the visible reference wand, frozen fact formats, live dependencies; the flags in the cost tooltip |
 | **JEI** filters by the learned gate, updates on grant, revoke, login and logout, marks unaffordable recipes accurately; everything works without JEI | "JEI": an order-independent reconcile against the current learned set at runtime start and on every arrival, stale objects hidden on replacement, caches cleared at logout, reference-wand affordability. E2E with and without JEI. |
 
-**Met here** (the [progression spec](progression.md#the-first-hour)): the first arcane craft within the first session is the Bell, from pre-iron materials, at a cost the Wellspring alone pays.
+**Met here** (the [progression spec](progression.md#the-first-hour)): the first arcane craft within the first session is the Bell or the Lathe, both behind `vftv:arcane_crafting`, at costs the Wellspring alone pays (the Stage 1 affordability test covers both).
 
 **[Wands, vis and nodes](https://github.com/andrewbrogoff/voices-from-the-void/issues/17)** (amended in this change)
 - `api.VisQuote` carries the resolved per-mille factors `cap`, `discount` and `warp`; echo equality is unchanged; the vectors, fixtures and `VisSpentEvent` payload show them.
@@ -639,7 +643,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `content/wands/recipes.json` bodies use the recipe type's format verbatim, with `"type": "vftv:arcane"`. [Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) is unblocked by it.
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)**, handed to [Stage 1 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/34) and [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35):
-- `vftv:arcane_crafting` (Stage 1 `note`) gates turning a table and `vftv:bell`; its entry carries a `vftv:recipe` page for `vftv:bell`. No additional arcane-specific entry is needed; `vftv:tapping` and the existing research ancestors remain prerequisites.
+- `vftv:arcane_crafting` (Stage 1 `note`) gates turning a table, `vftv:bell` and the foci spec's `vftv:lathe`; its entry carries `vftv:recipe` pages for `vftv:bell` and `vftv:lathe`, side by side. No additional arcane-specific entry is needed; `vftv:tapping` and the existing research ancestors remain prerequisites.
 - **The affordability artifact:** `content/research/path-stage1.json` learns `vftv:tapping` and then `vftv:arcane_crafting` within its Stage 1 replay, and its reviewed sources include `vftv:starter` (the Wellspring that fills the wand). The Bell's materials (copper, amethyst, wood) are reachable before iron; #34's ticket reviews that list.
 - **Fact fields** for `vftv:arcane`: `output`, `inputs`, `vis`, `vis_effective` and `flux`, in the formats above, priced with the reference wand and shown as the absent text when there is none; they re-resolve on the preview's live dependencies.
 - **Recipe sync** of `vftv:arcane` is this spec's, so the research spec's recipe-page sync needs nothing more for it.

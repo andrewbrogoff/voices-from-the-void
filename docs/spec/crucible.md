@@ -20,6 +20,7 @@ Resolved in [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from
 
 - **Gate the recipe, not the vessel.** Dissolving is ungated: a crucible someone gave you dissolves for you, as a Worktable works for anyone ([arcane crafting, Stage](arcane.md#stage)). **Obtaining counts.**
 - **Every crucible recipe carries its own `research`**, checked on the server against the item's **thrower** before anything is consumed, and again before anything is debited (see "Selection" and "Committing a craft").
+- **A full pool has an exit from day one.** The [essentia spec's](essentia.md#stage) `vftv:essentia_jars` has `vftv:crucible` as its parent, and the jar and Alembic recipes use only `minecraft:` items, so the first full crucible can be poured into jars before any Resonant Brass exists. Tubes stay behind Brass.
 - **Options considered:** a separate find for the crucible; gating dissolving itself. Gating the use of a block someone handed you buys nothing, and the progression spec already puts the crucible and Resonant Brass in Stage 2 ([progression, Stages](progression.md#stages)).
 
 ## The crucible
@@ -89,21 +90,21 @@ The **`water`** property is boolean, and **water is never consumed** by dissolvi
 - **Phase:** a boiling crucible runs a **step** on the ticks where `level.getGameTime() mod step.interval = phase(pos)`, with
 
   ```
-  phase(pos) = Long.remainderUnsigned(mix64(pos.asLong()), step.interval)
+  phase(pos) = Long.remainderUnsigned(fold([0x43525543 ("CRUC"), pos.asLong()]), step.interval)
   ```
 
-  where `mix64` is the SplitMix64 finaliser pinned in the [research spec](research.md#generating-a-note) and `asLong` is vanilla's `BlockPos` packing (26 bits of x shifted by 38, 26 bits of z shifted by 12, 12 bits of y). The phase is deterministic and spreads neighbouring crucibles across ticks.
+  where `fold` is the salted hash pinned in the [research spec](research.md#generating-a-note), with the salt `CRUC` like every other seeded phase (the warp and Hush schedules salt theirs), and `asLong` is vanilla's `BlockPos` packing (26 bits of x shifted by 38, 26 bits of z shifted by 12, 12 bits of y). The phase is deterministic and spreads neighbouring crucibles across ticks. The essentia spec's Alembic and lines and the infusion spec's bowls reuse this function.
 - **A step does nothing** while the block entity is dormant, queued for refresh, inside an operation (see "Emptying by bucket") or **transaction-busy** (see "Essentia out": an extraction's transaction is still open), and **it never re-enters itself**: a step started while another is running on the same block entity (a listener driving the crucible from inside a step) returns at once.
 
 **Vectors** (computed by a reference implementation and cross-checked against the JDK):
 
-| Position | `asLong` | `mix64` | Phase at 5 | Phase at 40 |
+| Position | `asLong` | `fold([CRUC, asLong])` | Phase at 5 | Phase at 40 |
 |---|---|---|---|---|
-| (0, 64, 0) | `0x0000000000000040` | `0x8AA449CE2D0CA1D3` | 0 | 35 |
-| (1, 64, 0) | `0x0000004000000040` | `0xCCA546706B2F3BE2` | 0 | 10 |
-| (0, 64, 1) | `0x0000000000001040` | `0x72C7F386FC53A75C` | 4 | 4 |
-| (−37, 70, 512) | `0xFFFFF6C000200046` | `0x3522C0D35D1C6561` | 4 | 9 |
-| (29999999, −64, −29999999) | `0x7270DFE363C81FC0` | `0xFD59B0EF405AF3EB` | 4 | 19 |
+| (0, 64, 0) | `0x0000000000000040` | `0xE0F53741245D77A5` | 2 | 37 |
+| (1, 64, 0) | `0x0000004000000040` | `0x52AD4BCB856565D5` | 1 | 21 |
+| (0, 64, 1) | `0x0000000000001040` | `0x088EFF2AA6E4BACB` | 0 | 35 |
+| (−37, 70, 512) | `0xFFFFF6C000200046` | `0x28DE383757949BE2` | 4 | 34 |
+| (29999999, −64, −29999999) | `0x7270DFE363C81FC0` | `0x235FAB678DA90CF7` | 3 | 23 |
 
 ### Admission
 
@@ -196,7 +197,7 @@ An item is **protected** iff it is in the item tag **`vftv:crucible_refuses`** (
 **A refused entity, and every crafted result:**
 - gets the entity attachment **`vftv:crucible_refused`** (a boolean, serialised with the entity, never synced). No crucible processes it **while that entity survives**;
 - gets vanilla's default pickup delay;
-- gets the velocity `(0.15 · dx/ℓ, 0.3, 0.15 · dz/ℓ)`, where (`dx`, `dz`) runs from the crucible's centre column (x + 0.5, z + 0.5) to the resolved thrower's position and ℓ is its length; with no thrower, or when ℓ² < 10⁻⁸, the velocity is `(0, 0.3, 0)`. A refused entity is not moved: it pops from where it lies. Without a thrower it may fall back inside, where its mark keeps it inert.
+- gets the velocity `(0.15 · dx/ℓ, 0.3, 0.15 · dz/ℓ)`, where (`dx`, `dz`) runs from the crucible's centre column (x + 0.5, z + 0.5) to the resolved thrower's position and ℓ is its length; with no thrower, a thrower in another level, or when ℓ² < 10⁻⁸, the velocity is `(0, 0.3, 0)`. A refused entity is not moved: it pops from where it lies. Without a thrower it may fall back inside, where its mark keeps it inert.
 
 **Vectors** (reference implementation, cross-checked against the JDK; crucible at x = 10, z = −5):
 
@@ -207,6 +208,7 @@ An item is **protected** iff it is in the item tag **`vftv:crucible_refuses`** (
 | (10.50005, −4.5), ℓ² = 2.5 × 10⁻⁹ | (0, 0.3, 0) |
 | (−100.0, 3.0) | (−0.149656, 0.300000, 0.010158) |
 | no thrower | (0, 0.3, 0) |
+| a thrower in another level | (0, 0.3, 0) |
 
 **Merging is vanilla's** (`ItemEntity#tryToMerge`): the surviving entity keeps its own thrower and attachments, and the absorbed entity's are lost. So:
 - a refused entity that absorbs a fresh stack makes the whole stack inert while it survives;
@@ -251,7 +253,7 @@ Which entity survives an equal-count merge is vanilla's choice; a GameTest recor
 ### Selection
 
 For an entity that reached row 3 of "The decision":
-1. **The thrower:** `ItemEntity#getOwner()` must resolve to a `ServerPlayer` that is alive and in this level. Vanilla records a thrower only on a player's own drops; droppers, death drops, broken containers and other mods' entities have none unless they set one (see the [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) contract).
+1. **The thrower:** the item entity's recorded thrower UUID, looked up **server-wide** with `server.getPlayerList().getPlayer(uuid)`, must resolve to a `ServerPlayer` that is **online and alive**, in any level. Vanilla's `ItemEntity#getOwner()` resolves only within the entity's own level, so it isn't used: research is per player, not per dimension, and a golem feeding its owner's crucible keeps working while the owner is in the Nether. Vanilla records a thrower only on a player's own drops; droppers, death drops, broken containers and other mods' entities have none unless they set one (see the [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) contract).
 2. **Candidates:** the current snapshot's recipes whose catalyst matches the count-one copy and whose `research` the thrower **has learned**, in ascending id (`String.compareTo` on `ns:path`). With no thrower there are none.
 3. **Affordable** means every cost aspect's pool amount ≥ its cost. The **lowest-id affordable** candidate crafts one item.
 4. **Candidates, none affordable:** refused `SHORT`, naming the **lowest-id** candidate's shortfall. A learned catalyst is never silently dissolved.
@@ -275,7 +277,7 @@ On the server thread, inside a step. Spawning an entity runs other mods' join li
 1. **Snapshot** what the craft expects: the block entity instance and its block state; the pool's `revision` (a counter bumped by every pool change); the catalyst entity and a copy of its stack; the recipe snapshot instance and the recipe id; the thrower, and that they have learned the recipe's `research`.
 2. **Create** the result stack from the template, and an `ItemEntity` holding it at `pos + (0.5, 1.0625, 0.5)`, marked refused, with the default pickup delay and the ejection velocity toward the thrower.
 3. **Spawn** it with `addFreshEntity`. **If it returns `false`** (a cancelled join) **or throws:** our result entity is discarded if it was added; nothing is debited; the catalyst is refused `ERROR`; one log line names the recipe.
-4. **Revalidate** everything from step 1 against the live world: the same block entity at the position, not removed, readable, not in an operation and not transaction-busy; the same block state, still `boiling`; the same pool revision; the catalyst entity alive and unmarked, its stack still matching the copy and the recipe; the same snapshot instance; the thrower still resolving and still having the research; **our result entity alive, holding the stack it was given**. Any failure: our result entity is discarded if it is still alive, nothing is debited, the catalyst is refused `ERROR`, and one log line names the recipe and the failed check. **Whatever listeners changed themselves is left as they made it.**
+4. **Revalidate** everything from step 1 against the live world: the same block entity at the position, not removed, readable, not in an operation and not transaction-busy; the same block state, still `boiling`; the same pool revision; the catalyst entity alive and unmarked, its stack still matching the copy and the recipe; the same snapshot instance; the thrower still resolving server-wide, online and alive, and still having the research; **our result entity alive, holding the stack it was given**. Any failure: our result entity is discarded if it is still alive, nothing is debited, the catalyst is refused `ERROR`, and one log line names the recipe and the failed check. **Whatever listeners changed themselves is left as they made it.**
 5. **Commit:** debit the cost (revision + 1); shrink the catalyst by one, discarding it at zero; mark the block entity for the coalesced sync; record the step's sound (see "Sound and particles").
 6. **Notifications,** after the commit, each exactly once, **each caught separately so the rest still run**, in this order:
    1. `CrucibleEvent(CRAFTED)`;
@@ -304,7 +306,7 @@ On the server thread, inside a step. Spawning an entity runs other mods' join li
 **Nothing happens over time.** There is **no decay**: no compound splits, no primal vanishes, and **Vacuos never breaks down into Aer or Perditio**, because nothing breaks down at all. A cold pool keeps its contents.
 - **Options considered:** decay as in TC4 (compounds split, primals vanish into flux); decay only while cold.
 - **Recommend** no decay. **Why:** the TC4 alchemy research's own friction notes say the crucible punished slowness and drove players to workarounds; the progression spec forbids passive-waiting pressure; the Hush must be caused by the player ([progression, TC4 systems](progression.md#tc4-systems-kept-redesigned-cut)), and a timer is not a choice; and a pool that never decays needs no per-tick work.
-- **The pressure that remains is a decision.** Leftovers from dissolving fill the cap, and the player either extracts them (see "Essentia out"), which keeps the material but needs somewhere to put it, or empties them, which is the priced alternative (see "Spilling").
+- **The pressure that remains is a decision.** Leftovers from dissolving fill the cap, and the player either extracts them (see "Essentia out") into jars through an Alembic, or later through tubes, which keeps the material and is learnable as soon as the crucible is (see "Stage"), or empties them, which is the priced alternative (see "Spilling").
 
 **Missing aspect ids.** An entry of a valid record whose aspect the registry doesn't hold (a pack removed it) is **kept**: written back unchanged, counted toward the total and the 64-id union, and spilled with the rest. It is never matched, extracted or used for the tint, and it is shown with the missing sprite and its exact amount. Restoring the pack restores it.
 
@@ -402,44 +404,44 @@ The crucible exposes the architecture's **`BlockCapability<ResourceHandler<Essen
 |---|---|
 | Frame | `vftv:hud/vis_frame`, the wands spec's nine-slice (16×16, border 4), with 4-px padding |
 | Header | first match: dormant → `hud.vftv.crucible.dormant` (0 args); dry → `hud.vftv.crucible.dry`; cold → `hud.vftv.crucible.cold`; else `hud.vftv.crucible.boiling` (each 2 args: the total and the capacity in force) |
-| Cells | one per pool entry, in ascending id: a 16×16 icon and the exact amount. A discovered aspect shows its icon ([aspects, Icons](aspects.md#icons)); one the viewer hasn't discovered shows the **unheard** icon; a missing id shows `vftv:hud/crucible_missing`. None when dormant. |
+| Cells | at most **12** (`MAX_CARD_ENTRIES`): every pool entry if there are 12 or fewer, else the 12 largest (ties to the lower id; missing ids rank by their amount like any other), drawn in ascending id: a 16×16 icon and the exact amount. A discovered aspect shows its icon ([aspects, Icons](aspects.md#icons)); one the viewer hasn't discovered shows the **unheard** icon; a missing id shows `vftv:hud/crucible_missing`. None when dormant. |
+| More line | `hud.vftv.crucible.more` (1 arg: the number of entries not drawn), iff the pool has more than 12 entries |
 | Spill line | `hud.vftv.crucible.spill` (1 arg: `essentiaFlux(pool, EMPTIED)`), iff the crucible has water and a non-empty, readable pool |
 
+**Why a cap:** a real pool holds a handful of aspects; 13 or more distinct ids is a deliberate experiment, and its smallest entries are the least decision-relevant. The cap keeps the card one glance tall on every screen, so it never pages. The total in the header and the spill line always cover the whole pool.
+
+**Vector** (reference implementation, cross-checked against the JDK): a pool of `a00` … `a13` holding 14 down to 1, plus `z` holding 3, draws `a00` … `a11` (`z` ties `a11` at 3 for twelfth place and loses on id), and the more line says 3.
+
 **Geometry,** in GUI-scaled pixels on a scaled screen of `W` × `H`:
-- the header and spill lines **wrap** to the widest inner width, `maxInner = W − 12` (a 2-px screen margin and the 4-px padding on each side), with the font's own `split`, so no number is ever cut ([localisation, R3](accessibility.md#r3-hud-text)): `h` header lines and `p` spill lines (0 without a spill line), 9 px each;
+- the header, more and spill lines **wrap** to the widest inner width, `maxInner = W − 12` (a 2-px screen margin and the 4-px padding on each side), with the font's own `split`, so no number is ever cut ([localisation, R3](accessibility.md#r3-hud-text)): `h` header lines, `q` more lines and `p` spill lines (0 without a more or spill line), 9 px each;
 - **the usable height** `H′` is `H` with no caption showing, else `bandTop − 2`, where `bandTop` is the top of the [caption band](accessibility.md#the-caption-band), read from its published value before this layout; `bandTop` is never above ⌊`H` / 3⌋, so `H′` is never negative. A caption never covers a card's numbers;
-- a **cell** is 16 px tall: the icon at (0, 0), the amount at (18, 4). Its width is `18 + T`, where `T` is the widest amount string in the pool by the font's own metrics, measured once per layout. The column pitch is cell + 4 and the row pitch 18;
-- **no entries** (an empty pool, or a dormant record): columns = rows = 0 and no grid is drawn;
+- a **cell** is 16 px tall: the icon at (0, 0), the amount at (18, 4). Its width is `18 + T`, where `T` is the widest amount string among the drawn cells by the font's own metrics, measured once per layout. The column pitch is cell + 4 and the row pitch 18;
+- `n` is the number of drawn cells, at most 12. **No cells** (an empty pool, or a dormant record): columns = rows = 0 and no grid is drawn;
 - otherwise `maxFit = max(1, ⌊(maxInner + 4) / pitch⌋)`. The **columns** `c` are the smallest count from `min(n, 4, maxFit)` up to `min(n, maxFit)` whose frame fits `H′ − 4` tall, else `min(n, maxFit)`; rows are ⌈`n` / `c`⌉;
-- frame height = 8 + 9 × `h` + 18 × rows + (2 + 9 × `p` if there is a spill line), which is the earlier 17 + 18 × rows + 11 when each line fits on one; frame width = 8 + the widest of the header lines, the spill lines and the grid (`c` × cell + (`c` − 1) × 4, or 0 with no columns);
+- frame height = 8 + 9 × `h` + 18 × rows + (2 + 9 × `q` if there is a more line) + (2 + 9 × `p` if there is a spill line), which is 17 + 18 × rows + 11 + 11 when each line fits on one; the more line sits under the grid, the spill line last; frame width = 8 + the widest of the header lines, the more lines, the spill lines and the grid (`c` × cell + (`c` − 1) × 4, or 0 with no columns);
 - **fallback:** if the frame is still wider than `W − 4` or taller than `H′ − 4`, it is drawn at the pose scale `s = min((W − 4) / width, (H′ − 4) / height)`;
-- **sheets,** when that `s` would be below **0.75**: the card is split into stable **sheets** instead of shrinking further. A card has a **head** (here the header lines), a **foot** (here the spill lines) and a **body** (here the grid rows), each consumer declaring its own. Every sheet repeats the head and the foot, and ends with the indicator `hud.vftv.card.sheet` (sheet, sheets, and the names of the two sheet keys; [localisation, Lang keys](accessibility.md#lang-keys)), one line with a 2-px gap. A sheet holds `r = max(1, ⌊((H′ − 4) / 0.75 − fixed) / 18⌋)` body rows, where `fixed = 8 + 9 × h + (2 + 9 × p if there is a spill line) + 11`; columns stay `c` as chosen above, and the indicator's width joins the frame width's maximum. Every sheet is drawn at **sheet 1's size**, `fixed + 18 × r` tall, at `s = min(1, (W − 4) / width, (H′ − 4) / height)`, so the frame never jumps; sheets = ⌈rows / `r`⌉. If even `r` = 1 doesn't fit at 0.75 (only on a window below 320 × 240), the sheet draws at the scale that fits;
+- **sheets,** when that `s` would be below **0.75**: the card is split into stable **sheets** instead of shrinking further. This is the shared mechanism the cards under "Shared geometry" rely on; **the capped crucible card itself never pages in any vector below**, and reaches it only with wrapped lines under a full caption band. A card has a **head** (here the header lines), a **foot** (here the spill lines) and a **body** (here the grid rows and the more line), each consumer declaring its own. Every sheet repeats the head and the foot, and ends with the indicator `hud.vftv.card.sheet` (sheet, sheets, and the names of the two sheet keys; [localisation, Lang keys](accessibility.md#lang-keys)), one line with a 2-px gap. A sheet holds `r = max(1, ⌊((H′ − 4) / 0.75 − fixed) / 18⌋)` body rows, where `fixed = 8 + 9 × h + (2 + 9 × p if there is a spill line) + 11`; columns stay `c` as chosen above, and the indicator's width joins the frame width's maximum. Every sheet is drawn at **sheet 1's size**, `fixed + 18 × r` tall, at `s = min(1, (W − 4) / width, (H′ − 4) / height)`, so the frame never jumps; sheets = ⌈rows / `r`⌉. If even `r` = 1 doesn't fit at 0.75 (only on a window below 320 × 240), the sheet draws at the scale that fits;
 - **turning sheets:** never automatic. The key mappings `key.vftv.card.previous_sheet` and `key.vftv.card.next_sheet` (Page Up and Page Down by default, rebindable) turn the card under the crosshair one sheet, stopping at the ends; they are consumed only while a card with more than one sheet shows and no screen is open. A turn narrates the new sheet's body once ([localisation, HUD narration](accessibility.md#hud-narration)). The sheet resets to 1 when the target changes and is clamped to the new count on a relayout. Every entry is on exactly one sheet, in order;
 - **position:** the drawn size is ⌈width × `s`⌉ × ⌈height × `s`⌉ (rounded **up**, so a fractional edge never eats the margin). The frame is anchored at (⌊`W`/2⌋ + 8, ⌊`H`/2⌋ + 8), then clamped: `x = max(2, min(anchor x, W − drawn width − 2))`, and `y = max(2, min(anchor y, H′ − drawn height − 2))`, so it stays at least 2 px inside the screen and above the caption band.
 
-**Every pool fits.** The total is at most 10,000, so only a one-entry pool can hold a five-digit amount; with 2–64 entries every amount has at most 4 digits. With the vanilla font (6-px digits) the largest pool fits **unscaled** on the smallest scaled screen, 320 × 240, which vanilla's GUI scale never goes below for a window that size or larger. The pose-scale fallback covers resource-pack fonts and smaller windows.
+**Every card fits.** The total is at most 10,000, so only a one-entry pool can hold a five-digit amount; with 2–64 entries every amount has at most 4 digits. With the vanilla font (6-px digits) the largest card (12 cells of 4 digits, the more line and the spill line) fits **unscaled** on the smallest scaled screen, 320 × 240, which vanilla's GUI scale never goes below for a window that size or larger, with no caption and under the caption band's maximum alike. The pose-scale fallback covers resource-pack fonts and smaller windows.
 
-**Vectors** (reference implementation, cross-checked against the JDK; no caption showing, so `H′ = H`, and every header and spill line fits on one line; "a wide pack font" is the [localisation spec's wide-font fixture](accessibility.md#fixtures)):
+**Vectors** (reference implementation, cross-checked against the JDK; every header, more and spill line fits on one line, 120, 100 and 180 px wide unless stated; "a wide pack font" is the [localisation spec's wide-font fixture](accessibility.md#fixtures)). The caption rows use 320 × 240 with `leftHeight` = `rightHeight` = 49, so the action-bar baseline is 172 and the caption band's bottom 164, with the caption blocks as the [localisation spec](accessibility.md#the-caption-band) sizes them:
 
-| `W` × `H` | Entries | `T` | Header, spill widths | Columns × rows | Frame | Drawn at | Scale |
+| `W` × `H` | Captions: `bandTop`, `H′` | Entries (drawn) | `T` | Columns × rows | Frame | Drawn at | Scale |
 |---|---|---|---|---|---|---|---|
-| 320 × 240 | 64 | 24 | 120, 180 | 6 × 11 | 280 × 226 | (38, 12) | 1 |
-| 640 × 360 | 6 | 12 | 100, 150 | 4 × 2 | 158 × 64 | (328, 188) | 1 |
-| 640 × 360 | 0 (empty, no spill line) | | 90, — | 0 × 0 | 98 × 17 | (328, 188) | 1 |
-| 320 × 240 | 1 | 30 | 120, 180 | 1 × 1 | 188 × 46 | (130, 128) | 1 |
-| 320 × 240 | 64 | 36 (a wide pack font) | 120, 180 | 5 × 13 | 294 × 262, drawn 265 × 236 | (53, 2) | 0.9008 |
+| 320 × 240 | none: —, 240 | 64 (12, more line) | 24 | 4 × 3 | 188 × 93 | (130, 128) | 1 |
+| 640 × 360 | none: —, 360 | 6 | 12 | 4 × 2 | 158 × 64 (header 100, spill 150) | (328, 188) | 1 |
+| 640 × 360 | none: —, 360 | 0 (empty, no spill line) | | 0 × 0 | 98 × 17 (header 90) | (328, 188) | 1 |
+| 320 × 240 | none: —, 240 | 1 | 30 | 1 × 1 | 188 × 46 | (130, 128) | 1 |
+| 320 × 240 | none: —, 240 | 64 (12, more line) | 36 (a wide pack font) | 4 × 3 | 236 × 93 | (82, 128) | 1 |
+| 320 × 240 | status 1 line, Voice 1 line: 130, 128 | 64 (12, more line) | 24 | 4 × 3 | 188 × 93 | (130, 33) | 1 |
+| 320 × 240 | status 1 line, Voice 1 line: 130, 128 | 64 (12, more line) | 36 (wide) | 4 × 3 | 236 × 93 | (82, 33) | 1 |
+| 320 × 240 | status 3 lines, Voice 4 lines (the band's maximum): 85, 83 | 64 (12, more line) | 24 | 6 × 2 | 280 × 75 | (38, 6) | 1 |
+| 320 × 240 | status 3 lines, Voice 4 lines: 85, 83 | 64 (12, more line) | 36 (wide) | 5 × 3 | 294 × 93, drawn 250 × 79 | (68, 2) | 79/93 ≈ 0.8495 |
+| 320 × 240 | status 1 line, Voice 1 line: 130, 128 | 1 | 30 | 1 × 1 | 188 × 46 | (130, 80) | 1 |
 
-**Combined vectors** (the same reference; 320 × 240 with `leftHeight` = `rightHeight` = 49, so the action-bar baseline is 172 and the caption band's bottom 164; header 120 and spill 180 wide, one line each; the indicator 150 wide; the caption blocks as the [localisation spec](accessibility.md#the-caption-band) sizes them):
-
-| Captions | `bandTop`, `H′` | Entries, `T` | Columns × rows | Sheet: rows `r`, sheets, frame | Drawn at | Scale |
-|---|---|---|---|---|---|---|
-| status 1 line, Voice 1 line | 130, 128 | 64, 24 | 6 × 11 | 7, 2, 280 × 165, drawn 211 × 124 | (107, 2) | 124/165 ≈ 0.7515 |
-| status 1 line, Voice 1 line | 130, 128 | 64, 36 (wide) | 5 × 13 | 7, 2, 294 × 165, drawn 221 × 124 | (97, 2) | 124/165 ≈ 0.7515 |
-| status 3 lines, Voice 4 lines (the band's maximum) | 85, 83 | 64, 24 | 6 × 11 | 3, 4, 280 × 93, drawn 238 × 79 | (80, 2) | 79/93 ≈ 0.8495 |
-| status 3 lines, Voice 4 lines | 85, 83 | 64, 36 (wide) | 5 × 13 | 3, 5, 294 × 93, drawn 250 × 79 | (68, 2) | 79/93 ≈ 0.8495 |
-| status 1 line, Voice 1 line | 130, 128 | 1, 30 | 1 × 1 | no sheets: 188 × 46 | (130, 80) | 1 |
-
-The no-caption vectors above are unchanged: their scale never falls below 0.75, so none pages.
+No row pages: the lowest scale is 0.8495.
 
 - **Precomputing:** the layout is rebuilt only when the block entity's synced data, the viewer's knowledge, #26's synced rules, the resources, the language, the scaled screen size, the [caption band's](accessibility.md#the-caption-band) revision or the sheet change. Our draw code allocates nothing per frame.
 - **Shared geometry:** the [infusion HUD](infusion.md#the-hud), the [golem card](golems.md#the-golem-card), the [Spectacles card](armor.md#drawing) and the [strike card](aspects.md#what-a-strike-reveals) reuse this frame, wrapping, `H′`, fallback, sheets and clamp unchanged, each declaring its head, foot and body, and each rebuilding on the caption band's revision and the language.
@@ -525,7 +527,7 @@ A soft dependency ([architecture, Soft dependencies](architecture.md#soft-depend
 |---|---|
 | Players, droppers, anything that makes item entities | can feed the crucible. A dropper's items have no thrower, so they always dissolve. |
 | Recipes | only for a resolved thrower who has learned the recipe: **no vanilla dropper or hopper crafting** |
-| [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) | **golem-assisted crafting**: a Feed mark drops items as the golem's online, same-level owner; a Tip mark drops them with no thrower, so they always dissolve (see the contracts); extraction through "Essentia out" |
+| [Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23) | **golem-assisted crafting**: a Feed mark drops items as the golem's online, alive owner, in whatever level the owner is; a Tip mark drops them with no thrower, so they always dissolve (see the contracts); extraction through "Essentia out" |
 | Hoppers, pipes | cannot insert: there is no item capability |
 | Extraction | through Essentia logistics, under "Essentia out" |
 | Thaumatorium-style auto-crafting | none in v1 |
@@ -604,6 +606,7 @@ A complete file (ingredients and costs illustrative; the content ticket chooses 
 | `hud.vftv.crucible.boiling`, `.cold`, `.dry` | 2 | "Boiling: %s of %s", "Cold: %s of %s", "Dry: %s of %s" (total, capacity) |
 | `hud.vftv.crucible.dormant` | 0 | "I can't read what's in it." |
 | `hud.vftv.crucible.spill` | 1 | "Emptying it spills %s flux." |
+| `hud.vftv.crucible.more` | 1 | "… and %s more" (entries not drawn) |
 | `message.vftv.crucible.protected` | 0 | "I won't melt that down." |
 | `message.vftv.crucible.nothing` | 0 | "Nothing in it will dissolve." |
 | `message.vftv.crucible.full` | 0 | "There's no room left in it." |
@@ -708,6 +711,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `MAX_ID_CHARS` | 256 |
 | `MAX_SPILL_FLUX` | 1,000,000 |
 | `MAX_DOSES` | 16 |
+| `MAX_CARD_ENTRIES` | 12 (cells on the HUD card) |
 
 Also fixed in code: the refusal codes; the two entity attachments; the phase function; the HUD and JEI geometry; the number formats. **Fixed feedback constants:** the ejection velocity (0.3 up, 0.15 toward the thrower, coincidence below ℓ² = 10⁻⁸); the result's spawn offset (0.5, 1.0625, 0.5); one step sound per step, craft over dissolve over refuse; the 40-tick boil cooldown and its volume 0.6; 1–2 bubbles per `animateTick`; 8 spill particles; the liquid's 4 frames of 5 ticks; playback volume and pitch 1.0 for every other sound.
 
@@ -743,7 +747,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the decision:** its order, including a **protected stack that matches a catalyst** (neither crafted nor dissolved) and the dissolve mark; every selection vector; non-simple catalysts; the count-one copy;
 - **the fit rule:** every vector above, including the 64/65-id union, `long` totals and a lowered capacity;
 - **ejection** and **tint:** every vector above;
-- **the HUD layout:** every vector above, translated header and spill widths, the pose-scale fallback;
+- **the HUD layout:** every vector above, including the 12-cell cap and its tie; translated header, more and spill widths; the pose-scale fallback;
 - **the recipe codec:** required `research`; aspect keys through registry ops (a compound and Vacuos accepted, an unknown aspect rejected); 0, 1001 and a ninth entry rejected; a created result empty or over its maximum rejected; the `StreamCodec` round trip and its bounds;
 - **the snapshot:** index merge order, the 4,096 cap (start refusal, reload emptying);
 - **the handler:** every method row; **an empty resource or a negative amount throws `IllegalArgumentException` from all four `insert` and `extract` overloads**; a zero amount, a mismatched resource, an invalid index and each unavailable state return 0 without throwing; **nested transactions:** a child commit undone by a root abort, one snapshot per touched depth, the root-commit publication skipped for a removed block entity;
@@ -755,7 +759,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **filling and boiling:** fill and empty; a second fill and an empty on a dry crucible change nothing; creative buckets and a full inventory; heat on and off (fire, a campfire unlit then lit, lava, magma); a cold crucible ignores items until it boils; **a heat-tag `/reload`** that adds and removes a source, with the queued crucible processing nothing until refreshed; a sneaking bucket click;
 - **admission:** stationary items resting inside when the crucible comes to the boil are processed; **a 500-entity flood** processes ≤ 16 per step in id order;
 - **dissolving:** a stack dissolves; `FULL` partial; the **65th id** refused whole; `NOTHING`; `PROTECTED` (a filled Bell Jar, a filled and an empty Essentia Jar, a shulker box with contents, a written book, and a **protected item that matches a recipe catalyst**) comes out unchanged and marked;
-- **the gate:** an unlearned thrower's catalyst dissolves while a learned one crafts; a thrower offline, in another dimension, or a dropper means dissolve; `SHORT` is refused with its message; **a sneak-dropped learned catalyst dissolves**, and a sneak-drop captured at the toss survives the thrower standing up;
+- **the gate:** an unlearned thrower's catalyst dissolves while a learned one crafts; **a learned thrower in another dimension still crafts** (the result pops straight up); a thrower offline or dead, or a dropper, means dissolve; `SHORT` is refused with its message; **a sneak-dropped learned catalyst dissolves**, and a sneak-drop captured at the toss survives the thrower standing up;
 - **crafting:** one craft per step; a marked result never reprocessed; the merge behaviour as stated, including the equal-count case;
 - **the provisional spawn:** a cancelling `EntityJoinLevelEvent` listener; a listener that **changes the pool**, **removes the catalyst**, **revokes the research**, **replaces the result's stack** or **removes the crucible** during the spawn: each leaves no debit, our result gone, the catalyst refused `ERROR`, and the listener's own changes in place (the removal spills once);
 - **notifications:** listeners on `CrucibleEvent(CRAFTED)` and `ItemCraftedEvent` that throw: the craft stands, every other notification still runs, and nothing reports `ERROR`;
@@ -768,7 +772,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - every test id in the discovery guard.
 
 **E2E:**
-- the HUD in every state (boiling, cold, dry, dormant), with unheard aspects and missing ids, **at the maximum layout (64 entries, 4-digit amounts) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool); under the [localisation fixtures](accessibility.md#fixtures) the header and spill lines wrap with the spill number whole, the outer pose scale stays ≥ 0.75, and with a status line and a Voice line showing the frame stays above them, paged as the combined vectors say, every entry reachable with Page Up and Page Down and each turn narrated once; a caption appearing and then expiring over an unchanged crucible re-lays the card both times;
+- the HUD in every state (boiling, cold, dry, dormant), with unheard aspects and missing ids, **at the maximum layout (a 64-entry pool: 12 cells of 4-digit amounts and the more line) on a 320 × 240 scaled screen**, with a **long test translation**, and **overlapping** the strike card and the vis HUD (screenshots plus a state dump of the pool); under the [localisation fixtures](accessibility.md#fixtures) the header, more and spill lines wrap with every number whole, the outer pose scale stays ≥ 0.75, and with a status line and a Voice line showing the frame stays above them, as the caption rows of the vectors say; a caption appearing and then expiring over an unchanged crucible re-lays the card both times;
 - a `SHORT` refusal naming 8 aspects on the status line, whole;
 - the liquid tint and its absence when dry; the bubbles, sounds and subtitles;
 - the book recipe pages and fact fields with no crucible targeted, a dry one, a cold one, a short one and a ready one;
@@ -810,8 +814,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35):
 - **Entries:** `vftv:crucible` (a `note`, parents `vftv:distillation` and `vftv:arcane_crafting`) gates the arcane recipe `vftv:crucible` and carries its `vftv:recipe` page. `vftv:resonant_brass` (a `note`, parent `vftv:crucible`) gates `vftv:resonant_brass_ingot` and carries its page.
-- **Ancestry:** `vftv:singing_wands` has `vftv:resonant_brass` in its transitive parents, because the chime rod and cap need the ingot, so no progression cycle is possible.
-- **Prose** never presents any essentia combination, Aer + Perditio → Vacuos included; the taught view is notebook theory only ([research, Links](research.md#links)). It teaches filling and heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying, with every number in fact spans.
+- **Ancestry:** `vftv:singing_wands` has `vftv:resonant_brass` in its transitive parents, because the chime rod and cap need the ingot, so no progression cycle is possible. The essentia spec's `vftv:essentia_jars` is a child of `vftv:crucible`, so the jars and Alembic can follow the vessel before Brass.
+- **Prose** never presents any essentia combination, Aer + Perditio → Vacuos included; the taught view is notebook theory only ([research, Links](research.md#links)). It teaches filling and heating, ordinary against sneak drops, `SHORT`, safe extraction (jars and an Alembic, learnable right after the vessel) and the price of emptying, with every number in fact spans.
 - **Fact fields** for `vftv:crucible`: `output`, `inputs`, `aspects`, `flux` and `status`, in the formats under "The authoritative preview", with the targeted-crucible context, its typed availability and its live dependencies. The research spec's fact grammar and live-value rule now admit a preview context (amended here).
 - **The affordability artifact:** `content/research/path-stage2.json` learns `vftv:crucible`, then `vftv:resonant_brass`, before any step that needs a Brass item; the crucible content's `content/crucible/first_brass.json` is reviewed beside it as the essentia half of the proof.
 
@@ -827,7 +831,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate for every cause, so the `EMPTIED` preview is also what removal generates; one `HIGHEST` listener; the equality is of generated flux, with retained, pending and overflow reported (amended above).*
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
-- A golem that drops items into a crucible **as crafting input** sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online, alive and in the same level, with the research learned. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.
+- A golem that drops items into a crucible **as crafting input** sets each `ItemEntity`'s thrower to **its owning player**. Recipes then match only while that player is online and alive (in any level: the thrower resolves server-wide, see "Selection"), with the research learned. FEED's owner rule is therefore "online and alive"; the level clause and its GameTest row go. **The golem spec documents or prevents delivery while those fail**, since the input then dissolves.
 - **Exempt** (amended by the [golems spec](golems.md#feed-and-tip)): a deliberate **Tip** drop has no thrower, exactly as a dropper's, so its items always dissolve. It is the golem's explicit dissolve path, not crafting input. This changes no crucible behaviour.
 - `api`'s `SpillCause` gains **`DIED`**, posted only by the golems spec's `GolemEvent(SPILLED)`. The crucible's own spills, producers and bounds are unchanged.
 - Golems touch the pool only through the capability under "Essentia out". Their own crucible recipes, if any, live in their own content files with the recipe type's body.
@@ -840,8 +844,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40)**
 - `vftv:chime_rod` and `vftv:resonant_brass_cap` take `vftv:resonant_brass_ingot` (frozen here).
 
-**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21) and [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Their crucible recipes use the recipe type's body with their own `research`, in their own content files, under the common validation and the global non-amplification test.
+**[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21), [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) and [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
+- Their crucible recipes use the recipe type's body with their own `research`, in their own content files, under the common validation and the global non-amplification test. This includes the [warp spec's](warp.md) `vftv:stilling_draught`, bound by the common validation and the global non-amplification test like every other.
 - Any essentia combination they add keeps Vacuos a true primal, and their book pages stay truthful about it.
 
 ## Production tickets
@@ -850,7 +854,7 @@ This spec settles every decision. Two required child tickets deliver the assets 
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Crucible assets** | The generator `tools/art/crucible.py`. **Block textures,** 16×16, Stage 2 row of [art style §5](art-style.md#5-tone-ramp-by-stage): `assets/vftv/textures/block/crucible_side.png`, `crucible_top.png`, `crucible_inner.png` and `crucible_bottom.png` (a brass-banded vessel, the teal tick as a small inlaid pip on the rim). **Liquid:** `assets/vftv/textures/block/crucible_liquid.png`, a 16×64 strip of 4 frames in light neutral steps (`glass1`, `hush3`) for runtime tinting, with `crucible_liquid.png.mcmeta` = `{"animation": {"frametime": 5, "interpolate": false}}`. **Model** `assets/vftv/models/block/crucible.json`: 5 cuboids (floor `[0,0,0]–[16,4,16]`, walls `[0,4,0]–[2,16,16]`, `[14,4,0]–[16,16,16]`, `[2,4,0]–[14,16,2]` and `[2,4,14]–[14,16,16]`), textures `side`, `top`, `inner`, `bottom` and `particle` (= side). **Blockstate** `assets/vftv/blockstates/crucible.json`: the 4 variants of `water` × `boiling`, all on that model (the liquid is the renderer's). **Item definitions** `assets/vftv/items/crucible.json` (`minecraft:model` of `vftv:block/crucible`) and `assets/vftv/items/resonant_brass_ingot.json`. **Resonant Brass:** `assets/vftv/textures/item/resonant_brass_ingot.png` by the chime-bar rule ([art style §4](art-style.md#4-silhouette-language)), from the prototype, and `assets/vftv/models/item/resonant_brass_ingot.json` (parent `minecraft:item/generated`). **HUD sprite:** `assets/vftv/textures/gui/sprites/hud/crucible_missing.png` (16×16; the frame reuses `vftv:hud/vis_frame`). **Sounds** under "Sound and particles": `assets/vftv/sounds/crucible/fill.ogg`, `empty.ogg`, `spill.ogg`, `refuse.ogg`, `dissolve_0.ogg` … `dissolve_2.ogg`, `craft_0.ogg` … `craft_2.ogg`, `boil_0.ogg` … `boil_2.ogg` (≤ 3 s, faded tails), with the `sounds.json` entries `crucible.fill`, `crucible.empty`, `crucible.spill`, `crucible.dissolve`, `crucible.craft`, `crucible.refuse` and `crucible.boil` naming `subtitles.vftv.crucible.<event>`, no volume or pitch overrides; the playback rules (category, volume, pitch, cooldowns, one step sound per step) are this spec's. **Review:** a contact sheet at GUI scale 2 with the crucible and the ingot beside vanilla's cauldron and copper ingot, and every tint of the liquid; Blender renders of the model, dry and filled; **worst-case HUD mockups** composed from the reused frame, the icons and the vanilla font: 64 entries with 4-digit amounts on a 320 × 240 scaled screen, the wide-font fallback, a long test translation, a dormant record, missing ids and unheard aspects, and the frame clamped over the vis HUD. Provenance rows. | none |
+| **Crucible assets** | The generator `tools/art/crucible.py`. **Block textures,** 16×16, Stage 2 row of [art style §5](art-style.md#5-tone-ramp-by-stage): `assets/vftv/textures/block/crucible_side.png`, `crucible_top.png`, `crucible_inner.png` and `crucible_bottom.png` (a brass-banded vessel, the teal tick as a small inlaid pip on the rim). **Liquid:** `assets/vftv/textures/block/crucible_liquid.png`, a 16×64 strip of 4 frames in light neutral steps (`glass1`, `hush3`) for runtime tinting, with `crucible_liquid.png.mcmeta` = `{"animation": {"frametime": 5, "interpolate": false}}`. **Model** `assets/vftv/models/block/crucible.json`: 5 cuboids (floor `[0,0,0]–[16,4,16]`, walls `[0,4,0]–[2,16,16]`, `[14,4,0]–[16,16,16]`, `[2,4,0]–[14,16,2]` and `[2,4,14]–[14,16,16]`), textures `side`, `top`, `inner`, `bottom` and `particle` (= side). **Blockstate** `assets/vftv/blockstates/crucible.json`: the 4 variants of `water` × `boiling`, all on that model (the liquid is the renderer's). **Item definitions** `assets/vftv/items/crucible.json` (`minecraft:model` of `vftv:block/crucible`) and `assets/vftv/items/resonant_brass_ingot.json`. **Resonant Brass:** `assets/vftv/textures/item/resonant_brass_ingot.png` by the chime-bar rule ([art style §4](art-style.md#4-silhouette-language)), from the prototype, and `assets/vftv/models/item/resonant_brass_ingot.json` (parent `minecraft:item/generated`). **HUD sprite:** `assets/vftv/textures/gui/sprites/hud/crucible_missing.png` (16×16; the frame reuses `vftv:hud/vis_frame`). **Sounds** under "Sound and particles": `assets/vftv/sounds/crucible/fill.ogg`, `empty.ogg`, `spill.ogg`, `refuse.ogg`, `dissolve_0.ogg` … `dissolve_2.ogg`, `craft_0.ogg` … `craft_2.ogg`, `boil_0.ogg` … `boil_2.ogg` (≤ 3 s, faded tails), with the `sounds.json` entries `crucible.fill`, `crucible.empty`, `crucible.spill`, `crucible.dissolve`, `crucible.craft`, `crucible.refuse` and `crucible.boil` naming `subtitles.vftv.crucible.<event>`, no volume or pitch overrides; the playback rules (category, volume, pitch, cooldowns, one step sound per step) are this spec's. **Review:** a contact sheet at GUI scale 2 with the crucible and the ingot beside vanilla's cauldron and copper ingot, and every tint of the liquid; Blender renders of the model, dry and filled; **worst-case HUD mockups** composed from the reused frame, the icons and the vanilla font: 12 cells with 4-digit amounts and the more line on a 320 × 240 scaled screen, the wide-font fallback, a long test translation, a dormant record, missing ids and unheard aspects, and the frame clamped over the vis HUD. Provenance rows. | none |
 | **Crucible content** | `content/crucible/recipes.json` (`vftv:crucible_recipes/1`, exactly the two recipes under "Authored content, Recipes": their ingredients, costs and Brass aspects chosen within those rules), `content/crucible/first_brass.json` (`vftv:crucible_dose_plan/1`, a dose plan that passes the reachability test against #30's values, each `why` reviewed), and `content/lang/en_us/crucible.json` (`vftv:lang/1`) with every key under "Lang keys". Its review supplies the bootstrap, material and source proof, and checks that the messages teach filling, heating, ordinary against sneak drops, `SHORT`, safe extraction and the price of emptying. | [Vanilla aspect value table](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the dose plan replays its values) |
 
 [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Wand and node content](https://github.com/andrewbrogoff/voices-from-the-void/issues/40) consume the entry ids, recipe ids, fact fields and the ingot id frozen here.

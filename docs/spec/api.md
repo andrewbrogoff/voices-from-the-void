@@ -8,7 +8,7 @@ What an addon or a pack may build on, and how long it may rely on it. This cover
 - the **events**, their shape and their failure rules;
 - the **capabilities** and the two read-only **views**, and why no service is public in v1;
 - the **keys, limits and rules** classes, and the full **inventory**;
-- the **gates** that hold all of this: binary and source compatibility, the frozen compatibility corpus, the ArchUnit rules and Javadoc.
+- the **gates** that hold all of this: the ArchUnit rules, Javadoc and the example addon in v1, and the baseline comparisons the `1.0.0` release ticket adds (binary and source compatibility, the frozen compatibility corpus).
 
 Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [architecture spec](architecture.md) for the layers, the seams and the data rules;
@@ -32,10 +32,10 @@ Resolved in [Public API spec](https://github.com/andrewbrogoff/voices-from-the-v
 | `vftv-X.Y.Z-api.jar` | `com.andrewbrogoff:vftv:X.Y.Z:api` | `sourceSets.api.output` only, plus `LICENSE-API` |
 | `vftv-X.Y.Z-api-sources.jar` | `com.andrewbrogoff:vftv:X.Y.Z:api-sources` | the `api` sources with their Javadoc, plus `LICENSE-API` |
 
-- **Every GitHub Release** (tag `vX.Y.Z`) attaches the three jars, the compatibility corpus jar `vftv-X.Y.Z-compat.jar` (for our own replay gate, not for addons; see "The fixtures") and a `SHA256SUMS` file covering all four.
+- **Every GitHub Release** (tag `vX.Y.Z`) attaches the three jars and a `SHA256SUMS` file covering them. From the `1.0.0` release on it also attaches the compatibility corpus jar `vftv-X.Y.Z-compat.jar` (for our own replay gate, not for addons; see "The fixtures"), and `SHA256SUMS` covers all four.
 - **No hosted Maven repository in v1.** Adding one later publishes these same coordinates and changes nothing else here.
 - **The `api` jar is not a mod.** It has no `neoforge.mods.toml`. An addon compiles against it and runs against the full mod.
-- **Manifest:** every jar records `Vftv-Version` and `Vftv-NeoForge-Version` (the NeoForge version it was built against), which the compatibility gate reads.
+- **Manifest:** every jar records `Vftv-Version` and `Vftv-NeoForge-Version` (the NeoForge version it was built against), which the compatibility gate reads once it exists.
 - **Options considered:** a separate `vftv-api` artefact with its own version; a Gradle subproject. **Why not:** an addon's runtime check is `neoforge.mods.toml`'s `versionRange` against the **mod** version, so a second version line would need a mapping table nobody keeps current; ADR 0001 rules out the subproject.
 
 ### For addon authors
@@ -73,7 +73,7 @@ side = "BOTH"
 ### Packages
 
 Every API package mirrors a `core` feature ([architecture, Layers](architecture.md#layers)):
-- **`…api`** (the root) holds only the two tier annotations and its `package-info`.
+- **`…api`** (the root) holds only the three tier annotations and its `package-info`.
 - **`…api.<f>`** holds the loader-free types of feature `<f>`, and **`…api.neoforge.<f>`** its NeoForge types (events, capabilities, data-map types, `EssentiaResource`).
 - `<f>` is an existing `core.<f>` slice: `aspect`, `research`, `vis`, `arcane`, `crucible`, `essentia`, `infusion`, `focus`, `golem`, `warp`, `armor`, `flux`, `hush`, `worldgen`, `road`.
 - Every package carries `@NullMarked` ([quality gates, Static gates](quality-gates.md#static-gates)).
@@ -102,13 +102,26 @@ Every API package mirrors a `core` feature ([architecture, Layers](architecture.
 
 | Tier | Marked by | Promise |
 |---|---|---|
-| **Stable** | nothing: the default | everything under "What an addon may rely on" |
-| **Experimental** | `@Experimental` | none: may change or vanish in any release, patches included |
+| **Stable** | `@Stable`, only on the allowlist below | everything under "What an addon may rely on" |
+| **Experimental** | `@Experimental`: **the default**, on every `api.<f>` and `api.neoforge.<f>` `package-info` | none: may change or vanish in any release, patches included |
 | **Internal** | `@Internal` | none: public only for our own wiring; not for addon use |
 
 - **Everything outside `com.andrewbrogoff.vftv.api`** is internal by location, with no annotation: `core`, `neoforge`, `datagen`.
-- **The annotations are ours,** in `…api`, with `RUNTIME` retention and the targets type, method, field, constructor and package. We don't use JetBrains' `ApiStatus`: [`API_IS_PURE`](architecture.md#enforcement) would have to widen, and the `api` jar would gain a dependency. Whether every tool reads them as intended is a gate self-test (see "Compatibility gates").
-- **The effective tier** of a declaration is that of its own annotation, else its nearest enclosing type's, else its package's `package-info`, else Stable.
+- **The annotations are ours,** in `…api`, with `RUNTIME` retention and the targets type, method, field, constructor and package. We don't use JetBrains' `ApiStatus`: [`API_IS_PURE`](architecture.md#enforcement) would have to widen, and the `api` jar would gain a dependency. Whether every tool reads them as intended is a gate self-test the `1.0.0` release ticket adds (see "Compatibility gates").
+- **The effective tier** of a declaration is that of its own annotation, else its nearest enclosing type's, else its package's `package-info`, else Experimental. The root package and its three annotations are Stable.
+
+### The Stable allowlist
+
+**v1 promises only what addons and packs need now.** Everything else, the 19 events and their payloads included, stays Experimental until a consumer outside this repository uses it; then it is promoted, per declaration, in a minor, by adding `@Stable` and amending this list.
+
+- every `*Keys` and `*Limits` constant holder, and `RoadLayout`;
+- the registry element interfaces (`Aspect`, `HiddenPrimal` and the 13 markers, "Registry element types") and `HushedForm`, which the keys name;
+- the data-map holders `AspectDataMaps`, `WarpDataMaps` and `ArmorDataMaps`, with the value types `AspectValues`, `Wearable` and `WearableSlot`;
+- `EssentiaResource`, `EssentiaCapabilities` and `EssentiaSuction`;
+- `GolemJob`, `GolemCarryKind`, `GolemRole` and `GolemCore`;
+- `ResearchView`, `ResearchCapabilities`, `BaffleView` and `ArmorCapabilities`.
+
+**The public datapack formats** ("Public data formats") are Stable as data whatever the tier of any Java type behind them. The list is closed under `API_TIER_LEAK`: no allowlisted signature names a type off the list.
 
 ### No tier leaks
 
@@ -132,13 +145,13 @@ Every API type has one owner of its construction:
 
 - `mod_version` is **`MAJOR.MINOR.PATCH`**, one number for the mod and the API.
 - **MAJOR** changes when any Stable promise below breaks, and for the **first release on a new Minecraft version** (vanilla and NeoForge types sit in our signatures).
-- **The promise starts at the first release tagged ≥ `1.0.0`.** Before it, versions promise compatibility with nothing, and the baseline comparison (`apiCompat`, the baseline ArchUnit rules and the binary replay) is skipped. Every other API check always runs: the jar-content tests, the shape and tier rules, `testAddon` compilation, the compatibility corpus's data and Java compilation, and Javadoc.
+- **The promise starts at the first release tagged ≥ `1.0.0`.** Before it, versions promise compatibility with nothing, and the baseline comparison (`apiCompat`, the baseline ArchUnit rules and the binary replay) doesn't exist yet: the `1.0.0` release ticket delivers it ("Build-phase note"). Every other API check always runs: the jar-content tests, the shape and tier rules, `testAddon` compilation and Javadoc.
 
 ### What an addon may rely on
 
 Within one MAJOR:
 1. **Binary and source compatibility** of every Stable declaration (see "What each release may change").
-2. **Each event's contract:** the class name and payload type; the bus and the side; when it is posted relative to the commit; whether it can be cancelled and what cancelling does; its failure rule; every existing payload accessor.
+2. **Each Stable event's contract** (none in v1; see "The Stable allowlist"): the class name and payload type; the bus and the side; when it is posted relative to the commit; whether it can be cancelled and what cancelling does; its failure rule; every existing payload accessor.
 3. **Every id in a Stable `*Keys` class**: registries, built-in instances, data maps, tags, attributes, the enchantment, entity, structure, dimension and advancement keys, and the component and attachment ids. None is removed or renamed. (Forks keep `vftv` ids too, per [`NOTICE.md`](../../NOTICE.md#branding).)
 4. **The public datapack formats** under "Public data formats", **including every embedded type id and its parameter format**, with their lifecycle and field meanings.
 5. **The capabilities' semantics** ([essentia, Suction](essentia.md#suction): a mover moves X from A to B only if `B.suction(X) > A.hold(X)`) and the views' answers.
@@ -161,6 +174,7 @@ For **Stable** declarations:
 | Add a method to an interface: as a `default` method only | | ✓ | ✓ |
 | Add an optional datapack field, a new type id with its parameters, or widen a range or count | | ✓ | ✓ |
 | Deprecate (see "Deprecation") | | ✓ | ✓ |
+| Promote an Experimental declaration to Stable | | ✓ | ✓ |
 | Remove, rename or change the signature of anything Stable | | | ✓ |
 | Add, remove, rename, reorder or retype a **record component** | | | ✓ |
 | Add an abstract method to an interface | | | ✓ |
@@ -170,13 +184,13 @@ For **Stable** declarations:
 - **Record components are frozen within a major,** because record patterns must name every component, even in a switch with a `default` arm ([JLS 25 §14.30.1](https://docs.oracle.com/javase/specs/jls/se25/html/jls-14.html#jls-14.30.1)). New information arrives as a **new accessor on the event class**, a new sealed variant, or a new record type.
 - **Enums and sealed payloads grow in minors.** Their Javadoc says so, and an addon's `switch` over one needs a `default` arm.
 - **Config keys** are an operator surface with their own table of the same shape ([configuration spec, Compatibility](config.md#compatibility)); nothing here checks them.
-- **"japicmp passed" is evidence, not proof,** of source compatibility. The corpus, the gate self-tests and review cover what it can't see.
+- **"japicmp passed" is evidence, not proof,** of source compatibility. From `1.0.0` the corpus and the gate self-tests cover part of what it can't see; review covers the rest.
 
 ### Deprecation
 
 - **A Stable declaration is removed only in a major,** and only after it shipped as `@Deprecated(since = "X.Y", forRemoval = true)`, with `@deprecated` Javadoc naming the replacement, in **at least one released minor** of the previous major.
 - **The one exception:** a Minecraft-port major may remove or change a declaration without the window when a vanilla or NeoForge change forces it. The release notes name each one.
-- **Our own code migrates first:** `-Xlint:all -Werror` ([quality gates, Static gates](quality-gates.md#static-gates)) fails any use of a deprecated declaration outside the compatibility corpus, whose every historical-use method carries a narrow suppression from the day it is added (see "The fixtures").
+- **Our own code migrates first:** `-Xlint:all -Werror` ([quality gates, Static gates](quality-gates.md#static-gates)) fails any use of a deprecated declaration outside the compatibility corpus (from `1.0.0`), whose every historical-use method carries a narrow suppression from the day it is added (see "The fixtures").
 - **The window is a release-checklist review item.** No tool reads release history for it.
 
 ## What addons may extend
@@ -200,7 +214,8 @@ All 14 are Stable formats. Each is fixed when a world opens: changing one needs 
 | `vftv:choir_site` | [worldgen](worldgen.md#site-kinds) | no | as above |
 | `vftv:chorister` | [choristers](choristers.md#the-registry) | yes | **override only**: it holds exactly `vftv:wuuren`, `vftv:suhlaa` and `vftv:nihthaa`; a pack can't add or remove one |
 
-The load validation and the missing-entry behaviour of each registry are its owner's.
+- **This table is the one list of synced registries.** A registry marked "yes" is registered with a network codec, so clients hold it; `vftv:voice_event`, `vftv:bargain` and `vftv:choir_site` are registered without one ([architecture, State and sync](architecture.md#state-and-sync)). Other specs point here rather than restating it.
+- The load validation and the missing-entry behaviour of each registry are its owner's.
 
 ### Data maps and other data
 
@@ -211,10 +226,13 @@ The load validation and the missing-entry behaviour of each registry are its own
 | **`vftv:gear_warp`** on item | [warp](warp.md#gear-warp) | yes | follows `/reload` |
 | **`vftv:wearable`** on item | [armor](armor.md#wearables) | yes | follows `/reload`. The map holds raw entries; which take effect is armor's internal validated view. |
 | every tag in a `*Keys` class | its owner | as vanilla tags are | follows `/reload` |
-| recipes of `vftv:strike`, `vftv:wand_assembly`, `vftv:arcane`, `vftv:crucible` and `vftv:infusion` | [aspects](aspects.md#the-commonplace-book), [wands](wands.md#assembly), [arcane](arcane.md#the-recipe-type), [crucible](crucible.md#the-recipe-type), [infusion](infusion.md#the-recipe-type) | as each owner states | follows `/reload` |
+| recipes of `vftv:strike` (two built in: a plain `minecraft:book` and a blank Book and Quill), `vftv:wand_assembly`, `vftv:arcane`, `vftv:crucible` and `vftv:infusion` | [aspects](aspects.md#the-commonplace-book), [wands](wands.md#assembly), [arcane](arcane.md#the-recipe-type), [crucible](crucible.md#the-recipe-type), [infusion](infusion.md#the-recipe-type) | as each owner states | follows `/reload` |
+| the load-time **`DerivedAspects`** table | [compatibility](compat.md#the-derivation-at-load) | yes, as **`DerivedAspectsSync`** (join and `/reload`) | rebuilt at every data load; computed, no pack format (below) |
 | `data/vftv/tuning/*.json` | each owner's "Tuning" | no (each owner syncs its own rules record) | follows `/reload`; an invalid file keeps the previous record |
 
 A data-map file with one bad value is discarded whole by NeoForge, logged, while other packs' files for the same map still load ([armor, Wearables](armor.md#wearables)).
+
+Modded items with neither a `vftv:aspects` entry nor a `vftv:aspect_defaults` tag take a value **derived at load** ([compatibility, Aspect values for modded items](compat.md#aspect-values-for-modded-items)). That table is computed, not a pack format, and has no API: packs steer it through the two maps above (an entry overrides it, `{}` suppresses it).
 
 ### Public data formats
 
@@ -232,7 +250,7 @@ Each format below is Stable under the table in "What each release may change". T
 | the four data maps | each value schema |
 | tuning files | every key and its range |
 
-**Review:** every change to a listed schema, and to any aggregate bound a pack can hit (for example `MAX_ARCANE_RECIPES`), is checked against the change table at release, item by item. The compatibility corpus is evidence for this, not the schema itself: a minimum and a maximum example can't prove every conditional rule or aggregate cap.
+**Review:** every change to a listed schema, and to any aggregate bound a pack can hit (for example `MAX_ARCANE_RECIPES`), is checked against the change table at release, item by item. From `1.0.0` the compatibility corpus is evidence for this, not the schema itself: a minimum and a maximum example can't prove every conditional rule or aggregate cap.
 
 ### Code extension
 
@@ -279,13 +297,13 @@ The one code registry addons may extend, because a job type is a declaration wit
 
 ### The shape
 
-All 19 events are Stable. Each is:
-- a `final` class in `api.neoforge.<f>`, extending `Event`, with an `@Internal` constructor and one Stable accessor, **`payload()`**, returning a Stable type in `api.<f>`. The one exception is `InfusionEvent`, which also has **`@Experimental @Nullable FluxRules fluxRules()`**, passed to its `@Internal` constructor separately from the payload (see "Payload details");
+All 19 events are **Experimental in v1**, with their payloads: addons may subscribe, but a minor may still reshape them. Each is promoted on its own once a consumer outside this repository uses it ("The Stable allowlist"), and the rules below are written so that promotion needs no reshaping. Each is:
+- a `final` class in `api.neoforge.<f>`, extending `Event`, with an `@Internal` constructor and one accessor, **`payload()`**, returning a type in `api.<f>`. The one exception is `InfusionEvent`, which also has **`@Experimental @Nullable FluxRules fluxRules()`**, passed to its `@Internal` constructor separately from the payload, and kept Experimental when the event is promoted (see "Payload details");
 - **posted on `NeoForge.EVENT_BUS`**, by the owning spec's publisher seam, **on the logical server's thread**. The bus posts synchronously on the caller's thread and doesn't reschedule (`BUS:EventBus.java:322–367`), so the publisher asserts the thread;
 - **never posted on a client**, and never by an addon. The constructor is `@Internal`; posting a synthetic event is unsupported.
 
 **Payload shapes:**
-- **No Stable record component has an Experimental or Internal type**, because record patterns and `API_RECORDS_FROZEN` freeze every component. Experimental data travels on the event class, behind an `@Experimental` accessor.
+- **No payload record component has an Internal type, and none of a promoted payload has an Experimental one**, because once Stable, record patterns and `API_RECORDS_FROZEN` freeze every component. Data that must stay Experimental travels on the event class, behind an `@Experimental` accessor.
 - **One record** `<Stem>Payload` when every kind carries the same fields, with a kind enum where the owner has kinds.
 - **A `sealed interface <Stem>Payload`** with one nested record per kind otherwise. The variants live in the same file, so `sealed` works in the unnamed module.
 
@@ -318,7 +336,7 @@ Each owner's exact ordering, guards and fields are authoritative. The table belo
 |---|---|---|---|---|
 | `ThingScannedEvent` (aspect) | [aspects](aspects.md#events) | `ThingScannedPayload`: player, `ScanKey`, `ScanTargetKind`, `ScanOutcome`, `complete`, points per aspect | after the commit | no |
 | `AspectDiscoveredEvent` (aspect) | [aspects](aspects.md#events) | `AspectDiscoveredPayload`: player, aspect, bonus awarded | after the commit | no |
-| `ResearchLearnedEvent` (research) | [research](research.md#events) | `ResearchLearnedPayload`: player, `ResourceKey<Research>`, `ResearchSource`, the warp applied as a `WarpPreview`, points paid per aspect | after the whole transition | no |
+| `ResearchLearnedEvent` (research) | [research](research.md#events) | `ResearchLearnedPayload`: player, `ResourceKey<Research>`, `ResearchSource`, the warp applied as a `WarpPreview`, points paid per aspect by the Learn (the one debit: placements are free) | after the whole transition | no |
 | `StageReachedEvent` (research) | [research](research.md#events) | `StageReachedPayload`: player, Stage and previous Stage (`int` 0–4), `ResearchSource` | after the whole transition | no |
 | `VisSpentEvent` (vis) | [wands](wands.md#events) | `VisSpentPayload`: player, level and position, `VisContext`, `VisQuote` | after the whole commit | no |
 | `NodeEvent` (vis) | [wands](wands.md#events) | `NodePayload`: `NodeEventKind`, `NodeRef`, `NodeCause` | after the whole commit | no |
@@ -363,7 +381,7 @@ The arcane, armor, worldgen and Choristers specs post no event of their own ([ar
   - **The flux rules** for a `Spilled` post are on the event, not in the payload: **`InfusionEvent.fluxRules()`**, `@Experimental @Nullable FluxRules`. It is the run's frozen rules for `UPSET`, the current rules for `ABANDONED` and `REMOVED`, and `null` for an `UPSET` from a run frozen before the Hush spec landed and for every other kind ([Hush, Sources](hush.md#sources)). The `@Internal` constructor takes it separately from the payload.
   - `Completed`: level, position, `seq`, starter UUID, recipe key, the output copy.
   - `Abandoned`: level, position, `seq`, `AbandonCause` (`PLAYER` or `REMOVED`), `@Nullable ServerPlayer player`, the drawn map.
-- **`FocusPayload`:** `FocusEventKind` (`CAST`, `COMPOSED`, `RANKED`); player; `int rank`; modifier keys. Effect, medium and `VisKind` are each **`@Nullable`, absent for a blank focus** (a blank can be ranked). For `CAST` only: `FocusGesture gesture` (`ENTITY` or `BLOCK`) and `int attempted`; both are absent or 0 otherwise.
+- **`FocusPayload`:** `FocusEventKind` (`CAST`, `COMPOSED`, `RANKED`); player; `int rank`; modifier keys. A rank-up costs vis only, so `RANKED` carries no experience figure; its price is reported by the rank-up's `VisSpentEvent`. Effect, medium and `VisKind` are each **`@Nullable`, absent for a blank focus** (a blank can be ranked). For `CAST` only: `FocusGesture gesture` (`ENTITY` or `BLOCK`) and `int attempted`; both are absent or 0 otherwise.
 - **`GolemResource`** (sealed): `Item(ItemStack copy)` or `Essentia(ResourceKey<Aspect>)`. It is never NeoForge's `ItemResource`.
 - **`GolemPayload`:**
   - `Placed`: golem, owner, level, position, `ResourceKey<GolemMaterial>` body, `ResourceKey<Item>` core.
@@ -371,7 +389,7 @@ The arcane, armor, worldgen and Choristers specs post no event of their own ([ar
   - `Moved`: golem, owner, level, mark position and face, role, resource, amount moved.
   - `Spilled`: golem, level, position, aspect, amount, `SpillCause.DIED`.
   - `Died`: golem, owner, level, position, copies of the drops.
-- **`WarpState`:** the ints `temporary`, `lasting`, `permanent`, `gear` and `total`. As a delta its values are signed. **`WarpSource`:** a `WarpSourceKind` (`ENTRY`, `BARGAIN`, `STILLING`, `DECAY`, `GEAR`, `MILESTONE`, `SILENCING`, `COMMAND`) and an `@Nullable Identifier id`, present for `ENTRY`, `BARGAIN` and `MILESTONE`. **`WarpPreview`:** `dT`, `dL`, `dP` and `clipped` ([warp, The commit](warp.md#the-commit)).
+- **`WarpState`:** the ints `temporary`, `lasting`, `permanent`, `gear` and `total`. As a delta its values are signed. **`WarpSource`:** a `WarpSourceKind` (`ENTRY`, `BARGAIN`, `LISTEN`, `STILLING`, `DECAY`, `GEAR`, `MILESTONE`, `SILENCING`, `COMMAND`; `LISTEN` is the [Listen rite's](warp.md#the-listen-rite) committed cost) and an `@Nullable Identifier id`, present for `ENTRY`, `BARGAIN` and `MILESTONE`. **`WarpPreview`:** `dT`, `dL`, `dP` and `clipped` ([warp, The commit](warp.md#the-commit)).
 - **`HushSpreadPayload`:**
   - `HushSpreadKind`: `CONVERT`, `NODE`, `RISE`, `RESTORE`.
   - `HushChange` (sealed): `Block(BlockState before, BlockState after)` for `CONVERT` and a block `RESTORE`; `Node(long id, ResourceKey<NodeType> before, ResourceKey<NodeType> after)` for `NODE` and a node `RESTORE`; `Rise(EntityType<?> type)` for `RISE`.
@@ -436,29 +454,28 @@ The two read-only queries addons need that events can't give: research events ca
 
 ## The inventory
 
-Every API type, by feature. Tier: `S` Stable, `X` `@Experimental`, `I` `@Internal`. `nf` marks `api.neoforge.<f>`; everything else is `api.<f>`.
+Every API type, by feature. Tier: **bold** types are on the Stable allowlist (`S`, "The Stable allowlist"); every other type in a row marked `X, S` is `@Experimental` by its package default; `I` is `@Internal`. `nf` marks `api.neoforge.<f>`; everything else is `api.<f>`.
 
 | Feature (owner) | Types | Tier |
 |---|---|---|
-| root | `Experimental`, `Internal` | S |
-| aspect ([aspects](aspects.md)) | `Aspect`, `HiddenPrimal`; `AspectKeys` (the registry; the 37 built-ins; the data-map ids; the knowledge attachment id `vftv:knowledge`); `AspectLimits` (5 aspects per entry, depth 3, fan-out 5, 2 tier-1 children, sounding radius 256); `AspectValues`; `ScanKey`, `ScanTargetKind`, `ScanOutcome`, `ThingScannedPayload`, `AspectDiscoveredPayload`; nf `AspectDataMaps` (`ITEM`, `BLOCK`, `ENTITY_TYPE`, `DEFAULTS`), `ThingScannedEvent`, `AspectDiscoveredEvent` | S |
-| research ([research](research.md)) | `Research`, `ResearchCategory`; `ResearchKeys` (both registries; the required keys under [Registry format](research.md#registry-format); the `vftv:page` component id; the `vftv:research` attachment id); `ResearchLimits` (anchors 2–5, grid radius 7, synthesis depth 3, 8 actions and 1 commit per tick, 16 notes, 9 bookmarks); `ResearchSource`, `ResearchLearnedPayload`, `StageReachedPayload`, `ResearchView`; nf `ResearchLearnedEvent`, `StageReachedEvent`, `ResearchCapabilities` | S |
-| vis ([wands](wands.md)) | `WandRod`, `WandCap`, `NodeType`; `VisKeys` (3 registries, the `vftv:vis_discount` attribute, the component ids `vftv:vis`, `vftv:wand_rod`, `vftv:wand_cap`, `vftv:wand_focus`, `vftv:captured_node`); `WandPartKeys` (the rods `vftv:wooden`, `vftv:chime`, `vftv:echo`, `vftv:void`; the caps `vftv:copper`, `vftv:resonant_brass`, `vftv:echo`, `vftv:void`); `NodeTypeKeys` (`vftv:wellspring`); `VisLimits` (the wands spec's fixed limits); `VisKind`, `VisContext`, `VisQuote`, `NodeRef`, `NodeEventKind`, `NodeCause`, `VisSpentPayload`, `NodePayload`; nf `VisSpentEvent`, `NodeEvent` | S |
-| arcane ([arcane](arcane.md)) | `ArcaneKeys` (`#vftv:converts_to_worktable`); `ArcaneLimits` | S |
-| crucible ([crucible](crucible.md)) | `CrucibleKeys` (`#vftv:crucible_heat`, `#vftv:crucible_refuses`, `RESONANT_BRASS_INGOTS` for `#c:ingots/resonant_brass` ([compatibility, Published](compat.md#published)), the attachment ids `vftv:crucible_dissolve`, `vftv:crucible_refused`); `CrucibleLimits`; `CruciblePayload`; nf `CrucibleEvent` | S |
-| essentia ([essentia](essentia.md)) | `EssentiaKeys` (`#vftv:essentia_endpoints`, `#vftv:alembic_bases`, the capability ids, the component ids `vftv:jar_contents`, `vftv:label`); `EssentiaLimits`; `EssentiaSuction`; `SpillCause`; `EssentiaPayload`; nf `EssentiaResource`, `EssentiaCapabilities`, `EssentiaEvent` | S |
-| infusion ([infusion](infusion.md)) | `InfusionKeys` (`#vftv:infusion_stabilisers`, `#vftv:infusion_unenchantable`); `InfusionLimits`; `InfusionPayload`, `InfusionPlan`, `InfusionCost`, `UpsetEffect`, `AbandonCause`; nf `InfusionEvent` | S (`InfusionEvent.fluxRules()` X) |
-| focus ([foci](foci.md)) | `FocusEffect`, `FocusMedium`, `FocusModifier`; `FocusKeys` (3 registries, the 15 required built-ins, `#vftv:focus_immune`, the component id `vftv:focus`); `FocusLimits`; `FocusEventKind`, `FocusGesture`, `FocusPayload`, `FocusAffectEntityPayload`; nf `FocusEvent`, `FocusAffectEntityEvent` | S |
-| golem ([golems](golems.md)) | `GolemMaterial`, `GolemJob`, `GolemCarryKind`, `GolemRole`, `GolemCore`; `GolemKeys` (`vftv:golem_material` and its built-ins, `JOB_REGISTRY`, `CARRY`, `DECANT`, the component ids `vftv:golem_body`, `vftv:golem_core`, `vftv:golem_state`, `vftv:baton_attunement`); `GolemLimits`; `GolemResource`, `GolemWorkPayload`, `GolemPayload`; nf `GolemWorkEvent`, `GolemEvent` | S |
-| warp ([warp](warp.md)) | `VoiceEvent`, `Bargain`; `WarpKeys` (the `vftv:voice_event` and `vftv:bargain` registries, the `vftv:gear_warp` id, `#vftv:voice_spawnable`, the `vftv:warp` attachment id); `WarpLimits`; `WarpState`, `WarpSource`, `WarpSourceKind`, `WarpPreview`, `WarpChangedPayload`; nf `WarpDataMaps` (`GEAR_WARP`, `DataMapType<Item, Integer>`), `WarpChangedEvent` | S |
+| root | **`Stable`**, **`Experimental`**, **`Internal`** | S |
+| aspect ([aspects](aspects.md)) | **`Aspect`**, **`HiddenPrimal`**; **`AspectKeys`** (the registry; the 37 built-ins; the data-map ids; the knowledge attachment id `vftv:knowledge`); **`AspectLimits`** (5 aspects per entry, depth 3, fan-out 5, 2 tier-1 children, sounding radius 256); **`AspectValues`**; `ScanKey`, `ScanTargetKind`, `ScanOutcome`, `ThingScannedPayload`, `AspectDiscoveredPayload`; nf **`AspectDataMaps`** (`ITEM`, `BLOCK`, `ENTITY_TYPE`, `DEFAULTS`), `ThingScannedEvent`, `AspectDiscoveredEvent` | X, S |
+| research ([research](research.md)) | **`Research`**, **`ResearchCategory`**; **`ResearchKeys`** (both registries; the required keys under [Registry format](research.md#registry-format); the `vftv:page` component id; the `vftv:research` attachment id); **`ResearchLimits`** (anchors 2–5, grid radius 7, synthesis depth 3, 8 actions and 1 commit per tick, 16 notes, 9 bookmarks); `ResearchSource`, `ResearchLearnedPayload`, `StageReachedPayload`, **`ResearchView`**; nf `ResearchLearnedEvent`, `StageReachedEvent`, **`ResearchCapabilities`** | X, S |
+| vis ([wands](wands.md)) | **`WandRod`**, **`WandCap`**, **`NodeType`**; **`VisKeys`** (3 registries, the `vftv:vis_discount` attribute, the component ids `vftv:vis`, `vftv:wand_rod`, `vftv:wand_cap`, `vftv:wand_focus`, `vftv:captured_node`); **`WandPartKeys`** (the rods `vftv:wooden`, `vftv:chime`, `vftv:echo`, `vftv:void`; the caps `vftv:copper`, `vftv:resonant_brass`, `vftv:echo`, `vftv:void`); **`NodeTypeKeys`** (`vftv:wellspring`); **`VisLimits`** (the wands spec's fixed limits); `VisKind`, `VisContext`, `VisQuote`, `NodeRef`, `NodeEventKind`, `NodeCause`, `VisSpentPayload`, `NodePayload`; nf `VisSpentEvent`, `NodeEvent` | X, S |
+| arcane ([arcane](arcane.md)) | **`ArcaneKeys`** (`#vftv:converts_to_worktable`); **`ArcaneLimits`** | S |
+| crucible ([crucible](crucible.md)) | **`CrucibleKeys`** (`#vftv:crucible_heat`, `#vftv:crucible_refuses`, `RESONANT_BRASS_INGOTS` for `#c:ingots/resonant_brass` ([compatibility, Published](compat.md#published)), the attachment ids `vftv:crucible_dissolve`, `vftv:crucible_refused`); **`CrucibleLimits`**; `CruciblePayload`; nf `CrucibleEvent` | X, S |
+| essentia ([essentia](essentia.md)) | **`EssentiaKeys`** (`#vftv:essentia_endpoints`, `#vftv:alembic_bases`, the capability ids, the component ids `vftv:jar_contents`, `vftv:label`); **`EssentiaLimits`**; **`EssentiaSuction`**; `SpillCause`; `EssentiaPayload`; nf **`EssentiaResource`**, **`EssentiaCapabilities`**, `EssentiaEvent` | X, S |
+| infusion ([infusion](infusion.md)) | **`InfusionKeys`** (`#vftv:infusion_stabilisers`, `#vftv:infusion_unenchantable`); **`InfusionLimits`**; `InfusionPayload`, `InfusionPlan`, `InfusionCost`, `UpsetEffect`, `AbandonCause`; nf `InfusionEvent` | X, S |
+| focus ([foci](foci.md)) | **`FocusEffect`**, **`FocusMedium`**, **`FocusModifier`**; **`FocusKeys`** (3 registries, the 15 required built-ins, `#vftv:focus_immune`, the component id `vftv:focus`); **`FocusLimits`**; `FocusEventKind`, `FocusGesture`, `FocusPayload`, `FocusAffectEntityPayload`; nf `FocusEvent`, `FocusAffectEntityEvent` | X, S |
+| golem ([golems](golems.md)) | **`GolemMaterial`**, **`GolemJob`**, **`GolemCarryKind`**, **`GolemRole`**, **`GolemCore`**; **`GolemKeys`** (`vftv:golem_material` and its built-ins, `JOB_REGISTRY`, `CARRY`, `DECANT`, the component ids `vftv:golem_body`, `vftv:golem_core`, `vftv:golem_state`, `vftv:baton_attunement`); **`GolemLimits`**; `GolemResource`, `GolemWorkPayload`, `GolemPayload`; nf `GolemWorkEvent`, `GolemEvent` | X, S |
+| warp ([warp](warp.md)) | **`VoiceEvent`**, **`Bargain`**; **`WarpKeys`** (the `vftv:voice_event` and `vftv:bargain` registries, the `vftv:gear_warp` id, the `vftv:warp` attachment id); **`WarpLimits`**; `WarpState`, `WarpSource`, `WarpSourceKind`, `WarpPreview`, `WarpChangedPayload`; nf **`WarpDataMaps`** (`GEAR_WARP`, `DataMapType<Item, Integer>`), `WarpChangedEvent` | X, S |
 | | `WarpCost`, `CommitResult`, `WarpRules` | I |
-| armor ([armor](armor.md)) | `ArmorKeys` (the `vftv:baffle` attribute and attachment id, the `vftv:wearable` id, the tags `#vftv:void_armor`, `#vftv:reveals_aspects`, `#vftv:repairs_void_armor`, `#vftv:baffle_ignores`, the `vftv:baffling` enchantment key); `ArmorLimits`; `Wearable`, `WearableSlot`; `BaffleView`; nf `ArmorDataMaps` (`WEARABLE`), `ArmorCapabilities` | S |
+| armor ([armor](armor.md)) | **`ArmorKeys`** (the `vftv:baffle` attribute and attachment id, the `vftv:wearable` id, the tags `#vftv:void_armor`, `#vftv:reveals_aspects`, `#vftv:repairs_void_armor`, `#vftv:baffle_ignores`, the `vftv:baffling` enchantment key); **`ArmorLimits`**; **`Wearable`**, **`WearableSlot`**; **`BaffleView`**; nf **`ArmorDataMaps`** (`WEARABLE`), **`ArmorCapabilities`** | S |
 | | `ArmorRules` | I |
-| flux ([Hush](hush.md)) | `FluxSource`, `FluxClearSource` | S |
-| | `FluxRules` | X |
-| hush ([Hush](hush.md)) | `HushKeys` (`#vftv:hushed`, `#vftv:hush_immune`, the `vftv:hushed` node type, the `vftv:hollow` entity type, the `vftv:aura` attachment id, `FORMS`); `HushedForm`; `HushLimits`; `HushSpreadKind`, `HushChange`, `HushOrigin`, `HushSpreadPayload`, `FluxPayload`; nf `HushSpreadEvent`, `FluxEvent` | S |
-| worldgen ([worldgen](worldgen.md)) | `ChoirSite`; `WorldgenKeys` (as [worldgen, Contracts](worldgen.md#contracts-on-sibling-specs) lists, with the `vftv:choir_claims` attachment id); `WorldgenLimits` | S |
-| road ([Eldritch tier](eldritch.md), [Choristers](choristers.md)) | `Chorister`; `EldritchKeys` (as the Eldritch tier lists, with the three Chorister keys and the `vftv:road` attachment id); `RoadLimits`; `ChoristerLimits`; `RoadLayout`; `RoadStepPassedPayload`, `RoadEncounterPayload`, `EncounterOutcome`, `EndingChosenPayload`, `Ending`; nf `RoadStepPassedEvent`, `RoadEncounterEvent`, `EndingChosenEvent` | S |
+| flux ([Hush](hush.md)) | `FluxSource`, `FluxClearSource`, `FluxRules` | X |
+| hush ([Hush](hush.md)) | **`HushKeys`** (`#vftv:hushed`, `#vftv:hush_immune`, the `vftv:hushed` node type, the `vftv:hollow` entity type, the `vftv:aura` attachment id, `FORMS`); **`HushedForm`**; **`HushLimits`**; `HushSpreadKind`, `HushChange`, `HushOrigin`, `HushSpreadPayload`, `FluxPayload`; nf `HushSpreadEvent`, `FluxEvent` | X, S |
+| worldgen ([worldgen](worldgen.md)) | **`ChoirSite`**; **`WorldgenKeys`** (as [worldgen, Contracts](worldgen.md#contracts-on-sibling-specs) lists, with the `vftv:choir_claims` attachment id); **`WorldgenLimits`** | S |
+| road ([Eldritch tier](eldritch.md), [Choristers](choristers.md)) | **`Chorister`**; **`EldritchKeys`** (as the Eldritch tier lists, with the three Chorister keys and the `vftv:road` attachment id); **`RoadLimits`**; **`ChoristerLimits`**; **`RoadLayout`**; `RoadStepPassedPayload`, `RoadEncounterPayload`, `EncounterOutcome`, `EndingChosenPayload`, `Ending`; nf `RoadStepPassedEvent`, `RoadEncounterEvent`, `EndingChosenEvent` | X, S |
 | | `RoadRules` | I |
 
 - **`HushKeys.FORMS`** is an unmodifiable `List<HushedForm>`, where `HushedForm(Identifier source, Identifier form)` is a pair of ids. It describes the [Hush spec's](hush.md#the-forms) fixed table and never exposes a form implementation.
@@ -481,6 +498,8 @@ Every API type, by feature. Tier: `S` Stable, `X` `@Experimental`, `I` `@Interna
 - **A Fabric port** is an aim, not a promise: `api` is loader-free so it could carry over, and `api.neoforge` would be mirrored ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)). It would follow the Minecraft-major rule, and no identical platform types are promised.
 
 ## Compatibility gates
+
+**What runs in v1:** `API_PACKAGES`, `API_SHAPES`, `API_TIER_LEAK` and `API_CONSTRUCTION`; Javadoc; the jar-content checks; and `testAddon` compiled against the `api` jar ("Tests"). **The rest of this section is the `1.0.0` release ticket's** ("Build-phase note"): the baseline step, `apiCompat`, the baseline ArchUnit rules, `apiGateSelfTest`, the `testCompat` corpus with `API_CORPUS_STABLE`, the binary replay and `runCompatGameTestServer`. Before `1.0.0` there is no baseline, so they would only exercise themselves. They are specified now so that ticket has no design left to do.
 
 ### The baseline
 
@@ -528,7 +547,7 @@ They run in `archTest` over the baseline `api` jar and the current classes, only
 
 ## The fixtures
 
-Two source sets, both compiled against the **built `-api.jar` file** (never `sourceSets.api.output`), plus Minecraft and NeoForge, and never `main`. That proves the jar is complete. Their Java is MPL-2.0 under [`NOTICE.md`](../../NOTICE.md) rule 4 (`src/test*/**`); their `resources/data/**` is CC-BY-4.0 under rule 5. No change to the licence map is needed.
+Two source sets, both compiled against the **built `-api.jar` file** (never `sourceSets.api.output`), plus Minecraft and NeoForge, and never `main`. That proves the jar is complete. `testAddon` exists from the first API type; `testCompat` arrives with the `1.0.0` release ticket. Their Java is MPL-2.0 under [`NOTICE.md`](../../NOTICE.md) rule 4 (`src/test*/**`); their `resources/data/**` is CC-BY-4.0 under rule 5. No change to the licence map is needed.
 
 ### `testAddon`: the example addon
 
@@ -540,14 +559,15 @@ Two source sets, both compiled against the **built `-api.jar` file** (never `sou
   - a reference to every Stable `*Keys`, `*Limits` and `DataMapType` constant.
   - It compiles in `check` against the `api` jar only, so it covers the current surface.
 - **Data:** a small example pack under its own namespace `vftv_addon`.
+- **Its run:** `runAddonGameTestServer` loads `vftv_addon` beside `vftv`, apart from the ordinary GameTests because the addon's items, recipes and tags would change what they see. It holds the GameTests that need an addon ([compatibility, Tests](compat.md#tests); "Tests" here), with its own discovery guard. At `1.0.0` the corpus joins it as `runCompatGameTestServer`.
 
 ### `testCompat`: the frozen compatibility corpus
 
-**Frozen within a major.** It is a tiny mod `vftv_compat` (its `neoforge.mods.toml` requires `vftv`), built into `vftv-X.Y.Z-compat.jar`.
+**The `1.0.0` release ticket's. Frozen within a major.** It is a tiny mod `vftv_compat` (its `neoforge.mods.toml` requires `vftv`), built into `vftv-X.Y.Z-compat.jar`.
 - **Java:** historical uses of the API, one method per use.
   - **Only effectively Stable public declarations** are referenced: no `@Experimental` or `@Internal` member or type, and nothing outside `api`. The ArchUnit rule **`API_CORPUS_STABLE`** checks the corpus classes and fails otherwise.
   - **Every method carries `@SuppressWarnings({"deprecation", "removal"})` from the day it is added,** before anything it uses is deprecated, with the one-line reason "historical API use; frozen compatibility corpus" ([quality gates, Static gates](quality-gates.md#static-gates)). So a later deprecation never forces an edit to a frozen file.
-  - On construction the mod registers a listener for every event class. For each **sealed variant** and each value of each kind enum present when it was written, the listener reads that variant's Stable accessors.
+  - On construction the mod registers a listener for every **Stable** event class (none until an event is promoted). For each **sealed variant** and each value of each kind enum present when it was written, the listener reads that variant's Stable accessors.
 - **Data,** valid per owner:
   - **registry additions** under `data/vftv_compat/…`, for each registry that accepts additions, one minimal and one maximal entry (every optional field, each at its upper bound);
   - **the three Chorister overrides** at `data/vftv/vftv/chorister/{wuuren,suhlaa,nihthaa}.json`;
@@ -560,8 +580,8 @@ Two source sets, both compiled against the **built `-api.jar` file** (never `sou
 
 ### The replay
 
-- **Binary replay** (FML unit test, only with a baseline): the **baseline's** `vftv-X.Y.Z-compat.jar` is loaded as a mod beside the current build **[build wires]**. The test posts one fixture instance **per sealed payload variant and per kind-enum value** of every event, so every variant-specific path of every corpus listener runs and links against the current API. A `LinkageError` or any throw fails.
-- **Data replay** (a separate GameTest run, `runCompatGameTestServer`, always): the current `vftv_compat` and `vftv_addon` load beside `vftv`, isolated from the ordinary GameTests because the corpus overrides tuning **[build wires]**. Its GameTests assert, at startup and **again after `/reload`** for the reloadable data:
+- **Binary replay** (FML unit test, only with a baseline): the **baseline's** `vftv-X.Y.Z-compat.jar` is loaded as a mod beside the current build **[build wires]**. The test posts one fixture instance **per sealed payload variant and per kind-enum value** of every Stable event, so every variant-specific path of every corpus listener runs and links against the current API. A `LinkageError` or any throw fails.
+- **Data replay** (a separate GameTest run, `runCompatGameTestServer`, always once the corpus exists; it replaces `runAddonGameTestServer` and keeps its tests): the current `vftv_compat` and `vftv_addon` load beside `vftv`, isolated from the ordinary GameTests because the corpus overrides tuning **[build wires]**. Its GameTests assert, at startup and **again after `/reload`** for the reloadable data:
   - every registry entry resolves, and every Chorister override took effect;
   - every data-map sentinel reads back through its `DataMapType`, which catches a silently discarded file;
   - every recipe is in the recipe manager, both infusion forms included;
@@ -590,13 +610,14 @@ Two source sets, both compiled against the **built `-api.jar` file** (never `sou
 The gates above, all in `check` or the `build` job ([quality gates, CI](quality-gates.md#ci)):
 
 **Static and unit:**
-- the ArchUnit rules `API_PACKAGES`, `API_SHAPES`, `API_TIER_LEAK`, `API_CONSTRUCTION` and `API_CORPUS_STABLE`, always; `API_NO_DEMOTION` and `API_RECORDS_FROZEN` with a baseline;
+- the ArchUnit rules `API_PACKAGES`, `API_SHAPES`, `API_TIER_LEAK` and `API_CONSTRUCTION`, always; from the `1.0.0` release ticket, `API_CORPUS_STABLE` always and `API_NO_DEMOTION` and `API_RECORDS_FROZEN` with a baseline;
+- **the allowlist:** a unit test reads every `api` class and asserts that the effectively Stable set equals the list under "The Stable allowlist", so a type can't become Stable by accident;
 - **`EssentiaResource`:** `EMPTY` and `new EssentiaResource(null)` are equal and empty; an unbound direct holder is rejected; two holders for one key from different registry snapshots are equal with equal hashes;
-- `apiCompat` with a baseline; `apiGateSelfTest` always;
+- from the `1.0.0` release ticket: `apiCompat` with a baseline, and `apiGateSelfTest` always;
 - **payload immutability, one unit test per payload type:** mutating the inputs after construction changes nothing; every collection accessor throws on mutation; two calls to an `ItemStack` accessor return distinct copies, and mutating one changes neither the other nor a later call;
 - **`GolemJob`:** the constructor's rejections (empty, duplicate or out-of-kind roles, a default outside the list); the codec round trip;
 - the data-map value codecs (`AspectValues`, `Wearable`), under [quality gates, Unit](quality-gates.md#unit-test-suite-junit-6-with-fml)'s codec rules;
-- the binary replay, with a baseline.
+- the binary replay, with a baseline, from the `1.0.0` release ticket.
 
 **Shipping-jar checks:**
 - the `api` jar holds only `META-INF/MANIFEST.MF`, directory entries, `LICENSE-API` and `com/andrewbrogoff/vftv/api/**/*.class`, and the `api-sources` jar the same with `.java`;
@@ -606,17 +627,17 @@ The gates above, all in `check` or the `build` job ([quality gates, CI](quality-
 
 **GameTest:**
 - each view's answers for a loaded player after a save and reload; after a command revocation (`isLearned` false at once); after a Baffle absorb and recharge; for an unreadable record; and a null view for a client-side player in the integrated E2E;
-- an addon `GolemJob` registered by `vftv_addon` drives a golem through a `GolemCore` item in the compatibility run;
-- the data replay.
+- an addon `GolemJob` registered by `vftv_addon` drives a golem through a `GolemCore` item in `runAddonGameTestServer`;
+- the data replay, from the `1.0.0` release ticket.
 
-**Release checklist:** the deprecation window; the schema review under "Public data formats"; `SHA256SUMS` and all four jars attached.
+**Release checklist:** the deprecation window; the schema review under "Public data formats"; `SHA256SUMS` and every jar attached.
 
 ## Contracts on sibling specs
 
 Each system spec is amended in this change, as listed. Each amendment is a criterion in that system's build ticket.
 
 - **[Architecture](architecture.md):** "Public API", "Build layout", "Essentia and capabilities" and "Enforcement" point here, and gain the ArchUnit rules.
-- **[Quality gates](quality-gates.md):** "Shipping artifact" sets the baseline, the gates and the fixtures; the `build` job runs them; definition-of-done item 7 asks for an effective, documented tier and compatibility evidence.
+- **[Quality gates](quality-gates.md):** "Shipping artifact" sets the v1 gates and names the `1.0.0` release ticket's; the `build` job runs them; definition-of-done item 7 asks for an effective, documented tier (Experimental unless allowlisted).
 - **Every events section** links to "Events" here for the common contract and keeps its own ordering, guards and fields. The [foci](foci.md#events), [golems](golems.md#events) and [Hush](hush.md#events) sections also state their pre-event failure rule.
 - **Every "Whether they are exposed in `api` is the API spec's call"** now reads that services are internal in v1, with the [research](research.md#events) and [armor](armor.md#events) views as the exceptions. Each spec's non-service keys and records stay as listed here.
 - **[Foci](foci.md#composition):** behaviour types are internal in v1; addons and packs add entries over the built-in types. `FocusService.kind` stays in `core`.
@@ -630,13 +651,14 @@ Each system spec is amended in this change, as listed. Each amendment is a crite
 
 ## Build-phase note
 
-This spec has **no production tickets**: it needs no assets and no `content/`. In the build phase, one ticket, **API infrastructure**, comes before the first system's build ticket. It delivers:
-- the two annotations;
+This spec has **no production tickets**: it needs no assets and no `content/`. **No API ticket is ordered before the systems.** The first system build ticket that adds an API type also delivers the small v1 layer:
+- the three annotations, the `@Experimental` `package-info`s and the allowlist test;
 - the three jars, their manifests and the publication;
 - the release workflow's assets and `SHA256SUMS`;
-- `apiCompat`, the baseline step and `apiGateSelfTest`;
-- the seven ArchUnit rules;
-- the `testAddon` and `testCompat` source sets with their runs and replay wiring;
+- the four v1 ArchUnit rules;
+- the `testAddon` source set and `runAddonGameTestServer`;
 - the Javadoc flags.
 
-Each system's build ticket then adds its own API types, its `testAddon` coverage and its `testCompat` entries, as "The inventory" lists.
+Each system's build ticket then adds its own API types and its `testAddon` coverage, as "The inventory" lists.
+
+**The `1.0.0` release ticket** delivers what only a baseline gives meaning to: the baseline download step, `apiCompat`, `API_NO_DEMOTION` and `API_RECORDS_FROZEN`, `apiGateSelfTest`, the `testCompat` corpus with `API_CORPUS_STABLE`, its freeze check and its jar, the binary replay, and `runCompatGameTestServer`. It seeds the corpus with entries for every Stable declaration and public data format at that point.

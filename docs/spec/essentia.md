@@ -22,7 +22,7 @@ Resolved in [Essentia logistics spec](https://github.com/andrewbrogoff/voices-fr
 
 **Every number in this spec is ours.** None is taken from TC4. Each tunable one is listed with its data home under "Tuning and limits". Numbers inside the JSON examples are illustrative unless the text says they are the shipped values; the content ticket sets the real ones.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 47 lines (2,013 bytes, SHA-256 `6c67d00b2c03b11b17fe212b1bcbc0360458d5bc0aee638984a0385ed1f0a31f`).
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 47 lines (2,013 bytes, SHA-256 `bc2bb07e5194d78e655475d1e8cf84fdaa276fabd1b40fe4d72dc52e3d7eb4b0`).
 
 ## Stage
 
@@ -33,12 +33,13 @@ Resolved in [Essentia logistics spec](https://github.com/andrewbrogoff/voices-fr
 
 | Entry | Kind | Parents | Gates |
 |---|---|---|---|
-| **`vftv:essentia_jars`** | `note` | `vftv:resonant_brass` | the arcane recipes `vftv:essentia_jar` and `vftv:alembic` |
-| **`vftv:essentia_tubes`** | `note` | `vftv:essentia_jars` | the arcane recipes `vftv:essentia_tube` and `vftv:tube_valve` |
+| **`vftv:essentia_jars`** | `note` | `vftv:crucible` | the arcane recipes `vftv:essentia_jar` and `vftv:alembic` |
+| **`vftv:essentia_tubes`** | `note` | `vftv:essentia_jars`, `vftv:resonant_brass` | the arcane recipes `vftv:essentia_tube` and `vftv:tube_valve` |
 
 - **Gate the recipe, not the block.** Using a jar, tube, valve or alembic is ungated: one someone gave you works for you, as a crucible does ([crucible, Stage](crucible.md#stage)). **Obtaining counts.**
 - **Labels are ungated vanilla recipes:** paper and an ink sac make labels, and a label crafted alone comes out blank. A label does nothing by itself.
-- **Brass ancestry** prevents a progression cycle, because the jar and tube recipes may use `vftv:resonant_brass_ingot`. It follows the singing-wands precedent ([crucible, Contracts](crucible.md#contracts-on-sibling-specs)).
+- **Jars come with the crucible.** The first thing a player does with a new crucible is throw things in, and a full pool with nowhere to go would trap them: emptying spills it at their workbench, and the first Brass needs room in the pool. So `vftv:essentia_jars` follows `vftv:crucible`, not Brass, and the jar and Alembic recipes use **only `minecraft:` items** (glass, copper), as the vessel's own recipe does ([crucible, The block](crucible.md#the-block)). The first full crucible is answered by the blocks built for it.
+- **Brass ancestry** stays on tubes: `vftv:essentia_tubes` names `vftv:resonant_brass` as a second parent, because the tube and valve recipes may use `vftv:resonant_brass_ingot`. It follows the singing-wands precedent ([crucible, Contracts](crucible.md#contracts-on-sibling-specs)). No progression cycle is possible.
 - **Options considered:** one entry for everything; a find for tubes. **Why two notes:** "jars, then tubes" is the [research roster](research.md#roster)'s order, and the Alembic makes jars useful before any tube exists.
 
 ## The Essentia Jar
@@ -551,7 +552,7 @@ Aer is conserved: C 2 + F 0 + J1 8 = 10.
 
 A per-level **due-time scheduler**: a priority queue of entries (due tick, line key, line id, generation, epoch), ordered by (due tick, key). Nothing scans every line each tick.
 
-- **Phase:** a line is due on the ticks where `gameTime mod tube.pulse = phase(key)`, with the [crucible's `phase`](crucible.md#boiling-and-the-step). Phases at a pulse of 10 for the crucible spec's five vector positions: (0, 64, 0) → 5; (1, 64, 0) → 0; (0, 64, 1) → 4; (−37, 70, 512) → 9; (29999999, −64, −29999999) → 9.
+- **Phase:** a line is due on the ticks where `gameTime mod tube.pulse = phase(key)`, with the [crucible's `phase`](crucible.md#boiling-and-the-step). Phases at a pulse of 10 for the crucible spec's five vector positions, under its salted phase: (0, 64, 0) → 7; (1, 64, 0) → 1; (0, 64, 1) → 5; (−37, 70, 512) → 4; (29999999, −64, −29999999) → 3.
 - **After an executed pulse:**
   - an awake line is rescheduled at its next phase tick;
   - a sleeping one at the phase tick `tube.idle_every` pulses later.
@@ -739,7 +740,7 @@ content/lang/en_us/essentia.json    every key under "Lang keys"
 | `vftv:label_blank` | `minecraft:crafting_shapeless` | none | `vftv:label`, count 1, **no components** | ingredients exactly one `vftv:label`. The result carries no `vftv:label`, so it is blank, and any label (written or blank) crafts to one blank label. |
 
 - **The four arcane bodies** follow the [arcane recipe type](arcane.md#the-recipe-type) exactly. Their `vis` uses only the six built-in primals, each ≤ the Wellspring's per-aspect amount in `content/nodes/types.json` (32 today; the lint reads it), as for the crucible's vessel.
-- **Ingredients** are any vanilla `Ingredient`s; `vftv:resonant_brass_ingot` is allowed, because both entries descend from `vftv:resonant_brass` (see "Stage").
+- **Ingredients:** for `vftv:essentia_jar` and `vftv:alembic`, **every ingredient is a `minecraft:` item or tag**, so the way out of a full crucible never needs Resonant Brass (see "Stage"). For `vftv:essentia_tube` and `vftv:tube_valve`, any vanilla `Ingredient`s; `vftv:resonant_brass_ingot` is allowed, because `vftv:essentia_tubes` descends from `vftv:resonant_brass`.
 - **The vanilla bodies** use vanilla's shapeless codec: `category` (default `misc`), `ingredients` and `result`.
 
 **Rejected:**
@@ -748,6 +749,7 @@ content/lang/en_us/essentia.json    every key under "Lang keys"
 - a result id, count or component outside its row;
 - any field outside its type's body;
 - a `vis` key that isn't a built-in primal, or a value over the Wellspring bound;
+- a jar or Alembic ingredient outside `minecraft:`;
 - label ingredients other than exactly paper and an ink sac;
 - a `vftv:label_blank` with any ingredient other than one `vftv:label`.
 
@@ -757,12 +759,12 @@ A complete file (counts, ingredients and costs illustrative; the content ticket 
 {"schema": "vftv:essentia_recipes/1", "recipes": {
   "vftv:essentia_jar": {
     "type": "vftv:arcane", "research": "vftv:essentia_jars", "kind": "ordinary",
-    "ingredients": ["minecraft:glass", "minecraft:glass", "vftv:resonant_brass_ingot"],
+    "ingredients": ["minecraft:glass", "minecraft:glass", "minecraft:copper_ingot"],
     "result": {"id": "vftv:essentia_jar", "count": 2},
     "vis": {"vftv:aqua": 8, "vftv:terra": 6}},
   "vftv:alembic": {
     "type": "vftv:arcane", "research": "vftv:essentia_jars", "kind": "ordinary",
-    "ingredients": ["minecraft:glass_bottle", "vftv:resonant_brass_ingot", "minecraft:copper_ingot"],
+    "ingredients": ["minecraft:glass_bottle", "minecraft:copper_ingot", "minecraft:copper_ingot"],
     "result": {"id": "vftv:alembic", "count": 1},
     "vis": {"vftv:aqua": 6, "vftv:ignis": 6}},
   "vftv:essentia_tube": {
@@ -1102,6 +1104,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `vftv:essentia_jar` joins the default of the **item** tag `vftv:crucible_refuses`.
 - `api` `SpillCause` gains `DESTROYED`.
 - `vftv:crucible` is in the block tags `vftv:essentia_endpoints` and `vftv:alembic_bases`.
+- **The crucible entry is the jars' parent:** `vftv:essentia_jars` follows `vftv:crucible`, with `minecraft:`-only jar and Alembic recipes, so a full pool has an exit before Brass (see "Stage").
 - It stays extract-only, with no suction capability.
 - **Its own 10,000-unit spill input is unchanged.**
 
@@ -1118,16 +1121,18 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35)
 - **The fact source `essentia`:** its grammar, every key, the value format, the `EssentiaRules` arrival and reload invalidation, and `[?]` before the first arrival. All of it is in the research spec's "Prose and fact references".
-- **Entries:** `vftv:essentia_jars` (a `note`, parent `vftv:resonant_brass`) gates `vftv:essentia_jar` and `vftv:alembic`. `vftv:essentia_tubes` (a `note`, parent `vftv:essentia_jars`) gates `vftv:essentia_tube` and `vftv:tube_valve`. Each carries `vftv:recipe` pages for its recipes. The ungated label recipes may sit on `vftv:essentia_jars`.
+- **Entries:** `vftv:essentia_jars` (a `note`, parent `vftv:crucible`) gates `vftv:essentia_jar` and `vftv:alembic`. `vftv:essentia_tubes` (a `note`, parents `vftv:essentia_jars` and `vftv:resonant_brass`) gates `vftv:essentia_tube` and `vftv:tube_valve`. Each carries `vftv:recipe` pages for its recipes. The ungated label recipes may sit on `vftv:essentia_jars`.
 - **Prose** teaches:
   - suction ranks, hold, labels as locks and gates;
   - one move per pulse, throughput, the idle delay before a sleeping line notices a change;
   - rank-based starvation (a hungrier vessel is always served first);
+  - **what the ranks mean for building:** a jar is filled by tube only from a crucible or an unlabelled jar, and emptied by tube only into a consumer, so labelled stores never trade, and an altar is fed by a crucible in or beside its box or by carrying filled jars; a Node Tap on a line will drink your stored primals, because it outranks every jar; primal leftovers can be fed to a Node Tap for free, while compounds must be jarred or spilled;
+  - that a crucible's leftovers can be jarred from the moment the crucible is built (the jars and Alembic need no Brass);
   - the caps;
   - **every loss exception:** item expiry, falling below the world, command discards and flag-256 removals; and the **external drop losses** (the `doTileDrops` rule off, a `BlockDropsEvent` that cancels or changes the drops, a rejected item spawn), where the reserved contents vanish without a spill.
 
   Every number goes through fact spans.
-- **The affordability artifact:** `content/research/path-stage2.json` learns `vftv:essentia_jars` after `vftv:resonant_brass`, then `vftv:essentia_tubes`, through actual note eligibility.
+- **The affordability artifact:** `content/research/path-stage2.json` learns `vftv:essentia_jars` after `vftv:crucible` (before or after `vftv:resonant_brass`), then `vftv:essentia_tubes` after both, through actual note eligibility.
 
 **[Infusion](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)**
 - It moves essentia only through the essentia capability, in roots closed within the call, never across ticks.

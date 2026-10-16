@@ -23,7 +23,7 @@ Resolved in [Choristers of the Road spec](https://github.com/andrewbrogoff/voice
 
 **Renamed coinages** ([lore, Vocabulary policy](lore.md#vocabulary-policy)): the Champion Eldritch Guardian, Eldritch Construct, Crimson Portal and Giant Taintacle → three **Choristers**, named from the lexicon: **Wuuren** ("step; footfall"), **Suhlaa** ("breath") and **Nihthaa** ("brow; the head that listens"). Every id stays English.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 21 lines (2,208 bytes, SHA-256 `28a364086b0b077b0466e704238856e751a7e9fa184d1a1b3c9d430c9c890f9c`). The references cover arithmetic only: the schedule, the four zones, the knell, facing, the walk, difficulty scaling, the box fit, the dodge margins, held knell waves with their record slots and serials, and the sync anchor. Their agreement says nothing about callbacks, sync, rendering or performance, which the build's tests prove (see "Tests"). **Nothing in this spec draws randomness.**
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 21 lines (2,203 bytes, SHA-256 `e34a6750661807bfb030383db2e03a9eec1202f70b0f774f8f1578193b6c7b68`). The references cover arithmetic only: the schedule, the four zones, the knell, facing, the walk, difficulty scaling, the box fit, the dodge margins, held knell waves with their record slots and serials, and the sync anchor. Their agreement says nothing about callbacks, sync, rendering or performance, which the build's tests prove (see "Tests"). **Nothing in this spec draws randomness.**
 
 **Source citations:** `MC:` is `minecraft-patched-26.2.0.88-sources.jar` and `NF:` the NeoForge 26.2.0.88 sources, with package prefixes omitted.
 
@@ -146,14 +146,14 @@ At its ACTIVE tick a knell **releases** `waves` waves (1 or 2) from C's position
 
 | Instance | Move | Type | W / L / R / G | Zone | Damage (hard) | Shield |
 |---|---|---|---|---|---|---|
-| Wuuren | `strike` | strike | 30 / 15 / 24 / 20 | radius 45, half-angle 45 | 80 (12.0) | 0 s |
+| Wuuren | `strike` | strike | 30 / 20 / 24 / 20 | radius 45, half-angle 45 | 80 (12.0) | 0 s |
 | | `knell` | knell | 40 / – / 30 / 20 | speed 5, band 6, max 350, 1 wave | 50 (7.5) | – |
-| Suhlaa | `strike` | strike | 28 / 14 / 22 / 16 | radius 45, half-angle 45 | 90 (13.5) | 3 s |
+| Suhlaa | `strike` | strike | 28 / 19 / 22 / 16 | radius 45, half-angle 45 | 90 (13.5) | 3 s |
 | | `inhale` | breath | 30 / – / 10 / 0 | 0–50 | 90 (13.5) | – |
 | | `exhale` | breath | 20 / – / 24 / 16 | 50–110 | 90 (13.5) | – |
 | | `knell` | knell | 36 / – / 26 / 16 | speed 6, band 6, max 350, 1 wave | 60 (9.0) | – |
-| Nihthaa | `hear` | hear | 30 / 12 / 20 / 12 | length 340, half-width 12 | 110 (16.5) | 3 s |
-| | `strike` | strike | 24 / 13 / 20 / 12 | radius 50, half-angle 40 | 100 (15.0) | 3 s |
+| Nihthaa | `hear` | hear | 30 / 18 / 20 / 12 | length 340, half-width 12 | 110 (16.5) | 3 s |
+| | `strike` | strike | 24 / 18 / 20 / 12 | radius 50, half-angle 40 | 100 (15.0) | 3 s |
 | | `inhale` | breath | 26 / – / 8 / 0 | 0–55 | 100 (15.0) | – |
 | | `exhale` | breath | 20 / – / 20 / 12 | 55–120 | 100 (15.0) | – |
 | | `knell` | knell | 32 / – / 24 / 12 | speed 6, band 6, max 350, 2 waves 16 apart | 70 (10.5) | – |
@@ -169,13 +169,13 @@ At its ACTIVE tick a knell **releases** `waves` waves (1 or 2) from C's position
 
 ### Dodging
 
-A directional move's lock must give its target time to leave the zone **at a walk, slowed by the [warp spec's](warp.md#danger) `pressing_dark`** (Slowness, amplifier 0, −15 %), after **2 ticks** of reaction and network allowance. Strafing can't sprint, so walking speed is the bar: **0.2158 blocks a tick** (about 4.32 m/s), so 0.18343 slowed. Two distances must fit:
+A directional move's lock must give its target time to leave the zone **at a walk, slowed by the [warp spec's](warp.md#danger) `pressing_dark`** (Slowness, amplifier 0, −15 %), after **6 ticks** of reaction and network allowance: about 250 ms to perceive the lock cue and react (5 ticks) plus one tick of round trip on a typical server. The lock is a sub-window of the windup, so no cycle length changes. Strafing can't sprint, so walking speed is the bar: **0.2158 blocks a tick** (about 4.32 m/s), so 0.18343 slowed. Two distances must fit:
 - **a strafe from 2 blocks out:** `min(2·tan(half_angle), √(radius² − 4))`, sideways along the line that the target's position and the facing make;
 - **the sector's inscribed radius** `radius·sin(h) / (1 + sin(h))`: from anywhere inside, the shortest way out is never longer.
 
 For a lane, the strafe is `half_width`.
 
-**Vectors** (radius, half-angle, lock → strafe, inscribed, available, fits): Wuuren's strike 45, 45, 15 → 2.0, 1.863961, 2.38459, yes; Suhlaa's 45, 45, 14 → 2.0, 1.863961, 2.20116, yes; Nihthaa's 50, 40, 13 → 1.678199, 1.956393, 2.01773, yes. Counter-examples: 45, 60, 15 → 3.464102, 2.088457, 2.38459, **no**; 50, 70, 10 → 4.582576, 2.422272, 1.46744, **no**; 50, 40, 12 → 1.678199, 1.956393, 1.8343, **no**. Nihthaa's hear (half-width 12, lock 12) → needed 1.2, available 1.8343, yes; with lock 4 → 0.36686, no.
+**Vectors** (radius, half-angle, lock → strafe, inscribed, available, fits): Wuuren's strike 45, 45, 20 → 2.0, 1.863961, 2.56802, yes; Suhlaa's 45, 45, 19 → 2.0, 1.863961, 2.38459, yes; Nihthaa's 50, 40, 18 → 1.678199, 1.956393, 2.20116, yes. Counter-examples: 45, 60, 20 → 3.464102, 2.088457, 2.56802, **no**; 50, 70, 16 → 4.582576, 2.422272, 1.8343, **no**; 50, 40, 16 → 1.678199, 1.956393, 1.8343, **no** (so `MIN_LOCK` alone doesn't fit Nihthaa's strike). Nihthaa's hear (half-width 12, lock 18) → needed 1.2, available 2.20116, yes; with lock 8 → 0.36686, no.
 
 - **The walking speed is the reference's assumption,** measured by the slowed-strafe GameTest ("Tests"). The inequality is checked during authored-content validation of the shipped file ("Authored content, Rejected"); world-load validation does not enforce it, so a datapack may tune past it.
 
@@ -191,9 +191,9 @@ The Chorister keeps its own tick count `t`: 0 on its first tick, +1 at the end o
 - **Moves fire on time** whether anyone is in reach or not. The timeline is a pure function of `t` and the instance. Only the facing and the walk read the target.
 - **The opening** (40 ticks): the bowed pose straightens; no move, no walk; fully damageable. Nothing strikes on the tick it appears ([progression, What the Voices do](progression.md#what-the-voices-do)).
 - **Vectors** (`t` → entry, phase, `k`, loop):
-  - Wuuren (cycle 241): 0 → opening 0; 39 → opening 39; 40 → 0, WINDUP, 0; 54 → 0, WINDUP, 14; 55 → 0, LOCKED, 15; 70 → 0, ACTIVE, 30; 71 → 0, RECOVERY, 31; 95 → 0, GAP, 55; 115 → 1, WINDUP, 0; 190 → 2, WINDUP, 0; 230 → 2, ACTIVE, 40; 231 → 2, RECOVERY, 41; 281 → 0, WINDUP, 0, loop 1.
-  - Suhlaa (248): 40 → 0, WINDUP, 0; 53 → 0, WINDUP, 13; 54 → 0, LOCKED, 14; 68 → 0, ACTIVE, 28; 107 → 1, WINDUP, 0; 108 → 1, WINDUP, 1; 138 → 1, RECOVERY, 31; 148 → 2, WINDUP, 0; 169 → 2, RECOVERY, 21; 205 → 2, GAP, 57; 288 → 0, WINDUP, 0, loop 1.
-  - Nihthaa (334): 40 → 0, WINDUP, 0; 57 → 0, WINDUP, 17; 58 → 0, LOCKED, 18; 70 → 0, ACTIVE, 30; 103 → 1, WINDUP, 0; 113 → 1, WINDUP, 10; 114 → 1, LOCKED, 11; 186 → 2, ACTIVE, 26; 214 → 3, WINDUP, 19; 255 → 4, WINDUP, 7; 287 → 4, RECOVERY, 39; 374 → 0, WINDUP, 0, loop 1.
+  - Wuuren (cycle 241): 0 → opening 0; 39 → opening 39; 40 → 0, WINDUP, 0; 49 → 0, WINDUP, 9; 50 → 0, LOCKED, 10; 70 → 0, ACTIVE, 30; 71 → 0, RECOVERY, 31; 95 → 0, GAP, 55; 115 → 1, WINDUP, 0; 190 → 2, WINDUP, 0; 230 → 2, ACTIVE, 40; 231 → 2, RECOVERY, 41; 281 → 0, WINDUP, 0, loop 1.
+  - Suhlaa (248): 40 → 0, WINDUP, 0; 48 → 0, WINDUP, 8; 49 → 0, LOCKED, 9; 68 → 0, ACTIVE, 28; 107 → 1, WINDUP, 0; 108 → 1, WINDUP, 1; 138 → 1, RECOVERY, 31; 148 → 2, WINDUP, 0; 169 → 2, RECOVERY, 21; 205 → 2, GAP, 57; 288 → 0, WINDUP, 0, loop 1.
+  - Nihthaa (334): 40 → 0, WINDUP, 0; 51 → 0, WINDUP, 11; 52 → 0, LOCKED, 12; 70 → 0, ACTIVE, 30; 103 → 1, WINDUP, 0; 108 → 1, WINDUP, 5; 109 → 1, LOCKED, 6; 186 → 2, ACTIVE, 26; 214 → 3, WINDUP, 19; 255 → 4, WINDUP, 7; 287 → 4, RECOVERY, 39; 374 → 0, WINDUP, 0, loop 1.
   - Facing (from, toward, rate → after): 180, −170, 12 → −170; 180, 90, 10 → 170; 0, 180, 15 → 15; −175, 175, 15 → 175; 30, 32.5, 10 → 32.5. The yaw from (0.5, 12.5) to (0.5, 0.5), (−11.5, 12.5), (12.5, 12.5), (6.5, 18.5) is 180, 90, −90, −45.
 
 ### Each tick, in order
@@ -277,7 +277,7 @@ Fixed in code in **`ChoristerLimits`** (`api`):
 | Limit | Value | Guarantees |
 |---|---|---|
 | `MIN_WINDUP` | 20 ticks | every move telegraphs for at least 1 s: pose, mark and sound |
-| `MIN_LOCK` | 10 ticks | a directional aim is fixed and shown at least 0.5 s before it lands |
+| `MIN_LOCK` | 16 ticks | a directional aim is fixed and shown at least 0.8 s before it lands: the 6-tick dodge latency plus a 10-tick walk |
 | `MIN_RECOVERY` | 8 ticks | every move leaves a punish window |
 | `MAX_MOVE_DAMAGE` | 130 tenths | on hard, **an unarmoured vanilla player at full health survives any one hit** (19.5 < 20); one hit, not a combination, and not under another mod's amplification |
 | `ARENA_REACH` | 340 tenths | every cycle holds a knell whose last front plus band reaches 34 blocks, the farthest arena point from anywhere on the walk (12 + 22): **no safe cell** |
@@ -321,7 +321,7 @@ And always: **no invulnerable phase** (it can be hurt from its first tick, in th
 | armour, enchantments, Resistance | apply: the types bypass nothing |
 | the Baffle | absorbs after armour, in `LivingDamageEvent.Pre` ([armor, Absorbing](armor.md#absorbing)) |
 | totems | vanilla |
-| warp | the Chorister applies no warp and is never a Voice spawn (outside `#vftv:voice_spawnable`, a datagen assertion). Vuulas is in context, so `pressing_dark`'s Darkness **and Slowness** may fire in a fight ([warp, Danger](warp.md#danger)): every telegraph also has a sound and a subtitle, and every lock is sized for the slowed walk ("Dodging") |
+| warp | the Chorister applies no warp, and v1 has no Voice spawn type ([warp, Danger](warp.md#danger)). Vuulas is in context, so `pressing_dark`'s Slowness may fire in a fight; it carries no Darkness, so the floor marks stay readable. Every telegraph also has a sound and a subtitle, and every lock is sized for the slowed walk ("Dodging") |
 | Joining | a Joined Listener's Void foci hit harder through the amplifier ([foci, The Void tier](foci.md#the-void-tier)); nothing special here |
 | Silencing | changes nothing: `targetFor` decides, and Silencing exempts only the Hush ([Eldritch tier, The capstones](eldritch.md#the-capstones)) |
 | phantoms | client-only and harmless ([warp, Phantoms](warp.md#phantoms)); a Chorister is never mistaken for an apparition ("Rendering") |
@@ -437,8 +437,8 @@ content/lang/en_us/choristers.json        every key under "Lang keys"
 | `moves` | 1–8 entries, keys matching `[a-z_]{1,32}` |
 | `cycle` | 1–12 keys of `moves`; every move used at least once |
 | every move | `type` (`strike`, `knell`, `breath` or `hear`); `windup` 20–200; `recovery` 8–200; `gap` 0–200; `damage` 1–130; `damage_type` a damage type id |
-| `strike` | `lock` 10 to `windup`; `radius` 10–80; `half_angle` 15–90; `shield_seconds` 0–5 |
-| `hear` | `lock` 10 to `windup`; `length` 40–340; `half_width` 4–20; `shield_seconds` 0–5 |
+| `strike` | `lock` 16 to `windup`; `radius` 10–80; `half_angle` 15–90; `shield_seconds` 0–5 |
+| `hear` | `lock` 16 to `windup`; `length` 40–340; `half_width` 4–20; `shield_seconds` 0–5 |
 | `breath` | `inner` 0 to `outer` − 10; `outer` 10–150 |
 | `knell` | `speed` 3–10; `band` 3–10, with `2·band ≥ speed + 4` (a player sprinting into the front is still sampled); `max_radius` 340–400, with `speed·⌊max_radius / speed⌋ + band ≥ 340`; `waves` 1–2; `wave_gap` 0 with one wave, else 10–40 |
 
@@ -471,7 +471,7 @@ No other field is allowed on a type: `lock` and `shield_seconds` only on `strike
   "vftv:wuuren": {"health": 200, "armor": 4, "scale": 1.0, "skin": "vftv:wuuren",
    "opening": 40, "turn": 10, "walk": 5,
    "moves": {
-    "strike": {"type": "strike", "windup": 30, "lock": 15, "recovery": 24, "gap": 20, "damage": 80,
+    "strike": {"type": "strike", "windup": 30, "lock": 20, "recovery": 24, "gap": 20, "damage": 80,
                "damage_type": "vftv:chorister_strike", "radius": 45, "half_angle": 45, "shield_seconds": 0},
     "knell": {"type": "knell", "windup": 40, "recovery": 30, "gap": 20, "damage": 50,
               "damage_type": "vftv:chorister_knell", "speed": 5, "band": 6, "max_radius": 350,
@@ -480,7 +480,7 @@ No other field is allowed on a type: `lock` and `shield_seconds` only on `strike
   "vftv:suhlaa": {"health": 260, "armor": 6, "scale": 1.1, "skin": "vftv:suhlaa",
    "opening": 40, "turn": 12, "walk": 7,
    "moves": {
-    "strike": {"type": "strike", "windup": 28, "lock": 14, "recovery": 22, "gap": 16, "damage": 90,
+    "strike": {"type": "strike", "windup": 28, "lock": 19, "recovery": 22, "gap": 16, "damage": 90,
                "damage_type": "vftv:chorister_strike", "radius": 45, "half_angle": 45, "shield_seconds": 3},
     "inhale": {"type": "breath", "windup": 30, "recovery": 10, "gap": 0, "damage": 90,
                "damage_type": "vftv:chorister_breath", "inner": 0, "outer": 50},
@@ -493,9 +493,9 @@ No other field is allowed on a type: `lock` and `shield_seconds` only on `strike
   "vftv:nihthaa": {"health": 320, "armor": 8, "scale": 1.2, "skin": "vftv:nihthaa",
    "opening": 40, "turn": 15, "walk": 9,
    "moves": {
-    "hear": {"type": "hear", "windup": 30, "lock": 12, "recovery": 20, "gap": 12, "damage": 110,
+    "hear": {"type": "hear", "windup": 30, "lock": 18, "recovery": 20, "gap": 12, "damage": 110,
              "damage_type": "vftv:chorister_hear", "length": 340, "half_width": 12, "shield_seconds": 3},
-    "strike": {"type": "strike", "windup": 24, "lock": 13, "recovery": 20, "gap": 12, "damage": 100,
+    "strike": {"type": "strike", "windup": 24, "lock": 18, "recovery": 20, "gap": 12, "damage": 100,
                "damage_type": "vftv:chorister_strike", "radius": 50, "half_angle": 40, "shield_seconds": 3},
     "inhale": {"type": "breath", "windup": 26, "recovery": 8, "gap": 0, "damage": 100,
                "damage_type": "vftv:chorister_breath", "inner": 0, "outer": 55},
@@ -543,8 +543,8 @@ Decimals compare to 6 places. **The complete file:**
   {"instance": "vftv:wuuren", "t": 0, "expect": {"entry": -1, "phase": "OPENING", "k": 0, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 39, "expect": {"entry": -1, "phase": "OPENING", "k": 39, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 40, "expect": {"entry": 0, "phase": "WINDUP", "k": 0, "loop": 0}},
-  {"instance": "vftv:wuuren", "t": 54, "expect": {"entry": 0, "phase": "WINDUP", "k": 14, "loop": 0}},
-  {"instance": "vftv:wuuren", "t": 55, "expect": {"entry": 0, "phase": "LOCKED", "k": 15, "loop": 0}},
+  {"instance": "vftv:wuuren", "t": 49, "expect": {"entry": 0, "phase": "WINDUP", "k": 9, "loop": 0}},
+  {"instance": "vftv:wuuren", "t": 50, "expect": {"entry": 0, "phase": "LOCKED", "k": 10, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 70, "expect": {"entry": 0, "phase": "ACTIVE", "k": 30, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 71, "expect": {"entry": 0, "phase": "RECOVERY", "k": 31, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 95, "expect": {"entry": 0, "phase": "GAP", "k": 55, "loop": 0}},
@@ -554,8 +554,8 @@ Decimals compare to 6 places. **The complete file:**
   {"instance": "vftv:wuuren", "t": 231, "expect": {"entry": 2, "phase": "RECOVERY", "k": 41, "loop": 0}},
   {"instance": "vftv:wuuren", "t": 281, "expect": {"entry": 0, "phase": "WINDUP", "k": 0, "loop": 1}},
   {"instance": "vftv:suhlaa", "t": 40, "expect": {"entry": 0, "phase": "WINDUP", "k": 0, "loop": 0}},
-  {"instance": "vftv:suhlaa", "t": 53, "expect": {"entry": 0, "phase": "WINDUP", "k": 13, "loop": 0}},
-  {"instance": "vftv:suhlaa", "t": 54, "expect": {"entry": 0, "phase": "LOCKED", "k": 14, "loop": 0}},
+  {"instance": "vftv:suhlaa", "t": 48, "expect": {"entry": 0, "phase": "WINDUP", "k": 8, "loop": 0}},
+  {"instance": "vftv:suhlaa", "t": 49, "expect": {"entry": 0, "phase": "LOCKED", "k": 9, "loop": 0}},
   {"instance": "vftv:suhlaa", "t": 68, "expect": {"entry": 0, "phase": "ACTIVE", "k": 28, "loop": 0}},
   {"instance": "vftv:suhlaa", "t": 107, "expect": {"entry": 1, "phase": "WINDUP", "k": 0, "loop": 0}},
   {"instance": "vftv:suhlaa", "t": 108, "expect": {"entry": 1, "phase": "WINDUP", "k": 1, "loop": 0}},
@@ -565,12 +565,12 @@ Decimals compare to 6 places. **The complete file:**
   {"instance": "vftv:suhlaa", "t": 205, "expect": {"entry": 2, "phase": "GAP", "k": 57, "loop": 0}},
   {"instance": "vftv:suhlaa", "t": 288, "expect": {"entry": 0, "phase": "WINDUP", "k": 0, "loop": 1}},
   {"instance": "vftv:nihthaa", "t": 40, "expect": {"entry": 0, "phase": "WINDUP", "k": 0, "loop": 0}},
-  {"instance": "vftv:nihthaa", "t": 57, "expect": {"entry": 0, "phase": "WINDUP", "k": 17, "loop": 0}},
-  {"instance": "vftv:nihthaa", "t": 58, "expect": {"entry": 0, "phase": "LOCKED", "k": 18, "loop": 0}},
+  {"instance": "vftv:nihthaa", "t": 51, "expect": {"entry": 0, "phase": "WINDUP", "k": 11, "loop": 0}},
+  {"instance": "vftv:nihthaa", "t": 52, "expect": {"entry": 0, "phase": "LOCKED", "k": 12, "loop": 0}},
   {"instance": "vftv:nihthaa", "t": 70, "expect": {"entry": 0, "phase": "ACTIVE", "k": 30, "loop": 0}},
   {"instance": "vftv:nihthaa", "t": 103, "expect": {"entry": 1, "phase": "WINDUP", "k": 0, "loop": 0}},
-  {"instance": "vftv:nihthaa", "t": 113, "expect": {"entry": 1, "phase": "WINDUP", "k": 10, "loop": 0}},
-  {"instance": "vftv:nihthaa", "t": 114, "expect": {"entry": 1, "phase": "LOCKED", "k": 11, "loop": 0}},
+  {"instance": "vftv:nihthaa", "t": 108, "expect": {"entry": 1, "phase": "WINDUP", "k": 5, "loop": 0}},
+  {"instance": "vftv:nihthaa", "t": 109, "expect": {"entry": 1, "phase": "LOCKED", "k": 6, "loop": 0}},
   {"instance": "vftv:nihthaa", "t": 186, "expect": {"entry": 2, "phase": "ACTIVE", "k": 26, "loop": 0}},
   {"instance": "vftv:nihthaa", "t": 214, "expect": {"entry": 3, "phase": "WINDUP", "k": 19, "loop": 0}},
   {"instance": "vftv:nihthaa", "t": 255, "expect": {"entry": 4, "phase": "WINDUP", "k": 7, "loop": 0}},
@@ -642,15 +642,15 @@ Decimals compare to 6 places. **The complete file:**
   {"scale": 1.0, "expect": [113, 181]},
   {"scale": 1.4, "expect": [106, 185]}],
  "strafe": [
-  {"radius": 45, "half_angle": 45, "lock": 15, "expect": {"at_2": 2.0, "inscribed": 1.863961, "available": 2.38459, "ok": true}},
-  {"radius": 45, "half_angle": 45, "lock": 14, "expect": {"at_2": 2.0, "inscribed": 1.863961, "available": 2.20116, "ok": true}},
-  {"radius": 50, "half_angle": 40, "lock": 13, "expect": {"at_2": 1.678199, "inscribed": 1.956393, "available": 2.01773, "ok": true}},
-  {"radius": 45, "half_angle": 60, "lock": 15, "expect": {"at_2": 3.464102, "inscribed": 2.088457, "available": 2.38459, "ok": false}},
-  {"radius": 50, "half_angle": 70, "lock": 10, "expect": {"at_2": 4.582576, "inscribed": 2.422272, "available": 1.46744, "ok": false}},
-  {"radius": 50, "half_angle": 40, "lock": 12, "expect": {"at_2": 1.678199, "inscribed": 1.956393, "available": 1.8343, "ok": false}}],
+  {"radius": 45, "half_angle": 45, "lock": 20, "expect": {"at_2": 2.0, "inscribed": 1.863961, "available": 2.56802, "ok": true}},
+  {"radius": 45, "half_angle": 45, "lock": 19, "expect": {"at_2": 2.0, "inscribed": 1.863961, "available": 2.38459, "ok": true}},
+  {"radius": 50, "half_angle": 40, "lock": 18, "expect": {"at_2": 1.678199, "inscribed": 1.956393, "available": 2.20116, "ok": true}},
+  {"radius": 45, "half_angle": 60, "lock": 20, "expect": {"at_2": 3.464102, "inscribed": 2.088457, "available": 2.56802, "ok": false}},
+  {"radius": 50, "half_angle": 70, "lock": 16, "expect": {"at_2": 4.582576, "inscribed": 2.422272, "available": 1.8343, "ok": false}},
+  {"radius": 50, "half_angle": 40, "lock": 16, "expect": {"at_2": 1.678199, "inscribed": 1.956393, "available": 1.8343, "ok": false}}],
  "lane_dodge": [
-  {"half_width": 12, "lock": 12, "expect": {"needed": 1.2, "available": 1.8343, "ok": true}},
-  {"half_width": 12, "lock": 4, "expect": {"needed": 1.2, "available": 0.36686, "ok": false}}],
+  {"half_width": 12, "lock": 18, "expect": {"needed": 1.2, "available": 2.20116, "ok": true}},
+  {"half_width": 12, "lock": 8, "expect": {"needed": 1.2, "available": 0.36686, "ok": false}}],
  "waves": [
   {"name": "wuuren", "instance": "vftv:wuuren", "expect": {"max_live": 1, "first_overflow": null}},
   {"name": "suhlaa", "instance": "vftv:suhlaa", "expect": {"max_live": 1, "first_overflow": null}},
@@ -743,7 +743,7 @@ Every balance number is a field of the **`vftv:chorister` registry** (written by
 | each damage type's exhaustion | `choristers.json`, written into `data/vftv/damage_type/` |
 | the damage types' `scaling` (`always`) and their `no_knockback` tag | code (datagen) |
 | the fairness limits and fixed sizes | `ChoristerLimits` in `api` ("Damage, Fairness limits") |
-| the zones' vertical band (−2.0 to 4.0), the dodge assumption (latency 2, walking 0.2158) | `ChoristerLimits` |
+| the zones' vertical band (−2.0 to 4.0), the dodge assumption (latency 6, walking 0.2158) | `ChoristerLimits` |
 | poses, mark segments and widths, particle counts, the hurt-sound gap (10), footfall interval (20) and sound volumes; tracking range 4 and update interval 2 | code (presentation) |
 | entry health, admission, threat, reset and every encounter number | the [Eldritch tier's tuning](eldritch.md#tuning-and-limits) |
 
@@ -781,14 +781,13 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 **Datagen-phase:**
 - the generated registry entries, damage types and `no_knockback` entries match the content;
-- `vftv:chorister` is outside `#vftv:voice_spawnable`;
 - **the Road templates keep the choir walk clear** (81 ≤ d² ≤ 225, y 1–5, air at Steps 1–3).
 
 **GameTest:**
 - **the creature:** the factory's Chorister at each instance's scale fits the rise box; max health 1024 accepted; both resistances 1.0; `/summon` refused; it discards itself when not owned; `die` reports once, and a cancelling `LivingDeathEvent` listener reports nothing; `heal` and each beneficial effect refused;
 - **the schedule:** every phase boundary at fixed `t`; **the body and head face the synced facing at the lock**;
 - **the anchor:** **on a normal first tick**, and **after a skipped tick** (the ring's chunk held below entity ticking for two ticks), a tracking client's derived `t`, phase and every wave's age equal the server's on every following tick;
-- **dodging:** **a target with Slowness I strafing at a walk, starting 2 ticks after the lock, leaves each shipped strike from 2 blocks out and the hear's lane**; a target who leaves the sector after the lock isn't hit, one who enters is;
+- **dodging:** **a target with Slowness I strafing at a walk, starting 6 ticks after the lock, leaves each shipped strike from 2 blocks out and the hear's lane**; a target who leaves the sector after the lock isn't hit, one who enters is;
 - **the knell:** a standing player attempted once a wave; a mid-jump player not hit; a player on a raised block hit; **admission churn**: sixteen hit by one wave, then a seventeenth walking in before it ends is attempted once and nobody twice; **a blocked, a cancelled and a peaceful attempt each consume the token**; two independent waves from different origins (`two_knells`) hit by their own origins; **the long/short/short regression**: a player hit by waves 1 and 2, teleported by a test callback to 29.7 blocks from the shared origin at `t` 159, is not attempted again by wave 1 at 160 after wave 3 has taken slot 1; **serial uniqueness across resets**: a second encounter at the same Step after a reset issues serials above the first's, and a token left from the first never matches;
 - **zones:** inhale then exhale; the hear's lane; a non-participant inside any zone never touched;
 - **damage per difficulty** for an unarmoured player against the scaling table, and **peaceful: no damage, no knockback, the fight won**; armour and the Baffle reduce it;
@@ -828,7 +827,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 | draws no randomness | "The schedule": no decision reads a random source; no `finalizeSpawn`; fixed pitch. Vanilla's ambient roll on the entity's own `random` disclosed (`MC:Mob.java:296`) |
 | every move's damage type difficulty-scaled, zero in peaceful | "Damage types and difficulty": `always`; `Player.java:723,739` |
 | outside `#minecraft:bypasses_armor` and `#vftv:baffle_ignores` | "Damage types and difficulty": outside every `bypasses_*` tag too, inside `no_knockback`, checked at open and at every tag bind |
-| every move telegraphed | "Fairness limits" (windup ≥ 20, lock ≥ 10); "Marks" on the floor's top and on raised surfaces; "Poses"; "Sound" with subtitles; body and head drawn from the facing |
+| every move telegraphed | "Fairness limits" (windup ≥ 20, lock ≥ 16); "Marks" on the floor's top and on raised surfaces; "Poses"; "Sound" with subtitles; body and head drawn from the facing |
 | targets only `targetFor`, every tick | "Each tick, in order", step 4; "Targets and hits" |
 | returns to its rise cell below the floor − 8 or outside the arena | "The choir walk": the leash |
 | its box fits the rise box at every instance's scale | "Attributes": `scale` ≤ 1.4, vectors |
@@ -848,7 +847,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **Met here** (other specs):
 - [Armor](https://github.com/andrewbrogoff/voices-from-the-void/issues/24): the Baffle absorbs Chorister damage after armour; none of the types is in `#vftv:baffle_ignores`.
 - [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22): its target rechecks around callbacks, and its record-before-callback bookkeeping for wave attempts; the Joined amplifier untouched.
-- [Warp](https://github.com/andrewbrogoff/voices-from-the-void/issues/25): no warp and no Voice spawn; context danger, Darkness and Slowness included, stays active, and the dodge margins assume its Slowness.
+- [Warp](https://github.com/andrewbrogoff/voices-from-the-void/issues/25): no warp; context danger (`pressing_dark`, Slowness only) stays active, and the dodge margins assume its Slowness.
 - [Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26): Silencing exempts nothing here; no Hush source is added.
 - [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27): one predicate everywhere, applied to incoming player damage too; the apparition and Answerer line-up.
 - [Art style](art-style.md) and [quality gates](quality-gates.md): the Stage 4 row, the palette and the sound chain with 3 variants for every frequent sound; three test layers, allocation budgets and a share.

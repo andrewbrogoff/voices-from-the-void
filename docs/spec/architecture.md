@@ -21,7 +21,7 @@ There is **one Gradle project** ([ADR 0001](../adr/0001-single-gradle-project.md
 - **`api`**: compiled on its own, so it cannot see `core`. It builds the `api` and `api-sources` classifier jars that addon authors compile against ([API spec, The artefacts](api.md#the-artefacts)).
 - **`main`**: holds `core`, `neoforge` and `datagen`, and depends on `api`. The mod jar packages the `api` classes too.
 
-The test source sets `testAddon` (the example addon) and `testCompat` (the frozen compatibility corpus) compile against the built `api` jar file, never against `main` ([API spec, The fixtures](api.md#the-fixtures)).
+The test source sets `testAddon` (the example addon) and, from the `1.0.0` release ticket, `testCompat` (the frozen compatibility corpus) compile against the built `api` jar file, never against `main` ([API spec, The fixtures](api.md#the-fixtures)).
 
 Generated resources are committed to `src/generated/resources` (see "Datagen").
 
@@ -45,6 +45,7 @@ Generated resources are committed to `src/generated/resources` (see "Datagen").
 - **Allowed access:** `neoforge` may use `core` and `api` (including `api.neoforge`). `core` may use `api` but not `api.neoforge`. Nothing may use `neoforge`.
 - **`core` is loader-free.** It never touches `net.neoforged..` or `org.spongepowered..`.
 - **Organised by feature:** each feature is one `core.<feature>` package, and features have no import cycles between them.
+- **`core.common` is the shared leaf:** the one feature every other may import, holding the machinery several specs share (the `mix64`/`fold`/`phase` hashes, the raw-record codec wrapper, the operation guard, the checked-commit helper and the `TickBudget` sampler, "Tick timing"). It imports no other `core` feature, so no feature imports another's for a helper; `core.common.model` stays Minecraft-free like every `model` package.
 - **`core.flux` is a leaf feature** ([Hush spec, The pinned functions](hush.md#the-pinned-functions)): it imports only `api` and the JDK, never another `core` feature, so `core.vis`, `core.crucible`, `core.infusion` and `core.hush` can all price flux without a cycle. The Hush's server-config record `HushConfig` lives there too, so `FluxRules` can carry it.
 - **The `model` tier** holds the heavy logic: the essentia network solver, validation of the research puzzle, the Voice event counter, infusion stability, golem job planning. It may not use `net.minecraft..`, so it gets millisecond unit tests without booting FML, and JMH benchmarks. It is thread-agnostic (immutable inputs, no shared mutable state).
 - **Client separation:** nothing outside a `..client..` package may use `net.minecraft.client..` or `com.mojang.blaze3d..`. This prevents dedicated-server class-loading crashes.
@@ -96,7 +97,11 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 - **Large or growing collections** (research progress, known aspects) sync as deltas through `AttachmentSyncHandler`, never as a full resend.
 - **After an in-place change**, call `syncData`, and mark the holder dirty (`markUnsaved()` / `setChanged()`).
 - **Recipes:** clients receive no recipes by default in 26.x. `neoforge` calls `OnDatapackSyncEvent#sendRecipes` for every one of our recipe types. The client gets them from `RecipesReceivedEvent` and clears them on logout.
-- **Our datapack registries** each carry a network codec, so clients hold them.
+- **Datapack registries:** only those the [API spec's registry table](api.md#datapack-registries) marks synced carry a network codec, so clients hold them; `vftv:voice_event`, `vftv:bargain` and `vftv:choir_site` are registered without one. That table is the single list.
+- **Format evolution:** every persisted record carries `format` ([quality gates, Unit](quality-gates.md#unit-test-suite-junit-6-with-fml)).
+  - **A format bump** must read every earlier format the mod has shipped and write the new one on the next save. An unknown or future format stays raw and inert, as each owner states. Dropping an old reader is a MAJOR change, named in the release notes.
+  - **One-shot world migrations** (anything that must run once per world, not per record) key off **`vftv_data_version`**, an `int` in a level `SavedData` in `core.common`, absent meaning 0. At server start each pending step runs in order, then the version is written. A step is idempotent, so a crash mid-step reruns it safely.
+  - **Test template:** for each bump, a committed sample of every earlier format decodes to the expected current record, and re-encoding gives the new format; a migration step runs twice with the same result.
 - **Untrusted input:** every client-to-server payload is validated on the server (the player has the right menu or item open, is in range, and owns the target). Each payload has a GameTest that sends it bad input.
 
 ## Essentia and capabilities
@@ -113,7 +118,7 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 - **`api`** is loader-free. It holds immutable records, interfaces, `ResourceKey`/`TagKey`/registry/data-map keys, and every shared constant (javac inlines constants, so they must live here, where ArchUnit can see them). It never holds implementations of game logic. That is enforced structurally by `API_SHAPES`, plus review, because a record or a default method can still hold logic.
 - **`api.neoforge`** holds the capability constants (essentia, suction and the two read-only views), the data-map types, `EssentiaResource` and the NeoForge events that addons subscribe to ([ADR 0004](../adr/0004-addon-hooks-are-neoforge-events.md)).
 - **Packages mirror features:** `api.<f>` and `api.neoforge.<f>` for each `core.<f>` slice.
-- **Tiers:** a declaration is Stable unless it, an enclosing type or its package carries `@Experimental` or `@Internal`, both our own annotations in `…api`.
+- **Tiers:** every `api` package defaults to `@Experimental`; a declaration is Stable only when it is on the [API spec's Stable allowlist](api.md#the-stable-allowlist) and carries `@Stable`, and `@Internal` marks wiring. All three are our own annotations in `…api`.
 - What is exposed, its tiers, versioning, deprecation and the compatibility gates are the [API spec](api.md)'s.
 
 ## Soft dependencies
@@ -145,6 +150,14 @@ The server is authoritative. The client predicts nothing except cosmetic effects
 - **No off-thread game logic in v1.** All game state is changed on the server thread, and payload handlers use `enqueueWork`. A config `Reloading` event may arrive on any thread, so its records are published through the server's (or client's) own executor ([configuration spec, Lifecycle](config.md#lifecycle)).
 - The `model` tier stays thread-agnostic, so a hot path (essentia solving, Hush spread) can move off-thread later if its budget demands it.
 
+## Tick timing
+
+The [whole-mod envelope](quality-gates.md#whole-mod-envelope) is measured with one instrument, **`TickBudget`** in `core.common`:
+- **Wrapping:** every seam listener, every `BlockEntityTicker` of ours and every `Mob.tick` override of ours runs inside `try (var s = TickBudget.enter("<section>")) { … }`. Sections are named per feature (`golem`, `hush`, …); nested entries count toward the outermost only, so nothing is counted twice.
+- **What it adds up:** `System.nanoTime` per section per tick. Native work our code calls (pathfinding inside `Mob.tick`, capability transfers) is inside the wrappers by construction. Engine work we trigger indirectly (chunk loads, lighting) isn't, and shows in the whole-server MSPT the quality gates already report.
+- **The tick** closes when the next one starts: a one-line `neoforge` listener on `ServerTickEvent.Pre` calls `TickBudget.closeTick()`, so our own `Post` listeners count in their own tick. Closing records each section's sum and the total into a fixed-bucket histogram (HDR-style, preallocated, so recording allocates nothing). **"Mod time" is the total.** The harness `dump` reads the histograms.
+- **Cost when off:** a `static final boolean`, read from a system property at class load, so the disabled wrapper is a branch the JIT removes. It ships in the mod, disabled; measurement runs set the property.
+
 ## Enforcement
 
 The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `test` suite (see the dev-tooling research, §8). Its rules:
@@ -162,13 +175,14 @@ The `archTest` suite runs ArchUnit in its own JVM, apart from the FML-booted `te
 | `MIXINS_CONFINED` | only `neoforge.mixin..` uses `org.spongepowered..`, and every class there carries `@WhyMixin("<one line>")` (class retention) |
 | `COMPAT_CONFINED` | `mezz.jei..` is used only in `neoforge.compat.jei..`, and `top.theillusivec4.curios..` only in `neoforge.compat.curios..`; no class outside a `neoforge.compat.<mod>` package references a class inside it, except one named entry class per mod called from the `@Mod` wiring (`CuriosCompat`; JEI has none) ([compatibility, Code layout](compat.md#code-layout)) |
 | `FLUX_LEAF` | `core.flux..` uses no other `core.(*)..` package |
+| `COMMON_LEAF` | `core.common..` uses no other `core.(*)..` package |
 | `FLUX_ENTRY_POINTS` | a package allowlist: only classes in `neoforge.hush..` and `core.hush..` call `FluxService.deposit` (review keeps them to the Hush spec's named entry points). A static caller check: once-only delivery and conservation are proved by the Hush spec's GameTests |
 | `API_PACKAGES` | every `..api..` package is the root `…api` or `api.<f>` / `api.neoforge.<f>` for an existing `core.<f>` slice ([API spec, Packages](api.md#packages)) |
 | `API_SHAPES` | every top-level and nested `..api..` type is an interface, record, enum, annotation, constant holder or (in `api.neoforge`) a `final` `Event` subclass; cancellable exactly for the three listed events; never `IModBusEvent` ([API spec, Shapes](api.md#shapes)) |
 | `API_TIER_LEAK` | no Stable declaration mentions an Experimental or Internal type anywhere in its signature: generic arguments and bounds, supertypes, record components and `throws` included ([API spec, No tier leaks](api.md#no-tier-leaks)) |
 | `API_CONSTRUCTION` | public constructors are Stable only on the addon-constructible types; every other API record and event declares an `@Internal` constructor ([API spec, Construction ownership](api.md#construction-ownership)) |
-| `API_CORPUS_STABLE` | the frozen compatibility corpus `testCompat` references only effectively Stable API declarations ([API spec, The fixtures](api.md#the-fixtures)) |
-| `API_NO_DEMOTION`, `API_RECORDS_FROZEN` | with a release baseline only: every baseline Stable declaration is still Stable, and every baseline Stable record keeps its components ([API spec, Compatibility gates](api.md#compatibility-gates)) |
+| `API_CORPUS_STABLE` | from the `1.0.0` release ticket: the frozen compatibility corpus `testCompat` references only effectively Stable API declarations ([API spec, The fixtures](api.md#the-fixtures)) |
+| `API_NO_DEMOTION`, `API_RECORDS_FROZEN` | from the `1.0.0` release ticket, with a release baseline only: every baseline Stable declaration is still Stable, and every baseline Stable record keeps its components ([API spec, Compatibility gates](api.md#compatibility-gates)) |
 
 **Other checks:**
 - A Gradle check fails if any active line (not blank, not a comment) in `META-INF/accesstransformer.cfg` lacks a trailing `# why` comment.

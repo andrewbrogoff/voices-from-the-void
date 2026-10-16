@@ -24,7 +24,7 @@ Resolved in [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-voi
 
 **Every number in this spec is ours.** None is taken from TC4. Each tunable one is listed with its data home under "Tuning and limits". Numbers inside the JSON examples are illustrative unless the text says they are the shipped values; the content ticket sets the real ones.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 50 lines (2,677 bytes, SHA-256 `37a04bc180b0c13f7cfd87dd1b8db3d13a427bdaa4ce735961bb09b2376f6486`).
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port. Both print the same 54 lines (3,074 bytes, SHA-256 `8d99d5323585ba213aa54f102d7d0f32c0f2a718a0757e0bc2378c3d1fa3741e`).
 
 ## Stage
 
@@ -35,14 +35,14 @@ Resolved in [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-voi
 
 | Entry | Kind | Parents | Gates |
 |---|---|---|---|
-| **`vftv:infusion`** | `note` | `vftv:ruins`, `vftv:essentia_jars` | the arcane recipes `vftv:singing_bowl` and `vftv:pedestal` |
+| **`vftv:infusion`** | `note` | `vftv:ruins`, `vftv:essentia_jars`, `vftv:resonant_brass` | the arcane recipes `vftv:singing_bowl` and `vftv:pedestal` |
 | **`vftv:echo_wands`** | `note` | `vftv:infusion`; hidden parent `vftv:singing_wands` | the infusion recipes `vftv:echo_rod` and `vftv:echo_cap` |
 | **`vftv:infused_enchanting`** | `note` | `vftv:infusion` | every built-in enchanting recipe |
 
 - **Gate the recipe, not the altar.** Striking, loading and reading an altar are ungated: a bowl someone gave you reads for you, as a crucible does ([crucible, Stage](crucible.md#stage)). **Obtaining counts.**
 - **Every infusion recipe carries its own `research`**, checked for the player who starts it at the read and again at the commit, before anything is claimed (see "Starting").
 - **The start is the commit.** A run that has started finishes, even if the starter's research is later revoked, and even while they are offline or dead (see "The run"). The research spec's gate contract is amended in this change to say so for machines that run over time.
-- **Brass and wand ancestry:** `vftv:essentia_jars` follows `vftv:resonant_brass`, and `vftv:echo_wands` follows `vftv:singing_wands`, because the Echo recipes take the chime rod and the Brass cap as their centres. No progression cycle is possible.
+- **Brass and wand ancestry:** `vftv:infusion` names `vftv:resonant_brass` as a parent itself, because `vftv:essentia_jars` now follows `vftv:crucible` and no longer carries Brass ([essentia, Stage](essentia.md#stage)); so the altar's recipes may still take the ingot, as before. `vftv:echo_wands` follows `vftv:singing_wands`, because the Echo recipes take the chime rod and the Brass cap as their centres. No progression cycle is possible.
 - **Options considered:** a Choir-page find for infusion; one entry for everything. **Why three notes:** the [research roster](research.md#roster) lists infusion as Stage 3 research; the jars parent exists because the altar draws only from vessels; and enchanting and the wand tier are separate ideas.
 
 ## The altar
@@ -112,7 +112,7 @@ Every row runs inside vanilla's `useItemOn`, after spawn protection, `mayInterac
 | any other item | empty pedestal, claimed (live or unknown) | refused: `message.vftv.infusion.promised` (3 args: the bowl's position) | `CONSUME` |
 | any item | an occupied bowl or pedestal | `TRY_WITH_EMPTY_HAND` | |
 | empty main hand | idle, occupied bowl; unclaimed, occupied pedestal | takes the item through `Inventory#placeItemBackInInventory`; `minecraft:entity.item_frame.remove_item` plays | `SUCCESS` |
-| empty main hand | ringing bowl | **abandoning** (see "Abandoning") | `SUCCESS` |
+| empty main hand | ringing bowl | **abandoning**, if this player may (see "Abandoning"); otherwise refused: `message.vftv.infusion.not_yours` | `SUCCESS`, or `CONSUME` when refused |
 | empty main hand | claimed pedestal (live or unknown) | refused: `.promised` | `CONSUME` |
 | empty main hand | anything empty | `PASS` | |
 
@@ -181,7 +181,7 @@ p  = ceilDiv((100 − S) · upset.max_chance, 100)                              
 ```
 
 - **Stability** is `S`, the readout's percentage; `p` is derived from it alone.
-- **The warp penalty** `Wp` is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' pure, kind-aware `infusion_penalty(player, kind)`: an integer 0–100, ≥ 0 for `ORDINARY`, a function only of the player's synced warp state and the recipe's `kind`. **Until #25 lands it is the typed zero.** Infusion is ordinary Stage 3 magic, so warp's dial reaches it: "the more you sound like the Void, the more your resonant magic … spills" ([progression, Warp](progression.md#warp)). It is shown in the breakdown, one of the arm's inputs (so a change bumps the revision), and frozen with the starter's value at the commit.
+- **The warp penalty** `Wp` is [Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)' pure, kind-aware `infusion_penalty(player, kind)`: an integer 0–100, ≥ 0 for `ORDINARY`, a function only of the player's synced warp state and the recipe's `kind`. At the warp spec's defaults it is ⌊total warp × `infusion.per_warp_pm` / 1000⌋ with `infusion.per_warp_pm` **500**, capped at `infusion.max_penalty` 20: one point per 2 warp ([warp, The dials](warp.md#the-dials)). **Vector** (reference implementation): warp 0, 1, 7, 14, 20, 24, 40, 60 → 0, 0, 3, 7, 10, 12, 20, 20. **Until #25 lands it is the typed zero.** Infusion is ordinary Stage 3 magic, so warp's dial reaches it: "the more you sound like the Void, the more your resonant magic … spills" ([progression, Warp](progression.md#warp)). It is shown in the breakdown, one of the arm's inputs (so a change bumps the revision), and frozen with the starter's value at the commit.
 - **Frozen at the commit:** `R`, `L`, `I`, `P`, `B`, `Wp`, `S`, `p` and the run-affecting rules are written into the run. Moving stabilisers, changing warp or a tuning `/reload` afterwards changes nothing about a run already ringing.
 
 **Vectors** (reference implementation; tuning defaults):
@@ -193,7 +193,7 @@ p  = ceilDiv((100 − S) · upset.max_chance, 100)                              
 | C: the ring; 12 matched pairs (capped at 8); `R` 50 | (0, 0, 12, 24, 74, 39) |
 | D: 2 lone pedestals; `R` 100 | (2, 0, 0, 0, 0, 150) |
 | E: the ring; two stabilisers on the axis and one unmatched; `R` 0 | (0, 0, 0, 0, 100, 0) |
-| F: as A with `Wp` 10 | (0, 0, 2, 6, 76, 36) |
+| F: as A with `Wp` 10 (warp 20) | (0, 0, 2, 6, 76, 36) |
 
 ### Counting the run
 
@@ -210,15 +210,15 @@ clean(p, n): c = 10⁹; repeat n times: c = floor(c · (1000 − p) / 1000); ret
 - **The full-supply figure** `clean(p, nominal)` is labelled "if every draw is full": it is the chance when each draw takes `run.rate` (or what remains).
 - Partial supply rolls more often than `nominal`. The readout never presents the full-supply figure as a guarantee.
 
-**Vectors** (reference implementation; `run.rate` 4, `upset.max` 6, `upset.spill` 4; the floored fixed point equals the exact floor in every row):
+**Vectors** (reference implementation; `run.rate` 4, `upset.max` 6, `upset.spill` 50; the floored fixed point equals the exact floor in every row):
 
 | Costs; components | `p` | `nominal` | full-supply ‰ | `worst` | clean floor ‰ | `ceiling` |
 |---|---|---|---|---|---|---|
-| 4; 1 | 150 | 2 | 722 | 5 | 443 | 29 |
-| 12, 20, 9; 8 | 21 | 19 | 668 | 49 | 353 | 73 |
-| 12, 20, 9; 8 | 0 | 19 | 1000 | 49 | 1000 | 73 |
-| 40, 40; 4 | 60 | 24 | 226 | 84 | 5 | 108 |
-| 8 × 1000; 16 | 150 | 2016 | 0 | 8016 | 0 | 8040 |
+| 4; 1 | 150 | 2 | 722 | 5 | 443 | 305 |
+| 12, 20, 9; 8 | 21 | 19 | 668 | 49 | 353 | 349 |
+| 12, 20, 9; 8 | 0 | 19 | 1000 | 49 | 1000 | 349 |
+| 40, 40; 4 | 60 | 24 | 226 | 84 | 5 | 384 |
+| 8 × 1000; 16 | 150 | 2016 | 0 | 8016 | 0 | 8316 |
 
 The first row is the trickle case: one unit per draw rolls 5 times, not 2, and the floor says 44.3 %, not 72.2 %.
 
@@ -230,7 +230,7 @@ The first row is the trickle case: one unit per draw rolls 5 times, not 2, and t
 - the stabiliser-cap flag (`P` > `stabilise.max_pairs`) and the clamp flag (`S` was clamped);
 - for `RINGING` (a **run readout**, kind `RUN`): the output; the plan's frozen `S` and `p`; units drawn and owed in all, and owed per aspect; components absorbed and in all; `upsets` and the frozen `upset.max`; whether it is stalled on essentia, stalled on a component (with its position) or paused; and `essentiaFlux(drawn, ABANDONED, rules)` under #26's current rules.
 
-- **"Held now"** is, per cost aspect, the sum over the box's sources (as "Drawing essentia" finds them) of `getAmountAsLong` over the slots holding that aspect, computed in `long` with saturation and **clamped to 99,999** (`HELD_NOW_MAX`), shown as "99999+" when clamped. It is **display only**: it refreshes, but it is not part of the revision, because vessels fill and drain constantly and a start never needs them full.
+- **"Held now"** is, per cost aspect, the sum over the box's sources (as "Drawing essentia" finds them) of `getAmountAsLong` over the slots holding that aspect, computed in `long` with saturation and **clamped to 99,999** (`HELD_NOW_MAX`), shown as "99999+" when clamped. It is **display only** and not part of the revision, because vessels fill and drain constantly and a start never needs them full. **It is computed only at a strike and at a commit**, never on the arm's refresh timer: it is the figure as of the player's last strike, and striking again updates it.
 
 ### Arms and revisions
 
@@ -238,11 +238,11 @@ A strike on an idle bowl creates or refreshes the striker's **arm**: one per pla
 
 - **Inputs** are everything the plan depends on: the snapshot (every reduced cell, every pedestal's block-entity identity, item copy and claim state, the bowl's identity and centre copy), the recipe snapshot's generation, the `InfusionRules` generation, the striker's research revision, `Wp`, and #26's flux-rule generation. **The revision bumps (+1, wrapping 32-bit) whenever the inputs differ**, whether or not any displayed field changed. A same-id recipe `/reload` or an equivalent replacement ingredient therefore bumps it.
 - **Selection runs only when inputs other than the claim states and the box's vessels changed** (see "Selection").
-- **Refresh:** every `arm.refresh` ticks the arm's due entry pops (see "Scheduling"); the server rebuilds the snapshot and, if the inputs differ, re-assesses, bumps and sends. A change to "held now" alone is sent without a bump, at most once per refresh.
+- **Refresh:** every `arm.refresh` ticks the arm's due entry pops (see "Scheduling"); the server rebuilds the snapshot and, if the inputs differ, re-assesses, bumps and sends, carrying "held now" as last computed. A refresh never recomputes "held now".
 - **Seen:** when the client's HUD takes an `ARMED` readout, it sends **`InfusionSeen(pos, revision)`** (C2S: a `BlockPos` and a VarInt; anything else is rejected at decode), once per readout it receives. The server accepts at most 4 per player per tick and drops extras; an honest client never sends more, because the server sends at most one readout per refresh or strike. The server records it as the arm's **seen revision** iff the arm exists for that dimension and position and `revision` equals the arm's current revision; otherwise it is ignored. A bump leaves the seen revision behind until the client acknowledges the new one. Seen proves only what an honest client displayed; it **authorises nothing** (see "Starting").
 - **Run subscription** (`RUN`): it refreshes on the same schedule from the bowl's frozen plan and live counters (progress, owed, upsets, stall or pause, and the abandon price under #26's current rules), **without** reassessing recipes or geometry, and sends only on a change. It ends on the run's completion, abandonment or removal (with a final `CLEARED`), and on the viewer exit conditions below. **A run subscription never authorises a start.**
-- **Either ends** on logout, death, a dimension change, the player leaving `Player#isWithinBlockInteractionRange(pos, 1.0)` (`MC:world/entity/player/Player.java:2087`), `arm.ttl` ticks after the last strike, a strike on another bowl, or the bowl's identity changing. The client is sent `CLEARED`. Ending discards the seen revision.
-- **Payload:** **`InfusionReadout`** S2C to that player only: the position, the revision, a kind (`ARMED`, `RUN` or `CLEARED`), **`solicited`** (a boolean) and the readout. `solicited` is true **only** for the readout that answers the player's own strike on the bowl or their commit (a start, an abandon's first or second use); every refresh, revision bump, held-now update, run-subscription update and `CLEARED` carries false. Bounded: ≤ 8 cost cells with costs 1–8,000 and held-now 0–99,999 (VarInts), ids ≤ 256 characters, the output through vanilla's item stream codec.
+- **Either ends** on logout, death, a dimension change, the player leaving the block-interaction range around `pos` widened by 1.0 block (vanilla's own player block-reach check with a 1.0 buffer, whatever 26.2 names it; the build pins the method against the 26.2 jar), `arm.ttl` ticks after the last strike, a strike on another bowl, or the bowl's identity changing. The client is sent `CLEARED`. Ending discards the seen revision.
+- **Payload:** **`InfusionReadout`** S2C to that player only: the position, the revision, a kind (`ARMED`, `RUN` or `CLEARED`), **`solicited`** (a boolean) and the readout. `solicited` is true **only** for the readout that answers the player's own strike on the bowl or their commit (a start, an abandon's first or second use); every refresh, revision bump, run-subscription update and `CLEARED` carries false. Bounded: ≤ 8 cost cells with costs 1–8,000 and held-now 0–99,999 (VarInts), ids ≤ 256 characters, the output through vanilla's item stream codec.
 
 ### The HUD
 
@@ -253,16 +253,17 @@ A strike on an idle bowl creates or refreshes the striker's **arm**: one per pla
 | # | `READY` | `RINGING` (a run) | other statuses |
 |---|---|---|---|
 | 1 | `hud.vftv.infusion.ready`: the output | `hud.vftv.infusion.ringing`: the output | the status's key and arguments |
-| 2 | `.stability`: `S` | `.progress`: units drawn, units owed in all, components absorbed, components | |
-| 3 | `.breakdown`: `R`, lone pedestals × penalty, lone items × penalty, `Wp`, `B`, `P`, the cap | `.frozen`: `S`, `p` | |
-| 4 | `.chance`: `p`, `nominal` | `.upsets`: upsets so far, `upset.max` | |
-| 5 | `.clean`: the clean floor, the full-supply figure | `.missing` (the position) when stalled on a component; `.paused` when a box chunk is unloaded; `.waiting` when stalled on essentia | |
+| 2 | `.clean`: the clean floor, the full-supply figure | `.progress`: units drawn, units owed in all, components absorbed, components | |
+| 3 | `.stability`: `S` | `.frozen`: `S`, `p` | |
+| 4 | `.breakdown`: `R`, lone pedestals × penalty, lone items × penalty, `Wp`, `B`, `P`, the cap | `.upsets`: upsets so far, `upset.max` | |
+| 5 | `.chance`: `p`, `nominal` | `.missing` (the position) when stalled on a component; `.paused` when a box chunk is unloaded; `.waiting` when stalled on essentia | |
 | 6 | `.worst`: `upset.max`, `upset.spill`, the upset flux bound | `.abandon`: `essentiaFlux(drawn, ABANDONED, rules)` now | |
 | — | cost cells: cost and held now | cost cells: still owed | |
 | 7 | `.strike_again`, or `.changed` after a `STALE` refusal | `.abandon_confirm` while abandoning is armed | |
 
+- **The clean run leads.** A `READY` readout's first number is the clean floor, the chance of a run with no upset, because a stability percentage reads as a success chance and isn't one (86 % stable at vector A's costs is a 35 % clean run). Stability and its breakdown follow it.
 - **Numbers:** `S` as "*n*%"; per-mille values as "*n*.*d*%" (integer division by 10, then the remainder); every other number a plain ASCII integer.
-- **Wrapping, not clipping:** each line wraps to `maxInner` with the font's own `split`; no number is ever cut. The cells follow the [crucible HUD](crucible.md#the-hud)'s grid rule (the arcane spec's shared cost-cell sprites `vftv:worktable/cost_cell`, and `cost_cell_short` for an aspect held short now). Then frame, padding, position, clamp, the caption band, the pose-scale fallback and **sheets** are the crucible's, unchanged, so every readout fits at a scale of at least 0.75 or pages. **Head:** line 1; **foot:** line 7; the body is lines 2–6 and the cell rows, in order.
+- **Wrapping, not clipping:** each line wraps to `maxInner` with the font's own `split`; no number is ever cut. The cells follow the [crucible HUD](crucible.md#the-hud)'s grid rule, every cell on the arcane spec's plain `vftv:worktable/cost_cell`. An aspect held short now draws the same plain cell, with the shortfall visible only in its "held now" number: at the altar short means "will start and wait", not "cannot", so the Worktable's and crucible's refusal sprite `cost_cell_short` is never used here. Then frame, padding, position, clamp, the caption band, the pose-scale fallback and **sheets** are the crucible's, unchanged, so every readout fits at a scale of at least 0.75 or pages. **Head:** line 1; **foot:** line 7; the body is lines 2–6 and the cell rows, in order.
 - **Unheard aspects** draw the unheard icon with their exact amounts ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)).
 - **Narration:** when a readout with `solicited` true arrives, lines 1 and 2 are passed once to the [localisation narration helper](accessibility.md#hud-narration), **whatever the narrator mode**: vanilla's `saySystemQueued` decides whether anything is spoken. A readout with `solicited` false (a refresh, a revision bump from changed inputs, a run update) is never narrated, nor is anything per frame. The book's fact fields carry the same values in full (see "The authoritative preview").
 - **The `status.vftv.infusion.*` keys** are this HUD's line 1, never a status-line message; refusals and the abandon prompt are `message.vftv.infusion.*` on the [status line](accessibility.md#r5-the-status-line).
@@ -306,7 +307,7 @@ A wand use on a ringing bowl is a strike that makes a run subscription. The firs
 | 9 | **the live fingerprint**, callback-free, after every callback of check 5: the bowl's and each matched pedestal's block-entity instance (the same object, not removed, still at its position), each slot (`ItemStack.matches` with the assessed copy), each claim, the bowl id and `runs`, the striker's research revision, the recipe snapshot and `InfusionRules` generations, `Wp` and #26's flux-rule generation all equal the assessed inputs | `.stale`, bump, fresh readout |
 
 Check 5 runs every foreign callback (custom `Ingredient` tests, the item's `supportsEnchantment` hook) **before** the commit; check 9 catches anything those callbacks changed. **The commit itself runs no foreign code:**
-1. if `runs` = 2³¹ − 1, a new bowl id is minted and `runs` = 0 first (every claim on the old id is dead); then `seq = runs + 1`; `runs = seq`; `seed` (see "Upsets");
+1. if `runs` = 2³¹ − 1, a new bowl id is minted and `runs` = 0 first (every claim on the old id is dead); then `seq = runs + 1`; `runs = seq`; a 64-bit **nonce** is minted from the level's random source and the `seed` derived from it (see "Upsets");
 2. the **run plan** is written into the bowl's record, complete (see "The plan");
 3. each matched pedestal gets the claim `{bowl position, bowl id, seq}`;
 4. the arm becomes the starter's run subscription; the bowl and pedestals are marked changed (`setChanged`) and for the coalesced sync; the bowl is entered in the level's step queue.
@@ -333,7 +334,7 @@ Then, after the commit and each caught separately: `InfusionEvent(STARTED)`, the
 | `result` | yes | exactly one of the two forms below | the output |
 
 **Result forms:**
-- **Item:** `{"item": <ItemStackTemplate with count 1>, "transmute": <boolean, default false>}`. With `transmute: true` the output is vanilla's `TransmuteRecipe.createWithOriginalComponents(result, centre copy)` (`MC:world/item/crafting/TransmuteRecipe.java:81–86`), so an upgrade keeps the centre's components.
+- **Item:** `{"item": <ItemStackTemplate with count 1>, "transmute": <boolean, default false>}`. With `transmute: true` the output is the result item carrying the centre copy's component patch, exactly as vanilla's transmute recipe assembles its result from the original stack, so an upgrade keeps the centre's components. The build pins the vanilla method by line against the 26.2 jar; the behaviour, not the name, is the contract.
 - **Enchantment:** `{"enchantment": <id in the enchantment registry>, "max_level": 1–255}`. `transmute` is rejected in this form.
 
 ```jsonc
@@ -351,17 +352,17 @@ Then, after the commit and each caught separately: `InfusionEvent(STARTED)`, the
  "research": "vftv:infused_enchanting",
  "centre": "#minecraft:enchantable/sharp_weapon",
  "components": ["minecraft:flint", "minecraft:flint", "minecraft:quartz", "minecraft:quartz"],
- "essentia": {"vftv:telum": 6, "vftv:praecantatio": 4},
+ "essentia": {"vftv:telum": 24, "vftv:praecantatio": 20},
  "instability": 10,
  "result": {"enchantment": "minecraft:sharpness", "max_level": 5}}
 ```
 
-- **Validation at decode, registry-aware,** through the same layered registry ops as the [arcane](arcane.md#the-recipe-type) and [crucible](crucible.md#the-recipe-type) types: `research`, every `essentia` key and `enchantment` must exist. An item result is **created and checked**: non-empty, count 1, within its component-resolved maximum stack size. For enchanting, `essentia[a] × min(max_level, enchantment.getMaxLevel())` ≤ 1000 for every aspect. A recipe that fails any rule fails to decode, and vanilla skips it with a logged error naming it.
+- **Validation at decode, registry-aware,** through the same layered registry ops as the [arcane](arcane.md#the-recipe-type) and [crucible](crucible.md#the-recipe-type) types: `research`, every `essentia` key and `enchantment` must exist. An item result is **created and checked**: non-empty, count 1, within its component-resolved maximum stack size. For enchanting, with `c = min(max_level, enchantment.getMaxLevel())`, `essentia[a] × c(c + 1)/2` ≤ 1000 for every aspect, so the dearest run (from no level to the cap) never puts more than 1000 in a cost cell. A recipe that fails any rule fails to decode, and vanilla skips it with a logged error naming it.
 - **A transmuted output** is created at the commit's recheck and must be non-empty, count 1 and within its maximum stack size; otherwise that candidate doesn't match (see "Selection").
 - **Unknown fields** are ignored at runtime (vanilla `MapCodec`) and rejected in `content/`.
 - **Stream codec:** bounded, because the recipe sync encodes through it: ids ≤ 256 characters, ≤ 16 components, ≤ 8 cost entries of 1–1000, `instability` 0–100, `max_level` 1–255, the ingredients and result through vanilla's own stream codecs.
 
-**Not vanilla crafting:** the type is not `RecipeType.CRAFTING`; `isSpecial()` is true; `showNotification()` is false; `placementInfo()` is `NOT_PLACEABLE`. `display()` returns one registered `RecipeDisplay` type, **`vftv:infusion`**: the centre's and components' `SlotDisplay`s, the result (for enchanting, an enchanted book storing the enchantment at level 1) and the bowl item as the station. It carries no cost: costs come from the preview.
+**Not vanilla crafting:** the type is not `RecipeType.CRAFTING`; `isSpecial()` is true; `showNotification()` is false; `placementInfo()` is `NOT_PLACEABLE`. `display()` returns one registered `RecipeDisplay` type, **`vftv:infusion`**: the centre's and components' `SlotDisplay`s, the result (for enchanting, an enchanted book storing the enchantment at `min(max_level, getMaxLevel())`, the level a run reaches) and the bowl item as the station. It carries no cost: costs come from the preview.
 
 ### Matching and selection
 
@@ -396,12 +397,13 @@ An enchanting recipe is a `vftv:infusion` body with the enchantment result. Ench
 |---|---|---|---|---|
 | 1 | not in the item tag **`vftv:infusion_unenchantable`** (default `minecraft:book`, `minecraft:enchanted_book`), and `EnchantmentHelper.canStoreEnchantments` (`MC:world/item/enchantment/EnchantmentHelper.java:81–83`; `updateEnchantments` silently returns `EMPTY` otherwise, `:67–79`) | `UNSTORABLE` | `status.vftv.infusion.enchant.unstorable` | 1: the item |
 | 2 | `ItemStack#supportsEnchantment(holder)` (`NF:common/extensions/IItemStackExtension.java:109–113`, the replacement for the deprecated `isSupportedItem` and `canEnchant`, `Enchantment.java:122–150`) | `UNSUPPORTED` | `.unsupported` | 2: the enchantment, the item |
-| 3 | the current level `L` (from `EnchantmentHelper.getEnchantmentsForCrafting`, `EnchantmentHelper.java:89–91`) is below `min(max_level, getMaxLevel())` (`Enchantment.java:164`) | `AT_MAX` | `.at_max` | 2: the enchantment, the cap |
+| 3 | the current level `L` (from `EnchantmentHelper.getEnchantmentsForCrafting`, `EnchantmentHelper.java:89–91`) is below the **cap** `c = min(max_level, getMaxLevel())` (`Enchantment.java:164`) | `AT_MAX` | `.at_max` | 2: the enchantment, the cap |
 | 4 | compatible with every **other** enchantment on the item, by `Enchantment.areCompatible` (`:181`). The helper `isEnchantmentCompatible` isn't used: it would reject the holder against itself (`EnchantmentHelper.java:602–610`). | `CONFLICT` | `.conflict` | 2: the enchantment, the first conflicting one in ascending id |
 
-- **Output,** computed at the commit and frozen: a count-one copy of the centre with `EnchantmentHelper.updateEnchantments(copy, m -> m.set(holder, L + 1))` (`ItemEnchantments.Mutable#set` caps at 255, `MC:world/item/enchantment/ItemEnchantments.java:131`). **One level per infusion.**
-- **Cost:** `essentia[a] × (L + 1)` for each aspect. **Instability:** `R = min(100, instability + enchant.instability_per_level × Σ levels already on the item)`. **No XP:** essentia is this mod's currency.
-- **Vectors** (reference implementation): per level {Praecantatio 4, Telum 6}, `instability` 10: at `L` 0 the cost is {4, 6} for level 1 and `R` 10; at `L` 2 with 3 levels on the item in all, {12, 18} for level 3 and `R` 25.
+- **Output,** computed at the commit and frozen: a count-one copy of the centre with `EnchantmentHelper.updateEnchantments(copy, m -> m.set(holder, c))` (`ItemEnchantments.Mutable#set` caps at 255, `MC:world/item/enchantment/ItemEnchantments.java:131`). **One infusion raises the enchantment straight to the cap:** the target level is always `c`, so a top enchantment is one run, not one run per level.
+- **Cost:** `essentia[a] × Σ_{l = L+1}^{c} l` for each aspect, the same total that one level per run would have cost. **Instability:** `R = min(100, instability + enchant.instability_per_level × (Σ levels already on the item + c − L − 1))`, the instability the last of those single-level runs would have had. **No XP:** essentia is this mod's currency.
+- **Vectors** (reference implementation): per level {Praecantatio 20, Telum 24}, `instability` 10, cap 5: at `L` 0 the cost is {300, 360} for level 5 and `R` 30; at `L` 2 with 3 levels on the item in all, {240, 288} and `R` 35; at `L` 4 with 4 levels in all, {100, 120} and `R` 30. The decode bound reads {300, 360} ≤ 1000.
+- **Content price floor:** every built-in enchanting recipe has `essentia[a] × max_level` ≥ **100** for every aspect, a jar's worth per aspect for the top level, so built-in content can't undercut the enchanting table for a handful of units (the vectors' recipe: {100, 120}).
 - `supportsEnchantment` is an item callback, so it runs in the assessment and again in the commit's recheck, never inside the commit.
 - **Built-in lint:** every built-in enchanting recipe's enchantment is in `#minecraft:in_enchanting_table` (`MC:tags/EnchantmentTags.java:18`), so no treasure or curse, with **exactly one exemption**: `vftv:baffling`, the [armor spec's](armor.md#baffling) infusion-only enchantment, which is deliberately in no enchantment tag. Packs are free. **One enchantment of our own in v1:** Baffling, applied only through the armor spec's recipe `vftv:armor/baffling` on this type's enchantment form.
 - **Options considered:** XP costs (as TC4 did); levels beyond vanilla's maxima. **Why not:** XP is vanilla's economy and essentia is ours; vanilla's maxima keep the anvil and the table coherent.
@@ -414,7 +416,7 @@ The commit writes the **whole plan** before anything is published. A run never r
 
 | Part | Content |
 |---|---|
-| identity | `seq`, `seed`, the starter's UUID, the recipe id, `kind` |
+| identity | `seq`, `seed`, the starter's UUID, the recipe id, its `research` (for the abandon gate), `kind` |
 | output | the frozen output stack |
 | components | in absorb order (ascending signed `asLong` of their pedestals): the offset (dx, dz), the **promised stack** (a count-one copy), `done` |
 | essentia | `costs` (effective) and `drawn`, aspect → amount; `drawn[a] ≤ costs[a]` |
@@ -429,7 +431,7 @@ The commit writes the **whole plan** before anything is published. A run never r
 
 A per-level **step queue** of entries `(due tick, signed bowl asLong, bowl id, seq)`, ordered by due tick then position. Nothing scans every bowl, and an idle bowl costs nothing.
 
-- **Phase:** a ringing bowl is due on ticks where `gameTime mod run.interval = phase(pos)`, the [crucible's phase](crucible.md#boiling-and-the-step) with the frozen interval. **Vectors** (reference implementation) at 10: (0, 64, 0) → 5; (1, 64, 0) → 0; (0, 64, 1) → 4; (−37, 70, 512) → 9; (−1, −64, −1) → 3; (29999999, −64, −29999999) → 9.
+- **Phase:** a ringing bowl is due on ticks where `gameTime mod run.interval = phase(pos)`, the [crucible's phase](crucible.md#boiling-and-the-step) with the frozen interval. **Vectors** (reference implementation, the crucible's salted phase) at 10: (0, 64, 0) → 7; (1, 64, 0) → 1; (0, 64, 1) → 5; (−37, 70, 512) → 4; (−1, −64, −1) → 8; (29999999, −64, −29999999) → 3.
 - **Entered** at the commit and by the bowl's `onLoad` when it has a run; **left** by `setRemoved`, the run's end, or a stale pop (the bowl at the position is gone, or its id or `seq` differs).
 - **Processing,** at the end of each level tick: entries due at or before now pop in order; at most **`MAX_STEPS_PER_TICK` = 16** steps run per level. Every pop counts toward **`MAX_QUEUE_POPS_PER_TICK` = 64** (stale entries included). Leftovers keep their original due tick, so overdue bowls go first next tick.
 - **The arm queue** is the same shape, keyed `(due tick, player UUID)`, for arm and run-subscription refreshes: at most 64 pops per level per tick, stale entries (an ended arm) included, leftovers keeping their due tick.
@@ -446,7 +448,7 @@ A per-level **step queue** of entries `(due tick, signed bowl asLong, bowl id, s
 
 ### Drawing essentia
 
-**Direct pulls from the vessels in the box.** No tube connects to the bowl; a line feeds a jar inside the box instead.
+**Direct pulls from the vessels in the box.** No tube connects to the bowl. A line from a crucible feeds a jar inside the box, or the crucible itself stands in the box. A labelled store elsewhere can't be piped to the altar's jars, because a jar fills by tube only from a crucible or an unlabelled jar ([essentia, Suction](essentia.md#suction)); carry filled jars in instead.
 
 - **Sources,** found afresh at every draw step by reading the 324 positions: positions whose state is in `vftv:essentia_endpoints` and whose block entity exposes the essentia capability on the **null side**, in ascending signed `asLong`, the first **`MAX_SOURCES` = 32** that have one. Finding them may query the capability at **every one of the 324 positions**, when earlier tagged blocks expose none. A handler with more than the essentia spec's `MAX_HANDLER_SLOTS` (128) slots is skipped. A crucible counts (its face is extract-only); an Alembic has no handler. Re-reading every step sees new and replaced vessels with no topology cache.
 - **Transaction:** if `Transaction.getLifecycle() != Lifecycle.NONE`, the step is deferred to the next tick with its due tick kept ([essentia, Transactions](essentia.md#transactions)). Otherwise **one root**, closed within the call:
@@ -472,7 +474,7 @@ Absorbing empties the slot (a direct write; no callbacks run), marks the compone
 After each rolled step, if `upsets < upset.max`:
 
 ```
-seed = fold([0x494E4655 ("INFU"), server.overworld().getSeed(), bowl pos.asLong(), seq])     the research spec's fold
+seed = fold([0x494E4655 ("INFU"), nonce])     the research spec's fold; nonce minted at the commit
 k    = rolls; rolls = k + 1
 u_j  = mix64(seed + (3k + j + 1) · 0x9E3779B97F4A7C15)     j = 0 roll, 1 kind, 2 target; mod 2⁶⁴
 upset iff Long.remainderUnsigned(u_0, 1000) < p
@@ -488,9 +490,10 @@ On an upset, `upsets + 1` **whatever its effect**, then:
 
 - **Every upset posts `InfusionEvent(UPSET)`** with its effect (`JOLT`, `SPILL` or `NONE`), plays `infusion.upset` and sends 8 `minecraft:smoke` particles above the bowl.
 - **Never:** the centre item, health, warp, or any block. A jolted item can be lost to lava or picked up by anyone (the book says so).
-- **Bounded:** at most `upset.max` upsets per run; the rolled steps never exceed `ceiling`; the flux from upsets is at most **`upset.max × essentiaFluxBound(upset.spill, UPSET, rules)`**. A bound on one map of `upset.max × upset.spill` would not do: a conversion that rounds per event or carries a fixed overhead can exceed it. **Vector** (reference implementation, with a stand-in conversion `ceil(total / 3) + 1`): one map of 24 → 9; six spills of 4 → 18; the sequence bound → 18.
-- **Determinism:** `seq` grows with every start and is part of the plan, so waiting never rerolls. Predicting the draws needs the world seed, which a server keeps. The first start on a new bowl has `seq` 1.
-- **Vectors** (reference implementation; world seed `0x0123456789ABCDEF`): seeds for (0, 64, 0) at `seq` 1 → `0x3B659D37E1C47D8A`, `seq` 2 → `0x39537E0E88BC9C45`; (−37, 70, 512) at `seq` 6 → `0x851F505AB167CA66`. With the first, `p` 150, weights 1 : 1 and 5 eligible components, the first six upsets are at rolls 5 (r 136, JOLT 3), 8 (r 89, JOLT 0), 11 (r 141, JOLT 4), 21 (r 146, SPILL), 32 (r 4, JOLT 3) and 62 (r 74, JOLT 0); 148 ‰ of 10,000 rolls are upsets.
+- **Bounded:** at most `upset.max` upsets per run; the rolled steps never exceed `ceiling`; the flux from upsets is at most **`upset.max × essentiaFluxBound(upset.spill, UPSET, rules)`**: at the defaults, 6 spills of up to 50 units, so **300** under the Hush spec's one essentia rate. A bound on one map of `upset.max × upset.spill` would not do: a conversion that rounds per event or carries a fixed overhead can exceed it. **Vector** (reference implementation, with a stand-in conversion `ceil(total / 3) + 1`): one map of 300 → 101; six spills of 50 → 108; the sequence bound → 108.
+- **The price of an upset is real.** A SPILL re-owes up to `upset.spill` essentia and generates that much flux at the altar, enough over a bad run to hush the altar room ([Hush spec](hush.md#where-it-begins)). So symmetry and stabilisers buy something a patient player still wants; the readout shows the bound before the second strike.
+- **Determinism:** the seed is fixed at the commit and is part of the plan, so waiting and save-and-reload never reroll. The **nonce** comes from the level's random source, not from the world seed, the position or `seq`, so knowing the world seed predicts nothing and a run can't be farmed by cheap starts and abandons; the plan stores the seed, which never leaves the server. `seq` stays for claims. The first start on a new bowl has `seq` 1.
+- **Vectors** (reference implementation): nonces `0x0123456789ABCDEF` → seed `0x42B223F609FBAC52`, `0x0000000000000001` → `0x4957B49D21C3ABCB`, `0xFFFFFFFFFFFFFFFF` → `0x0CC18069B53A003D`. With the first, `p` 150, weights 1 : 1 and 5 eligible components, the first six upsets are at rolls 4 (r 108, JOLT 1), 7 (r 136, SPILL), 31 (r 110, JOLT 1), 33 (r 15, SPILL), 52 (r 42, JOLT 2) and 53 (r 117, SPILL); 142 ‰ of 10,000 rolls are upsets.
 - **Options considered:** a deterministic strain counter whose outcome the readout states in full; TC4's instability that grows during a run and with stalls. **Recommend** seeded odds with an exact chance, a true clean floor and a hard worst case. **Why:** players love infusion's chaos (pain points, "loved" §5) but hate opaque spirals (§9); the TC4 alchemy research says stall debt is what snowballs, and here stalls cost nothing.
 
 ### Finishing
@@ -519,7 +522,7 @@ On an upset, `upsets + 1` **whatever its effect**, then:
 
 ### Abandoning
 
-**Empty-handed use on a ringing bowl:**
+**Empty-handed use on a ringing bowl.** **Who may abandon:** a player who has learned the run's `research` (frozen in the plan; the same gate as starting), and, while the starter is online and in the bowl's level, only the starter. Anyone else is refused with `message.vftv.infusion.not_yours` and nothing changes. Breaking the bowl stays the universal override, and claim mods guard it through `BreakBlockEvent`.
 1. **First use** (no abandon armed, or armed by this player and expired): arm `{player, deadline = now + abandon.window, flux-rule generation}`. **The run pauses**, so `drawn` can't change. The status line shows `message.vftv.infusion.abandon_confirm` with the exact `essentiaFlux(drawn, ABANDONED, rules)` under #26's current rules.
 2. **Second use** by the same player before the deadline, with #26's flux rules unchanged: **abandon**. If the rules changed, step 1 runs again with the new value.
 3. **Another player's** empty-handed use while it is armed is refused: `message.vftv.infusion.abandon_pending`.
@@ -574,9 +577,9 @@ The Stage 3 wand tier, added as data with no code, as the [wands spec](wands.md#
 | Field | Value |
 |---|---|
 | `recipe`, `kind` | the recipe |
-| `output` | item: the created result (transmuted: "the centre, transmuted to …"); enchanting: with a context, the centre at `L + 1` (its target level); without, "+1 level, up to *n*" |
+| `output` | item: the created result (transmuted: "the centre, transmuted to …"); enchanting: with a context, the centre at the cap (its target level); without, "raised to *n*" |
 | `inputs` | the centre and the components, as slot displays |
-| `essentia` | with a context: the effective cost (a run: its frozen costs); without: the recipe's cost, per level for enchanting |
+| `essentia` | with a context: the effective cost for the whole run, `L + 1` to the cap (a run: its frozen costs); without: the recipe's cost, per level for enchanting |
 | `instability` | without a context: the recipe's own (enchanting: its base, labelled "before levels already on the item"); with one: `R` |
 | `stability`, `chance` | from the context (a run: the frozen values); **absent** without one |
 | `clean_floor`, `clean_full_supply` | `ARMED` context: the two clean figures; absent otherwise (a run already under way has no clean figure) |
@@ -615,13 +618,13 @@ Every field that is absent renders the **absent text** for the preview's availab
 
 A soft dependency, never on the progression path. Every JEI class lives in `…neoforge.compat.jei.client`.
 
-- **One category** for `vftv:infusion`, 160×146: the centre in an 18-px slot at (59, 38); up to 16 components on a ring about it, component *i* of *n* at (59 + round(36 sin θ), 38 − round(36 cos θ)) with θ = 2π*i*/*n*; the result at (134, 38); an instability line at (0, 82), clipped to 160 px with "…" and complete in its tooltip; the **cost panel** at (0, 96), 4 × 2 cells of 40×18 under the shared cost-cell rule ([arcane crafting, The screen](arcane.md#the-screen)); a status line at (0, 136): `infusion.vftv.checked_at` with a context, else the absent availability's text, clipped likewise; its tooltip carries the context's complete coordinates, `stability`, `chance`, both clean figures, `upset_flux` (and `abandon_flux` for a run) and both flags, in the fact formats. Enchanting shows the enchanted book and the line `infusion.vftv.fact.enchant`. Title `jei.vftv.category.infusion`. The bowl item is its catalyst. **No transfer handler.**
+- **One category** for `vftv:infusion`, 160×146: the centre in an 18-px slot at (59, 38); up to 16 components on a ring about it, component *i* of *n* at (59 + round(36 sin θ), 38 − round(36 cos θ)) with θ = 2π*i*/*n*; the result at (134, 38); an instability line at (0, 82), clipped to 160 px with "…" and complete in its tooltip; the **cost panel** at (0, 96), 4 × 2 cells of 40×18 under the shared cost-cell rule ([arcane crafting, The screen](arcane.md#the-screen)), every cell on the plain `cost_cell`, as in the HUD; a status line at (0, 136): `infusion.vftv.checked_at` with a context, else the absent availability's text, clipped likewise; its tooltip carries the context's complete coordinates, `stability`, `chance`, both clean figures, `upset_flux` (and `abandon_flux` for a run) and both flags, in the fact formats. Enchanting shows the enchanted book and the line `infusion.vftv.fact.enchant`. Title `jei.vftv.category.infusion`. The bowl item is its catalyst. **No transfer handler.**
 - **Reconcile:** the arcane spec's shared reconcile function, unchanged, with the infusion snapshot and the learned set ([arcane crafting, JEI](arcane.md#jei)).
 - **Affordability** is marked against the preview: absent or stale contexts are marked unavailable, never affordable.
 
 ## Multiplayer and automation
 
-- **Unowned.** The gate belongs to whoever starts; any permitted player can strike, load, abandon or break. Claim mods guard every hand path through `RightClickBlock` and breaking through `BreakBlockEvent`, and **both strikes** pass through vanilla's use.
+- **Unowned.** The gate belongs to whoever starts; any permitted player can strike, load or break. **Abandoning** is narrower: only a player who has learned the run's research, and only the starter while they are online in the bowl's level (see "Abandoning"), because claim mods rarely deny an empty-handed use on a non-container, and two such uses would otherwise let a passer-by spill a whole run. Claim mods guard every hand path through `RightClickBlock` and breaking through `BreakBlockEvent`, and **both strikes** pass through vanilla's use.
 - **Untrusted input:** one C2S payload, `InfusionSeen`, bounded at decode; it records an acknowledgement and authorises nothing. Starting happens only inside a permitted vanilla use (see "Starting"). Each check has a GameTest that sends bad input.
 
 | Path | Behaviour |
@@ -691,7 +694,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 |---|---|---|
 | `vftv:singing_bowl`, `vftv:pedestal` | [`vftv:arcane`](arcane.md#the-recipe-type) | `research` `vftv:infusion`; `kind` `ordinary` (or omitted); result the block item, count 1; ingredients reachable in Stages 1–3 without infusion; each `vis` value ≤ the `vftv:chime` rod's capacity in `content/wands/parts.json` (the lint reads it) |
 | `vftv:echo_rod`, `vftv:echo_cap` | `vftv:infusion` | `research` `vftv:echo_wands`; `kind` `ordinary`; centres `vftv:chime_rod` and `vftv:resonant_brass_cap`; item results `vftv:echo_rod` and `vftv:echo_cap`; `transmute` omitted or false; `instability` 5–25; every item and aspect covered by the bootstrap |
-| `vftv:infused_enchanting/<path>`, 6–10 of them | `vftv:infusion` | `research` `vftv:infused_enchanting`; `kind` `ordinary`; result `{"enchantment": "minecraft:<path>", …}` with the enchantment in `#minecraft:in_enchanting_table` and `max_level` ≤ its `getMaxLevel()`; `instability` 0–30; ids distinct |
+| `vftv:infused_enchanting/<path>`, 6–10 of them | `vftv:infusion` | `research` `vftv:infused_enchanting`; `kind` `ordinary`; result `{"enchantment": "minecraft:<path>", …}` with the enchantment in `#minecraft:in_enchanting_table` and `max_level` ≤ its `getMaxLevel()`; every `essentia` value × `max_level` ≥ 100 (the price floor); `instability` 0–30; ids distinct |
 
 ```json
 {"schema": "vftv:infusion_recipes/1", "recipes": {
@@ -704,7 +707,7 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
     "type": "vftv:infusion", "research": "vftv:infused_enchanting",
     "centre": "#minecraft:enchantable/sharp_weapon",
     "components": ["minecraft:flint", "minecraft:flint", "minecraft:quartz", "minecraft:quartz"],
-    "essentia": {"vftv:telum": 6, "vftv:praecantatio": 4},
+    "essentia": {"vftv:telum": 24, "vftv:praecantatio": 20},
     "instability": 10,
     "result": {"enchantment": "minecraft:sharpness", "max_level": 5}}
 }}
@@ -776,14 +779,14 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | `hud.vftv.infusion.paused`, `.waiting` | 0 | "Paused: part of the altar is beyond my hearing.", "Waiting for essentia. Waiting costs nothing." |
 | `hud.vftv.infusion.abandon` | 1 | "Abandoning it now spills %s flux." |
 | `hud.vftv.infusion.abandon_confirm` | 0 | "Take it out again to abandon." |
-| `message.vftv.infusion.unreadable`, `.busy`, `.ringing`, `.strike_first`, `.stale`, `.abandon_pending`, `.too_busy` | 0 | refusals (`.too_busy`: "The altar is crowded with listeners; strike again.") |
+| `message.vftv.infusion.unreadable`, `.busy`, `.ringing`, `.strike_first`, `.stale`, `.abandon_pending`, `.not_yours`, `.too_busy` | 0 | refusals (`.not_yours`: "This ringing isn't yours to stop."; `.too_busy`: "The altar is crowded with listeners; strike again.") |
 | `infusion.vftv.fact.yes`, `infusion.vftv.fact.no` | 0 | "yes", "no" |
 | `infusion.vftv.status.ringing_only`, `infusion.vftv.status.not_ringing` | 0 | "(already ringing)", "(not ringing)" |
 | `message.vftv.infusion.promised` | 3 | "That is promised to the bowl at %s, %s, %s." |
 | `message.vftv.infusion.abandon_confirm` | 1 | "Abandoning spills %s flux. Take it out again to abandon." |
 | `infusion.vftv.unheard` | 0 | "something unheard" |
-| `infusion.vftv.fact.enchant` | 2 | "%s, one level more, up to %s" |
-| `infusion.vftv.fact.per_level` | 0 | " for each level" |
+| `infusion.vftv.fact.enchant` | 2 | "%s, raised to %s in one run" |
+| `infusion.vftv.fact.per_level` | 0 | " times each level gained (level 3 costs three times this)" |
 | `infusion.vftv.status.no_altar`, `.short_now`, `.ready` | 0 | "(no altar before me)", "Its vessels are short for now.", "Ready to begin." |
 | `infusion.vftv.checked_at` | 3 | "Read at the bowl at %s, %s, %s." |
 | `jei.vftv.category.infusion` | 0 | "Infusion" |
@@ -822,11 +825,11 @@ content/lang/en_us/infusion.json     every key under "Lang keys"
 | infusion rules | the tuning record and the fixed limits | **`InfusionRules`** S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
 | infusion recipes | the recipe manager; `InfusionRecipeSnapshot` | every player, as under "Recipe sync and reload" |
 
-**`<run>`:** `{"seq", "seed": <long>, "starter": <uuid>, "recipe": <id>, "kind", "output": <stack>, "components": [{"at": [dx, dz], "item": <stack>, "done": <bool>}, …], "costs": {<aspect>: 1–1000}, "drawn": {<aspect>: 1–1000}, "stability": {"r", "lone_pedestals", "lone_items", "matched", "bonus", "warp", "s", "chance"}, "rules": {"interval", "rate", "lone_pedestal", "lone_item", "per_pair", "max_pairs", "max_chance", "max", "spill", "jolt_weight", "spill_weight"}, "flux_rules"?: <#26's record>, "rolls": 0–18,016, "upsets": 0–64, "abandon"?: {"player": <uuid>, "until": <long>, "flux_generation": <long>}}` (`long`, as the [Hush spec's](hush.md#sync-and-state) `FluxRules` generation; amended from `int`).
+**`<run>`:** `{"seq", "seed": <long>, "starter": <uuid>, "recipe": <id>, "research": <id>, "kind", "output": <stack>, "components": [{"at": [dx, dz], "item": <stack>, "done": <bool>}, …], "costs": {<aspect>: 1–1000}, "drawn": {<aspect>: 1–1000}, "stability": {"r", "lone_pedestals", "lone_items", "matched", "bonus", "warp", "s", "chance"}, "rules": {"interval", "rate", "lone_pedestal", "lone_item", "per_pair", "max_pairs", "max_chance", "max", "spill", "jolt_weight", "spill_weight"}, "flux_rules"?: <#26's record>, "rolls": 0–18,016, "upsets": 0–64, "abandon"?: {"player": <uuid>, "until": <long>, "flux_generation": <long>}}` (`long`, as the [Hush spec's](hush.md#sync-and-state) `FluxRules` generation; amended from `int`).
 
 - **Cross-field invariants,** checked **only against the run's own stored rules** and the format bounds, never against the tuning in force: 1–16 components with distinct offsets inside the box and off (0, 0), each stack count 1; 1–8 costs; `drawn`'s keys ⊆ `costs`' and `drawn[a] ≤ costs[a]`; `bonus = min(matched, max_pairs) × per_pair`; `s` = clamp(100 − `r` − `lone_pedestals` × `lone_pedestal` − `lone_items` × `lone_item` − `warp` + `bonus`, 0, 100); `chance` = ceilDiv((100 − `s`) × `max_chance`, 100); each stored rule within its tuning range; `max × spill` ≤ 10,000; `upsets ≤ max`; `rolls` ≤ the run's own `ceiling`; `1 ≤ seq ≤ runs`. A run started under one tuning therefore reopens valid under any other. Zero amounts are never written.
 - **Disk:** every persistent mutation (a commit, a claim, an absorb, a jolt, a draw's ledger, a roll's counters, abandoning, a finish, a hand or automation slot change, a minted id) calls `setChanged` on each block entity it touched, in addition to marking it for the packet flush.
-- **Formats.** A record with an unknown format, out of bounds, failing an invariant, or naming an aspect, item or enchantment the registries don't hold is **kept as its raw tag and written back unchanged**, with one log line, and the block entity is **dormant**: no hand use, no hopper or capability movement (the container path refuses and the handler is unavailable), no step, no claim validated as live, readout `UNREADABLE` or `PEDESTAL_UNREADABLE`. A dormant pedestal's claim can't be read, so the pedestal refuses new claims. A loaded **dormant bowl** leaves its pedestals' claims **unresolved** (see "Claims"): they are kept and refuse reassignment until the bowl can be validated, so restoring its pack can never resume a plan against offerings another bowl has claimed meanwhile. Removal drops nothing it can't decode and logs a warning. Restoring the pack restores it.
+- **Formats.** A record with an unknown format, out of bounds, failing an invariant, or naming an aspect, item, enchantment or research entry the registries don't hold is **kept as its raw tag and written back unchanged**, with one log line, and the block entity is **dormant**: no hand use, no hopper or capability movement (the container path refuses and the handler is unavailable), no step, no claim validated as live, readout `UNREADABLE` or `PEDESTAL_UNREADABLE`. A dormant pedestal's claim can't be read, so the pedestal refuses new claims. A loaded **dormant bowl** leaves its pedestals' claims **unresolved** (see "Claims"): they are kept and refuse reassignment until the bowl can be validated, so restoring its pack can never resume a plan against offerings another bowl has claimed meanwhile. Removal drops nothing it can't decode and logs a warning. Restoring the pack restores it.
 - **Coalesced updates:** every change marks the block entity in a per-level dirty set, flushed once per tick after the level ticks: at most one update packet per block entity per tick, by the [wands spec's flush](wands.md#sync-and-state). A stale entry never updates a replacement.
 - **`InfusionRules`** is a fixed record: every tuning key and the `limits.*` values the research grammar lists (see the amendment). Client caches are invalidated when it arrives.
 - **Bounded codecs:** both records as above; ids ≤ 256 characters; `InfusionReadout` and `InfusionSeen` as under "Arms and revisions"; `InfusionRules` fixed; the tuning file.
@@ -855,7 +858,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `stabilise.max_pairs` | 8 | 0–64 | pairs that count |
 | `upset.max_chance` | 150 ‰ | 0–1,000 | the chance per rolled step at stability 0 |
 | `upset.max` | 6 | 0–64 | upsets per run |
-| `upset.spill` | 4 | 1–1,000 | most units per spill |
+| `upset.spill` | 50 | 1–1,000 | most units per spill; each is owed again and spills as flux, so the worst run spills 300 at the defaults |
 | `upset.jolt_weight`, `upset.spill_weight` | 1, 1 | 0–100 | |
 | `enchant.instability_per_level` | 5 | 0–100 | points per level already on the item |
 | `arm.ttl` | 1,200 ticks | 20–12,000 | after the last strike |
@@ -866,7 +869,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 - stabilisers and unenchantable items: the tags `vftv:infusion_stabilisers` and `vftv:infusion_unenchantable` (packs may extend them);
 - costs, instability, kinds and gates: each recipe's data (`content/infusion/recipes.json`, other specs' files, packs);
 - Echo values: `content/infusion/wand_parts.json`;
-- the warp penalty: #25's data; the flux conversion: #26's.
+- the warp penalty: #25's data (`infusion.per_warp_pm` 500, `infusion.max_penalty` 20); the flux conversion: #26's.
 
 **Fixed limits, in code** (formats and invariants, not balance), as constants in **`InfusionLimits`** in `api`:
 
@@ -907,7 +910,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | Per draw step | ≤ 4 chunk checks; 324 state reads; **≤ 324 capability lookups** (to find ≤ 32 sources); ≤ 8 aspects × 32 sources = **256 resource-only extracts**, which on foreign handlers using the interface's default slot walk (`NF:transfer/ResourceHandler.java:228–237`) can mean **≤ 32,768 indexed attempts**; one ledger snapshot per depth |
 | Per absorb | one block-entity read and write |
 | Per roll | 3 `mix64`; a jolt adds one spawn and its revalidation |
-| Per assessment (strike, armed refresh or commit recheck) | 324 state reads, ≤ 324 capability lookups and ≤ 32 × 128 slot reads for "held now", ≤ 16 pedestal reads, the callback-free fingerprint; selection only when its inputs changed: ≤ 4,096 candidates × (≤ 256 `Ingredient` tests + an O(16³) matching) |
+| Per assessment (strike, armed refresh or commit recheck) | 324 state reads; at a strike or commit only, ≤ 324 capability lookups and ≤ 32 × 128 slot reads for "held now" (never on an armed refresh); ≤ 16 pedestal reads, the callback-free fingerprint; selection only when its inputs changed: ≤ 4,096 candidates × (≤ 256 `Ingredient` tests + an O(16³) matching) |
 | Packets | ≤ 1 update per block entity per tick; ≤ 1 readout per arm per refresh |
 
 - **Allocation:** **zero** in the model's stability, count, clean and roll code (allocation-budget tests). **Bounded** per step (a ledger snapshot, at most one spawn and its payloads, one update tag), per assessment (the snapshot's ≤ 324 cells and ≤ 16 copies) and per selection (`setup + perCandidate × candidates`, capped at 4,096). The byte ceilings are calibrated by the build and stored in its committed allocation-test fixture. **Zero per frame** in our HUD and renderer draw code.
@@ -921,13 +924,13 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **counts and clean figures:** every vector above, including the tuning-maximum `ceiling` of 18,016 (reference implementation: at that `n`, `p` 0 gives 1000 ‰ and `p` 1 and 1000 give 0 ‰, floored and exact alike); the floored fixed point never exceeds the exact floor (n = 0 to 18,016 at every `p`); the trickle case;
 - **counters:** `rolls` stops at the upset cap and never exceeds `ceiling`; `runs` at 2³¹ − 1 mints a new bowl id before the next start;
 - **positions:** the phase and signed-order vectors, including negative coordinates;
-- **upsets:** the seed and roll vectors; JOLT and SPILL fallbacks; the `NONE` effect counting toward the cap; the sequence flux bound against a per-event-rounding stand-in;
+- **upsets:** the nonce-to-seed and roll vectors; JOLT and SPILL fallbacks; the `NONE` effect counting toward the cap; the sequence flux bound against a per-event-rounding stand-in;
 - **matching and selection:** every Kuhn vector; strays; the lowest-id enchanting refusal; learned-only candidates; ascending-id ties;
-- **enchanting:** each condition and reason; the cost and `R` vectors; a book refused; conflict excluding the holder itself;
+- **enchanting:** each condition and reason; the cost, `R` and decode-bound vectors (one run to the cap); a book refused; conflict excluding the holder itself;
 - **the recipe codec:** required fields; `transmute` only with an item result and false by default; created results; per-level caps; the `StreamCodec` round trip and bounds;
 - **the item handler:** every method row; arguments first; restoration of the promised stack and refusal of a wrong one; locked taking; nested transactions with one snapshot per depth;
 - **codecs:** both block entities (every bound and invariant, raw round trip of dormant records, missing ids), the readout (held-now saturation at 99,999 from `long` totals; `solicited` true only on a strike's or commit's answer, false on every refresh, bump and run update), the seen payload, `InfusionRules`, the tuning file (the product bound) and every `content/` schema;
-- **content lints:** the chime-capacity bound; the enchantment tag and maxima; the multiblock rules; the bootstrap coverage; `void` only behind a Stage 4 gate; non-amplification (see the contracts).
+- **content lints:** the chime-capacity bound; the enchantment tag and maxima; the enchanting price floor; the multiblock rules; the bootstrap coverage; `void` only behind a Stage 4 gate; non-amplification (see the contracts).
 
 **GameTest:**
 - **the shown altar** assesses as its lint says;
@@ -940,16 +943,16 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **automation:** a hopper and an item-capability caller can neither take a claimed component nor put a wrong item on a claimed pedestal, can restore the promised stack, and can't take from a ringing bowl; an aborted capability extraction leaves the slot exact; a capability transaction open across a start, an absorb and a removal (each refused or deferred, settling once);
 - **drawing:** from jars and a crucible in the box; nothing from outside it or behind an unloaded chunk; a trickle of one unit per draw rolls once per unit; a nested abort leaves vessels and ledger exact; **a source whose `onRootCommit` throws after a successful extraction: the credit stands, the step rolls, nothing retries**; an extract that throws before the commit: no credit, no roll; capability discovery that throws still closes the operation and settles a deferred removal; a box whose earlier tagged blocks expose no handler still finds its 32 sources; a non-`NONE` lifecycle defers the step; stalls never roll;
 - **upsets:** a fixed seed reproduces the vector's upsets; a jolt with a cancelled spawn, and with a listener emptying the pedestal (no duplication); restoring a jolted item by hand and by hopper; a spill is owed again and posts once; the cap;
-- **abandoning:** pause, confirm and timeout, with the exact flux; another player refused; a flux-rule `/reload` between the two uses makes it reconfirm;
+- **abandoning:** pause, confirm and timeout, with the exact flux; another player refused while it is armed; **a player without the run's research, and a learned non-starter while the starter is online in the level, refused `.not_yours` with nothing changed**; with the starter offline, a learned player abandons; a flux-rule `/reload` between the two uses makes it reconfirm;
 - **removal:** the bowl removed mid-run, during a step and during a capability transaction (spills and drops once each); a pedestal broken mid-run, then replaced and restored;
 - **persistence:** save and reload mid-run, paused, stalled and abandon-armed; a chunk unloaded mid-run resumes without catch-up; a tuning `/reload` mid-run leaves the run's rules frozen; **a tuning change (symmetry penalties, `upset.max_chance`, the rest) followed by save and reopen** leaves the run readable, valid against its stored rules, and unchanged in odds; dormant records refuse hands, hoppers and capabilities and survive save unchanged;
-- **enchanting:** a level added; the cap; a conflict; `transmute` keeping components;
+- **enchanting:** an unenchanted and a partly enchanted sword each raised to the cap in one run, at the summed price; the cap refused; a conflict; `transmute` keeping components;
 - **bounds:** no chunk is loaded anywhere; the step and arm queues hold their caps under 64 due bowls;
 - every test id in the discovery guard.
 
 **E2E:**
 - the HUD in every status and during a run (progress, missing, paused, waiting, abandon armed), **at the worst case** (8 cells, 4-digit amounts, a long test translation, unheard aspects) on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD (screenshots plus a state dump); under the [localisation fixtures](accessibility.md#fixtures) the outer pose scale stays ≥ 0.75, the frame stays above a showing status line and Voice line, appearing and disappearing over an unchanged readout re-lays the card, and a readout too tall at 0.75 pages into sheets; a long refusal on the status line, whole;
-- **narration** from the localisation capture: an identical strike, in narrator modes Off, Chat, System and All, attempts lines 1 and 2 exactly once each time (emission follows the mode); a passive revision bump from changed inputs, a held-now update and a run update attempt nothing;
+- **narration** from the localisation capture: an identical strike, in narrator modes Off, Chat, System and All, attempts lines 1 and 2 exactly once each time (emission follows the mode); a passive revision bump from changed inputs and a run update attempt nothing;
 - the strike pitch at stability 0 and 100; every sound and subtitle; the held items (a sword, a block) on both blocks;
 - the book's recipe and structure pages and fact fields with no altar, another recipe's altar, a short one, a ready one and **a live run of that recipe** (abandon flux shown, clean figures absent), with `checked_at` shown whenever there is a context;
 - **with JEI:** hide and unhide on grant and revoke, and after a reload; the ring at 1 and 16 components; **without JEI**, nothing breaks;
@@ -981,7 +984,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 | Essentia contract | Met by |
 |---|---|
 | Moves essentia only through the essentia capability, in roots closed within the call, never across ticks | "Drawing essentia": one root per draw step, nested extracts, the ledger journalled in the same root, the `Lifecycle.NONE` guard and deferral |
-| Any suction it offers is in the consumer band; its blocks join `vftv:essentia_endpoints` if tubes should connect | The bowl offers no suction and is no endpoint; tubes feed jars inside the box |
+| Any suction it offers is in the consumer band; its blocks join `vftv:essentia_endpoints` if tubes should connect | The bowl offers no suction and is no endpoint; a line from a crucible feeds a jar inside the box, or a crucible stands in it |
 | Direct jar pulls inherit neither a line's connectivity nor its throughput, and need not apply the suction rule; routing like a line applies it | Direct pulls from the box only, at `run.rate`, routing nothing |
 
 **Met here** (the [Research and the Commonplace Book spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)'s contracts on this ticket):
@@ -1000,8 +1003,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36):
 - **Entries:** the three notes under "Stage", with their parents and gates, each carrying `vftv:recipe` pages for the recipes it gates; `vftv:infusion` also carries a `vftv:structure` page with `multiblock: vftv:infusion_altar`.
-- **Prose** teaches striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, the difference between the clean floor and the full-supply figure, waiting without harm, restoring a jolted offering, abandoning and its price, the start as the commit, and every loss exception, with every number in `recipe` or `infusion` fact spans. The number-word lint bans "pair": prose says "matched", or lists an exception.
-- **The affordability artifact:** `content/research/path-stage3.json` learns `vftv:infusion` after `vftv:ruins` and `vftv:essentia_jars`, then `vftv:echo_wands` and `vftv:infused_enchanting`; the review reads it beside `content/infusion/echo_bootstrap.json`, the material half of the proof.
+- **Prose** teaches striking twice, symmetry, matched stabilisers and their cap, upsets and their bound, the difference between the clean floor and the full-supply figure, waiting without harm, restoring a jolted offering, abandoning, its price and who may do it, the start as the commit, enchanting straight to the cap in one run, and every loss exception, with every number in `recipe` or `infusion` fact spans. The number-word lint bans "pair": prose says "matched", or lists an exception.
+- **The affordability artifact:** `content/research/path-stage3.json` learns `vftv:infusion` after `vftv:ruins`, `vftv:essentia_jars` and `vftv:resonant_brass`, then `vftv:echo_wands` and `vftv:infused_enchanting`; the review reads it beside `content/infusion/echo_bootstrap.json`, the material half of the proof.
 - **No progression requires an infusion craft criterion**, since offline completion omits it.
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
@@ -1012,10 +1015,11 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - `essentiaFlux(spilled, cause, rules)` covers `UPSET`, `ABANDONED` and `REMOVED` for infusion and generates flux **once** on `InfusionEvent(SPILLED)` with **the rules that event carries** (amended from "is applied": what an aura retains is reported separately). It supplies a pure **`essentiaFluxBound(units, cause, rules)`**: an integer 0–1,000,000, ≥ `essentiaFlux(m, cause, rules)` for every valid map `m` totalling ≤ `units` (≤ 1,000). Its rules record is versioned, synced and codec-backed, with a generation, so a run can freeze it. The two-argument `essentiaFlux(spilled, cause)` of the crucible and essentia contracts is this function under the current rules, so those contracts are unchanged. Until #26 lands, both functions are the typed zero and the record is absent.
 - **Bounds:** an infusion spill is a valid map of ≤ 8 aspects totalling ≤ 8,000.
 - It adds no flux for drawing, absorbing, stalls, pauses or finishing.
-- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate, so `essentiaFluxBound` is exact and monotone (the default upset bound is 24); `FluxRules` with its codec and generation; an `UPSET` from a run frozen before #26 carries no record and generates 0, while its `ABANDONED` or `REMOVED` carries the current record; generated, retained, pending and overflow reported.*
+- **Its infusion recipe `vftv:pealing_bell`** (behind `vftv:the_hush`) uses this body with its own `research`, in its own content file, bound by the common validation and the global non-amplification test, like the siblings below.
+- *Met by the [Hush spec](hush.md#contracts-on-sibling-specs): one essentia rate, so `essentiaFluxBound` is exact and monotone (the default upset bound is 300: 6 spills of 50); `FluxRules` with its codec and generation; an `UPSET` from a run frozen before #26 carries no record and generates 0, while its `ABANDONED` or `REMOVED` carries the current record; generated, retained, pending and overflow reported.*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28), [Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22), [Armor and trinkets](https://github.com/andrewbrogoff/voices-from-the-void/issues/24)**
-- Their infusion recipes (`vftv:hollow_bell` among them, named for its item like every item-producing body here) use this body with their own `research`, in their own content files. `kind: void` built-ins need a Stage 4 gate. #24 may use `transmute` for upgrades. Runic augments, Void-tier stability rules or anything else is an extension they propose. *Met by the [armor spec](armor.md#contracts-on-sibling-specs) for #24: its recipes live in `content/armor/recipes.json` and `void.json`; its runic-augmentation equivalent, Baffling, uses this type's enchantment form with no extension, needing only the lint exemption above (amended here); its Void pieces are `kind: void` transmutes behind the Stage 4 gate `vftv:void_armor`. Met by the [Eldritch tier spec](eldritch.md#void-tier-crafting) for #28: three bodies, `vftv:hollow_bell`, `vftv:void_rod` and `vftv:void_cap`, in `content/eldritch/recipes.json`, each `kind: void` behind `vftv:hollow_bell` or `vftv:void_wands`; no runic augmentation and no Void stability rule.*
+- Their infusion recipes (`vftv:hollow_bell` among them, named for its item like every item-producing body here) use this body with their own `research`, in their own content files, bound by the common validation and the global non-amplification test, as is the Hush spec's `vftv:pealing_bell` (above). `kind: void` built-ins need a Stage 4 gate. #24 may use `transmute` for upgrades. Runic augments, Void-tier stability rules or anything else is an extension they propose. *Met by the [armor spec](armor.md#contracts-on-sibling-specs) for #24: its recipes live in `content/armor/recipes.json` and `void.json`; its runic-augmentation equivalent, Baffling, uses this type's enchantment form with no extension, needing only the lint exemption above (amended here); its Void pieces are `kind: void` transmutes behind the Stage 4 gate `vftv:void_armor`. Met by the [Eldritch tier spec](eldritch.md#void-tier-crafting) for #28: three bodies, `vftv:hollow_bell`, `vftv:void_rod` and `vftv:void_cap`, in `content/eldritch/recipes.json`, each `kind: void` behind `vftv:hollow_bell` or `vftv:void_wands`; no runic augmentation and no Void stability rule.*
 
 **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)**
 - Golems may load pedestals and bowls and restore promised stacks through the item capability or the container path, under its rules. No golem starts an infusion in v1: a start needs a player's second permitted strike against an acknowledged readout.
@@ -1041,7 +1045,7 @@ This spec settles every decision. Two required child tickets deliver the assets 
 
 | Ticket | Delivers | Blocked by |
 |---|---|---|
-| **Infusion assets** | **Generator:** `tools/art/infusion.py`. Every asset is in the Stage 3 row of [art style §5](art-style.md#5-tone-ramp-by-stage): mauve and slate in the shadows, `teal1` in grooves.<br>**Block textures,** 16×16, under `assets/vftv/textures/block/`: `singing_bowl_side.png`, `singing_bowl_top.png` (the rim), `singing_bowl_inner.png` (walls and floor inside), `singing_bowl_bottom.png`; `pedestal_side.png`, `pedestal_top.png`, `pedestal_bottom.png`.<br>**Block models,** pixel-aligned, no rotations ([art style §6](art-style.md#6-blocks-and-models)): `assets/vftv/models/block/singing_bowl.json` with exactly the 6 cuboids under "The blocks" (textures `side`, `top`, `inner`, `bottom`, `particle` = side), and `assets/vftv/models/block/pedestal.json` with exactly its 3 cuboids (`side`, `top`, `bottom`, `particle` = side).<br>**Blockstates:** `assets/vftv/blockstates/singing_bowl.json` and `pedestal.json`, one variant each.<br>**Item definitions:** `assets/vftv/items/singing_bowl.json`, `pedestal.json` (`minecraft:model` of the block model), `echo_rod.json`, `echo_cap.json`.<br>**Items:** `assets/vftv/textures/item/echo_rod.png` (an upright instrument, [art style §4](art-style.md#4-silhouette-language)) and `echo_cap.png`, with `assets/vftv/models/item/echo_rod.json` and `echo_cap.json` (parent `minecraft:item/generated`).<br>**Wand layers:** `assets/vftv/textures/item/wand/rod/echo.png` and `…/wand/cap/echo.png` with their layer models `vftv:item/wand/rod/echo` and `vftv:item/wand/cap/echo` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (see the contracts on #38).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound" (≤ 3 s, faded tails), with the triggers, category, volume, pitch rule and variant counts in its table.<br>**No new sprite:** the HUD frame is `vftv:hud/vis_frame` and its cells `vftv:worktable/cost_cell` and `cost_cell_short`.<br>**Review:**<br>• a contact sheet at GUI scale 2 beside vanilla's lectern, enchanting table and amethyst cluster, with every item and the 5 rod-and-cap wands that include an Echo part;<br>• Blender renders of the shown altar empty, loaded and ringing, with **a sword and a block held** on the bowl and a pedestal at the geometry under "Rendering and sound";<br>• **worst-case HUD mockups** composed from the reused sprites and the vanilla font: a `READY` readout with 8 cells of 4-digit amounts, a run that is missing an offering, paused, waiting and abandon-armed, a `PROMISED` and an `UNREADABLE` readout, a long test translation, and unheard aspects, on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD.<br>Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) (it owns `items/wand.json` first) |
+| **Infusion assets** | **Generator:** `tools/art/infusion.py`. Every asset is in the Stage 3 row of [art style §5](art-style.md#5-tone-ramp-by-stage): mauve and slate in the shadows, `teal1` in grooves.<br>**Block textures,** 16×16, under `assets/vftv/textures/block/`: `singing_bowl_side.png`, `singing_bowl_top.png` (the rim), `singing_bowl_inner.png` (walls and floor inside), `singing_bowl_bottom.png`; `pedestal_side.png`, `pedestal_top.png`, `pedestal_bottom.png`.<br>**Block models,** pixel-aligned, no rotations ([art style §6](art-style.md#6-blocks-and-models)): `assets/vftv/models/block/singing_bowl.json` with exactly the 6 cuboids under "The blocks" (textures `side`, `top`, `inner`, `bottom`, `particle` = side), and `assets/vftv/models/block/pedestal.json` with exactly its 3 cuboids (`side`, `top`, `bottom`, `particle` = side).<br>**Blockstates:** `assets/vftv/blockstates/singing_bowl.json` and `pedestal.json`, one variant each.<br>**Item definitions:** `assets/vftv/items/singing_bowl.json`, `pedestal.json` (`minecraft:model` of the block model), `echo_rod.json`, `echo_cap.json`.<br>**Items:** `assets/vftv/textures/item/echo_rod.png` (an upright instrument, [art style §4](art-style.md#4-silhouette-language)) and `echo_cap.png`, with `assets/vftv/models/item/echo_rod.json` and `echo_cap.json` (parent `minecraft:item/generated`).<br>**Wand layers:** `assets/vftv/textures/item/wand/rod/echo.png` and `…/wand/cap/echo.png` with their layer models `vftv:item/wand/rod/echo` and `vftv:item/wand/cap/echo` in the wands spec's layer form, and the **appended** `assets/vftv/items/wand.json` (see the contracts on #38).<br>**Sounds:** every file and `sounds.json` entry under "Rendering and sound" (≤ 3 s, faded tails), with the triggers, category, volume, pitch rule and variant counts in its table.<br>**No new sprite:** the HUD frame is `vftv:hud/vis_frame` and its cells `vftv:worktable/cost_cell`.<br>**Review:**<br>• a contact sheet at GUI scale 2 beside vanilla's lectern, enchanting table and amethyst cluster, with every item and the 5 rod-and-cap wands that include an Echo part;<br>• Blender renders of the shown altar empty, loaded and ringing, with **a sword and a block held** on the bowl and a pedestal at the geometry under "Rendering and sound";<br>• **worst-case HUD mockups** composed from the reused sprites and the vanilla font: a `READY` readout with 8 cells of 4-digit amounts, a run that is missing an offering, paused, waiting and abandon-armed, a `PROMISED` and an `UNREADABLE` readout, a long test translation, and unheard aspects, on a 320 × 240 scaled screen, overlapping the strike card and the vis HUD.<br>Provenance rows. | [Wand assets #38](https://github.com/andrewbrogoff/voices-from-the-void/issues/38) (it owns `items/wand.json` first) |
 | **Infusion content** | `content/infusion/recipes.json` (`vftv:infusion_recipes/1`: the two arcane bodies, the two Echo bodies and 6–10 enchanting bodies, within "Authored content, Recipes"); `content/infusion/wand_parts.json` (`vftv:wand_parts/1`, exactly the shipped Echo values); `content/infusion/multiblock.json` (`vftv:multiblocks/1`, the altar the book shows, passing its lints); `content/infusion/echo_bootstrap.json` (`vftv:echo_bootstrap/1`, with every `why` reviewed and the sequence non-circular); and `content/lang/en_us/infusion.json` (`vftv:lang/1`) with every key under "Lang keys". Its review checks that the messages teach what that section lists. | [Vanilla aspect value table #30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30) (the non-amplification lint replays its values) |
 
 [Stage 3 research content #36](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) consumes the entry ids, recipe ids, the multiblock id, the fact fields and the `infusion` fact keys frozen here.

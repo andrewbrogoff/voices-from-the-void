@@ -5,7 +5,7 @@ How the mod works beside other mods. This covers:
 - **JEI**: the one plugin, its lifecycle, the Striking category and the wand assembly in vanilla's crafting category;
 - **Curios**, which the armor spec owns, and how its collector is wired;
 - what **datapacks and scripting tools** may add, override and remove, and what they can't;
-- **aspect values for modded items**: the `c:` tag defaults in play, and the operator's **derivation export**;
+- **aspect values for modded items**: the `c:` tag defaults and the **derivation at load** in play, and the operator's **audit export**;
 - **convention tags**, and data that names another mod;
 - **other mods'** capabilities, claim mods, tooltip overlays and rendering mods;
 - the **version ranges**, the **integration runs** in CI, and the tests.
@@ -52,7 +52,7 @@ Every integration follows [architecture, Soft dependencies](architecture.md#soft
 | KubeJS | none; the newest is `26.1.2-8.0.7`, a beta for 26.1.2 | **deferred**: no bindings ("Scripting tools") |
 | TerraBlender | betas | **none**: no biome needs it ([worldgen, Options considered](worldgen.md#not-in-v1)) |
 | Jade, WTHIT, The One Probe | Jade releases, a WTHIT beta | **no provider** ("Tooltip overlays") |
-| Sodium, Iris | releases | **no code**; a nightly smoke ("Rendering mods") |
+| Sodium, Iris | releases | **no code**; a nightly smoke deferred to v1.1 ("Rendering mods") |
 
 - **REI, EMI and KubeJS are deferred from v1 by the owner,** to a later minor once stable 26.2 builds exist. This is an owner-approved scope cut, recorded in the map's "Out of scope".
 - **A later integration is additive.** It needs a new `compat.<mod>` package and this spec's amendment, and nothing it needs is JEI-specific:
@@ -166,7 +166,7 @@ Each of these is additive in a later minor:
 - the entities file and slot tags;
 - the `ICurioItem` registrations and the `vftv:wearable/curios` base id;
 - the collector's order, budget and cost;
-- the reload refresh, and the off-hand and head-slot fallbacks;
+- the off-hand and head-slot fallbacks;
 - its tests.
 
 The [warp spec's](warp.md#gear-warp) gear sample is the collector's other server caller. This spec adds only the wiring and the CI runs.
@@ -177,17 +177,15 @@ The collector's callers sit outside `neoforge.compat.curios`, so they reach it t
 
 - **`WornSlots`**, an interface in `neoforge.armor`, with no Curios type:
   - **`int collect(LivingEntity entity, int budget, WornSink sink)`:** the [collector's contract](armor.md#the-collector) exactly. Entries are `(slot id, index, cosmetic, stack)` through `WornSink`, also in `neoforge.armor`, whose call returns whether to continue.
-  - **`void forEachWearableModifier(LivingEntity entity, BiConsumer<Holder<Attribute>, AttributeModifier> sink)`:** the reload refresh's effective query over **every** functional position ([armor, After a reload](armor.md#after-a-reload)), filtered to the `vftv:wearable/` ids and never truncated.
   - **`WornSlots.NONE`:** emits nothing and returns 0.
 - **The entry class:** **`static WornSlots init(IEventBus modBus)`** on `CuriosCompat` registers the three `ICurioItem`s and returns a `CuriosWorn` instance, which implements `WornSlots`.
   - The declared return type is the interface, never `CuriosWorn`, so no confined type appears in the wiring's invocation descriptor.
-- **The `@Mod` constructor** chooses `ModList.get().isLoaded("curios") ? CuriosCompat.init(modBus) : WornSlots.NONE` once, and passes the result to its three consumers:
+- **The `@Mod` constructor** chooses `ModList.get().isLoaded("curios") ? CuriosCompat.init(modBus) : WornSlots.NONE` once, and passes the result to its two consumers (worn modifiers follow a reload only at the next equipment change, so there is no reload refresh: [armor, After a reload](armor.md#after-a-reload)):
 
 | Consumer | Package | Without Curios (`NONE`) |
 |---|---|---|
 | the gear sample | `neoforge.warp` | the vanilla inventory, armour and off hand only |
 | the spectacles' worn check | `neoforge.armor.client` | the vanilla head slot only |
-| the reload refresh | `neoforge.armor` | the vanilla slots only |
 
 - **The only reference** into `neoforge.compat.curios` from outside it is that one call (`COMPAT_CONFINED`, "Code layout").
 
@@ -222,26 +220,33 @@ The [API spec](api.md#what-addons-may-extend) is authoritative for every format,
 
 **Passive support:** the promise is the **format**, not the tool.
 - Anything that emits datapack JSON in our Stable formats works through the table above, with no code of ours and no runtime dependency: plain packs, KubeJS's custom-recipe JSON and data emission once it exists for 26.2, CraftTweaker.
-- [API, Public data formats](api.md#public-data-formats) and the compatibility corpus already guard those formats.
+- [API, Public data formats](api.md#public-data-formats) guards those formats, by release review now and with the compatibility corpus from `1.0.0`.
 - **No `compat.kubejs` package in v1.** Bindings arrive in a minor, as an amendment here, once a 26.2 KubeJS exists.
 
 ## Aspect values for modded items
 
 ### In play
 
-**Gameplay lookup is unchanged** ([aspects, Data maps](aspects.md#data-maps)): a `vftv:aspects` entry, else `vftv:aspect_defaults` through its `c:` tags, else nothing ("Nothing answers.").
-- **No runtime derivation in v1.** Modded items are covered by the `c:` tag defaults, by any pack's entries, and by the export below, whose output is an ordinary pack.
-- **Why not at runtime:**
-  - data maps can't be extended at runtime without reflection, so derived values would need a second synced table;
-  - modded reversible conversions would amplify under minimum-1 rounding, and the crucible turns amplification into free essentia;
-  - per-reload work in large packs is unbounded;
-  - non-vanilla recipe types are opaque anyway.
+**Gameplay lookup** ([aspects, Data maps](aspects.md#data-maps), amended): a `vftv:aspects` entry, else `vftv:aspect_defaults` through its `c:` tags, else the **`DerivedAspects`** table below, else nothing ("Nothing answers.").
+- **Authored entries override** a derived value, and an authored **`{}` suppresses** it: both make the item resolved, so it is never derived over. A pack that wants curated values ships entries; one that wants an item to answer nothing ships `{}`.
+- **A player in a kitchen-sink pack** gets values for every modded item reachable through accepted vanilla-type recipes from valued items, with no operator action.
+
+### The derivation at load
+
+**`DerivedAspects`**, a server table in `core.aspect`, built by the export's own steps 2–5 and 7 ("The derivation export"): the same `DerivationRecipes` adapter, the same candidates, the same cycle exclusion, the same evaluation and the same limits. Only the output differs: a table in memory, not files.
+
+- **When:** at every server data load, the first one and each `/reload`, once recipes, tags and data maps are loaded. The `neoforge` listener runs it on `DataMapsUpdatedEvent` for the item registry with cause `SERVER_RELOAD`, which NeoForge posts after recipes, tags and data maps are loaded and before the datapack sync (the ordering is **[build verifies]**). It runs on the server thread.
+- **Invalidated on `/reload`:** the new table replaces the old one whole when it is built. Nothing reads a half-built table.
+- **The switch:** the server key **`aspects.derive_modded`** (bool, default `true`; [configuration spec](config.md#server-keys), amended). With `false` the table is empty, nothing is derived, and the next data load applies a change; the export still runs, since it is an audit.
+- **Over a limit:** the table is empty for that load, and one `WARN` names both counts and both limits. The world opens; modded items fall back to the defaults.
+- **Sync:** S2C **`DerivedAspectsSync`**, sent to each player on `OnDatapackSyncEvent` (join and `/reload`), as the other aspect maps reach the client: the whole table as `(item id, aspects)` entries in ascending item id, split into payloads of at most **4,096 entries**, the last one flagged; the client swaps its copy on that last payload and clears it at logout. Bounded codec: each entry at most `AspectLimits`' 5 aspects; out of bounds is rejected at decode.
+- **Conservation:** exactly the export's promise ("Conservation, by exclusion"). Rejected recipes stay outside it, and nobody reviews the table before play. That is the accepted trade for modded coverage; a pack that finds a gain overrides the item or ships `{}`, and the export's report shows where to look.
 
 ### The derivation export
 
 **`/vftv aspects derive`**, a **permission level 4** leaf under the level-2 root ([configuration spec, Commands](config.md#commands)). It writes files, as vanilla's level-4 `/perf` and `/jfr` do (`MC:server/commands/PerfCommand.java:38`; `MC:server/commands/JfrCommand.java:31`). It has no arguments, its paths are fixed, and no loaded-chunk rule applies, because it reads server data and no positions.
 
-It runs the [aspects spec's](aspects.md#vanilla-values) derivation over the live server's data and writes **reviewable datapacks** that the operator installs by hand. Nothing it writes loads until then.
+**An audit dump.** It runs the [aspects spec's](aspects.md#vanilla-values) derivation over the live server's data, the same derivation that builds the `DerivedAspects` table at load, so with `aspects.derive_modded` on its packs hold exactly the loaded table, and its report explains it. Nothing it writes loads unless the operator installs it. Installing is optional: an installed pack's entries are authored, so they **pin** those values against later recipe changes and can be edited by hand; with `aspects.derive_modded` set to `false`, installed packs give a reviewed-only setup.
 
 **1. Refusal while installed.** If any **selected** pack's id starts with `file/vftv_derived_`, the command refuses. A world datapack folder's id is `file/` plus its folder name (`MC:server/packs/repository/FolderRepositorySource.java:64–66`). The refusal gives `commands.vftv.aspects.derive.installed`, naming those ids, and writes nothing.
 - Otherwise a live export would read its own earlier output as authored entries and leave those items out, so replacing the installed packs would silently drop them.
@@ -280,7 +285,7 @@ It runs the [aspects spec's](aspects.md#vanilla-values) derivation over the live
 - **The graph:** every item that appears as an alternative or a result of an accepted recipe is a node. Each accepted recipe adds an edge from each alternative of each ingredient to its result.
 - **Excluded:** every candidate in a **non-trivial strongly connected component** (two or more items, or one item with an edge to itself). The components come from an iterative Tarjan pass, with no recursion. That covers every conversion cycle among accepted recipes, whatever its length. `1 A → 2 B → 2 C → 2 A` is excluded although no recipe pair inverts it.
 - **Excluded candidates have no value,** so nothing downstream is computed from them.
-- **The promise is exactly this:** no emitted value lies on a conversion cycle of accepted recipes. One-way gains from minimum-1 rounding remain, as in the [aspects spec's](aspects.md#vanilla-values) vanilla table. **Rejected recipes are outside the promise,** a modded machine that turns one ore into two dusts among them, so the report says the output **needs a human review** before it is installed.
+- **The promise is exactly this:** no emitted value lies on a conversion cycle of accepted recipes. One-way gains from minimum-1 rounding remain, as in the [aspects spec's](aspects.md#vanilla-values) vanilla table. **Rejected recipes are outside the promise,** a modded machine that turns one ore into two dusts among them, so the report says where a human review should look.
 
 **5. Values.**
 - **Order:** the remaining candidates form an acyclic graph. They are evaluated once each, in topological order, with ties broken by ascending item id (Kahn's algorithm over a priority queue). A value is never revised.
@@ -301,8 +306,8 @@ It runs the [aspects spec's](aspects.md#vanilla-values) derivation over the live
 
 - **One pack per source namespace,** `derived/vftv_derived_<namespace>/`, holding:
   - `pack.mcmeta`, encoded through `PackMetadataSection.SERVER_TYPE.codec()` with the running format `SharedConstants.getCurrentVersion().packVersion(PackType.SERVER_DATA)`;
-  - `data/vftv/data_maps/item/aspects.json`, holding only that namespace's items.
-- **Removing a mod** means deleting its folder. Even if the folder stays, NeoForge logs and skips each entry for a missing item id, and keeps the file's other entries (`NF:registries/DataMapLoader.java:119–128`). A GameTest keeps that as a regression check.
+  - `data/vftv/data_maps/item/aspects.json`, holding only that namespace's items, with a top-level **`"neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "<namespace>"}]`**. The export reads the mod list, so it writes the condition only when the namespace is a loaded mod's id; a namespace that isn't gets no condition, and the report lists it.
+- **Removing a mod:** with the condition, an installed pack for a removed mod is skipped whole and silently. Without it, `DataMapLoader` logs each missing required id at `ERROR`, once per entry per reload (`NF:registries/DataMapLoader.java:119–128`), which after a 2,000-item mod is 2,000 lines on every `/reload`. Deleting the folder still works. A GameTest proves the silent skip.
 - **`derived/report.txt`**, plain text with these sections in order:
   - the inputs: both tuning values and the mod list, ids ascending with versions;
   - the counts: holders seen, accepted, rejected by reason, candidates, emitted, empty, excluded and unresolved;
@@ -368,7 +373,7 @@ v1's data names no other mod's registry object. These rules, each with a datagen
 - **Recipes, loot tables and advancements**, which evaluate conditions, carry `{"neoforge:conditions": [{"type": "neoforge:mod_loaded", "modid": "<id>"}]}`.
 - **Tags** name the object as an optional entry, `{"id": "<id>:<path>", "required": false}`. Tag loading decodes `TagFile.CODEC` directly and evaluates no top-level condition (`MC:tags/TagLoader.java:56–68`; `MC:tags/TagFile.java:7–12`).
 - **Built-in data maps** name only `minecraft` and `vftv` registry objects. Their `#c:` tag keys are NeoForge's convention tags, which always exist.
-- **The derivation export's** data maps name only other mods' items. Their removal path is the per-namespace folder ("The derivation export").
+- **The derivation export's** data maps name only other mods' items, and each file carries `neoforge:mod_loaded` for its namespace's mod ("The derivation export"). The load-time `DerivedAspects` table is rebuilt from the loaded registries, so it never names an absent item.
 
 The Curios entities file and `curios:` tags name only our items, and are inert without Curios ([armor, Slots and eligibility](armor.md#slots-and-eligibility)).
 
@@ -389,7 +394,7 @@ No new capability, and no bridge. Every owner has already decided its own:
 
 ### Claim mods
 
-**No integration with a named claim mod in v1,** and no named claim mod is promised compatible. The protection surface is NeoForge's vanilla-path events plus our three cancellable events ([API, Failure rules](api.md#failure-rules)). A claim mod integrates from its side, against the Stable API.
+**No integration with a named claim mod in v1,** and no named claim mod is promised compatible. The protection surface is NeoForge's vanilla-path events plus our three cancellable events ([API, Failure rules](api.md#failure-rules)). A claim mod integrates from its side, against the API; the three cancellable events are Experimental in v1 ([API, The Stable allowlist](api.md#the-stable-allowlist)), so such an integration tracks our minors until they are promoted.
 
 What is authorised, and what deliberately isn't:
 
@@ -415,7 +420,7 @@ What is authorised, and what deliberately isn't:
 
 ### Rendering mods
 
-**No code.** Two pinned **nightly, non-gating** E2E configurations, under the [quality gates' Vulkan rule](quality-gates.md#graphics-backends): a red run is triaged within a week by whoever drives the build phase.
+**No code, and no CI run in v1.** Two pinned **nightly, non-gating** E2E configurations are **deferred to v1.1** ([quality gates, Graphics backends](quality-gates.md#graphics-backends)); they are pinned here so that ticket has nothing to decide. Once running, a red run is triaged within a week by whoever drives the build.
 
 | Configuration | Mods |
 |---|---|
@@ -458,8 +463,9 @@ side = "BOTH"
 | `neoforge.compat.curios` | `CuriosCompat`, the entry class; `CuriosWorn`; the `ICurioItem` registrations ([armor](armor.md#curios)) |
 | `neoforge.armor` | `WornSlots`, `WornSink` |
 | `core.research.model` | `GatedRecipeDiff` |
-| `core.aspect` | the `aspects derive` subtree, built from vanilla Brigadier types; the export service; `DerivationRecipes` |
+| `core.aspect` | the `aspects derive` subtree, built from vanilla Brigadier types; the export service; `DerivationRecipes`; `DerivedAspects` and the `DerivedAspectsSync` payload |
 | `core.aspect.model` | the derivation graph: the components, the exclusion and the topological evaluation |
+| `neoforge.aspect` | the one-line `DataMapsUpdatedEvent` listener that rebuilds `DerivedAspects`, and the `OnDatapackSyncEvent` send |
 
 **`COMPAT_CONFINED`** ([architecture, Enforcement](architecture.md#enforcement), amended in this change):
 - `mezz.jei..` is used only in `neoforge.compat.jei..`, and `top.theillusivec4.curios..` only in `neoforge.compat.curios..`.
@@ -474,7 +480,8 @@ side = "BOTH"
   - **Striking to the [aspects spec's](aspects.md#performance) client share**, amended in this change.
 - **The reconcile** runs on arrivals, never per frame. It is O(snapshot) per category, bounded as under "Lifecycle".
 - **Curios's traversal** is the armor spec's disclosed native term.
-- **The derivation export** is an operator **load scenario**, reported apart from steady state: a synthetic pack of 50,000 accepted recipes and 500,000 edges, timed on the reference machine, with the tick it runs in disclosed. It is report-only, and the limits under "The derivation export" cap the work.
+- **The derivation at load** runs once per server data load, never per tick, so it adds nothing to steady state. It is a **load scenario**, reported apart: a synthetic pack of 50,000 accepted recipes and 500,000 edges, timed on the reference machine at server start and at `/reload`, with the client's `DerivedAspectsSync` handling. It is report-only, and the limits under "The derivation export" cap the work. A lookup that falls through to the table is one map read.
+- **The derivation export** is the same work plus the writes, an operator command timed in the same scenario, with the tick it runs in disclosed.
 
 ## Lang keys
 
@@ -483,7 +490,7 @@ This spec owns these keys. Its English is final: datagen writes them as code-def
 | Key | Placeholders | Text |
 |---|---|---|
 | `jei.vftv.category.strike` | 0 | "Striking" |
-| `commands.vftv.aspects.derive.success` | 3 | "Derived %1$s values into %2$s packs at %3$s. Review report.txt before installing any." |
+| `commands.vftv.aspects.derive.success` | 3 | "Derived %1$s values into %2$s packs at %3$s. report.txt explains them; installing a pack pins its values." |
 | `commands.vftv.aspects.derive.installed` | 1 | "Derived packs are enabled: %1$s. Disable them and run /reload, then derive again." |
 | `commands.vftv.aspects.derive.too_large` | 4 | "Too much to derive: %1$s recipes and %2$s ingredient links, where the limits are %3$s and %4$s." |
 | `commands.vftv.aspects.derive.failed` | 2 | "The export could not be written (%1$s). The previous export is at %2$s." |
@@ -520,7 +527,8 @@ This spec owns these keys. Its English is final: datagen writes them as code-def
     - a resolved remainder with template count 2 subtracts twice its value;
     - a `{}` remainder subtracts nothing and is accepted;
     - a remainder that is itself a candidate rejects the holder as `unvalued remainder`, before the graph is built, and the report lists it among recipes outside the promise.
-- **The report and pack writer:** byte-identical output for the same input.
+- **The report and pack writer:** byte-identical output for the same input; each pack's data-map file carries `mod_loaded` for its namespace, and a namespace that is no loaded mod's id gets none and is listed.
+- **`DerivedAspectsSync`:** the codec round-trips; a table of 10,000 entries splits into three payloads and the client swaps only on the last; an entry over 5 aspects is rejected at decode.
 
 **ArchUnit:** `COMPAT_CONFINED`, with a fixture for each forbidden direction:
 - a JEI type outside its package;
@@ -542,9 +550,16 @@ and the permitted call, `static WornSlots init(IEventBus)`, from the wiring.
 - **a disabled recipe:** a `neoforge:never` override removes one of our recipes, and its owner's behaviour follows;
 - every test id in the discovery guard.
 
-**GameTest (`runCompatGameTestServer`,** which loads `vftv_addon` and so has its registered items):
+**GameTest (`runAddonGameTestServer`,** which loads `vftv_addon` and so has its registered items; [API, `testAddon`](api.md#testaddon-the-example-addon)):
 - **capabilities:** a golem TAKEs from and GIVEs to a `vftv_addon` block that exposes a plain `ResourceHandler<ItemResource>`.
 - **Striking's cap:** with a `vftv_addon` pack of 4,097 strike recipes, the one JEI omits still converts in play.
+- **the derivation at load,** over `vftv_addon` items and recipes:
+  - at server start, an addon item with neither an entry nor a default reads its derived value through the gameplay lookup, equal to the export's golden copy; the fork reads it and the crucible accepts it;
+  - an authored entry for that item wins, and an authored `{}` makes it answer nothing;
+  - a `/reload` that adds an entry or removes a recipe rebuilds the table, and the lookup follows;
+  - `aspects.derive_modded` `false` empties the table at the next data load;
+  - a test pack past the recipe limit leaves the table empty with one `WARN`, and the world opens;
+  - a connected player's client holds the same table after join and after `/reload`, and an empty one after logout;
 - **the export,** over `vftv_addon` items and recipes:
   - the files equal a committed golden copy;
   - a level-2 source can neither run nor see the leaf;
@@ -556,7 +571,8 @@ and the permitted call, `static WornSlots init(IEventBus)`, from the wiring.
     - writing staging, the first rename, and the second rename (with and without a failed rename back) each leave a complete previous export where the message says, and log one `ERROR`;
     - a failed delete of `derived.previous` is a cleanup failure: the new export is complete and usable, one `WARN`, and the next run removes the leftover;
   - the over-limit refusal writes nothing;
-  - an entry for an unregistered item is skipped while the file's other entries load (`NF:registries/DataMapLoader.java:119–128`), a regression check;
+  - the export's files equal the loaded `DerivedAspects` table entry for entry;
+  - an installed pack whose `mod_loaded` names an absent mod is skipped whole, with no `ERROR` logged;
 - each test id in that run's discovery guard.
 
 **GameTest (`runCuriosGameTestServer`, Curios `16.0.0+26.2` present):**
@@ -584,7 +600,7 @@ and the permitted call, `static WornSlots init(IEventBus)`, from the wiring.
 
 **E2E, absent:** every ordinary scenario runs with no soft dependency; the "without JEI" twins are the owners'.
 
-**Nightly, non-gating:** the two rendering configurations under "Rendering mods".
+**Nightly, non-gating, from v1.1:** the two rendering configurations under "Rendering mods".
 
 ## Contracts on sibling specs
 
@@ -599,10 +615,11 @@ Each spec is amended in this change, as listed. Each amendment is a criterion in
   - "Shipping artifact": the integration runs every PR;
   - the `build` job runs `runCuriosGameTestServer`;
   - the `e2e` job runs the JEI-present and Curios-present clients;
-  - "Graphics backends": the two nightly rendering configurations.
+  - "Graphics backends": the two nightly rendering configurations, deferred to v1.1.
 - **[Aspects](aspects.md):**
-  - "Vanilla values": the in-play rule, `{}` as suppression, no runtime derivation, the export, and `DerivationRecipes` shared;
-  - "Tuning": the `derivation.*` keys feed datagen and the export;
+  - "Vanilla values": the in-play rule, `{}` as suppression, the derivation at load (its sentence "There is no runtime derivation in v1" is removed), the audit export, and `DerivationRecipes` shared;
+  - "Data maps": the lookup consults `DerivedAspects` after `vftv:aspect_defaults`; "Sync and state" adds `DerivedAspectsSync`;
+  - "Tuning": the `derivation.*` keys feed datagen, the derivation at load and the export;
   - "Performance": Striking's drawing in the client share;
   - "Tests": the non-amplification replay over the widened recipes.
 - **[Arcane](arcane.md):**
@@ -618,7 +635,7 @@ Each spec is amended in this change, as listed. Each amendment is a criterion in
   - "The collector": wired through `WornSlots`;
   - "Layers": the wiring;
   - "Tests": the Curios runs every PR.
-- **[Configuration](config.md):** "Commands" gains the level-4 leaf `aspects derive` and its lang ownership.
+- **[Configuration](config.md):** "Commands" gains the level-4 leaf `aspects derive` and its lang ownership; "Server keys" gains `aspects.derive_modded` (bool, default `true`, applied at the next data load), so the server key count goes from 20 to 21.
 - **[API](api.md):**
   - "What addons may extend" points here for the mechanics and scripting tools;
   - "Known limitations": v1 ships a JEI integration only;
@@ -633,7 +650,7 @@ Each spec is amended in this change, as listed. Each amendment is a criterion in
 - the wand-assembly extension;
 - `GatedRecipeDiff`;
 - the `WornSlots` wiring;
-- the export with its graph;
+- the derivation graph, `DerivedAspects` with its listener and sync, and the export;
 - the tag widening and the data rules;
 - `COMPAT_CONFINED`;
 - the two optional dependencies;

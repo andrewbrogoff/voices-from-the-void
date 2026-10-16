@@ -32,7 +32,7 @@ Resolved in [Eldritch tier and the Choir's Road spec](https://github.com/andrewb
 - the Primordial Pearl and void metal → nothing; a **keepsake** pays for one wand tier;
 - "Opening the Eye" → `vftv:hollow_bell`.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses `java.util.Random` for vanilla's LCG. Both print the same 31 lines (1,395 bytes, SHA-256 `1d5c71de7bdf96ec82a3e5e679cea7a2443481d064f7d73bdef8bf3f71a06499`). The references cover arithmetic only: the Threshold's placement, entry health, admission, threat and targets, the Joining bonus and the arrival station. Their agreement says nothing about generation, teleports, callbacks, persistence or performance, which the build's tests prove (see "Tests"). Nothing else in this spec draws randomness: the Road is identical in every world, encounters follow fixed rules, and the ending scene plays its lines in a fixed order.
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses `java.util.Random` for vanilla's LCG. Both print the same 31 lines (1,395 bytes, SHA-256 `01e55659e3c28367fb8218f523f300132b9cceac0baf8e29d178c182e117fa48`). The references cover arithmetic only: the Threshold's placement, entry health, admission, threat and targets, the Joining bonus and the arrival station. Their agreement says nothing about generation, teleports, callbacks, persistence or performance, which the build's tests prove (see "Tests"). Nothing else in this spec draws randomness: the Road is identical in every world, encounters follow fixed rules, and the ending scene plays its lines in a fixed order.
 
 **Source citations:** `MC:` is `minecraft-patched-26.2.0.88-sources.jar` and `NF:` the NeoForge 26.2.0.88 sources, with package prefixes omitted.
 
@@ -50,13 +50,13 @@ Seven entries, authored by [Stage 4 research content #37](https://github.com/and
 | **`vftv:choirs_road`** | `find`, `opens_stage` 4; trigger `vftv:advancement` `vftv:find/choirs_road`; `hinted_by` the last Stage 3 page in #36's narrative order | `vftv:ruins`, `vftv:silence_beneath` | | the Stage 4 opener |
 | **`vftv:hollow_bell`** | `note` | `vftv:choirs_road` | temporary 2, lasting 2 | the infusion recipe `vftv:hollow_bell`, **and the descent** ("The descent") |
 | **`vftv:the_road`** | `free` | `vftv:hollow_bell` | | documents Vuulas, the Steps, the encounters, the catch and the rule against building |
-| **`vftv:void_wands`** | `note`, **secret**: `reveal` `[{"type": "vftv:warp_at_least", "kind": "lasting_plus_permanent", "value": 6}]`, `hinted_by` `vftv:the_road` | `vftv:hollow_bell`, `vftv:echo_wands` | lasting 2 | the infusion recipes `vftv:void_rod` and `vftv:void_cap` |
+| **`vftv:void_wands`** | `note`, **secret**: `reveal` `[{"type": "vftv:warp_at_least", "kind": "lasting_plus_permanent", "value": 4}]`, `hinted_by` `vftv:the_road` | `vftv:hollow_bell`, `vftv:echo_wands` | lasting 2 | the infusion recipes `vftv:void_rod` and `vftv:void_cap` |
 | **`vftv:the_heart`** | `free` | `vftv:the_road` | | documents Joining and Silencing, every consequence in a fact span |
 | **`vftv:heard`** | `find`, **secret**: trigger and `reveal` `vftv:advancement` `vftv:end/joined`; `hinted_by` `vftv:the_heart` | `vftv:the_heart` | | the Joining capstone's page |
 | **`vftv:unheard`** | `find`, **secret**: trigger and `reveal` `vftv:advancement` `vftv:end/silenced`; `hinted_by` `vftv:the_heart` | `vftv:the_heart` | | the Silencing capstone's page |
 
 - **The revelation gates the road.** `vftv:silence_beneath` (lasting 4, [warp, Stage](warp.md#stage)) is a parent of the opener, so nobody takes the Road without having heard the silence beneath. It is already on the Stage 3 path, and lasting warp can be stilled.
-- **The key is turned in order** ([research, Affordability and recovery](research.md#affordability-and-recovery)): Stage 3 latches L + P ≥ 4 through `silence_beneath`; `vftv:hollow_bell`'s lasting 2 makes 6 before `vftv:void_wands`' gate is read. No gate needs permanent warp or a Bargain. Every entry here with lasting warp descends from `vftv:being_heard`.
+- **The key is turned once, by the reveal** ([research, Affordability and recovery](research.md#affordability-and-recovery)): `silence_beneath`'s own commit (L + P = 4) latches `vftv:void_wands`' gate of 4, exactly as it latches [`vftv:void_armor`'s](armor.md#stage). A latched gate stays turned, so a Listener who stills to 0 after the reveal, as the Stage 3 prose teaches, still finds Void wands revealed when Stage 4 opens; a gate above 4 would have hidden them behind permanent warp or luck. `vftv:hollow_bell`'s lasting 2 stays the dose it is. No gate needs permanent warp, a Bargain or the Listen rite ([warp, The Listen rite](warp.md#the-listen-rite)). Every entry here with lasting warp descends from `vftv:being_heard`.
 - **"A different capstone opens"** ([progression, Endgame](progression.md#endgame)) literally: each ending latches its capstone's page in the book.
 - `vftv:void_foci` ([foci](foci.md#stage)) and `vftv:void_armor` ([armor](armor.md#stage)) hang off the opener too; `vftv:learning_the_tongue` keeps the [warp spec's](warp.md#stage) parents and permanent 3.
 - **Options considered:** a warp threshold as the opener. **Why not:** a find is what opens a Stage ([progression, Stages](progression.md#stages)), and hidden warp gating is one of the complaints (pain points §8).
@@ -143,7 +143,7 @@ Combat is specified in its own spec, **[Choristers of the Road](https://github.c
 | nothing else | no node, no chest, no other `vftv:` block, no hushed block |
 
 - **Paths** (the [worldgen spec's](worldgen.md#pieces-and-topology) "on foot", 4-connected standing cells rising or falling at most 1 block a step): every chancel standing cell, the Reliquary's front cell and every defender's cell is reachable from **every** entry cell, and every entry cell from the chancel. So the way down is also the way out.
-- The defenders are the worldgen spec's Answerer and Cantor, with every rule of theirs unchanged: template entities, persistent, homes set at finalization, none in peaceful.
+- The defenders are the worldgen spec's Answerer and Cantor, with every rule of theirs unchanged: template entities, persistent, homes set at finalization, and kept in peaceful, where they take no target and deal no damage ([worldgen, Placement and persistence](worldgen.md#placement-and-persistence)).
 - **Look:** the Stage 3 masonry register (tuff, tuff bricks, chiseled tuff, calcite, deepslate tiles, waxed copper) with the bell frames broken and empty, and soul lanterns down the stair: the teal sits inside the dark ([art style §5](art-style.md#5-tone-ramp-by-stage), Stage 4 row).
 
 ### A Choir site
@@ -238,6 +238,8 @@ The Hollow Bell in Vuulas (row 4), a sneak-use of Step 1's bell ("The Step Bells
 3. Teleport, accepted as for the descent (the player, alive, at the target). The return point is kept (the next descent overwrites it); `last_station` is cleared; the travel cooldown is set. A refused or redirected return writes nothing.
 
 An unreadable record still returns the player, to the default, writing nothing.
+
+**The Road does not keep you.** A player who logs out in Vuulas is returned before they are saved: our `PlayerEvent.PlayerLoggedOutEvent` listener runs this return for any player in Vuulas who is alive, as `evacuate` does (no cooldown, the target and "Safe standing" as above). NeoForge posts the event from `PlayerList#remove` (`firePlayerLoggedOut`, `MC:server/players/PlayerList.java:313`) before vanilla's `save` of that player (`:316`), so a disconnect's save is written at the return point. **A clean server stop:** `MinecraftServer#stopServer` runs `saveAll()` and then `removeAll()` (`MC:server/MinecraftServer.java:653–654`); the first save may still hold a player in Vuulas, but `removeAll()` disconnects each player through the same `remove()`, which fires our return and then saves again, so the **final** write of every player file is outside Vuulas. `last_station` is transient anyway, and the next descent lands at the arrival station, so the only cost is a toll. A dead player is skipped: the respawn takes them out. **Disclosed:** an autosave still writes a player who is in Vuulas at that moment, so a crash (or a killed process) before their next logout leaves that file in Vuulas, and a missing dimension after an uninstall then loads them at the same coordinates in the spawn level ("Existing worlds and removing the mod"). With VFTV present they load on the Road, where the catch stands under them, and `/vftv road evacuate` remains the remedy.
 
 ### Safe standing
 
@@ -469,6 +471,7 @@ The Chorister's **confirmed death**, `Encounter.onConfirmedDeath` ("The split": 
 5. The boss bar is cleared; `RoadEncounterEvent(DEFEATED)` is posted.
 
 - **Keepsakes have no ledger:** a lost one is recovered by another defeat, a rematch rung alone included ("The Step Bells", row 6), and farming is bounded by fighting. Re-fighting a passed Step pays a keepsake and nothing else.
+- **Keepsakes are never a currency beyond the Void rod and cap.** Wuuren can be beaten at range by a patient archer, which is harmless while a keepsake buys only three wand parts; no later spec or content may hang another recipe, trade or material on keepsakes. If one is ever wanted, give Wuuren Suhlaa's exhale first, never a change of cadence.
 - **Who killed it doesn't matter:** a command or a fall credits the participants present.
 
 ### Reset, unload and peaceful
@@ -477,7 +480,7 @@ The Chorister's **confirmed death**, `Encounter.onConfirmedDeath` ("The split": 
 - **Unload:** Choristers are never saved. If the ring's chunks unload, which happens as soon as nobody in Vuulas keeps them loaded, the Chorister is gone and the slot resets at the next tick. **The 1,200-tick window is a grace only while the ring stays loaded,** for example while another Listener is in Vuulas. A party that wiped alone rings again. Stated, not hidden; no chunk ticket is added.
 - **Server stop:** encounters are memory only, so a restart starts every slot `IDLE`.
 - **Peaceful:** the Chorister type is allowed in peaceful (`MC:world/entity/Mob.java:715–718` discards only types that aren't), and its damage scales to zero there (a contract on the Choristers spec), so a peaceful world can still finish the endgame.
-- **Opening a screen doesn't pause a fight:** it isn't a Voice event. The [warp spec's](warp.md#danger) `pressing_dark` can fire in Vuulas, in context, under its own rules.
+- **Opening a screen doesn't pause a fight:** it isn't a Voice event. The [warp spec's](warp.md#danger) `pressing_dark` (Slowness only, so the floor marks stay visible) can fire in Vuulas, in context, under its own rules.
 
 ### The boss bar
 
@@ -516,6 +519,7 @@ One `ServerBossEvent` per slot (`MC:server/level/ServerBossEvent.java:20–22`),
 | the permanent warp it adds, from the warp spec's preview of `(0, 0, J)` as `MILESTONE(vftv:joining)`, with "(less, at the limit)" when clipped. **J** is the Joining milestone's **current** amount in the warp tuning's `permanent.milestones` (5 as shipped), read for every quote and again at the commit, so a legal retuning never makes Joining `INVALID` | the temporary and lasting warp it removes, exactly the current T and L; permanent warp kept, with its amount |
 | "The Voices go on." | "The Voices end, for good." |
 | the lasting Void power: the Joining bonus, `joining.amplifier_bonus` | "The Hush can't hear me: it won't wake for me, and its Hollows won't hunt me. My own spills still pool; it still wakes for anyone else, or if left to run alone." |
+| "Only I can still listen: Bargains and the Listen rite stay open to me." | "Bargains and the Listen rite close to me for good." |
 | "I can never be Silenced." | "I can never Join." |
 
 - **Panels:** each panel's consequence lines are a prose viewport (the [localisation spec's R1](accessibility.md#r1-viewports)) from 4 px below the panel's title to 4 px above its button, wrapping a long translation and scrolling with the research spec's scrollbar sprites. The title and the button stay outside it. Button labels follow R2: clipped at 50 px with "…", the full text as tooltip and narration.
@@ -559,13 +563,13 @@ Both are **pure functions of the warp record the owner's client already holds**,
 
 | Ending | Warp ([warp, Joining and Silencing](warp.md#joining-and-silencing)) | Capstone | Price |
 |---|---|---|---|
-| **Joining** ("Heard") | permanent +J (5 as shipped), once; the Voices go on | **Lasting Void power:** `amplifier_warp` gains the **Joining bonus**, `joining.amplifier_bonus` (**10**, 0–50) warp points, added to total warp (amended in the warp spec) | permanent warp and the Voices for good; never Silenced |
-| **Silencing** ("Unheard") | temporary and lasting to 0; permanent kept; never checked again | **The Hush can't hear you:** the [Hush spec's](hush.md#where-it-begins) spread attendance counts only players who aren't Silenced, and Hollows never acquire or keep a Silenced target (amended in the Hush spec) | the Voices, Bargains and insights end; Void power falls to permanent and gear warp; never Joined |
+| **Joining** ("Heard") | permanent +J (5 as shipped), once; the Voices go on | **Lasting Void power:** `amplifier_warp` gains the **Joining bonus**, `joining.amplifier_bonus` (**10**, 0–50) warp points, added to total warp (amended in the warp spec); Bargains and the Listen rite stay open | permanent warp and the Voices for good; never Silenced |
+| **Silencing** ("Unheard") | temporary and lasting to 0; permanent kept; never checked again | **The Hush can't hear you:** the [Hush spec's](hush.md#where-it-begins) spread attendance counts only players who aren't Silenced, and Hollows never acquire or keep a Silenced target (amended in the Hush spec) | the Voices, Bargains, insights and the Listen rite end; Void power falls to permanent and gear warp; never Joined |
 
-- **The bonus is additive, not a floor.** Current warp still scales Void power, so stilling still costs power ([progression, Warp](progression.md#warp); [warp, Stilling](warp.md#stilling)): a Joined Listener who stills from 37 to 5 goes from 47 to 15. It is bounded, and the `warp.amplifier` switch still zeroes it. The [armor spec's](armor.md#void-armour) Void Baffle reads the same amplifier, so it follows.
-- **Vectors** (`per_warp_pm` 20, `max_bonus_pm` 1000; total, Joined, bonus, switch → `w`, `amp_pm`, a base-4000 Void working's magnitude): 37, no, 10, on → 37, 1740, 6960; 37, yes, 10, on → 47, 1940, 7760; 5, yes, 10, on → 15, 1300, 5200; 0, yes, 10, on → 10, 1200, 4800; 40, yes, 0, on → 40, 1800, 7200; 2,200, yes, 50, on → 2,250, 2000 (capped), 8000; 37, yes, 10, off → 0, 1000, 4000.
+- **The bonus is additive, not a floor.** Current warp still scales Void power ([progression, Warp](progression.md#warp); [warp, Stilling](warp.md#stilling)): a Joined Listener who stills from 12 to 5 goes from 22 to 15, and their Void power from ×1.88 to ×1.6. It is bounded, and the `warp.amplifier` switch still zeroes it. At `void.per_warp_pm` 40 the bonus of 10 is worth +40%, and Joining's own permanent 5 plus the bonus give 15, ×1.6 (1600‰) before lasting warp or gear, below the doubling at 25, so stilling still costs a Joined Listener Void power. The [armor spec's](armor.md#void-armour) Void Baffle reads the same amplifier, so it follows.
+- **Vectors** (`per_warp_pm` 40, `max_bonus_pm` 1000; total, Joined, bonus, switch → `w`, `amp_pm`, a base-4000 Void working's magnitude): 12, no, 10, on → 12, 1480, 5920; 12, yes, 10, on → 22, 1880, 7520; 5, yes, 10, on → 15, 1600, 6400; 0, yes, 10, on → 10, 1400, 5600; 12, yes, 0, on → 12, 1480, 5920; 2,200, yes, 50, on → 2,250, 2000 (capped), 8000; 12, yes, 10, off → 0, 1000, 4000.
 - **Silencing's scope:** a Silenced player's spills still deposit; another player near the pool, or the Hush spec's `hush.unattended`, still runs it; the Pealing Bell still counts them; Hollows still rise near them under the rise rules and still hunt everyone else. Mixed parties need nothing more.
-- **Neither is better.** One keeps the Void and its noise; the other buys quiet with power. Doom or release stays the player's ([lore, Cosmology](lore.md#cosmology)).
+- **Joining is the stronger ending, and says so.** It keeps the Void, its noise and its power: a band's worth of Void power always, and the only way left to listen (Bargains and the Listen rite close to the Silenced for good). Silencing buys quiet and the Hush's deafness with power. Doom or release stays the player's ([lore, Cosmology](lore.md#cosmology)).
 - **Options considered:**
 
   | Option | Why not |
@@ -602,11 +606,12 @@ Both are **pure functions of the warp record the owner's client already holds**,
 - The stem is self-contained: nothing vanilla refers to Vuulas.
 - A return point in a missing level falls back to the default spawn ("Coming back").
 - **`/vftv road evacuate`** returns every online player in Vuulas ("Commands").
-- **The uninstall checklist** (in this spec and the release notes): everyone leaves Vuulas, or an operator runs `evacuate`; stop the server; remove the jar; optionally delete `dimensions/vftv/vuulas/`.
+- **Logging out returns the player** ("Coming back"), so after a clean stop no player file's final write is in Vuulas. An autosave followed by a crash can still leave one there; `evacuate` (with VFTV present) is the remedy.
+- **The uninstall checklist** (in this spec and the release notes): stop the server cleanly (which returns everyone, as above); remove the jar; optionally delete `dimensions/vftv/vuulas/`.
 
 **What we can't do, and what happens:**
 - Nothing of ours runs after removal: no offline player can be moved and no save file edited.
-- **An offline player saved in Vuulas** loads into the **configured world-spawn level** (the overworld unless changed) **at the same coordinates** (`MC:server/network/config/PrepareSpawnTask.java:52–62`). The Road lies at x, z ≈ 0 and y 56–296, so that player may stand in terrain or in the air.
+- **An offline player saved in Vuulas** (only by an autosave followed by a crash or killed process, since logout returns them) loads into the **configured world-spawn level** (the overworld unless changed) **at the same coordinates** (`MC:server/network/config/PrepareSpawnTask.java:52–62`). The Road lies at x, z ≈ 0 and y 56–296, so that player may stand in terrain or in the air.
 - **Every VFTV attachment is lost** the first time a player is loaded and saved without VFTV: unknown attachment types are skipped on load and only registered ones are written (`NF:attachment/AttachmentHolder.java:120–136,144–160`). That is warp (and so the ending), research, Road progress and page claims, for every player. **Re-adding the mod restores Vuulas from its region files, but not that progress.**
 - Region folders are never deleted by vanilla (only `deleteLevel()` recurses).
 
@@ -787,7 +792,7 @@ The wands spec's `vftv:wand_parts/1`, with exactly rod `vftv:void` (`item` `vftv
 | `admission` | `cap` (default 16); `steps`: each `{"eligible": [ids], "expect": [ids]}`, applied in order from no participants |
 | `target` | `threat` `{id: 0–1,000,000}`; `dist2` `{id: int ≥ 0}` with the same ids; `expect`: an id |
 | `decay` | `interval` (default 20); `keep_pm` (default 900); `hits`: `[tick, id, tenths]` triples; `expect`: `[tick, {id: threat}]` pairs |
-| `amplifier` | `total` 0–2,200; `joined`; `bonus` 0–50 (default 10); `on` (default true); `expect` `{w, amp_pm, out}` for a base-4000 Void working at `per_warp_pm` 20, `max_bonus_pm` 1000 |
+| `amplifier` | `total` 0–2,200; `joined`; `bonus` 0–50 (default 10); `on` (default true); `expect` `{w, amp_pm, out}` for a base-4000 Void working at `per_warp_pm` 40, `max_bonus_pm` 1000 |
 | `arrival` | `expect`: the four stations for `progress` 0–3 |
 
 **Types:** ids are positive ints; *hex* is as the worldgen spec's. **The complete file:**
@@ -825,13 +830,13 @@ The wands spec's `vftv:wand_parts/1`, with exactly rod `vftv:void` (`item` `vftv
    "expect": [[0, {"1": 60, "2": 0}], [20, {"1": 54, "2": 0}], [25, {"1": 54, "2": 45}], [40, {"1": 48, "2": 40}],
               [41, {"1": 58, "2": 40}], [55, {"1": 58, "2": 70}], [60, {"1": 52, "2": 63}]]}],
  "amplifier": [
-  {"total": 37, "joined": false, "expect": {"w": 37, "amp_pm": 1740, "out": 6960}},
-  {"total": 37, "joined": true, "expect": {"w": 47, "amp_pm": 1940, "out": 7760}},
-  {"total": 5, "joined": true, "expect": {"w": 15, "amp_pm": 1300, "out": 5200}},
-  {"total": 0, "joined": true, "expect": {"w": 10, "amp_pm": 1200, "out": 4800}},
-  {"total": 40, "joined": true, "bonus": 0, "expect": {"w": 40, "amp_pm": 1800, "out": 7200}},
+  {"total": 12, "joined": false, "expect": {"w": 12, "amp_pm": 1480, "out": 5920}},
+  {"total": 12, "joined": true, "expect": {"w": 22, "amp_pm": 1880, "out": 7520}},
+  {"total": 5, "joined": true, "expect": {"w": 15, "amp_pm": 1600, "out": 6400}},
+  {"total": 0, "joined": true, "expect": {"w": 10, "amp_pm": 1400, "out": 5600}},
+  {"total": 12, "joined": true, "bonus": 0, "expect": {"w": 12, "amp_pm": 1480, "out": 5920}},
   {"total": 2200, "joined": true, "bonus": 50, "expect": {"w": 2250, "amp_pm": 2000, "out": 8000}},
-  {"total": 37, "joined": true, "on": false, "expect": {"w": 0, "amp_pm": 1000, "out": 4000}}],
+  {"total": 12, "joined": true, "on": false, "expect": {"w": 0, "amp_pm": 1000, "out": 4000}}],
  "arrival": [{"expect": ["step_1", "step_2", "step_3", "heart"]}]}
 ```
 
@@ -852,7 +857,7 @@ JSON object keys are strings, so the `target` and `decay` maps key ids as decima
 | `road.vftv.step_not_mine`, `.step_listening`, `.stand_back`, `.step_occupied`, `.step_silent`, `.step_full` | 0 | "This step is not yet mine.", "It is already listening.", "Stand back from the step.", "Something stands on the step.", "The step stays silent.", "The step can hear no more." |
 | `heart.vftv.title`, `.joining`, `.silencing`, `.not_yet`, `.answered`, `.silenced`, `.busy`, `.cost_changed`, `.confirm`, `.cancel`, `.close`, `.final` | 0 | "The Heart", "Join them", "Silence them", "The heart does not hear me yet.", "I have answered.", "I have silenced them.", "Not now.", "The cost has changed.", "Confirm", "Cancel", "Close", "This cannot be undone in this world." |
 | `heart.vftv.joining.permanent`, `.joining.bonus` | 1 | "%s permanent warp", "My Void workings hear %s more, always." |
-| `heart.vftv.joining.voices`, `.joining.never`, `.silencing.voices`, `.silencing.hush`, `.silencing.never` | 0 | "The Voices go on.", "I can never be Silenced.", "The Voices end, for good.", "The Hush can't hear me…", "I can never Join." |
+| `heart.vftv.joining.voices`, `.joining.listen`, `.joining.never`, `.silencing.voices`, `.silencing.listen`, `.silencing.hush`, `.silencing.never` | 0 | "The Voices go on.", "Only I can still listen: Bargains and the Listen rite stay open to me.", "I can never be Silenced.", "The Voices end, for good.", "Bargains and the Listen rite close to me for good.", "The Hush can't hear me…", "I can never Join." |
 | `heart.vftv.silencing.removed` | 2 | "%s temporary and %s lasting warp, stilled" |
 | `heart.vftv.silencing.kept` | 1 | "%s permanent warp stays" |
 | `narration.vftv.heart.choice` | 2 | "%s: %s" |
@@ -1020,6 +1025,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the dimension type, biome and stem JSON exactly as specified; the advancements decode, and `vftv:find/choirs_road` matches only its page (another page and a plain `vftv:choir_page` don't).
 
 **GameTest:**
+- **the reveal survives stilling:** learn `silence_beneath`, drink Stilling Draughts to lasting 0, open Stage 4 and learn `vftv:hollow_bell`: `vftv:void_wands` is revealed;
+- **logout in Vuulas:** a player who logs out at Step 2 is saved at their return point in its level (read back from the saved player data), with the point obstructed saved at the default spawn, and a dead player left alone; a clean server stop leaves every player file's final write at the return point, even though `saveAll()` first wrote it in Vuulas; an autosave of a player in Vuulas followed by a killed process loads them on the Road, and `evacuate` brings them back;
 - **the descent:** refused per row (unlearned, ordinary ground, riding, the item's cooldown, the travel cooldown, an obstructed landing) and accepted at a ruin and on hushed ground; a cancelled `EntityTravelToDimensionEvent` writes nothing; a `PlayerChangedDimensionEvent` listener that moves the player elsewhere in Vuulas writes nothing; a throwing listener;
 - **the return:** to the point; to the default spawn when the point is obstructed, hazardous, unsupported, **on a magma floor under clear feet and head**, **obstructed in an adjacent, initially unloaded chunk the player's box straddles** (loaded first, then refused), or in a missing level; with an unreadable record (ignoring the travel cooldown); refused by the travel cooldown at `bell.toll` 20 and `travel.cooldown` 1,200; `evacuate` ignoring it;
 - **the Step Bells:** every row; a player further down walking up; same-tick double use; **a solo player who passed a Step sprint-uses its bell, wins the rematch and gets a keepsake with progress unchanged**; a sprint-use while an encounter runs; **up and Step 1's return while crouching with an ordinary block, and with the Hollow Bell, in the main hand and a populated off hand** (the block use promoted); an earlier listener that denies the block use keeps it denied; spawn protection refuses;
@@ -1039,7 +1046,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - the Heart screen held behind another screen, then played;
 - sync on join, reconnect, dimension change and `/reload`;
 - the asset, lang, model and sound validators;
-- **the uninstall regression** at release checkpoints: a world with progress and a player logged out in Vuulas; reopened without VFTV and saved; then reopened with VFTV. It checks the seed and the vanilla dimensions unchanged, the player in the world-spawn level at their Vuulas coordinates, the VFTV attachments gone, and Vuulas restored from its region files. If the harness can't launch without our jar, it is run by hand on the reference machine and reported.
+- **the uninstall regression** at release checkpoints: a world with progress and a player who logged out in Vuulas; reopened without VFTV and saved; then reopened with VFTV. It checks the seed and the vanilla dimensions unchanged, the player at their return point (the logout returned them), the VFTV attachments gone, and Vuulas restored from its region files. If the harness can't launch without our jar, it is run by hand on the reference machine and reported.
 
 ## Contracts on sibling specs
 

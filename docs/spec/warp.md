@@ -5,8 +5,9 @@ How audible the Void finds a Listener, and what the Voices do about it. This cov
 - **total warp**, the one number that drives the **dials**: the warp tax on ordinary vis, the infusion penalty and the Void-tier amplifier;
 - the four **warp bands** that the Commonplace Book's overlay and the Voices read;
 - **Voice events**: the counter that rations them, the suppression rules, the seeded draws and every event type;
+- **the Listen rite**: the one repeatable, deliberate listen, which pays lasting warp to be heard at once;
 - **Bargains**: offers of power for warp, decided in the book and always refusable at no cost;
-- what one Listener alone perceives: **Voice lines** and their subtitles, phantom sounds, the colour drain, **disguised blocks** and **apparitions**;
+- what one Listener alone perceives: **Voice lines** and their subtitles, phantom sounds, the colour drain and **apparitions**;
 - Joining and Silencing as they touch warp, and the Voice line recordings.
 
 Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
@@ -25,14 +26,14 @@ Resolved in [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-f
 
 **Every number in this spec is ours.** None is taken from TC4: our counter is linear and in per mille, and our check period, decay, bands, cap, costs and chances were chosen fresh. Each tunable number is listed with its data home under "Tuning and limits". Numbers inside the JSON examples are illustrative unless the text says they are the shipped values; the content tickets set the real ones.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses `java.util.Random` itself. Both print the same 91 lines (4,631 bytes, SHA-256 `9a2d654f99280c9db71fcaa14765324ee6f72f6a1f700859c4d9084c40a48210`). The references cover the arithmetic and the draws only: their agreement is no evidence for suppression, guards, callbacks, `SKIPPED` or `FAILED` outcomes, or the service's source-kind and negative-permanent rejections, which the build's GameTests prove (see "Tests").
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses `java.util.Random` itself. Both print the same 103 lines (5,528 bytes, SHA-256 `91b0b239648dedd14c413adf9ba2f89f710501d6190136931b5edd15ee640028`). The references cover the arithmetic and the draws only: their agreement is no evidence for suppression, guards, callbacks, `SKIPPED` or `FAILED` outcomes, or the service's source-kind and negative-permanent rejections, which the build's GameTests prove (see "Tests").
 
 ## Stage
 
 | Stage | What this spec puts there | Find |
 |---|---|---|
 | 1 Resonance, 2 Distillation | nothing: no built-in entry carries warp | |
-| 3 Ruins | warp, the Voices, Bargains, stilling, the first permanent milestone | the opener `vftv:ruins`, whose find `vftv:find/ruins` is [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)'s ([research, Stage](research.md#stage)); then the entries below |
+| 3 Ruins | warp, the Voices, Bargains, stilling, the Listen rite, the first permanent milestone | the opener `vftv:ruins`, whose find `vftv:find/ruins` is [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)'s ([research, Stage](research.md#stage)); then the entries below |
 | 4 The Choir's Road | the second milestone; Joining's milestone | the opener `vftv:choirs_road` ([Eldritch tier](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)'s find) |
 
 | Entry | Stage | Kind | Parents | Warp | Role |
@@ -43,7 +44,7 @@ Resolved in [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-f
 | **`vftv:learning_the_tongue`** | 4 | `listen`, optional | `vftv:choirs_road`, `vftv:silence_beneath` | **permanent 3** | a named milestone; parent of nothing |
 
 - **The first warp a Listener takes is temporary.** They watch it fade before choosing lasting warp, so the dial is taught by doing.
-- **No warp before Stage 3** is a rule over built-in research, not a runtime promise: transferable gear, commands and a research `reset` can give a Stage 1 player warp. The [wands](wands.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) specs prove Stage 1 affordable at zero warp from the Wellspring's 32 per aspect, and even 3 warp makes a 32 cost 33 (see "The dials").
+- **No warp before Stage 3** is a rule over built-in research, not a runtime promise: transferable gear, commands and a research `reset` can give a Stage 1 player warp. The [wands](wands.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) specs prove Stage 1 affordable at zero warp from the Wellspring's 32 per aspect, and even 3 warp makes a 32 cost 34 (see "The dials").
 - `vftv:under_the_silence` is not `secret`: [research's reveal triggers](research.md#triggers) have no "learned" type, so it is LOCKED until its parent is learned.
 - **Options considered:** Stage 2 whispers as foreshadowing. **Why not:** no Stage 2 instrument or rite makes them a choice ([lore, Listening and warp](lore.md#listening-and-warp)), and the progression spec permits early doses without requiring them.
 
@@ -62,10 +63,11 @@ Player attachment **`vftv:warp`**, `copyOnDeath` with a serializer (`NF:attachme
 | `counter` | 0–10,000 | yes | the Voice counter ("The counter and the chance") |
 | `checks` | `long` ≥ 0 | yes | performed checks: the draw index |
 | `milestones_paid` | ≤ 16 distinct ids, ≤ 256 characters each | yes | named milestones already paid |
+| `last_listen` | `long` ≥ −1 | yes | the overworld game time of the last Listen rite, −1 if never ("The Listen rite") |
 | `silenced` | boolean | yes | set only by Silencing |
 | `revision` | `long` ≥ 0, monotonic | yes | every change takes the next value |
 | `offer` | at most one (see "Bargains") | **no** | transient: gone at logout |
-| `quiet`, `void_work_until`, `grace_until`, the operation guard | | no | transient |
+| `quiet`, `void_work_until`, `grace_until`, `listen_due`, the operation guard | | no | transient |
 
 - **Decoding checks format bounds only, never tuning.** A record with an unknown `format`, or one out of these bounds, keeps its raw tag and is written back unchanged with one warning. That player's warp is **unreadable**: every dial is neutral, no check runs, and every commit and apply refuses with `UNREADABLE` (`message.vftv.warp.unreadable`). The [golems](golems.md#sync-and-state) and [foci](foci.md#sync-and-state) specs keep records the same way.
 - **Reconciling a lowered tuning** never rewrites a record. A `permanent` above a lowered `permanent.cap` is kept (it can never be removed) and further permanent gains preview as 0. A `counter` above a lowered `counter.max` is **read** as `min(counter, counter.max)` and written clamped at its next change. A `gear` above a lowered `gear.max` is replaced at the next sample. Vector (`counter.max` 1000 → 150 with 900 stored): the chance reads the counter as 150 (165 ‰ at `total` 9); a fired event leaves 120; a gain of 2 leaves 150.
@@ -77,12 +79,12 @@ The complete list for v1:
 
 | Kind | Gained from | Removed by |
 |---|---|---|
-| Temporary | an entry's `warp.temporary`, on its checked commit ([research, Warp on entries](research.md#warp-on-entries)); a Bargain's cost; commands | fading (see "Schedule"); Silencing; commands |
-| Lasting | an entry's `warp.lasting`; a Bargain's cost; commands | stilling; Silencing; commands |
+| Temporary | an entry's `warp.temporary`, on its checked commit ([research, Warp on entries](research.md#warp-on-entries)); a Bargain's cost; the Listen rite's cost, if tuned to carry any; commands | fading (see "Schedule"); Silencing; commands |
+| Lasting | an entry's `warp.lasting`; a Bargain's cost; **the Listen rite's cost** ("The Listen rite"); commands | stilling; Silencing; commands |
 | Permanent | **only** the named milestones ("Permanent warp"), each at most once per player; commands | commands only |
 | Gear | carried items with a `vftv:gear_warp` value ("Gear warp") | putting them down |
 
-- **Listening** is a `listen` or `note` entry's commit. **Void-tier work** reaches warp through the research that teaches it (Stage 4 notes carry warp, authored by [Stage 4 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/37)) and through gear warp.
+- **Listening** is a `listen` or `note` entry's commit, or the **Listen rite**, the one repeatable listen. **Void-tier work** feeds the counter, never warp ("The counter and the chance"), and reaches warp only through the research that teaches it (Stage 4 notes carry warp, authored by [Stage 4 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/37)) and through gear warp.
 - **Crafting, casting and infusing apply no warp in v1,** as the [arcane](arcane.md#the-cost), [foci](foci.md#the-void-tier) and [infusion](infusion.md#stability) specs already state, and no previewed extension is proposed here.
 - **Options considered:** a temporary charge per `VOID` craft, as TC4 charged per forbidden craft. **Why not:** it needs a previewed, echoed extension in three specs for a dose the research already charges, and the [pain points](https://github.com/andrewbrogoff/voices-from-the-void/blob/research/community-pain-points/docs/research/community-pain-points.md) ask for fewer, visible sources.
 
@@ -103,9 +105,12 @@ The complete list for v1:
 
 ### Bands
 
-**`bands` = [8, 20, 40]**, exactly three strictly ascending thresholds on `total`. `band = |{t ∈ bands : total ≥ t}|`, from 0 to 3. This is the research spec's book band ([research, Prose that degrades with warp](research.md#prose-that-degrades-with-warp)), and it also gates and scales Voice events.
+**`bands` = [6, 14, 24]**, exactly three strictly ascending thresholds on `total`. `band = |{t ∈ bands : total ≥ t}|`, from 0 to 3. This is the research spec's book band ([research, Prose that degrades with warp](research.md#prose-that-degrades-with-warp)), and it also gates and scales Voice events.
 
-Vectors: `total` 7 → 0; 8 → 1; 19 → 1; 20 → 2; 39 → 2; 40 → 3; 2,200 → 3.
+Vectors: `total` 5 → 0; 6 → 1; 13 → 1; 14 → 2; 23 → 2; 24 → 3; 2,200 → 3.
+
+- **Tuned to what play reaches.** Built-in content gives at most lasting 8, permanent 10 and gear 12 (about 30) without Bargains or the rite, and a Stage 4 Listener usually holds 10–20. So band 1 opens with the reveal plus a little, band 2 at a typical Stage 4, and band 3 (Void-tongue only) for a Joined Listener in Void armour who keeps their lasting warp, or anyone who listens on purpose.
+- **The 46 Voice lines don't move.** The four band pools keep 8 lines each ("Voice lines"); only the thresholds that choose a pool changed, so `band3`'s 8 Void-tongue lines are now heard in ordinary Stage 4 play instead of never.
 
 ### Schedule
 
@@ -114,10 +119,11 @@ Each online player is handled once per server tick, in the server-side `PlayerTi
 1. **Decay:** if `g mod temporary.decay_interval = phase(temporary.decay_interval)` and `T > 0`: `T − 1`, source `DECAY`.
 2. **Gear sample:** if `g mod 20 = phase(20)`: sample gear ("Gear warp").
 3. **Check:** if `g mod check.interval = phase(check.interval)`: run one check ("Voice events").
+4. **The rite's check:** if `listen_due` is set and no suppression row holds: clear it and run one **forced** check ("The Listen rite").
 
 Because 20 divides 400 divides 1200 and the phases come from one hash, all three coincide at every default check; this order makes a check read the state after that tick's decay and sample. Phases are recomputed when a `/reload` changes an interval. Online ticks only: an offline player's temporary warp waits for them.
 
-**Vectors** (UUID `00112233-4455-6677-8899-aabbccddeeff`): phases 805, 5 and 5 for 1200, 400 and 20; for `0…0`/`0…1`, 872, 72 and 12; for all ones, 92, 92 and 12. **Coincident schedule:** from `T` 3, `L` 4, counter 70, with an item worth gear 2 carried from tick 790 to 1499: tick 5 decay → `T` 2 (`total` 6); tick 405 → `T` 1 (5); tick 805 decay → `T` 0 (4), **then** the sample → gear 2 (6), **then** check 0 at `total` 6, band 0, which rolls 188 ≥ 85 (quiet); tick 1505 sample → gear 0 (4); tick 2005 check 1 at `total` 4 rolls 859 (quiet).
+**Vectors** (UUID `00112233-4455-6677-8899-aabbccddeeff`): phases 805, 5 and 5 for 1200, 400 and 20; for `0…0`/`0…1`, 872, 72 and 12; for all ones, 92, 92 and 12. **Coincident schedule:** from `T` 3, `L` 4, counter 70, with an item worth gear 2 carried from tick 790 to 1499: tick 5 decay → `T` 2 (`total` 6); tick 405 → `T` 1 (5); tick 805 decay → `T` 0 (4), **then** the sample → gear 2 (6), **then** check 0 at `total` 6, band 1, which rolls 188 ≥ 85 (quiet); tick 1505 sample → gear 0 (4); tick 2005 check 1 at `total` 4 rolls 859 (quiet).
 
 ## The dials
 
@@ -131,16 +137,16 @@ amplifier_warp(player)         = amplifier on ? total + (joined ? joining.amplif
 
 `joined` ⇔ `vftv:joining ∈ milestones_paid`, which is written even when the cap clipped the milestone to 0, because the choice was made ("The commit").
 
-- **The warp tax:** +1% per warp, at most +50% (`tax.per_warp_pm` 10, `tax.max_pm` 500). The [wands quote](wands.md#the-quote) converts with `Math.round(clamp(W, 0, 10) × 1000)`. Each value here is meant as the rational *k*/1000; a `double` division doesn't always hold it exactly, but the rounding recovers *k* (a unit test over every `total` from 0 to 2,200), so the station shows the per mille exactly.
-- **The infusion penalty:** 1 stability point per 4 warp, at most 20 (`infusion.per_warp_pm` 250, `infusion.max_penalty` 20), within the [infusion spec's](infusion.md#stability) 0–100.
-- **The amplifier:** `total` in warp points, plus the Joining bonus for a Joined Listener. The [foci spec's](foci.md#the-void-tier) `void.per_warp_pm` default is **20** (amended in this change), so a Void working doubles at 50 warp, just past band 3. That is this spec's scale decision, not proven balance.
-- **The Joining bonus:** a Joined Listener's amplifier adds `joining.amplifier_bonus` (**10**, 0–50) warp points to `total`, so `amplifier_warp` is an `int` of at most 2,250. It is **additive, never a floor**: current warp still scales Void power, so stilling still costs power ("Stilling"). It changes no band, chance, tax or penalty, and `warp.amplifier` off still zeroes the whole amplifier. Owned by the [Eldritch tier spec](eldritch.md#the-capstones), whose references give the vectors: `total` 37 → 37 unjoined, 47 Joined; 5 Joined → 15; 0 Joined → 10; 40 Joined at bonus 0 → 40; 2,200 Joined at bonus 50 → 2,250; 37 Joined with the switch off → 0.
+- **The warp tax:** +2% per warp, at most +50% from 25 warp (`tax.per_warp_pm` 20, `tax.max_pm` 500). The [wands quote](wands.md#the-quote) converts with `Math.round(clamp(W, 0, 10) × 1000)`. Each value here is meant as the rational *k*/1000; a `double` division doesn't always hold it exactly, but the rounding recovers *k* (a unit test over every `total` from 0 to 2,200), so the station shows the per mille exactly.
+- **The infusion penalty:** 1 stability point per 2 warp, at most 20 from 40 warp (`infusion.per_warp_pm` 500, `infusion.max_penalty` 20), within the [infusion spec's](infusion.md#stability) 0–100.
+- **The amplifier:** `total` in warp points, plus the Joining bonus for a Joined Listener. The [foci spec's](foci.md#the-void-tier) `void.per_warp_pm` default is **40** (amended in this change), so a Void working doubles at 25 warp, just past band 3's 24. That is this spec's scale decision, not proven balance.
+- **The Joining bonus:** a Joined Listener's amplifier adds `joining.amplifier_bonus` (**10**, 0–50) warp points to `total`, so `amplifier_warp` is an `int` of at most 2,250. It is **additive, never a floor**: current warp still scales Void power. At 40 per mille the bonus is worth +40%; Joining's own permanent 5 plus the bonus give 15, ×1.6 (1600 ‰) before lasting warp or gear, short of the doubling at 25, so stilling still lowers a Joined Listener's Void power. It changes no band, chance, tax or penalty, and `warp.amplifier` off still zeroes the whole amplifier. Owned by the Eldritch tier spec, whose references give the vectors: `total` 12 → 12 unjoined, 22 Joined; 5 Joined → 15; 0 Joined → 10; 12 Joined at bonus 0 → 12; 2,200 Joined at bonus 50 → 2,250; 12 Joined with the switch off → 0.
 - **`VOID` is neutral:** factor 1.0, penalty 0. Void power has one lever, the amplifier's magnitude; Void costs stay predictable.
 - **Unreadable warp** reads as `total` 0 for every dial, with no Joining bonus.
 
-**Vectors** (`total` → band, factor `ORDINARY`/`VOID` in per mille, penalty `ORDINARY`/`VOID`): 0 → 0, 1000/1000, 0/0; 3 → 0, 1030/1000, 0/0; 7 → 0, 1070/1000, 1/0; 8 → 1, 1080/1000, 2/0; 19 → 1, 1190/1000, 4/0; 20 → 2, 1200/1000, 5/0; 37 → 2, 1370/1000, 9/0; 40 → 3, 1400/1000, 10/0; 49 → 3, 1490/1000, 12/0; 50 → 3, 1500/1000, 12/0; 80 → 3, 1500/1000, 20/0; 2,200 → 3, 1500/1000, 20/0. With the tax off, `total` 40 → 1000, 0.
+**Vectors** (`total` → band, factor `ORDINARY`/`VOID` in per mille, penalty `ORDINARY`/`VOID`): 0 → 0, 1000/1000, 0/0; 3 → 0, 1060/1000, 1/0; 5 → 0, 1100/1000, 2/0; 6 → 1, 1120/1000, 3/0; 13 → 1, 1260/1000, 6/0; 14 → 2, 1280/1000, 7/0; 23 → 2, 1460/1000, 11/0; 24 → 3, 1480/1000, 12/0; 25 → 3, 1500/1000, 12/0; 26 → 3, 1500/1000, 13/0; 39 → 3, 1500/1000, 19/0; 40 → 3, 1500/1000, 20/0; 41 → 3, 1500/1000, 20/0; 2,200 → 3, 1500/1000, 20/0. With the tax off, `total` 24 → 1000, 0.
 
-**Amplifier vectors** at the amended default ([foci, Magnitude](foci.md#magnitude): Force step 250, `max_bonus_pm` 1000; base, Force, `w`, Void → `power_pm`, `amp_pm`, out): 4000, 0, 37, yes → 1000, 1740, **6960**; 4000, 0, 50, yes → 1000, 2000, 8000; 4000, 3, 250, yes → 1750, 2000, 14,000. The old 10-per-mille figure survives only as an explicitly parameterised regression: 4000, 0, 37, yes → 1000, 1370, 5480.
+**Amplifier vectors** at the amended default ([foci, Magnitude](foci.md#magnitude): Force step 250, `max_bonus_pm` 1000; base, Force, `w`, Void → `power_pm`, `amp_pm`, out): 4000, 0, 12, yes → 1000, 1480, **5920**; 4000, 0, 15, yes (a Joined Listener's permanent 5 plus the bonus 10, before lasting warp or gear) → 1000, 1600, 6400; 4000, 0, 25, yes → 1000, 2000, 8000; 4000, 3, 250, yes → 1750, 2000 (capped), 14,000. The old 20-per-mille figure survives only as an explicitly parameterised regression, the same row as the foci spec's: 4000, 0, 37, yes → 1000, 1740, 6960.
 
 ## The commit
 
@@ -149,7 +155,7 @@ One service in `core.warp`, whose records live in `api`:
 | Record | Fields |
 |---|---|
 | `WarpCost` | `temporary`, `lasting`, `permanent`: each −1,000–1,000 |
-| `WarpSource` | a kind `ENTRY` \| `BARGAIN` \| `STILLING` \| `DECAY` \| `GEAR` \| `MILESTONE` \| `SILENCING` \| `COMMAND`, and an id for `ENTRY`, `BARGAIN` and `MILESTONE` |
+| `WarpSource` | a kind `ENTRY` \| `BARGAIN` \| `LISTEN` \| `STILLING` \| `DECAY` \| `GEAR` \| `MILESTONE` \| `SILENCING` \| `COMMAND`, and an id for `ENTRY`, `BARGAIN` and `MILESTONE` |
 | `WarpPreview` | the actual deltas `dT`, `dL`, `dP`, and `clipped` (the actual deltas differ from the cost) |
 | `CommitResult` | a status `OK` \| `STALE` \| `BUSY` \| `INVALID` \| `UNREADABLE`; the actual `WarpPreview` (`OK`) or the current one (`STALE`); the new `revision` (`OK`) |
 
@@ -165,7 +171,7 @@ One service in `core.warp`, whose records live in `api`:
 
 ### Commit and apply
 
-- **`commit(player, cost, source, expected)`**, for every change a player saw previewed (research's listen, learn and buy; a Bargain's acceptance; [#28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)'s Joining):
+- **`commit(player, cost, source, expected)`**, for every change a player saw previewed (research's listen, learn and buy; a Bargain's acceptance; the Listen rite, through its compound operation; [#28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)'s Joining):
   1. the player's **operation guard** is held: `BUSY`;
   2. take the guard; `preview` (`INVALID` or `UNREADABLE` end here);
   3. the preview ≠ `expected`: `STALE`, carrying the current preview;
@@ -173,7 +179,7 @@ One service in `core.warp`, whose records live in `api`:
   5. post `WarpChangedEvent` if any delta is non-zero, **while the guard is held**;
   6. release the guard in `finally`; return `OK` with the actual deltas.
 - **`apply(player, cost, source)`** is the same without step 3, for server-originated changes that show no echoed preview: decay, stilling and commands.
-- **Compound operations** (a Bargain's acceptance, Silencing, a gear sample) take the guard once, make every write through one internal mutation helper, publish one event at the end, and release in `finally`.
+- **Compound operations** (a Bargain's acceptance, the Listen rite, Silencing, a gear sample) take the guard once, make every write through one internal mutation helper, publish one event at the end, and release in `finally`.
 - **Re-entry:** a `commit` or `apply` from a listener, or from any callback inside a guarded operation, is refused `BUSY`. Nothing can come between a preview and its charge ([research, Contracts](research.md#contracts-on-sibling-specs)).
 - **Commands** are the one exception to the milestone rule: they change any kind, clamped to the format bounds and, for permanent gains, the cap.
 - **A throwing `WarpChangedEvent` listener** is logged once; the write stands and is never retried or rolled back, and the remaining cleanup and sync still run. NeoForge's own dispatch to its other subscribers is NeoForge's.
@@ -186,7 +192,7 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 - **Starting to drink** is refused on both sides, consuming nothing, when the synced `L` is 0: `message.vftv.warp.nothing_to_still`.
 - **On finishing** (server): `L` is read again; if it is 0 now, the same refusal and nothing is consumed. Otherwise `apply((0, −min(still.amount, L), 0), STILLING)`; `BUSY` refuses (`message.vftv.warp.busy`) and consumes nothing; `OK` consumes one draught (none for a player with infinite materials) and returns a glass bottle the way vanilla's potions do.
 - **Always works:** no chance. `still.amount` is **4**, and the tooltip states it beside the player's current lasting warp.
-- **Always costs:** the recipe (below), and every point stilled also lowers the amplifier, so going quiet weakens Void tools ([progression, Warp](progression.md#warp)). A Joined Listener's Joining bonus is never stilled, but everything else is: stilling from 37 to 5 takes their amplifier from 47 to 15.
+- **Always costs:** the recipe (below), and every point stilled also lowers the amplifier, so going quiet weakens Void tools ([progression, Warp](progression.md#warp)). A Joined Listener's Joining bonus is never stilled, but everything else is: stilling from 12 to 5 takes their amplifier from 22 to 15, and a Void working from ×1.88 to ×1.6 ([Eldritch tier, The capstones](eldritch.md#the-capstones)).
 - **The recipe** `vftv:stilling_draught` (the shipped body): `{"type": "vftv:crucible", "research": "vftv:being_heard", "catalyst": "minecraft:glass_bottle", "aspects": {"vftv:silentium": 6, "vftv:ordo": 4, "vftv:aqua": 4}, "result": {"id": "vftv:stilling_draught", "count": 1}}`. Silentium is a compound, and the [crucible never combines](crucible.md#the-recipe-type), so it must come from matter: wool (see the contract on [#30](https://github.com/andrewbrogoff/voices-from-the-void/issues/30)), named in the content's reviewed bootstrap.
 - **Options considered:** a soap with a hidden chance; a ward that only delays events (both TC4's). **Why not:** the lore says treatment "always works but always costs something", and the pain points ask for a visible price.
 
@@ -206,9 +212,10 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 - every listed milestone except `vftv:joining` names an existing `listen` entry;
 - **`vftv:joining` is listed** (any amount in range): the [Eldritch tier's Heart](eldritch.md#the-choice) reads its current amount for every quote and commit, so a retuning changes what Joining costs and never disables it.
 
-**No built-in gate needs permanent warp, and none waits on a Bargain.** The proof is ordered, through the research spec's affordability paths ([research, Affordability and recovery](research.md#affordability-and-recovery), amended): a path never commits a milestone entry, Bargains are not steps, and every built-in `warp_at_least` gate must latch during its Stage's replay from the `lasting` committed **before** it, so warp behind the very gate being tested can't pay for it.
+**No built-in gate needs permanent warp, and none waits on a Bargain.** The proof is ordered, through the research spec's affordability paths ([research, Affordability and recovery](research.md#affordability-and-recovery), amended): a path never commits a milestone entry, Bargains and the Listen rite are not steps, and every built-in `warp_at_least` gate must latch during its Stage's replay from the `lasting` committed **before** it, so warp behind the very gate being tested can't pay for it.
 
-- **Options considered:** no permanent warp at all. **Why not:** the lore makes the permanent share "what you can never un-hear", a deliberate milestone. 10 against bands of 8, 20 and 40 means permanent warp alone reaches band 1 at most.
+- **Every built-in gate is latched by the reveal.** The highest built-in gate is 4 (`vftv:void_armor` and `vftv:void_wands`), which `silence_beneath`'s own commit meets, so a Listener who stills to 0 afterwards never finds a Stage 4 key locked ([Eldritch tier, Stage](eldritch.md#stage)).
+- **Options considered:** no permanent warp at all. **Why not:** the lore makes the permanent share what a Listener *chose* never to un-hear, a deliberate milestone. 10 against bands of 6, 14 and 24 means permanent warp alone reaches band 1 at most.
 
 ## Gear warp
 
@@ -223,7 +230,8 @@ Treating lasting warp. "Silencing" stays the name of the ending.
 
 ### The counter and the chance
 
-- **Gains raise the counter:** on every commit or apply, `counter = min(counter.max, min(counter, counter.max) + gains × counter.per_gain)`, `gains` being the positive actual deltas of `T`, `L` and `P`. Decay, stilling and gear never raise it.
+- **Gains raise the counter:** on every commit or apply, `counter = min(counter.max, min(counter, counter.max) + gains × counter.per_gain)`, `gains` being the positive actual deltas of `T`, `L` and `P`. The Listen rite's cost is such a gain (lasting 2 → +20). Decay, stilling and gear never raise it.
+- **Void work raises the counter, never warp:** `noteVoidWork` ("Context") also sets `counter = min(counter.max, min(counter, counter.max) + counter.per_void_work)` (**5**), under the guard (a held guard skips that increment), never for an unreadable or Silenced record, and syncs the record only if the counter changed. No price, warp or dial moves, so it needs no preview and is no hidden tax; it keeps a Stage 4 Listener who works with the Void *heard*. Vectors: counter 0 → 5; 997 → 1000; 900 stored under a lowered `counter.max` 150 → 150.
 - **Fired events lower it:** `counter = max(0, min(counter, counter.max) − counter.per_event)`.
 - **The chance, per check, in per mille:** `p = total == 0 ? 0 : min(chance.max_pm, chance.base_pm + P × chance.per_permanent_pm + min(counter, counter.max) × chance.per_counter_pm)`. This one formula is what both the check and the Ledger's `chance` fact use, so a Listener with no warp reads 0%.
 - **The background:** a Listener who stops gaining settles to `15 + 5P` per mille at each check (1.5% to 6.5%): faint, set by permanent warp, never zero while any warp remains ([progression, What the Voices do](progression.md#what-the-voices-do)). A Listener with no warp hears nothing: `p` is 0, and the check is skipped as well (suppression row 4).
@@ -253,11 +261,11 @@ A check is **skipped** (no draw; `checks`, the counter and everything else uncha
 
 A check that isn't skipped draws from **one `java.util.Random(fold([0x564F4943 ("VOIC"), uuidMsb, uuidLsb, checks]))`**, and `checks` then increments, whatever the outcome. Every draw is `nextInt(bound)` with `bound` ≥ 1, or `nextLong()`. In order:
 
-1. **Roll:** `roll = nextInt(1000)`; the check goes on only if `roll < p`.
+1. **Roll:** `roll = nextInt(1000)`; the check goes on only if `roll < p`. A **forced** check (the Listen rite's) draws the roll, so the order never changes, and goes on whatever it is.
 2. **Eligibility,** over the `vftv:voice_event` registry in ascending id: the event's type is on in server config; `min_band ≤ band ≤ max_band`; if `context`, the player is in context ("Context"); a `vftv:bargain` event needs no live offer and at least one eligible bargain ("Bargains"); a `vftv:insight` event needs at least one known aspect. **None eligible:** the check ends with no further draw.
 3. **Pick:** `nextInt(Σ weight)` over the eligible events' cumulative weights.
 4. **Cue seed:** `cueSeed = nextLong()`.
-5. **Server parameters,** by type: `vftv:insight` draws `known[nextInt(n)]`, the known aspects in ascending id; `vftv:bargain` draws `nextInt(Σ weight)` over the eligible bargains in ascending id; `vftv:spawn` draws its placement (see "Event types"). Other types draw nothing here.
+5. **Server parameters,** by type: `vftv:insight` draws `known[nextInt(n)]`, the known aspects in ascending id; `vftv:bargain` draws `nextInt(Σ weight)` over the eligible bargains in ascending id. Other types draw nothing here.
 6. **Run** the server part, then settle the outcome.
 
 **Outcomes:**
@@ -267,7 +275,7 @@ A check that isn't skipped draws from **one `java.util.Random(fold([0x564F4943 (
 | `SKIPPED` | a suppression row | unchanged | unchanged | none |
 | `QUIET` | `roll ≥ p` | +1 | unchanged | none |
 | `NONE` | nothing eligible | +1 | unchanged | none |
-| `FAILED` | the server part did nothing: a `status` event applied no effect, or a `spawn` event spawned nothing | +1 | unchanged | none |
+| `FAILED` | the server part did nothing: a `status` event applied no effect | +1 | unchanged | none |
 | `FIRED` | otherwise | +1 | − `counter.per_event` | sent, **except** after a danger callback made the Listener ineligible (see "Danger") |
 
 **The one exception** is a danger event whose callbacks silence the Listener, open a menu, set `quiet` or otherwise make a suppression row hold: the counter settles from what actually succeeded (`FIRED` or `FAILED` as above), but no cue is sent.
@@ -276,9 +284,9 @@ A client-side type always settles `FIRED`: the server can't see whether the clie
 
 **Vectors** (UUID above):
 - After `being_heard` (`T` 3), `silence_beneath` (`L` 4) and `under_the_silence` (`P` 2): counter 90, `total` 9, band 1, `p` 115. Checks 0–3 are quiet (rolls 188, 859, 766, 549); check 4 rolls 26, picks 12 of 88 → `vftv:footsteps`, cue `0DF0AA695B97CC14`, counter 60; checks 5–11 are quiet at `p` 85 (rolls 584, 671, 532, 604, 677, 595, 388).
-- `total` 52, band 3, `P` 10, counter 400, in context, an offer open, 20 known: checks 100 and 101 quiet (528, 659); check 102 rolls 71 < 250, picks 11 of 104 → `vftv:false_stone`, cue `611DA5A7DEEFDC87`, counter 370; checks 103–105 quiet (486, 862, 704).
-- `total` 25, band 2, counter held at 1000, no context, no offer, 7 known, the first of each type: check 203 → `vftv:whisper` (pick 78 of 102, cue `339C9C5D43AE62AC`); 204 → `vftv:false_stone` (10, `0D874E6671D1C117`); 207 → `vftv:offer` (55, `210DB43E85A0C2EC`), bargain `vftv:quick_hands`; 211 → `vftv:watcher` (60, `2A5CEE7D8F68C7E8`); 212 → `vftv:insight` (43, `FDBDCB55FA6CDBB7`), aspect 3 of 7; 228 → `vftv:drained` (7, `D6C2A8E3AADAB044`); 233 → `vftv:footsteps` (18, `76CAA311F155588D`).
-- The same check 207 with only `vftv:keen_eyes` eligible draws bargain `vftv:keen_eyes`.
+- `total` 52, band 3, `P` 10, counter 400, in context, an offer open, 20 known: checks 100 and 101 quiet (528, 659); check 102 rolls 71 < 250, picks 27 of 96 → `vftv:insight`, cue `611DA5A7DEEFDC87`, aspect 19 of 20, counter 370; checks 103–105 quiet (486, 862, 704).
+- `total` 20, band 2, counter held at 1000, no context, no offer, 7 known, the first of each type: check 203 → `vftv:drained` (pick 2 of 94, cue `339C9C5D43AE62AC`); 204 → `vftv:footsteps` (20, `0D874E6671D1C117`); 212 → `vftv:whisper` (87, `FDBDCB55FA6CDBB7`); 215 → `vftv:watcher` (52, `295BA7579F883854`); 222 → `vftv:offer` (43, `A22D32BB04C2F67E`), bargain `vftv:quick_hands`; 228 → `vftv:insight` (33, `D6C2A8E3AADAB044`), aspect 0 of 7.
+- The same check 222 with only `vftv:keen_eyes` eligible draws bargain `vftv:keen_eyes`.
 - **Empty eligibility:** `total` 5, band 0, no known aspect, whisper switched off, counter 1000: check 509 rolls 168 < 250, `NONE`, counter still 1000.
 - The background: `total` 4, `P` 0, counter 0 → 15 ‰; `total` 0 → 0 ‰; `P` 10 → 65 ‰.
 
@@ -293,34 +301,27 @@ A code registry, **`vftv:voice_event_type`**: types in code, instances in data. 
 | `vftv:bargain` | creates the offer ("Bargains") | a line from the `offer` pool |
 | `vftv:sound` | none | a phantom sound |
 | `vftv:colour` | none | the colour drain |
-| `vftv:phantom_block` | none | disguised blocks |
 | `vftv:phantom_mob` | none | an apparition |
 | `vftv:status` (context only) | each listed effect through **one** `addEffect` call ([below](#danger)) | none of its own |
-| `vftv:spawn` (context only) | the placement below | none of its own |
+
+- **Cut from v1:** `vftv:spawn` (a server placement algorithm for a type with no shipped instance) and `vftv:phantom_block` (disguised blocks, a client render override paid for with the one rendering gap the NeoForge research flagged). The type registry stays extensible, so an addon or v1.1 can add either; apparitions, phantom sounds and the colour drain keep the "senses lie" promise.
 
 #### Danger
 
-**Physical danger only in context** ([progression, What the Voices do](progression.md#what-the-voices-do)): the two server-side danger types are valid only on events with `context: true`.
+**Physical danger only in context** ([progression, What the Voices do](progression.md#what-the-voices-do)): the server-side danger type, `vftv:status`, is valid only on events with `context: true`.
 
-**Danger eligibility,** rechecked **before every danger operation after the first** (each later `addEffect`, each later spawn attempt): the Listener is online, alive and in the same level; no suppression row holds (so not silenced, no menu open, `quiet` unset, past grace); and they are still in context ("Context"), read afresh. Foreign callbacks can teleport, silence or open a menu for the Listener, so nothing from before a callback is trusted after it. When the recheck fails, the remaining operations of that event are skipped, and the outcome follows the exception under "Outcomes".
+**Danger eligibility,** rechecked **before every danger operation after the first** (each later `addEffect`): the Listener is online, alive and in the same level; no suppression row holds (so not silenced, no menu open, `quiet` unset, past grace); and they are still in context ("Context"), read afresh. Foreign callbacks can teleport, silence or open a menu for the Listener, so nothing from before a callback is trusted after it. When the recheck fails, the remaining operations of that event are skipped, and the outcome follows the exception under "Outcomes".
 
 **`vftv:status`:** the listed effects (1–3), in list order, each through **one** vanilla `addEffect(new MobEffectInstance(effect, duration, amplifier))`. That call runs NeoForge's applicability callback and the `Added` callbacks inside itself (`MC:world/entity/LivingEntity.java:1047–1066`; `NF:common/CommonHooks.java:1588–1590`); its return value is the result, and nothing probes applicability separately. `FIRED` if any call returned true, else `FAILED`. A throw is logged once and counts as false. Whatever the callbacks did stays: native and addon side effects are disclosed, never rolled back.
 
-The built-in `vftv:pressing_dark`: Darkness 0 and Slowness 0 for 100 ticks each. Darkness honours the client's own `darknessEffectScale` (`MC:client/Options.java:1427`).
+The built-in `vftv:pressing_dark`: Slowness 0 for 100 ticks. **No Darkness:** context includes Vuulas, lit only by soul lanterns, where a Chorister's only positional telegraph is a mark on the floor; Darkness would hide it for 5 s. Slowness alone is the cost the [Choristers' dodge model](choristers.md#dodging) prices in.
 
-**`vftv:spawn`:** up to `count` entities (1–3), from **one budget of `MAX_SPAWN_ATTEMPTS` (16) attempts shared by all the entities in the event**, drawn from the check's `Random`, in order until `count` have counted or the budget is spent. Each attempt:
-1. `dx = nextInt(2·max + 1) − max`, `dz` likewise. The attempt goes on only if `min² ≤ dx² + dz² ≤ max²` (`min_distance` and `max_distance`, default 8 and 24).
-2. **Column:** from the player's block y + 4 down to y − 8 (at most 13 cells), the first y where the cell is entity-ticking (`ServerLevel#isPositionEntityTicking`, `MC:server/level/ServerLevel.java:1823`), the block below has a sturdy top face, the entity type's box at `(x + 0.5, y, z + 0.5)` has no collision, and every player in the level is at least `min_distance` away in three dimensions. No chunk is loaded. No such y ends the attempt.
-3. **Spawn:** create it with spawn reason `EVENT`, place it, and `addFreshEntity`. Join listeners may cancel or move it.
-4. **Check the insertion:** it counts only if `addFreshEntity` returned `true` and, read afterwards, the entity is alive in this level, still in the chosen cell, its box has no collision, and every player in the level is still at least `min_distance` away. Otherwise our entity is discarded (if it was added) and doesn't count.
-5. **Recheck danger eligibility** before the next attempt; when it fails, stop.
-
-`FIRED` if at least one counted, else `FAILED`. Entities that counted stay. An entity type outside the tag **`vftv:voice_spawnable`** is rejected at load. **v1 ships no spawn instance:** [#27](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) and [#28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) may add instances for their own Void-touched mobs under these rules. The Answerers are never Voice spawns.
+**No spawns:** v1 has no Voice event that creates an entity; nothing hostile ever appears on the Listener, and the Answerers are never Voice spawns.
 
 ### Context
 
 A player is **in context** iff any of:
-1. **Void work:** `g < void_work_until`, which is set to `g + context.window` (600 ticks) when that player's `VisSpentEvent` carries `kind` `VOID` ([wands, Events](wands.md#events)). The `neoforge.warp` listener calls `WarpService.noteVoidWork(player)`; `core.warp` never imports `core.vis`.
+1. **Void work:** `g < void_work_until`, which is set to `g + context.window` (600 ticks) when that player's `VisSpentEvent` carries `kind` `VOID` ([wands, Events](wands.md#events)). The `neoforge.warp` listener calls `WarpService.noteVoidWork(player)`, which also adds `counter.per_void_work` to the counter ("The counter and the chance"); `core.warp` never imports `core.vis`.
 2. **A Void-touched dimension:** the player's level is in tuning `context.dimensions` (by default the [Eldritch tier's](eldritch.md#vuulas) `vftv:vuulas`).
 3. **A Void-touched place:** any **place query** registered with `WarpService.registerPlaceQuery(VoidPlaceQuery)` answers true for the player's level and block position. A query is a plain interface in `core.warp`, registered at init by the feature that owns the place ([Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26) for the Hush, [Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27) for Choir sites, [Eldritch tier](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) for the Road: its `RoadPlaceQuery`, true iff the level is Vuulas and the position is in the Road's column, O(1) over `RoadLayout` with no chunk read; its Thresholds are Choir sites). It must be pure, read only loaded data, never load a chunk, and do work bounded by what is indexed for that position's chunk.
 
@@ -337,7 +338,8 @@ A datapack registry **`vftv:bargain`** (server-only, fixed when a world opens), 
 | Type | Fields | Power |
 |---|---|---|
 | `vftv:effect` | `effect` (a mob effect id), `amplifier` 0–2, `duration` 200–24,000 ticks | that effect, through one `addEffect` call |
-| `vftv:points` | `points`: 1–4 aspects, each 1–64 | those points, through the knowledge service, to known aspects only |
+
+- **No points bargain.** Aspect points are abundant after the first hour ([research](research.md#affordability-and-recovery)), so power paid in points is a dud nobody accepts; v1 has the one type.
 
 Every bargain also has `cost` `{"temporary": 0–20, "lasting": 0–20}`, at least one > 0 (**permanent is rejected**: permanent warp stays the milestones' alone), and `weight` 1–1000. At most `MAX_BARGAINS` (64).
 
@@ -347,9 +349,8 @@ Every bargain also has `cost` `{"temporary": 0–20, "lasting": 0–20}`, at lea
 |---|---|---|---|
 | `vftv:keen_eyes` | Night Vision (amplifier 0) for 6,000 ticks | temporary 3 | 30 |
 | `vftv:quick_hands` | Haste (amplifier 1) for 3,600 ticks | temporary 2, lasting 1 | 20 |
-| `vftv:unheard_insight` | 6 Vacuos and 4 Silentium points | lasting 2 | 10 |
 
-**A bargain is eligible** at a check iff its cost's preview is not clipped (the Voices never offer power for nothing at a cap), and for `vftv:points`, every one of its aspects is known.
+**A bargain is eligible** at a check iff its cost's preview is not clipped (the Voices never offer power for nothing at a cap).
 
 ### The offer
 
@@ -366,17 +367,45 @@ Every bargain also has `cost` `{"temporary": 0–20, "lasting": 0–20}`, at lea
    - no offer → `message.vftv.warp.offer_gone`;
    - the offer has expired → it is **deleted**, `offer_gone`;
    - `seq` ≠ `offerSeq` → `offer_gone`, and **the live offer is kept** (a stale action never touches a newer offer);
-   - the bargain id is missing from the registry, or a `points` aspect is missing or no longer known → the offer is **deleted**, `offer_gone`.
+   - the bargain id is missing from the registry → the offer is **deleted**, `offer_gone`.
 
    These deletions of an expired or invalid offer are the only state a refusal may change.
 3. `preview(cost, BARGAIN(id))` is clipped → `message.vftv.warp.offer_full`; the offer stays.
 4. The preview ≠ `echoedWarp` → the research spec's "The cost has changed." with fresh quotes.
-5. **Grant** the power: one `addEffect` call, or the points credit. `addEffect` returning false (an applicability callback said no, or a stronger effect is already active) → `message.vftv.warp.offer_cannot`; nothing is charged and the offer stays. A throw is logged once and counts as false; whatever native or addon side effects happened stay, and no general rollback is promised.
+5. **Grant** the power: one `addEffect` call. `addEffect` returning false (an applicability callback said no, or a stronger effect is already active) → `message.vftv.warp.offer_cannot`; nothing is charged and the offer stays. A throw is logged once and counts as false; whatever native or addon side effects happened stay, and no general rollback is promised.
 6. On a grant, with no foreign code between: write the warp (as a commit's step 4), delete the offer; then post `WarpChangedEvent(BARGAIN(id))` and play `bargain.accept`; release in `finally`.
 
 Nothing is rechecked after the grant: the guard kept warp from changing, and once the power is given the price is paid.
 
 `refuse_offer(offerSeq)`, after the same research checks, under the guard: no offer → `offer_gone`; an expired offer → deleted, `offer_gone`; `seq` ≠ `offerSeq` → `offer_gone`, the live offer kept; otherwise the offer is deleted. It changes nothing else, ever.
+
+## The Listen rite
+
+The one **repeatable, deliberate listen**: "listening is always a deliberate act, done through an instrument or a rite" ([lore, Listening and warp](lore.md#listening-and-warp)). Without it the dial only turns down: entry warp is one-shot, Bargains arrive only when an event fires, and a Listener stilled to `total` 0 skips every check, so nothing could ever reach them again. The rite reuses the checked commit, the counter and the check; its only new state is the persisted `last_listen` and the transient `listen_due`.
+
+- **The surface: the Ledger.** One **Listen** button on the Ledger's offer card (the right page) while no offer stands, sent as the research spec's action **`listen_rite(echoedWarp)`**, counted as a commit under its one-commit-per-tick rule. The card shows the cost (`ledger.vftv.offer.cost`) and, while the rite is refused, the button disabled with the refusal's message as its tooltip and narration.
+- **Where:** in a **Void-touched place**, `inVoidTouchedPlace(level, player.blockPosition())` ("Context", clause 3): a Choir site (every ruin and Threshold), hushed ground or the Road. The book goes everywhere; the place is what makes it a rite.
+- **When:** from Stage 3, after the reveal. The research spec shows the button only once `vftv:silence_beneath` is learned (`core.warp` imports no research, so that gate is research's), and never to a Silenced Listener or while `warp.voices.enabled` is off.
+- **Cost:** tuning **`listen.cost`**, default `{"lasting": 2}`: temporary 0–20 and lasting 0–20, at least one above 0, **permanent rejected** (permanent warp stays the milestones'). Previewed as `preview(listen.cost, LISTEN)`; the Ledger's quote carries it as the offer's does.
+- **Cooldown:** tuning **`listen.cooldown`**, **6,000** ticks (5 minutes). Ready iff `last_listen` < 0, or `g − last_listen ≥ listen.cooldown`, or `g < last_listen` (a world whose clock went back). Persisted, so relogging never resets it; a lowered cooldown applies at once.
+
+**`WarpService.listen(player, expected)`**, after the research spec's rate, request-id and menu checks, is one guarded compound operation. First match refuses with nothing changed:
+1. the guard is held: `message.vftv.warp.busy`;
+2. the record is unreadable: `message.vftv.warp.unreadable`;
+3. `silenced`, or `warp.voices.enabled` off: `message.vftv.warp.listen_closed`;
+4. not in a Void-touched place: `message.vftv.warp.listen_place`;
+5. cooling: `message.vftv.warp.listen_cooldown`, with the seconds left;
+6. the preview is clipped: `message.vftv.warp.offer_full` (the Voices never take warp for nothing at a cap);
+7. the preview ≠ `expected`: the research spec's "The cost has changed." with fresh quotes;
+8. otherwise, with no foreign code between: write the warp as a commit's step 4 (so the counter rises by `gains × counter.per_gain`, +20 at the default), `last_listen = g`, set `listen_due`; post `WarpChangedEvent(LISTEN)` while the guard is held; release in `finally`. The research layer then plays `vftv:book.listen` and closes the book (`ServerPlayer#closeContainer`), so the Voices can answer.
+
+**The forced check** is schedule step 4 ("Schedule"): at the first tick on which no suppression row holds, normally the tick the client's `VoiceQuiet(false)` arrives after the book closes, `listen_due` is cleared and one check runs. It is an ordinary check (the same `Random`, `checks` index, eligibility, pick, parameters, outcome and counter rule) except that its roll is drawn and ignored, so it settles `NONE`, `FAILED` or `FIRED`, never `QUIET`. Danger stays context-only. At band 0 the rite brings a whisper or an insight; from band 1 anything the band allows, Bargains included. `listen_due` is transient: cleared by the forced check and at logout, death, a dimension change and Silencing. A lapsed one has still paid, and the counter it raised feeds the ordinary checks that follow.
+
+**Vectors** (UUID above): a Listener stilled to nothing (`T` 0, `L` 0, `P` 0, counter 0) at a Choir site commits (0, 2, 0), not clipped, counter 20, `total` 2, band 0; the forced check 12 draws roll 230 and ignores it, picks 38 of 55 → `vftv:whisper`, cue `17DB95611369EEE9`, counter 0. At `total` 8, band 1, `P` 0, counter 100, 7 known, no offer, forced checks 13–18, each from counter 100, pick 84, 9, 50, 53, 51 and 71 of 88 → `vftv:whisper` (cue `45B9ECC5196FAD18`), `vftv:drained` (`03B96FD3CA6F2CE2`), then `vftv:whisper` four times (`D49266C63348E278`, `FA7617B4A3AC2389`, `B6FB8572B56AB179`, `BF05F3BCFCA1AEE3`), each leaving counter 70.
+
+- **Not a path step:** no gate waits on the rite ("Permanent warp"), and affordability paths never perform it. It is how a Listener who stilled turns the dial back up, by choice, at a price.
+- **Joined and Silenced:** it stays open to the Joined and closes to the Silenced for good, with Bargains, which the Heart's panels state ([Eldritch tier, The block and the screen](eldritch.md#the-block-and-the-screen)).
+- **Options considered:** sneak-tolling the Hollow Bell at a Void-touched place. **Why not:** the bell is Stage 4 and its use already means descend and return, while the rite opens at Stage 3; the Ledger already holds the cost, the counter and the offer it leads to.
 
 ## What a Listener perceives
 
@@ -410,7 +439,6 @@ Everything in this section runs on the owner's client and never touches server s
 |---|---|---|
 | `vftv:sound` | `sounds[nextInt(n)]` over the `phantoms` resource's list; `yaw = nextInt(360)`; `dist = 4 + nextInt(7)` | `ClientLevel.playLocalSound` (`MC:client/multiplayer/ClientLevel.java:738`) at the player's feet + (−sin yaw · dist, 1, cos yaw · dist) on `SoundSource.AMBIENT`, volume 1.0, pitch 1.0, no distance delay |
 | `vftv:colour` | none | the colour drain (below) |
-| `vftv:phantom_block` | per probe: `dx = nextInt(33) − 16`, `dy = nextInt(9) − 4`, `dz = nextInt(33) − 16` | disguises (see "Phantoms") |
 | `vftv:phantom_mob` | per attempt: `yaw = nextInt(360)`, `dist = 12 + nextInt(9)` | an apparition (see "Phantoms") |
 
 **The colour drain** is a fullscreen desaturation (the Hush's subtraction, [lore, The Hush](lore.md#the-hush-replaces-taint)), drawn by our own pass with a per-frame uniform, as the [architecture spec](architecture.md#rendering) plans for warp intensity:
@@ -421,7 +449,7 @@ Everything in this section runs on the owner's client and never touches server s
 
 ### Phantoms
 
-**The fork never lies** ([aspects, Phantoms](aspects.md#what-a-strike-reveals)): phantoms have no server identity, so whatever the fork strikes is what is really there.
+**The fork never lies** ([aspects, Phantoms](aspects.md#what-a-strike-reveals)): phantoms have no server identity, so whatever the fork strikes is what is really there. v1's only visible phantom is the apparition (disguised blocks are cut: "Event types").
 
 **Apparitions** (phantom mobs):
 - **The entity type `vftv:apparition`:** a plain `Entity` with no health and no AI, built with `noSummon()` and `noSave()` (`MC:world/entity/EntityType.java:596,601`); `isPushable` false, `canBeCollidedWith` false, `isPickable` true (`MC:world/entity/Entity.java:2017,2025,2384`). The server never creates one; one that exists server-side is discarded on its first tick.
@@ -431,29 +459,23 @@ Everything in this section runs on the owner's client and never touches server s
 - **No packet:** our `InputEvent.InteractionKeyMappingTriggered` listener cancels that input **and calls `setSwingHand(false)`** (`NF:client/event/InputEvent.java:314–325`). The call sites return before any attack or use processing, and swing only when asked to (`MC:client/Minecraft.java:1689–1693,1744–1748`); a permitted swing would send `ServerboundSwingPacket` (`MC:client/player/LocalPlayer.java:327–329`). So a strike at an apparition sends nothing, shows silence, and **never falls through to sounding at air**. Even a sent attack or interact would find no target (`MC:server/network/ServerGamePacketListenerImpl.java:1849–1851,1878–1880`).
 - **Lore:** an apparition is a glimpse of a Choir figure, robed and faceless, never a vanilla mob, so nothing hostile ever seems to spawn on the Listener and nothing is confused with vanilla's Phantom.
 
-**Disguises** (phantom blocks):
-- **A disguise** is a real block drawn as another. The `phantoms` resource's `disguises` list pairs a block tag (`real`) with a block (`shown`).
-- **Placement:** count = `max(1, 2 · (band − 1))`, so 2 at band 2 and 4 at band 3. Up to `MAX_PHANTOM_PROBES` (64) probes with the draws above, relative to the player's block position. A probe is accepted iff 36 ≤ dx² + dy² + dz² ≤ 256; the chunk is loaded on the client; the cell isn't already disguised; its block is a full opaque cube; the first disguise in list order whose `real` tag holds that block shows a different block; and at least one of the six neighbours isn't a full opaque cube, so it can be seen. At most `MAX_PHANTOM_BLOCKS` (4) at once: the oldest goes first.
-- **Drawn** as the shown block's model scaled 1.002 about the cell's centre, with the cell's light, so it covers the real block; no chunk is rebuilt and the level is unchanged.
-- **Why disguises only:** collision, targeting and the server all stay real. Walking, mining and the fork all reach the real block, so the [aspects](aspects.md#what-a-strike-reveals) row "a phantom over a real block reads the real block" holds by construction, and a phantom over air never arises. A phantom over air would need collision (and moving onto it would desync the player from the server) or a client picking override.
-- **It vanishes** when touched, in the first of: an attack, use or strike whose crosshair hit is its cell (the input goes on to the real block); the player's box, grown by 0.05, touching the cell; a change of the cell's block state (checked each tick, at most 4 reads); 600 ticks; a level change.
 
 ### Accessibility
 
-**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; disguises and apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. On the client it takes effect at the next frame or tick: `voices.text` off hides a line already on screen while its sound plays on; `voices.colour_shift` off ramps out within 50 ticks (see "Perception effects"); `voices.phantoms` off removes existing apparitions and disguises silently; `voices.phantom_sounds` off starts no new phantom sound, and one playing finishes. Files, ranges and comments are the [configuration spec's](config.md#client-keys). The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`, and Darkness follows `darknessEffectScale`. The mod-wide baseline (captions, subtitles, photosensitivity, contrast, narration) is the [localisation and accessibility spec's](accessibility.md); this spec's surfaces conform to it.
+**Client config:** `voices.text` (on), `voices.colour_shift` (on), `voices.phantoms` (on; apparitions), `voices.phantom_sounds` (on). The research spec's `book.clear_prose` is unchanged. Turning one off changes nothing on the server: the counter and every outcome stay as they were. On the client it takes effect at the next frame or tick: `voices.text` off hides a line already on screen while its sound plays on; `voices.colour_shift` off ramps out within 50 ticks (see "Perception effects"); `voices.phantoms` off removes existing apparitions silently; `voices.phantom_sounds` off starts no new phantom sound, and one playing finishes. Files, ranges and comments are the [configuration spec's](config.md#client-keys). The volume of Voice lines is vanilla's Voice slider; the colour drain also follows `screenEffectScale`. The mod-wide baseline (captions, subtitles, photosensitivity, contrast, narration) is the [localisation and accessibility spec's](accessibility.md); this spec's surfaces conform to it.
 
 ## In the Commonplace Book
 
 The [research spec](research.md#structure) owns the book. This spec supplies its numbers (amended there in this change):
-- **The Ledger's warp spread** ([research, GUI contract](research.md#gui-contract)): on the left page, the kinds, gear, `total` (and, for a Joined Listener, the Joining bonus the amplifier adds, `ledger.vftv.warp.joined`), the band and the next threshold, the counter, and the **chance per eligible check** with the check's interval in seconds and every part of the formula; on the right page, the offer card with **Accept** and **Refuse**.
+- **The Ledger's warp spread** ([research, GUI contract](research.md#gui-contract)): on the left page, the kinds, gear, `total` (and, for a Joined Listener, the Joining bonus the amplifier adds, `ledger.vftv.warp.joined`), the band and the next threshold, the counter, and the **chance per eligible check** with the check's interval in seconds and every part of the formula; on the right page, the offer card with **Accept** and **Refuse**, and, while no offer stands, the **Listen** button with the rite's cost or its refusal ("The Listen rite").
 - **Fact spans:** the existing `warp:<kind|total>` grows `band`, `counter` and `chance`; `entry:<ns>:<path>:warp` shows the reader's own preview; a new `warp_rules` source states every tuning number.
-- **Two actions,** `accept_offer` and `refuse_offer`, each counted as a commit under the research spec's one-commit-per-tick rule; the offer's preview travels in its quotes.
+- **Three actions,** `accept_offer`, `refuse_offer` and `listen_rite`, each counted as a commit under the research spec's one-commit-per-tick rule; the offer's preview and the rite's travel in its quotes, with the rite's cooldown left.
 
 ## Joining and Silencing
 
 [Eldritch tier #28](https://github.com/andrewbrogoff/voices-from-the-void/issues/28) owns the choice and keeps it in the world. This spec never imports #28; #28 calls `core.warp`:
-- **Silencing:** `WarpService.silence(player, expected)`, one guarded compound operation, checked like a commit. First match: the guard is held → `BUSY`; the record is unreadable → `UNREADABLE`; already silenced, or `expected` isn't the current `(−T, −L, 0)` preview → `STALE` with the current one. Otherwise `T` and `L` to 0, `silenced` set, the offer deleted and the counter to 0, all written before one `WarpChangedEvent(SILENCING)` is posted with the deltas, while the guard is held; then `VoiceClear`; the guard released in `finally`; `OK`. A throwing listener is logged once and the silencing stands, `VoiceClear` included. A silenced Listener is never checked again, so the Voices stop for them. Permanent and gear warp stay, the dials still read `total`, and later gains still apply, taxed and visible, so nothing silently stops working.
-- **Joining:** #28 shows `preview((0, 0, J), MILESTONE(vftv:joining))`, with J the milestone's current amount in `permanent.milestones` (5 as shipped), and calls `commit` with it, at most once (`milestones_paid`). The Voices continue for a Joined Listener, and their amplifier gains the Joining bonus ("The dials"). No event field distinguishes Joined Listeners in v1.
+- **Silencing:** `WarpService.silence(player, expected)`, one guarded compound operation, checked like a commit. First match: the guard is held → `BUSY`; the record is unreadable → `UNREADABLE`; already silenced, or `expected` isn't the current `(−T, −L, 0)` preview → `STALE` with the current one. Otherwise `T` and `L` to 0, `silenced` set, the offer and `listen_due` deleted and the counter to 0, all written before one `WarpChangedEvent(SILENCING)` is posted with the deltas, while the guard is held; then `VoiceClear`; the guard released in `finally`; `OK`. A throwing listener is logged once and the silencing stands, `VoiceClear` included. A silenced Listener is never checked again and can never perform the Listen rite, so the Voices stop for them. Permanent and gear warp stay, the dials still read `total`, and later gains still apply, taxed and visible, so nothing silently stops working.
+- **Joining:** #28 shows `preview((0, 0, J), MILESTONE(vftv:joining))`, with J the milestone's current amount in `permanent.milestones` (5 as shipped), and calls `commit` with it, at most once (`milestones_paid`). The Voices, Bargains and the Listen rite continue for a Joined Listener, and their amplifier gains the Joining bonus ("The dials"). No event field distinguishes Joined Listeners in v1.
 - **The record is the ending's only authority:** Joined ⇔ `vftv:joining ∈ milestones_paid`; Silenced ⇔ `silenced`. #28 writes no ending of its own and derives everything from these ([Eldritch tier, The ending authority](eldritch.md#the-ending-authority)). **`WarpService.isSilenced(player)`** is a pure read of the flag (false for an unreadable record), for the [Hush spec's](hush.md#where-it-begins) attendance and Hollows without a dependency on #28.
 
 ## Commands
@@ -476,7 +498,7 @@ The content tickets deliver authored inputs under `content/`, following the rese
 content/lexicon/void_tongue.json   the Void-tongue lexicon and the ending lines' text
 content/warp/events.json           the Voice events
 content/warp/bargains.json         the bargains
-content/warp/phantoms.json         disguises and phantom sounds
+content/warp/phantoms.json         phantom sounds
 content/warp/voice_lines.json      the Voice line script
 content/warp/recipes.json          the Stilling Draught
 content/warp/bootstrap.json        the reviewed physical sources for that recipe
@@ -539,12 +561,9 @@ A line's text is a list of **`segments`**, each `{"lang": "en" | "void", "text":
 | `weight` | yes | 1–1000 | |
 | `min_band` | no, default 0 | 0–3 | |
 | `max_band` | no, default 3 | `min_band`–3 | |
-| `context` | no, default false | boolean | eligible only in context; **required true** for `status` and `spawn` |
+| `context` | no, default false | boolean | eligible only in context; **required true** for `status` |
 | `points` | `insight` only | 1–64 | |
 | `effects` | `status` only | 1–3 of `{"effect": <mob effect id>, "amplifier": 0–4, "duration": 20–600}` | |
-| `entity` | `spawn` only | an entity type in `vftv:voice_spawnable` | |
-| `count` | `spawn` only | 1–3 | |
-| `min_distance`, `max_distance` | `spawn` only, defaults 8, 24 | 8–24, `min_distance`–32 | |
 
 **The shipped roster** (the content ticket ships exactly these):
 
@@ -555,14 +574,12 @@ A line's text is a list of **`segments`**, each `{"lang": "en" | "void", "text":
   "vftv:footsteps":     {"type": "vftv:sound",         "weight": 15, "min_band": 1},
   "vftv:drained":       {"type": "vftv:colour",        "weight": 10, "min_band": 1},
   "vftv:offer":         {"type": "vftv:bargain",       "weight": 8,  "min_band": 1},
-  "vftv:false_stone":   {"type": "vftv:phantom_block", "weight": 8,  "min_band": 2},
   "vftv:watcher":       {"type": "vftv:phantom_mob",   "weight": 6,  "min_band": 2},
   "vftv:pressing_dark": {"type": "vftv:status",        "weight": 10, "min_band": 2, "context": true,
-                         "effects": [{"effect": "minecraft:darkness", "amplifier": 0, "duration": 100},
-                                     {"effect": "minecraft:slowness", "amplifier": 0, "duration": 100}]}}}
+                         "effects": [{"effect": "minecraft:slowness", "amplifier": 0, "duration": 100}]}}}
 ```
 
-Band 0 (`total` below 8, which covers early Stage 3) hears only whispers and insights. **Rejected:** a field outside the table or the type's own; `min_band > max_band`; `status` or `spawn` without `context: true`; an `entity` outside the tag; any value differing from the shipped roster.
+Band 0 (`total` below 6, which covers early Stage 3) hears only whispers and insights. **Rejected:** a field outside the table or the type's own; `min_band > max_band`; `status` without `context: true`; a type outside the registry, including the cut `vftv:spawn` and `vftv:phantom_block`; any value differing from the shipped roster.
 
 ### Bargains
 
@@ -573,27 +590,22 @@ Band 0 (`total` below 8, which covers early Stage 3) hears only whispers and ins
   "vftv:keen_eyes":        {"type": "vftv:effect", "weight": 30, "cost": {"temporary": 3},
                             "effect": "minecraft:night_vision", "amplifier": 0, "duration": 6000},
   "vftv:quick_hands":      {"type": "vftv:effect", "weight": 20, "cost": {"temporary": 2, "lasting": 1},
-                            "effect": "minecraft:haste", "amplifier": 1, "duration": 3600},
-  "vftv:unheard_insight":  {"type": "vftv:points", "weight": 10, "cost": {"lasting": 2},
-                            "points": {"vftv:vacuos": 6, "vftv:silentium": 4}}}}
+                            "effect": "minecraft:haste", "amplifier": 1, "duration": 3600}}}
 ```
 
-**Rejected:** a `permanent` cost; a cost with both kinds 0 or absent; a field outside its type; a value out of range or differing from the roster.
+**Rejected:** a `permanent` cost; a cost with both kinds 0 or absent; a type other than `vftv:effect` (`vftv:points` is cut); a field outside its type; a value out of range or differing from the roster.
 
 ### Phantoms
 
-`{"schema": "vftv:phantoms/1", "disguises": [{"real": <block tag>, "shown": <block id>}, …], "sounds": [<sound event id>, …]}`, 1–32 of each. **Shipped:**
+`{"schema": "vftv:phantoms/1", "sounds": [<sound event id>, …]}`, 1–32 sounds. **Shipped:**
 
 ```json
 {"schema": "vftv:phantoms/1",
- "disguises": [{"real": "#minecraft:base_stone_overworld", "shown": "minecraft:chiseled_deepslate"},
-               {"real": "#minecraft:base_stone_overworld", "shown": "minecraft:deepslate_tiles"},
-               {"real": "#minecraft:dirt",                  "shown": "minecraft:coarse_dirt"}],
  "sounds": ["minecraft:block.wool.step", "minecraft:block.wooden_door.open",
             "minecraft:entity.creeper.primed", "vftv:apparition.vanish"]}
 ```
 
-**Rejected:** a `shown` block that isn't a full opaque cube, or is air, glass, a fluid or a container; an unknown sound or tag. **At runtime** a resource pack's override is validated before use: an invalid file is ignored with one logged error and the built-in file is used. An empty list makes its type show nothing.
+**Rejected:** an unknown sound; a `disguises` field (cut with disguised blocks). **At runtime** a resource pack's override is validated before use: an invalid file is ignored with one logged error and the built-in file is used. An empty list makes `vftv:sound` play nothing.
 
 ### Voice lines
 
@@ -639,18 +651,18 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `phase` | `msb`, `lsb` (16 uppercase hex digits each); `expect` `[p1200, p400, p20]` |
 | `dials` | `total` 0–2,200; `tax` boolean (default true); `expect` `{band, factor_ordinary, factor_void, penalty_ordinary, penalty_void}` |
 | `magnitude` | the [foci fixture's](foci.md#fixtures) row: `base`, `force`, `step_pm`, `w`, `void`, `per_warp_pm`, `max_bonus_pm`, `cap`; `expect` `{power_pm, amp_pm, out}` |
-| `preview` | `state` `[T, L, P]`; `cost` `[T, L, P]`; `source` `{kind, id?}` (`id` required for `entry`, `bargain` and `milestone`); `cap` (default 10); `paid` (ids, default `[]`); `expect` `{"actual": [T, L, P], "clipped"}` or `"invalid"` |
-| `checks` | `uuid`; `index`; `total`; `permanent`; `counter`; `counter_max` (default 1000); `context` (default false); `offer` (default false); `known` (default 7); `disabled` (event ids, default `[]`); `bargains` (eligible ids, default all three); `expect` `{roll, pm, outcome: "quiet"\|"none"\|"fired", counter}`, plus `pick`, `of`, `event` and `cue` when fired, `aspect` `[index, of]` for an insight and `bargain` for an offer |
+| `preview` | `state` `[T, L, P]`; `cost` `[T, L, P]`; `source` `{kind, id?}` (kinds `entry`, `bargain`, `listen`, `stilling`, `milestone`, `command`; `id` required for `entry`, `bargain` and `milestone`); `cap` (default 10); `paid` (ids, default `[]`); `expect` `{"actual": [T, L, P], "clipped"}` or `"invalid"` |
+| `checks` | `uuid`; `index`; `total`; `permanent`; `counter`; `counter_max` (default 1000); `context` (default false); `offer` (default false); `known` (default 7); `disabled` (event ids, default `[]`); `bargains` (eligible ids, default both); `forced` (default false: the Listen rite's check, whose roll is drawn and ignored); `expect` `{roll, pm, outcome: "quiet"\|"none"\|"fired", counter}`, plus `pick`, `of`, `event` and `cue` when fired, `aspect` `[index, of]` for an insight and `bargain` for an offer |
 | `background` | `total`; `permanent`; `counter`; `expect_pm` |
 | `schedule` | `uuid`; `start` `{T, L, P, gear, counter}`; `gear_held` `{from, to, value}`; `until` (the last tick); `expect`: the ordered operations, each `{tick, op}` and by `op`: **`decay`:** `T`, `total` after it; **`gear`:** `gear`, `total` after it; **`check`:** `total`, `band`, `index`, and the check's `expect` as in `checks` |
-| `reconcile` | `counter`; `counter_max`; `total`; `permanent`; `expect` `{pm, after_fire, after_gain_2}` |
+| `reconcile` | `counter`; `counter_max`; `total`; `permanent`; `expect` `{pm, after_fire, after_gain_2, after_void_work}` (the last at `counter.per_void_work` 5) |
 | `amplifier` | `total` 0–2,200; `joined` boolean; `bonus` 0–50 (default 10); `on` boolean (default true); `expect` `{w, amp_pm, out}` for a base-4000 Void working at the foci defaults |
 
 ```json
 {"schema": "vftv:warp_fixtures/1",
  "checks": [{"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 4, "total": 9, "permanent": 2,
              "counter": 90, "context": false, "offer": false, "known": 7, "disabled": [],
-             "bargains": ["vftv:keen_eyes", "vftv:quick_hands", "vftv:unheard_insight"],
+             "bargains": ["vftv:keen_eyes", "vftv:quick_hands"], "forced": false,
              "expect": {"roll": 26, "pm": 115, "outcome": "fired", "pick": 12, "of": 88,
                         "event": "vftv:footsteps", "cue": "0DF0AA695B97CC14", "counter": 60}}]}
 ```
@@ -666,6 +678,10 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `item.vftv.stilling_draught`, `entity.vftv.apparition` | 0 | "Stilling Draught", "Apparition" |
 | `tooltip.vftv.stilling_draught` | 2 | "Stills %s lasting warp (I carry %s)." |
 | `tooltip.vftv.gear_warp` | 1 | "Gear warp +%s" |
+| `message.vftv.warp.listen_closed`, `.listen_place` | 0 | "The Voices aren't listening for me.", "Only where the Void has touched." |
+| `message.vftv.warp.listen_cooldown` | 1 | "I can listen again in %s seconds." |
+| `ledger.vftv.listen.button` | 0 | "Listen" |
+| `narration.vftv.listen` | 1 | "Listen, for %s" |
 | `message.vftv.warp.nothing_to_still`, `.busy`, `.unreadable`, `.offer_gone`, `.offer_full`, `.offer_cannot` | 0 | "Nothing in me to still.", "Not now.", "I can't read my own warp.", "The offer is gone.", "The Voices can't take more of me.", "The Voices can't give me that now." |
 | `voice.vftv.insight_gain` | 2 | "Something of %s comes to me (+%s)." |
 | `warp.vftv.kind.temporary`, `.lasting`, `.permanent` | 1 | "%s temporary", "%s lasting", "%s permanent" |
@@ -677,7 +693,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `ledger.vftv.warp.chance_parts` | 4 | "%s, plus %s for each permanent, plus %s for each count, at most %s" |
 | `ledger.vftv.offer.title`, `.none`, `.expired`, `.accept`, `.refuse` | 0 | "An Offer", "No offer stands.", "The offer has faded.", "Accept", "Refuse" |
 | `ledger.vftv.offer.effect` | 3 | "%s %s for %s seconds" |
-| `ledger.vftv.offer.points`, `.cost`, `.expires` | 1 | "%s", "It costs %s.", "It fades in %s seconds." |
+| `ledger.vftv.offer.cost`, `.expires` | 1 | "It costs %s." (also the Listen rite's cost), "It fades in %s seconds." |
 | `narration.vftv.offer` | 2 | "Offer: %s, for %s" |
 | `options.vftv.voices.text`, `.colour_shift`, `.phantoms`, `.phantom_sounds` | 0 | "Voice text", "Colour drain", "Phantoms", "Phantom sounds" |
 | `commands.vftv.warp.get` | 9 | "%s: temporary %s, lasting %s, permanent %s, gear %s, in all %s, band %s, counter %s, chance %s" |
@@ -685,7 +701,7 @@ with `"voice.vftv.band0_0": "Are you listening?"` and `"voice.vftv.band2_0": "I 
 | `subtitles.vftv.apparition.vanish`, `.voice.insight`, `.bargain.accept`, `.stilling.drink_end` | 0 | "Something fades", "A voice gives", "A bargain is struck", "A draught settles" |
 | `voice.<ns>.<path>` (in `voices.json`) | 0 | every line's text |
 
-**Used, not declared here:** effect, aspect and player names; the research spec's confirm dialog and "The cost has changed." (`message.vftv.research.cost_changed`, [research, Book UI keys](research.md#book-ui-keys)).
+**Used, not declared here:** effect, aspect and player names; the research spec's `vftv:book.listen` sound, played by the Listen rite; the research spec's confirm dialog and "The cost has changed." (`message.vftv.research.cost_changed`, [research, Book UI keys](research.md#book-ui-keys)).
 
 **Subtitles:** every sound event of this spec names `subtitles.vftv.<event>` above, **except the 46 Voice line events**, enumerated by `voice_lines.json`; `vftv:voice.insight`, an effect sound, keeps `subtitles.vftv.voice.insight`. The Stilling Draught's refusals (`nothing_to_still`, `busy`) go to the [status line](accessibility.md#r5-the-status-line); the offer's are the Ledger's feedback line.
 
@@ -702,7 +718,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 - **One post per change,** never per check or cue. The [research spec's](research.md#triggers) `warp_at_least` latches on it.
 - **A throwing listener** is logged once; the change stands.
 
-**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.silence`, `.isSilenced`, `.noteVoidWork`, `.registerPlaceQuery`, `.inVoidTouchedPlace`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. They are **internal in v1** ([API spec, Services](api.md#services)): no addon commits or applies warp.
+**Plain `core` services:** `WarpService.preview`, `.commit`, `.apply`, `.listen`, `.silence`, `.isSilenced`, `.noteVoidWork`, `.registerPlaceQuery`, `.inVoidTouchedPlace`, `WarpDials.visFactor`, `.infusionPenalty`, `.amplifierWarp`, `WarpPhase.of`. They are **internal in v1** ([API spec, Services](api.md#services)): no addon commits or applies warp.
 
 ## Sync and state
 
@@ -711,15 +727,15 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | State | Storage | Synced to |
 |---|---|---|
 | the warp record and the offer | the `vftv:warp` attachment (transient fields marked above) | the owner, through `AttachmentSyncHandler` filtered to the owner (`NF:attachment/AttachmentSyncHandler.java:28–40`) |
-| warp rules | the tuning record and exactly four server switches: `warp.voices.enabled`, `warp.tax`, `warp.amplifier` and `warp.gear` (the dials and the book's `switch.*` facts). The nine event-type switches are server-only and never sent. | **`WarpRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`), and again when a server config change alters one of the four (`FML:event/config/ModConfigEvent.java:23–42`; [configuration spec, Publishing a change](config.md#publishing-a-change)) |
+| warp rules | the tuning record and exactly four server switches: `warp.voices.enabled`, `warp.tax`, `warp.amplifier` and `warp.gear` (the dials and the book's `switch.*` facts). The seven event-type switches are server-only and never sent. | **`WarpRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`), and again when a server config change alters one of the four (`FML:event/config/ModConfigEvent.java:23–42`; [configuration spec, Publishing a change](config.md#publishing-a-change)) |
 | the gear map | the `vftv:gear_warp` data map | every player, as synced data maps are |
 | cues | none | **`VoiceCue`** and **`VoiceClear`**, S2C, to the owner only |
 | screen state | the transient `quiet` flag | **`VoiceQuiet`**, C2S |
-| guard, `void_work_until`, `grace_until` | transient per-player memory | never |
+| guard, `void_work_until`, `grace_until`, `listen_due` | transient per-player memory | never |
 
 - **Baselines are NeoForge's:** login and respawn send initial player attachments (`MC:server/players/PlayerList.java:228,446`), and a dimension change resends them because the client loses them (`MC:server/level/ServerPlayer.java:1186–1188`). No duplicate send is added. The gear sample of that tick follows as an ordinary change.
-- **Every change** sends the whole record: about 70 bytes, plus an offer of at most 4 aspect ids, or 1 effect id, of at most 256 characters each.
-- **Death:** the record is copied (`copyOnDeath`); the transient offer is deleted. Death neither cures nor charges.
+- **Every change** sends the whole record: about 78 bytes (with `last_listen`), plus an offer's one effect id of at most 256 characters.
+- **Death:** the record is copied (`copyOnDeath`), `last_listen` with it; the transient offer and `listen_due` are deleted. Death neither cures nor charges.
 - **Dimension change:** the same server player continues (`MC:server/level/ServerPlayer.java:1129–1150`); `grace_until` is set; the client clears its presentation and reasserts `quiet`.
 - **Bounded codecs:** the record as above; `VoiceCue` (ids ≤ 256 characters, band 0–3); `VoiceQuiet` one boolean; `WarpRules` a fixed record; `echoedWarp` as the research spec's (three values, 0–100); `offerSeq` a positive `long`. Out of bounds is rejected at decode.
 
@@ -728,7 +744,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 | Change | Effect |
 |---|---|
 | Tuning (`/reload`) | a new record, validated with the milestone rules; `WarpRules` re-sent; phases recomputed; records reconciled on read (see "Kinds and the record") |
-| Server config | `warp.voices.*` at the next check; `warp.tax` at the next vis quote and the next infusion assessment and start (a running infusion keeps its frozen `Wp`); `warp.amplifier` at the next quote and cast, and in a live Baffle capacity at once; `warp.gear` at the next sample. Nothing already committed is reversed: a standing offer, an applied effect, a spawned mob or a shown phantom stays. `WarpRules` re-sent if one of its four switches changed. |
+| Server config | `warp.voices.*` at the next check; `warp.tax` at the next vis quote and the next infusion assessment and start (a running infusion keeps its frozen `Wp`); `warp.amplifier` at the next quote and cast, and in a live Baffle capacity at once; `warp.gear` at the next sample. Nothing already committed is reversed: a standing offer, an applied effect or a shown apparition stays. `WarpRules` re-sent if one of its four switches changed. |
 | The event, bargain and research registries | need the world reopened, so no live offer survives |
 | Resource reload | the `phantoms` and `lines` resources, revalidated |
 
@@ -738,12 +754,13 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 
 | Key | Value | Range | Notes |
 |---|---|---|---|
-| `bands` | [8, 20, 40] | exactly 3, strictly ascending, 1–1000 | |
+| `bands` | [6, 14, 24] | exactly 3, strictly ascending, 1–1000 | |
 | `temporary.decay_interval` | 400 ticks | 20–24,000 | |
-| `tax.per_warp_pm`, `tax.max_pm` | 10, 500 | 0–100, 0–3,000 | the ordinary vis factor |
-| `infusion.per_warp_pm`, `infusion.max_penalty` | 250, 20 | 0–1,000, 0–100 | |
+| `tax.per_warp_pm`, `tax.max_pm` | 20, 500 | 0–100, 0–3,000 | the ordinary vis factor |
+| `infusion.per_warp_pm`, `infusion.max_penalty` | 500, 20 | 0–1,000, 0–100 | |
 | `check.interval` | 1,200 ticks | 200–24,000 | |
 | `counter.per_gain`, `counter.per_event`, `counter.max` | 10, 30, 1,000 | 0–100, 1–1,000, 1–10,000 | |
+| `counter.per_void_work` | 5 | 0–100 | added per `VOID` spend; counter only, never warp |
 | `chance.base_pm`, `chance.per_permanent_pm`, `chance.per_counter_pm`, `chance.max_pm` | 15, 5, 1, 250 | 0–1,000 each | |
 | `grace` | 600 ticks | 0–6,000 | |
 | `context.window` | 600 ticks | 0–6,000 | |
@@ -751,6 +768,8 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `joining.amplifier_bonus` | 10 | 0–50 | warp points a Joined Listener's amplifier adds ("The dials") |
 | `gear.max` | 12 | 0–100 | |
 | `bargain.ttl` | 12,000 ticks | 1,200–168,000 | |
+| `listen.cost` | `{"lasting": 2}` | temporary 0–20, lasting 0–20, at least one > 0; `permanent` invalid | the Listen rite's price |
+| `listen.cooldown` | 6,000 ticks | 200–168,000 | between rites, per player, persisted |
 | `still.amount` | 4 | 1–100 | |
 | `permanent.cap` | 10 | 0–100 | |
 | `permanent.milestones` | the "Permanent warp" table | ≤ 16 ids, amounts 1–100 | |
@@ -760,9 +779,9 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 - bargains: the `vftv:bargain` registry (`content/warp/bargains.json`);
 - each entry's warp: research data;
 - gear values: the `vftv:gear_warp` data map, added by #24 and #28;
-- disguises and phantom sounds: the `phantoms` client resource;
+- phantom sounds: the `phantoms` client resource;
 - the overlay counts: the research spec's `overlay.json`;
-- **server config** (admin switches; files, validation and sync are the [configuration spec's](config.md#server-keys)), each default on and **each proven by a GameTest**: `warp.voices.enabled` (every check); one per event type, `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_block`, `.phantom_mob`, `.bargain`, `.status`, `.spawn` (a type that is off is never eligible, so it never fires and the counter is untouched); `warp.tax` (the vis factor and the infusion penalty go neutral); `warp.amplifier` (`amplifier_warp` is 0); `warp.gear` (the gear sample is 0);
+- **server config** (admin switches; files, validation and sync are the [configuration spec's](config.md#server-keys)), each default on and **each proven by a GameTest**: `warp.voices.enabled` (every check); one per event type, `warp.voices.whisper`, `.insight`, `.sound`, `.colour`, `.phantom_mob`, `.bargain`, `.status` (a type that is off is never eligible, so it never fires and the counter is untouched); `warp.tax` (the vis factor and the infusion penalty go neutral); `warp.amplifier` (`amplifier_warp` is 0); `warp.gear` (the gear sample is 0);
 - **client config:** `voices.text`, `voices.colour_shift`, `voices.phantoms`, `voices.phantom_sounds` (see "Accessibility").
 
 **Fixed limits, in code** (formats and invariants, not balance), as constants in **`WarpLimits`** in `api`:
@@ -772,57 +791,56 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `T_MAX`, `L_MAX`, `P_FORMAT_MAX`, `COUNTER_FORMAT_MAX` | 1,000, 1,000, 100, 10,000 |
 | `MAX_EVENTS`, `MAX_BARGAINS` | 64, 64 |
 | `MAX_GEAR_SLOTS` | 128 |
-| `MAX_SPAWN_ATTEMPTS`, `MAX_SPAWN_COLUMN` | 16, 13 cells |
-| `MAX_PHANTOM_BLOCKS`, `MAX_PHANTOM_PROBES` | 4, 64 |
 | `MAX_APPARITION_ATTEMPTS` | 16 |
 | `MAX_CUE_HOLD` | 200 ticks |
 | `MAX_MILESTONES`, `MAX_ID_CHARS` | 16, 256 |
 
-**Also fixed in code:** the phase function and its salt; the schedule order; the check salt and draw order; the suppression order; the outcome table; the gear sample cadence (20 ticks). **Fixed feedback constants:** the colour drain's peaks, ramps and hold; the disguise scale 1.002; the apparition's 4-block touch radius and 400-tick lifetime; the disguise's 600-tick lifetime; the Voice text's width, line count and extra 20 ticks; playback volumes as stated.
+**Also fixed in code:** the phase function and its salt; the schedule order; the check salt and draw order; the suppression order; the outcome table; the gear sample cadence (20 ticks). **Fixed feedback constants:** the colour drain's peaks, ramps and hold; the apparition's 4-block touch radius and 400-tick lifetime; the Voice text's width, line count and extra 20 ticks; playback volumes as stated.
 
 ## Performance
 
 **Heavy-base workload:** 8 players online with warp:
 - 2 at band 3 with the counter refilled to 1,000 by the fixture, so `p` stays at its cap;
-- 1 of them in context, spending `VOID` vis every 100 ticks, with a registered place query answering true and a test-pack `spawn` event that spawns 3;
+- 1 of them in context, spending `VOID` vis every 100 ticks (each spend adding to the counter), with a registered place query answering true, performing the Listen rite at every cooldown;
 - 2 holding live offers, accepted and refused by the fixture each minute;
 - every player carrying 41 stacks plus 8 Curios stacks, one of them swapping a gear item every 40 ticks;
 - every event type on.
 
-On the client: one band-3 player with the colour drain, 4 disguises, an apparition and a Voice line active at once, with the Voice text shown.
+On the client: one band-3 player with the colour drain, an apparition and a Voice line active at once, with the Voice text shown.
 
-**Share:** server ≤ **0.02 ms mean, ≤ 0.08 ms p99**, measured in the combined stress world, including the spawns' placement and callbacks, the effect callbacks, events and sync. Client: ≤ **0.005 ms p50** idle (the screen poll); ≤ **0.04 ms p50** with every effect active, GPU pass included. Shares are acceptance targets, not measurements.
+**Share:** server ≤ **0.02 ms mean, ≤ 0.08 ms p99**, measured in the combined stress world, including the effect callbacks, events and sync. Client: ≤ **0.005 ms p50** idle (the screen poll); ≤ **0.04 ms p50** with every effect active, GPU pass included. Shares are acceptance targets, not measurements.
 
 **The envelope's running totals** (planning arithmetic, never a combined percentile): the finished specs' server shares total **0.47 ms mean / 1.90 ms p99** with golems; with warp, **0.49 / 1.98**, leaving **0.51 / 1.02** for Armor and trinkets, Flux and the Hush, Worldgen and mobs, and the Eldritch tier. Client shares total **0.77 ms p50**, **0.81** with warp, leaving **0.19**.
 
-**Measured separately as load scenarios** (reported): 64 players all checking in one tick (shared phases); a `spawn` event whose 16 attempts all fail; a place query over a dense index; a `VoiceQuiet` flood.
+**Measured separately as load scenarios** (reported): 64 players all checking in one tick (shared phases); a place query over a dense index; a `VoiceQuiet` flood.
 
 **Hot paths:**
 
 | When | Work |
 |---|---|
-| Per player per tick | three phase compares, O(1), zero allocation |
+| Per player per tick | three phase compares and one `listen_due` read, O(1), zero allocation |
 | Per gear sample (every 20 ticks) | ≤ 128 stack reads and data-map lookups |
 | Per check (every 1,200 ticks by default) | one `Random`; ≤ 64 eligibility tests; the context test: O(1) for Void work and dimensions, plus each registered query's bounded loaded-only work; for an insight, O(known aspects); for a bargain, ≤ 64 |
 | Per status event | ≤ 3 `addEffect` calls and their callbacks: **a native term**, disclosed |
-| Per spawn event | one shared budget of ≤ 16 attempts × ≤ 13 cells, each a loaded-cell read and a collision query, plus a scan of the level's players: **an O(players) native term**, disclosed; ≤ 3 `addFreshEntity` calls and their callbacks, each followed by one insertion check and one eligibility recheck |
-| Per cue (client) | ≤ 64 block probes or ≤ 16 columns of ≤ 13 cells, once |
-| Per frame (client) | ≤ 4 disguise models, 1 entity, one fullscreen pass, the Voice text; **zero allocation in our code** (an allocation-budget test) |
-| Per client tick | one screen poll; ≤ 4 disguise state reads |
-| Packets | one record sync per change (≤ 1 per check, decay, sample or commit); ≤ 1 cue per check; `WarpRules` per join, reload or config reload |
+| Per `VOID` spend | one O(1) counter write, and one record sync if it changed |
+| Per Listen rite | one place-query test (the registered queries' bounded loaded-only work), one preview, one commit; then one check |
+| Per cue (client) | ≤ 16 columns of ≤ 13 cells, once |
+| Per frame (client) | 1 entity, one fullscreen pass, the Voice text; **zero allocation in our code** (an allocation-budget test) |
+| Per client tick | one screen poll |
+| Packets | one record sync per change (≤ 1 per check, decay, sample, commit or counter-changing `VOID` spend); ≤ 1 cue per check; `WarpRules` per join, reload or config reload |
 
 ## Tests
 
 All three layers ([quality gates](quality-gates.md#test-layers)).
 
 **Unit (`model` tier and codecs):**
-- **every vector** in this spec, replayed from `content/warp/fixtures.json`: phases, dials, bands, previews (milestone authorisation, already paid, clipping, a lowered cap), checks (the arithmetic and draw outcomes `QUIET`, `NONE` and `FIRED`, per-type parameter draws, empty eligibility, zero known aspects, a single eligible bargain), the background chance, the 20‰ amplifier rows, the Joining bonus rows (the `amplifier` section), the coincident schedule, and reconciling a lowered `counter.max`. `SKIPPED`, `FAILED`, native failures and the service's source-kind and negative-permanent rejections are not in the references; they are the GameTests below;
+- **every vector** in this spec, replayed from `content/warp/fixtures.json`: phases, dials, bands, previews (milestone authorisation, already paid, clipping, a lowered cap), checks (the arithmetic and draw outcomes `QUIET`, `NONE` and `FIRED`, per-type parameter draws, empty eligibility, zero known aspects, a single eligible bargain, the Listen rite's forced checks), the rite's commit, the background chance, the 40‰ amplifier rows, the Joining bonus rows (the `amplifier` section), the coincident schedule, and reconciling a lowered `counter.max`, Void work's counter increments included. `SKIPPED`, `FAILED`, native failures and the service's source-kind and negative-permanent rejections are not in the references; they are the GameTests below;
 - the per-mille recovery of the vis factor over every `total` from 0 to 2,200;
 - the counter under gains, fires and a lowered maximum; the background floor; `total` 0 skipping;
 - the gear sum, its cap and the slot bound;
-- the client draws: pool sorting, empty pools and lists (no `nextInt(0)`), probe and column rules, the colour ramp's per-tick bound;
+- the client draws: pool sorting, empty pools and lists (no `nextInt(0)`), column rules, the colour ramp's per-tick bound;
 - codecs: the record (bounds, the raw round trip of an unreadable record, defaults), `VoiceCue`, `VoiceClear`, `VoiceQuiet`, `WarpRules`, the tuning file;
-- every `content/` rejection rule and lint: the lexicon phonology, the line counts, the ending-line copy, the event and bargain rules, the bootstrap, the milestone sum, the no-early-warp, ancestry and milestone-entry rules.
+- every `content/` rejection rule and lint: the lexicon phonology, the line counts, the ending-line copy, the event and bargain rules (the cut types refused), the bootstrap, the milestone sum, the no-early-warp, ancestry and milestone-entry rules.
 
 **GameTest:**
 - the registries and the tuning file load, and each bad entry and file is refused; a tuning reload that breaks a milestone rule keeps the previous record;
@@ -831,11 +849,13 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **schedule:** decay, sample and check in one tick, in order;
 - **gear:** equip and unequip post `GEAR` events within 20 ticks, with Curios absent; `warp.gear` off;
 - **stilling:** exact removal; refused at 0 at start; lasting stilled to 0 during the drink (nothing consumed); 2 left gives a partial; `BUSY`;
-- **Bargains:** accept and refuse; a stale `seq` (the newer live offer kept); an expired offer on accept and on refuse (deleted, `offer_gone`, nothing else changed); a clipped cost refused (`offer_full`); **an applicability callback that refuses** (nothing charged, the offer kept); **a callback that changes its answer between calls** (one `addEffect`, so nothing is double-probed); a throwing callback; an `Added` listener that commits warp (`BUSY` for it, our charge stands); the menu closed or mutated before the action; death and logout delete the offer; a `points` aspect no longer known;
+- **Bargains:** accept and refuse; a stale `seq` (the newer live offer kept); an expired offer on accept and on refuse (deleted, `offer_gone`, nothing else changed); a clipped cost refused (`offer_full`); **an applicability callback that refuses** (nothing charged, the offer kept); **a callback that changes its answer between calls** (one `addEffect`, so nothing is double-probed); a throwing callback; an `Added` listener that commits warp (`BUSY` for it, our charge stands); the menu closed or mutated before the action; death and logout delete the offer;
+- **the Listen rite:** each refusal in order (`BUSY`, unreadable, Silenced, `warp.voices.enabled` off, ordinary ground, cooling, clipped, a stale echo), each changing nothing; at a Choir site, on hushed ground and on the Road it commits lasting 2, raises the counter by 20, writes `last_listen`, posts `WarpChangedEvent(LISTEN)` and closes the book; the forced check runs on the tick the book's `VoiceQuiet(false)` arrives, never while a menu is open, and settles `FIRED` even where an ordinary roll would be quiet; a Listener stilled to `total` 0 can perform it and is checked again; the cooldown survives relog, death and a server restart; a lowered `listen.cooldown` applies at once; logout, death or Silencing before the forced check clears `listen_due` and keeps the charge;
+- **Void work:** each `VOID` `VisSpentEvent` adds 5 to the counter, never warp, and nothing for a Silenced or unreadable record or under a held guard;
 - **suppression:** no check with each menu open (book, Worktable, Lathe), with `quiet` set, during grace, dead or spectating; **the last `VoiceQuiet` of a tick wins**; a flood; reassertion after a dimension change;
 - **every server switch,** off and on;
-- **context and danger:** status only in context; a status whose every effect is refused settles `FAILED` with the counter unchanged; a test-pack `spawn` lands ≥ 8 blocks from every player; all attempts failing settles `FAILED`; a cancelled join; partial success (1 of 3); the 16-attempt budget shared across all 3 entities; unloaded cells never loaded; a place query that would need an unloaded chunk answers false;
-- **danger callbacks:** a first effect's callback that teleports the Listener out of context in the same level, opens a menu, sets `quiet` or silences them: the second effect never runs; a join listener that moves our entity onto a player, into a wall or out of its cell: discarded, not counted; a callback that silences the Listener after one success: the counter falls, but **no cue** is sent (the outcome exception);
+- **context and danger:** status only in context; `pressing_dark` applies Slowness and no Darkness; a status whose every effect is refused settles `FAILED` with the counter unchanged; a place query that would need an unloaded chunk answers false;
+- **danger callbacks:** a first effect's callback that teleports the Listener out of context in the same level, opens a menu, sets `quiet` or silences them: the second effect never runs (a test-pack status event with two effects); a callback that silences the Listener after one success: the counter falls, but **no cue** is sent (the outcome exception);
 - **Silencing** writes everything before its one event and stops checks; it returns `STALE` on a stale or repeated echo, `BUSY` under the guard and `UNREADABLE` on an unreadable record, changing nothing; **Joining** through `commit` once, after which the amplifier carries the bonus, and `warp.amplifier` off zeroes it; `isSilenced` and `inVoidTouchedPlace` against each registered query, and recent Void work alone answering false;
 - persistence through save and reload, death, dimension change and the End credits respawn; the offer gone after logout;
 - two-player privacy: cues reach only the owner;
@@ -844,8 +864,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 **E2E:**
 - **the first listen, driven deterministically:** `/vftv warp fire` with `vftv:whisper` after `being_heard` plays a line with its text (screenshot and dump);
 - the Ledger's warp spread equals the state dump (kinds, gear, total, band, counter, chance and its parts), with an offer accepted by mouse and refused **by keyboard only**, a long test translation scrolling, and labels fitting;
+- **the Listen rite** at a ruin, by mouse and **by keyboard only**: the cost on the card, the confirm, the book closing and a line playing; the disabled button's tooltip and narration on ordinary ground and while cooling;
 - the colour drain at bands 1–3 (screenshots, plus a dump of per-frame intensity proving the ramp and peak bounds); with `voices.colour_shift` off and with `screenEffectScale` 0;
-- a disguise struck by the fork reads the real block;
 - an apparition vanishing when approached and when struck: **no attack, interact or swing packet** in the protocol dump, the fork silent, no sounding;
 - client options off, including `voices.colour_shift` turned off at the 65% peak reaching zero within 50 ticks; `VoiceClear` on Silencing; cleanup on a level change;
 - sync on join, reconnect, dimension change and `/reload`;
@@ -860,7 +880,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Research contract | Met by |
 |---|---|
-| `book_bands`: three ascending thresholds in tuning; sync the owner's band 0–3 and exact warp per kind | "Bands": `bands` [8, 20, 40], exactly three (the research spec now names it); "Sync and state": the owner-filtered record with every kind, gear, total and band |
+| `book_bands`: three ascending thresholds in tuning; sync the owner's band 0–3 and exact warp per kind | "Bands": `bands` [6, 14, 24], exactly three (the research spec now names it); "Sync and state": the owner-filtered record with every kind, gear, total and band |
 | Defines `total`, including gear if gear counts; a post-commit warp-change event with values and source, including gear equip and unequip | "Total warp"; `WarpChangedEvent` after the complete change, under the guard, from commits, applies, compound operations and gear samples |
 | One checked commit `commit(player, cost, source, expectedPreview)`: exactly the previewed deltas, cap clipping included, refused on stale state, returning the actual deltas; nothing between preview and charge | "The commit": the preview with clipping and milestone authorisation; `STALE`; the guard held through the event, re-entry `BUSY`; Joining on the checked path |
 | A concrete lasting-only amount for `silence_beneath`; the optional deeper listen decided | "Stage": lasting 4; `vftv:under_the_silence`, optional, permanent 2, parent of nothing |
@@ -870,7 +890,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Wands contract | Met by |
 |---|---|
-| `vis_factor(player, ctx)`: finite, pure over synced warp and `ctx.kind`, ≥ 1.0 for `ORDINARY`, any value for `VOID`, identical on both sides | "The dials": (1000 + min(500, 10 · `total`)) / 1000 for `ORDINARY`, 1.0 for `VOID`, from the synced record and `WarpRules`; the per-mille recovery test |
+| `vis_factor(player, ctx)`: finite, pure over synced warp and `ctx.kind`, ≥ 1.0 for `ORDINARY`, any value for `VOID`, identical on both sides | "The dials": (1000 + min(500, 20 · `total`)) / 1000 for `ORDINARY`, 1.0 for `VOID`, from the synced record and `WarpRules`; the per-mille recovery test |
 
 **Met here** (the [Arcane crafting spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/18)'s contracts):
 
@@ -883,14 +903,14 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Infusion contract | Met by |
 |---|---|
-| `infusion_penalty(player, kind)`: pure, 0–100, ≥ 0 for `ORDINARY`, a function of synced warp and the kind, identical on both sides, the typed zero until it lands; re-sends nothing itself | "The dials": min(20, ⌊250 · `total` / 1000⌋) for `ORDINARY`, 0 for `VOID`; this spec sends nothing for it |
+| `infusion_penalty(player, kind)`: pure, 0–100, ≥ 0 for `ORDINARY`, a function of synced warp and the kind, identical on both sides, the typed zero until it lands; re-sends nothing itself | "The dials": min(20, ⌊500 · `total` / 1000⌋) for `ORDINARY`, 0 for `VOID`; this spec sends nothing for it |
 | Infusion applies no warp; warp on an upset needs a proposed extension | none proposed |
 
 **Met here** (the [Foci spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)'s contracts):
 
 | Foci contract | Met by |
 |---|---|
-| `amplifier_warp(player)`: pure, finite, non-negative, synced, identical on both sides; the unit and which kinds count decided; the scale tested against `void.per_warp_pm` | "Total warp" and "The dials": `total` in warp points; the foci default amended to 20 with its vectors and fixtures, so a Void working doubles at 50 |
+| `amplifier_warp(player)`: pure, finite, non-negative, synced, identical on both sides; the unit and which kinds count decided; the scale tested against `void.per_warp_pm` | "Total warp" and "The dials": `total` in warp points; the foci default amended to 40 with its vectors and fixtures, so a Void working doubles at 25 |
 | Whether a carried Void focus is gear warp | "Gear warp": no, as a balance choice; the foci spec drops its kind-read wording |
 | Casting applies no warp | "Sources" |
 
@@ -898,14 +918,14 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Aspects contract | Met by |
 |---|---|
-| Phantom mobs have no server identity; phantom blocks vanish when struck; the fork's readout names what is really there | "Phantoms": client-only apparitions with negative ids, the input cancelled **with the swing off**, so no packet is sent and nothing falls through to sounding; disguises over real blocks only, which vanish on any hit or strike while the input reaches the real block |
+| Phantom mobs have no server identity; phantom blocks vanish when struck; the fork's readout names what is really there | "Phantoms": client-only apparitions with negative ids, the input cancelled **with the swing off**, so no packet is sent and nothing falls through to sounding; v1 ships no phantom blocks ("Event types"), so that clause has nothing to bind |
 | The revealing listen shows its warp cost before commit | the research spec's flow over "Preview" |
 
 **Met here** (the [Crucible alchemy spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)): a craft that should spill flux needs #26 or #25 to propose it. None is proposed; the Stilling Draught is an ordinary crucible craft.
 
-**Met here** (the [progression spec](progression.md#warp)): warp as a dial of key, amplifier and price ("Total warp", "The dials"); the four kinds ("Kinds and the record", "Sources"); a small cap from named milestones that show their cost ("Permanent warp"); events rationed by a counter that settles to a faint background set by permanent warp ("The counter and the chance"); nothing while a GUI is open, including client-only screens ("Suppression"); nothing hostile on top of the Listener, and physical danger only in context, with eligibility and every inserted entity rechecked after each foreign callback ("Danger", "Context"); a server switch per effect, each with a GameTest ("Tuning and limits"); senses lie and instruments never: the Ledger is exact and the fork reads the real thing ("In the Commonplace Book", "Phantoms"); phantoms client-only, unseen by others and harmless ("Phantoms").
+**Met here** (the [progression spec](progression.md#warp)): warp as a dial of key, amplifier and price ("Total warp", "The dials"); the four kinds ("Kinds and the record", "Sources"); a small cap from named milestones that show their cost ("Permanent warp"); events rationed by a counter that settles to a faint background set by permanent warp ("The counter and the chance"); nothing while a GUI is open, including client-only screens ("Suppression"); the dial turning both ways, through stilling and the Listen rite ("The Listen rite"); nothing hostile on top of the Listener, and physical danger only in context, with eligibility rechecked after each foreign callback ("Danger", "Context"); a server switch per effect, each with a GameTest ("Tuning and limits"); senses lie and instruments never: the Ledger is exact and the fork reads the real thing ("In the Commonplace Book", "Phantoms"); phantoms client-only, unseen by others and harmless ("Phantoms").
 
-**Met here** (the [lore spec](lore.md#listening-and-warp)): warp is never a hidden tax, since every source is a previewed commit or a carried item with its tooltip; the counter and the chance are printed with their parts; a Bargain is never free and always refusable at no cost; listening is deliberate; the Voices are the owner's recordings, delivered as audio plus text and never chat, sliding into Void-tongue with the bands ("Voice lines").
+**Met here** (the [lore spec](lore.md#listening-and-warp)): warp is never a hidden tax, since every source is a previewed commit or a carried item with its tooltip; the counter and the chance are printed with their parts; a Bargain is never free and always refusable at no cost; listening is deliberate, and the Listen rite is the rite the lore names; the Voices are the owner's recordings, delivered as audio plus text and never chat, sliding into Void-tongue with the bands ("Voice lines").
 
 **Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a workload, a share, hot paths with bounded work and disclosed native terms, and an allocation budget ("Performance").
 
@@ -916,13 +936,15 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - **Load validation:** no warp in Stage 1–2 entries; permanent only on listed milestones with their amounts; every entry with `lasting` or `permanent` > 0 has `vftv:being_heard` in its ancestry; built-in `warp_at_least` gates use `lasting_plus_permanent`.
 - **Affordability paths** never commit a milestone entry; milestone entries are exempt from "every entry committed"; every built-in warp gate latches during its replay from earlier `lasting`.
 - **The Ledger's warp spread, the fact sources and the offer actions,** as specified there.
-- **Prose** teaches the kinds, the bands, the dials, the counter and the chance, that a Bargain can always be refused at no cost, and that stilling always works and always costs, with every number in a `warp`, `warp_rules`, `entry` or `recipe` fact span.
+- **The Listen rite:** a `listen_rite(echoedWarp)` action, counted as a commit and passed to `WarpService.listen` after the rate, request-id and menu checks; the **Listen** button on the offer card while no offer stands, shown once `vftv:silence_beneath` is learned, never to the Silenced or with `warp.voices.enabled` off, disabled with the refusal's message as tooltip and narration; its preview and cooldown in the quotes; on `OK`, `vftv:book.listen` and closing the book.
+- **No `points` Bargain:** the offer card shows effect powers only.
+- **Prose** teaches the kinds, the bands, the dials, the counter and the chance, that a Bargain can always be refused at no cost, that stilling always works and always costs, and that the Listen rite, at a ruin or on hushed ground, is how a Listener asks to be heard again, with every number in a `warp`, `warp_rules`, `entry` or `recipe` fact span.
 
 **[Aspects and scanning](https://github.com/andrewbrogoff/voices-from-the-void/issues/15)** (amended in this change)
-- Its points sources gain insight events and `points` Bargains: credits to known aspects only, never a discovery.
+- Its points sources gain insight events: credits to known aspects only, never a discovery. There is no `points` Bargain.
 
 **[Foci](https://github.com/andrewbrogoff/voices-from-the-void/issues/22)** (amended in this change)
-- `void.per_warp_pm` defaults to 20, with every default vector, fixture and note updated; a Void focus is not gear warp; the Void effects' names come from the Void-tongue lexicon ticket.
+- `void.per_warp_pm` defaults to 40, with every default vector, fixture and note updated; a Void focus is not gear warp; the Void effects' names come from the Void-tongue lexicon ticket.
 
 **[Art style](art-style.md)** (amended in this change)
 - §7 gains the Voice clip exception: a raw performance ≤ 3.5 s, a final clip ≤ 4.5 s, peak −3 dBFS, every other convention kept.
@@ -938,8 +960,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - It registers a place query for hushed ground under "Context": pure, loaded-only, bounded. It adds no warp.
 
 **[Worldgen and mobs](https://github.com/andrewbrogoff/voices-from-the-void/issues/27)**
-- It registers a place query for Choir sites, backed by site metadata it indexes per chunk at generation, so the query never follows structure references. Any Void-touched mob it adds to `vftv:voice_spawnable` meets "Danger"'s rules. The Answerers are never Voice spawns.
-- *Met by the [worldgen spec](worldgen.md#the-choir-site-place-query): `ChoirSitePlaceQuery` reads whether a loaded chunk's vanilla structure-reference set for `#vftv:choir_sites` is non-empty (written per chunk at generation, never followed), at most 8 lookups with zero allocation; it adds no mob to `vftv:voice_spawnable`, and `#vftv:answerers` is disjoint from it (tested).*
+- It registers a place query for Choir sites, backed by site metadata it indexes per chunk at generation, so the query never follows structure references. v1 has no Voice spawns, so it adds no mob to any spawn list.
+- *Met by the [worldgen spec](worldgen.md#the-choir-site-place-query): `ChoirSitePlaceQuery` reads whether a loaded chunk's vanilla structure-reference set for `#vftv:choir_sites` is non-empty (written per chunk at generation, never followed), at most 8 lookups with zero allocation; it adds no Voice spawn.*
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
 - **Silencing** calls the checked `silence(player, expected)`; **Joining** commits the `vftv:joining` milestone, at its current amount, through `commit` with the preview it shows, once.
@@ -955,7 +977,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The server switches and client options under "Tuning and limits", as named.
 
 **API**
-- `WarpSource`, `WarpPreview`, `WarpState`, `WarpLimits`, the marker interfaces `VoiceEvent` and `Bargain`, and `WarpKeys` (the `vftv:voice_event` and `vftv:bargain` registry keys, the `vftv:gear_warp` data-map key, the `vftv:voice_spawnable` tag key and the `vftv:warp` attachment's id) live in `api`, loader-free, as Stable. `WarpCost`, `CommitResult` and the `WarpRules` record live there too, as `@Internal`. The `WarpChangedEvent` class and the `vftv:gear_warp` `DataMapType` live in `api.neoforge`.
+- `WarpSource`, `WarpPreview`, `WarpState`, `WarpLimits`, the marker interfaces `VoiceEvent` and `Bargain`, and `WarpKeys` (the `vftv:voice_event` and `vftv:bargain` registry keys, the `vftv:gear_warp` data-map key and the `vftv:warp` attachment's id) live in `api`, loader-free, as Stable. `WarpCost`, `CommitResult` and the `WarpRules` record live there too, as `@Internal`. The `WarpChangedEvent` class and the `vftv:gear_warp` `DataMapType` live in `api.neoforge`.
 - The `vftv:voice_event_type` registry and its key are internal in v1; its type ids and their fields stay a public data format. The commit's guard and publication contract is as under "The commit". Every service is internal ([API spec](api.md#services)).
 
 ## Production tickets

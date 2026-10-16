@@ -7,7 +7,7 @@ How the mod's text is authored, validated, translated and shown, and the accessi
 - the **shared text-overflow rules** every screen and HUD cites, and the **status line**, the one destination for a player's world-use feedback;
 - the **screen baseline** (keyboard, focus and narration), **HUD narration**, **subtitles** and **captions**;
 - **photosensitivity and motion**, **colour and contrast**, and how long transient text stays;
-- the shared **test fixtures**: the pseudo-locale pack, the wide-font pack and the narration capture.
+- the shared **test fixture**, the wide-font pack, and what waits for a second locale.
 
 Terms are defined in [`CONTEXT.md`](../../CONTEXT.md). This spec builds on:
 - the [architecture spec](architecture.md) for the layers, the seams and datagen;
@@ -46,12 +46,12 @@ Resolved in [Localisation and accessibility spec](https://github.com/andrewbrogo
 | 3 | a duplicate key across files of one locale, or across a file and a code-defined key | every locale |
 | 4 | a key no owner table declares or matches (an **unowned** key), or a key in a file other than its owner's | every locale |
 | 5 | a required key missing from `en_us`, checked after every file is merged | `en_us` |
-| 6 | a key `en_us` doesn't have | other locales |
-| 7 | an empty string | every locale |
-| 8 | a malformed template ("Placeholders") or malformed book markup ([research, Prose and fact references](research.md#prose-and-fact-references)) | every locale |
-| 9 | a protected sequence altered ("Protected text") | other locales |
-| 10 | a digit or number word in authored prose ("Per-locale lints") | every locale |
-| 11 | a `subtitles.vftv.*` value over **32 code points**; a `voice.*` line over **80 code points** | every locale |
+| 6 | an empty string | every locale |
+| 7 | a malformed template ("Placeholders") or malformed book markup ([research, Prose and fact references](research.md#prose-and-fact-references)) | every locale |
+| 8 | a digit or number word in authored prose ("Per-locale lints") | every locale |
+| 9 | a `subtitles.vftv.*` value over **32 code points**; a `voice.*` line over **80 code points** | every locale |
+
+**Rules that only another locale can exercise** (a key `en_us` doesn't have; an altered protected sequence, "Protected text") arrive with the **second-locale ticket** ("Adding a locale"). v1 ships `en_us` only, so they would have no input.
 
 **Escapes are interpreted once.** Book prose (`research.*`, `marginalia.*` keys) is parsed with the book's markup (`\` escapes `*`, `{` and `\`), and its fact spans are not templates. Every other value is a translatable template, parsed by "Placeholders", where `\` is an ordinary character. No value is parsed both ways.
 
@@ -65,11 +65,11 @@ Resolved in [Localisation and accessibility spec](https://github.com/andrewbrogo
 - **Arity, in other locales:** every index 1…*n* used at least once, none above; a translation may reorder (`%2$s … %1$s`) and repeat.
 - **Book prose:** each value's multiset of `{fact:…}` spans equals `en_us`'s; order is free.
 
-**The parity test** feeds a corpus of templates through both our parser and vanilla's `TranslatableContents` and asserts that everything we accept vanilla renders without falling back to the raw template, and lists separately what vanilla accepts and we reject by policy (`%d`, `%f`, mixed forms).
+**The grammar check** is these rules alone, a few lines over our own parser, with unit cases for each rejection. A parity corpus against vanilla's `TranslatableContents` waits for the second-locale ticket: our subset is strictly inside vanilla's, so `en_us` can't reach a template vanilla falls back on.
 
 ### Protected text
 
-Some sequences are never translated. A non-English value must contain each of its `en_us` value's protected sequences **exactly**, character for character and case included, in the same order relative to one another; translated prose around them may move.
+**The definition stands; the check is the second-locale ticket's** (there is no non-English value to check in v1). Some sequences are never translated. A non-English value must contain each of its `en_us` value's protected sequences **exactly**, character for character and case included, in the same order relative to one another; translated prose around them may move.
 
 - **Void-tongue:** each maximal run of lexicon words in the `en_us` value ([warp, The lexicon](warp.md#the-lexicon)), with the spaces and punctuation between them. That covers the proper names (`item.vftv.hollow_bell` "Thahvis", the Choristers' names, the two Void foci in `foci_void.json`), every `void` segment of a Voice line ([warp, Language segments](warp.md#language-segments)), and any Void-tongue inside book prose. Void-tongue stays lowercase in prose and capitalised only as a proper name ([lore, Void-tongue phonology](lore.md#void-tongue-phonology)), so case is never changed.
 - **Aspect names:** the 37 Latin names ([aspects, The aspects](aspects.md#the-aspects)) wherever they appear in a value, and every `aspect.vftv.<path>` value itself. Glosses (`aspect.vftv.<path>.gloss`) are translated.
@@ -87,7 +87,7 @@ Some sequences are never translated. A non-English value must contain each of it
   | `words` | yes | 1–256 strings, each a lowercase word of letters only (`\p{L}+`), unique |
   | `allowed` | no, default `{}` | `{<lang key>: <one-line reason>}`; each key a book-prose key that exists, each reason 1–120 characters |
 
-  Unknown fields are rejected. **Matching:** the value outside fact spans is lowercased with that locale's `Locale`, `Locale.forLanguageTag(code.replace('_', '-'))` (`pt_br` → `pt-br`), split into maximal `\p{L}` runs, and a run equal to a listed word fails, unless the key is in `allowed`, which exempts that key from the list entirely. `en_us.json` transcribes the research spec's exhaustive English list and absorbs the old allow-list file:
+  Unknown fields are rejected. **Matching:** the value outside fact spans is lowercased with `Locale.ROOT`, split into maximal `\p{L}` runs, and a run equal to a listed word fails, unless the key is in `allowed`, which exempts that key from the list entirely. **v1 has only `en_us.json`**, the research spec's exhaustive English list with its reviewed exceptions. Folding with each locale's own `Locale` (Turkish `I`, `pt_br` → `pt-br`) arrives with the second-locale ticket, with that locale's list:
 
   ```json
   {"schema": "vftv:number_words/1",
@@ -102,8 +102,8 @@ Some sequences are never translated. A non-English value must contain each of it
 
 ### Numbers and plurals
 
-- **Numbers are frozen** in every locale, as their owners already say: ASCII digits, `.` as the decimal point, `%` as the percentage suffix and no grouping ([arcane crafting, The screen](arcane.md#the-screen); the fact formats under [research, Prose and fact references](research.md#prose-and-fact-references)). Every format call and every case fold in our code takes `Locale.ROOT`, enforced by Error Prone's **`DefaultLocale`** and **`StringCaseLocaleUsage`** as errors ([quality gates, Static gates](quality-gates.md#static-gates)). **The one exception** is the number-word lint's linguistic folding, which names the locale being linted ("Per-locale lints"); it runs in the build, never in play. So the book's case-insensitive search ([research, Structure](research.md#structure)) folds with `Locale.ROOT` too.
-- **No plural machinery.** Vanilla has none, and `.one`/`.other` pairs can't express Polish or Russian. **A value's grammar never depends on an argument's number:** use a label ("Level cost: %s"), a mass noun ("Spills %s flux.") or "of" ("Drawn %s of %s"). Each content ticket's review checks it, and the existing keys that break it are amended (foci's `tooltip.vftv.lathe.rank_xp`).
+- **Numbers are frozen** in every locale, as their owners already say: ASCII digits, `.` as the decimal point, `%` as the percentage suffix and no grouping ([arcane crafting, The screen](arcane.md#the-screen); the fact formats under [research, Prose and fact references](research.md#prose-and-fact-references)). Every format call and every case fold in our code takes `Locale.ROOT`, enforced by Error Prone's **`DefaultLocale`** and **`StringCaseLocaleUsage`** as errors ([quality gates, Static gates](quality-gates.md#static-gates)), which is why v1 needs no reruns under other JVM default locales. So the book's case-insensitive search ([research, Structure](research.md#structure)) folds with `Locale.ROOT` too.
+- **No plural machinery.** Vanilla has none, and `.one`/`.other` pairs can't express Polish or Russian. **A value's grammar never depends on an argument's number:** use a label ("Level cost: %s"), a mass noun ("Spills %s flux.") or "of" ("Drawn %s of %s"). Each content ticket's review checks it, and any existing key that breaks it is amended.
 
 ### Text built on the server
 
@@ -111,7 +111,7 @@ A dedicated server holds `en_us` only, so the server never resolves player-facin
 - every message, status, refusal, death message and command reply is a `Component.translatable` with arguments;
 - **names are arguments as components** (an item's `getHoverName()`, an aspect's, an effect's, a block's), never resolved strings, so the client renders them in its own language;
 - numbers are arguments pre-formatted under "Numbers and plurals";
-- player names, ids and file paths are literal arguments, and the pseudo-locale review exempts them.
+- player names, ids and file paths are literal arguments, which a later pseudo-locale review exempts.
 
 ## Locales
 
@@ -125,6 +125,7 @@ A dedicated server holds `en_us` only, so the server never resolves player-facin
 
 ### Adding a locale
 
+- **The second-locale ticket** is the first locale's, and comes before its content. It delivers what v1 leaves out because `en_us` can't exercise it: the validator rules for keys `en_us` lacks and for protected text ("Validation"); number-word folding per locale ("Per-locale lints"); the placeholder parity corpus ("Placeholders"); and the pseudo-locale and partial-locale packs with their scenarios ("Fixtures").
 - **How:** a PR adding `content/lang/<code>/` and `content/research/number_words/<code>.json`, under `CC-BY-4.0` by [`NOTICE.md`](../../NOTICE.md) rule 5. The contributor licenses it as that file's Contributions section says; there is no CLA. No translation platform in v1.
 - **Machine-assisted drafts** may ship only from a tool whose terms permit redistribution under CC-BY-4.0, and only after the same checks and review as any other translation. Provenance is recorded honestly ([ADR 0005](../adr/0005-licensing.md)): no copyright is claimed in purely machine-generated text, and the reviewer is recorded as a reviewer, not as a commissioned translator.
 - **One provenance row per locale batch** in [`docs/assets-provenance.md`](../assets-provenance.md): the tool and exact model revision (if any), the tool's terms, the date, the human contribution, **the named fluent reviewer and the revision they reviewed**.
@@ -173,7 +174,7 @@ The [shared cost-cell rule](arcane.md#the-screen), unchanged: the number scales 
 - **The details view:** the key mapping `key.vftv.status_details` (J by default, rebindable) opens **`StatusDetailsScreen`** on the **latest** status line, kept until a level change or disconnect, so it can be read after the line has faded. A 240 × 120 screen, centred: the title `screen.vftv.status_details` at (8, 6); the body, an R1 viewport at (8, 20), 220 × 72, with its scrollbar at (230, 20), holding the full text; **Close** (`screen.vftv.close`), 54 × 18, at (93, 96). Focus starts on the body, then Close; Esc closes. It narrates the title and the full text.
 - **Lifetime:** `ceil(60 × max(1, notificationDisplayTime))` ticks, the last 20 fading; vanilla's own action bar starts at 60 ticks (`MC:client/gui/Hud.java:1347–1350`). **A newer line replaces the current one at once.** Cleared at a level change and at disconnect. Hidden with F1; drawn beneath an open screen, as vanilla's action bar is.
 - **Narration:** on arrival, the full text is passed once to the narration helper ("HUD narration").
-- **Fit:** the longest shipped messages with their longest arguments (the crucible's `SHORT` list of at most `MAX_COST_ENTRIES` (8) aspects, essentia's two block names, the node tap's five arguments) show within the 3 visible lines and are complete in the details view, under the pseudo-locale and wide-font fixtures (an E2E assertion).
+- **Fit:** the longest shipped messages with their longest arguments (the crucible's `SHORT` list of at most `MAX_COST_ENTRIES` (8) aspects, essentia's two block names, the node tap's five arguments) show within the 3 visible lines and are complete in the details view, under the wide-font fixture (an E2E assertion).
 - **Not on the status line:** chat (never used), command replies (vanilla's command feedback), and HUD readouts, which keep their own layers.
 
 ### The caption band
@@ -188,12 +189,12 @@ The status line and the Voice text share one **caption band**, bounded and alway
 ### R6: tooltips
 
 - **Width:** mod-owned tooltips wrap at **170 px**, the width vanilla widgets use (`MC:client/gui/components/Tooltip.java:20,72–73`). Item tooltip lines keep their components and styles; a line of ours longer than 170 px is split the same way.
-- **Height:** vanilla flips and repositions a tooltip, but never scrolls it, and can place it above the screen when it is taller (`MC:client/gui/screens/inventory/tooltip/DefaultTooltipPositioner.java:22–30`; `MC:client/gui/GuiGraphicsExtractor.java:1151–1184`). So every mod-owned tooltip fits **240 − 8 px** tall at 320 × 240 under the pseudo-locale and wide-font fixtures (an E2E assertion). A tooltip that can't fit keeps a short summary and moves its detail into a focusable R1 viewport in its screen, opened by mouse and keyboard. **The Lathe's rank quote does so** ([foci, The screen](foci.md#the-screen): the rank details).
+- **Height:** vanilla flips and repositions a tooltip, but never scrolls it, and can place it above the screen when it is taller (`MC:client/gui/screens/inventory/tooltip/DefaultTooltipPositioner.java:22–30`; `MC:client/gui/GuiGraphicsExtractor.java:1151–1184`). So every mod-owned tooltip fits **240 − 8 px** tall at 320 × 240 under the wide-font fixture (an E2E assertion). A tooltip that can't fit keeps a short summary and moves its detail into a focusable R1 viewport in its screen, opened by mouse and keyboard. **The Lathe's rank quote does so** ([foci, The screen](foci.md#the-screen): the rank details).
 
 ## The minimum view
 
 - **320 × 240 scaled pixels is the floor:** the smallest scaled screen vanilla's GUI scale allows for a window at least that large ([crucible, The HUD](crucible.md#the-hud)). Every custom screen fits it whole: the book through its own integer scale ([research, GUI contract](research.md#gui-contract)), where `guiScale` means the effective `Window.getGuiScale()`, not the option value (0 is "auto"); the Lathe at 288 × 234; the Worktable at 176 × 220; the Heart at 248 × 166. Every HUD fits through its owner's clamp and fallback.
-- **The pose-scale fixture gate:** in the E2E scenarios at 320 × 240 under the pseudo-locale and wide-font fixtures, every HUD's **outer** pose scale is **≥ 0.75**. It is a gate on the fixtures, not a runtime floor. Each fixture freezes its worst case: the maximum entry counts its owner declares (64 crucible entries, 8 infusion cells, 6 node aspects, 16 golem marks), the longest shipped names, four-digit amounts, and the overlays that can show together (the vis HUD with the Hush reading; a crosshair card with the caption band at its maximum). **A crosshair card that would fall below 0.75 pages into sheets** ([crucible, The HUD](crucible.md#the-hud)), with every entry reachable by Page Up and Page Down; its combined vectors are frozen there. Any other HUD that fails gets **shorter authored labels**, never a lost live value or name. R4's inner number scale is separate.
+- **The pose-scale fixture gate:** in the E2E scenarios at 320 × 240 under the wide-font fixture, every HUD's **outer** pose scale is **≥ 0.75**. It is a gate on the fixtures, not a runtime floor. Each fixture freezes its worst case: the maximum entry counts its owner declares (64 crucible entries, 8 infusion cells, 6 node aspects, 16 golem marks), the longest shipped names, four-digit amounts, and the overlays that can show together (the vis HUD with the Hush reading; a crosshair card with the caption band at its maximum). **A crosshair card that would fall below 0.75 pages into sheets** ([crucible, The HUD](crucible.md#the-hud)), with every entry reachable by Page Up and Page Down. The crucible card is capped at 12 cells, and its capped-card vectors, frozen there, never page (the lowest scale is 79/93 ≈ 0.85). Any other HUD that fails gets **shorter authored labels**, never a lost live value or name. R4's inner number scale is separate.
 
 ## Screens
 
@@ -288,20 +289,17 @@ The [warp spec](warp.md#voice-lines) owns the Voice text; it is amended here so 
 
 ## Photosensitivity and motion
 
-- **The only screen-wide effect of ours is the colour drain**, with its existing rules: desaturation with luminance preserved, at most 1.3% change per tick, scaled by `screenEffectScale`, and its own key ([warp, Perception effects](warp.md#perception-effects)). The Joining scene reuses it. Darkness is vanilla's, scaled by `darknessEffectScale`.
+- **The only screen-wide effect of ours is the colour drain**, with its existing rules: desaturation with luminance preserved, at most 1.3% change per tick, scaled by `screenEffectScale`, and its own key ([warp, Perception effects](warp.md#perception-effects)). The Joining scene reuses it. No built-in effect of ours applies Darkness (`pressing_dark` is Slowness only, [warp, Danger](warp.md#danger)); a pack's status event that does gets vanilla's `darknessEffectScale`.
 - **No full-screen flash. No camera shake, roll, forced rotation or FOV change of ours.** A teleport is an instant move, as vanilla's portals are.
 - **No reduce-motion key.** Nothing of ours moves the camera, and what moves in the world (orbiting motes, idle sways, animated textures) is the kind of motion vanilla offers no switch for. That confirms the configuration spec's "would govern nothing a spec defines" ([configuration, Client keys](config.md#client-keys)).
 
 ### The flash test
 
-A **project limit, not a WCAG proof:** no animation of ours flashes more than **3 times in any 20 ticks**. A JUnit test enforces it on the committed resources:
+A **project limit, not a WCAG proof,** held by review plus one assertion:
 
-- **Sequences:** every animated texture we ship (each `.mcmeta` strip, GUI ones included), expanded to one tick per sample over one full period, and **every code-driven schedule**, declared in the test from its owner: the focus bolt's `(age / 2) % 4` ([foci, Rendering and sound](foci.md#rendering-and-sound)) and the node core's `frame_ticks[clarity]` from `assets/vftv/nodes/client.json` ([wands, Rendering and sound](wands.md#rendering-and-sound)). A code-driven animation that isn't declared to the test isn't allowed: GUI and HUD elements of ours are otherwise static.
-- **Composition:** each frame composited, alpha included, over **black and over white** separately, so a bright sprite that appears and disappears counts.
-- **Per pixel:** the relative luminance (sRGB to linear, Rec. 709 weights) of each pixel over time. A **flash** is a pair of opposing changes **between successive local extrema** of that pixel's luminance (not adjacent frames, so a gradual rise and fall counts), each change ≥ 0.10, with the darker extreme below 0.80. The sequence is **cyclic**, so the loop seam counts.
-- **Area:** the sequence fails if more than **25% of the sprite's pixels** each flash more than 3 times in some 20-tick window. Regions flashing in opposite phase therefore fail even when the sprite's mean never moves; a single twinkling pixel passes.
-- **Red:** no colour in the locked palette is a saturated red (R / (R + G + B) ≥ 0.8), which the test asserts over the palette, so a red flash can't come from our art. Addon aspect colours tint the bolt and are the addon's.
-- **Self-tests:** fixtures that must fail (two halves alternating in opposite phase with an unchanged mean; a three-frame rise and fall; a bright sprite appearing and vanishing over black; a flash only across the loop seam) and one that must pass (a slow 20-tick cycle). A green check proves it rejects each defect it claims to catch.
+- **The rule, enforced by the asset review:** no animation of ours alternates between frames whose **mean relative luminance** (Rec. 709 weights over linear sRGB) differs by **≥ 0.10** faster than **once per 7 ticks**, which keeps it under 3 flashes in any 20 ticks. It covers every animated texture we ship (each `.mcmeta` strip, GUI ones included) and **every code-driven schedule** its owner declares: the focus bolt's `(age / 2) % 4` ([foci, Rendering and sound](foci.md#rendering-and-sound)) and the node core's `frame_ticks[clarity]` from `assets/vftv/nodes/client.json` ([wands, Rendering and sound](wands.md#rendering-and-sound)). A code-driven animation its owner hasn't declared isn't allowed: GUI and HUD elements of ours are otherwise static. The asset ticket's contact sheet lists each strip's frame timings and mean luminances for the reviewer.
+- **Red, a unit test:** no colour in the locked palette is a saturated red (R / (R + G + B) ≥ 0.8), so a red flash can't come from our art. Addon aspect colours tint the bolt and are the addon's.
+- **No per-pixel analyser in v1.** The mod has a handful of strips, all authored under the art style's slow, low-contrast motion; a reviewer reading their timings catches what an analyser would.
 
 ## Colour and contrast
 
@@ -390,19 +388,12 @@ This spec's own keys are **code-defined UI keys**: their English below is final,
 
 ## Fixtures
 
-Test resource packs, generated by the build, never shipped:
+One test resource pack, generated by the build, never shipped, loaded by the harness ([quality gates, Harness work the build phase needs first](quality-gates.md#harness-work-the-build-phase-needs-first)):
 
-- **The pseudo-locale pack** overrides `assets/vftv/lang/en_us.json`, so no language has to be registered. Each value is transformed deterministically:
-  - placeholders, fact spans, book markup, protected text, `\n` and literal arguments are kept;
-  - each ASCII letter becomes an accented Latin-1 letter from a fixed table over U+00C0–U+00FF (× and ÷ excluded);
-  - the value is wrapped in `«` and `»` and padded to `n + max(6, ⌈0.4n⌉)` code points with space-separated words of the same alphabet;
-  - no digit is introduced.
-
-  English left visible under this pack, outside the exemptions under "Text built on the server", is text that leaked past the lang pipeline.
-- **The wide-font pack** replaces `minecraft:default` with a bitmap provider whose glyphs for U+0020–U+007E and U+00A0–U+00FF all advance **9 px** (vanilla's digits advance 6): the "wide resource-pack font" the [arcane](arcane.md#tests) and [crucible](crucible.md#the-hud) vectors assume (four digits, 36 px). It covers the pseudo alphabet, so the two packs stress the same text together.
-- **A partial-locale pack** adds `assets/vftv/lang/fr_fr.json` with one key, to test per-key fallback.
-- **The narration capture** (harness, [quality gates, Harness work the build phase needs first](quality-gates.md#harness-work-the-build-phase-needs-first)): every call our `Narration.say` helper makes is recorded as **attempted**, and a recording narrator in place of the platform one records what the player's narrator mode **emitted**. A second op returns the text vanilla's screen narration collector builds for the focused widget.
-- **Every existing "long test translation" scenario** ([research](research.md#tests), [arcane](arcane.md#tests), [crucible](crucible.md#tests), [infusion](infusion.md#tests), [golems](golems.md#tests), [Hush](hush.md#tests), [foci](foci.md#tests)) means the pseudo-locale pack with the wide-font pack.
+- **The wide-font pack** replaces `minecraft:default` with a bitmap provider whose glyphs for U+0020–U+007E and U+00A0–U+00FF all advance **9 px** (vanilla's digits advance 6): the "wide resource-pack font" the [arcane](arcane.md#tests) and [crucible](crucible.md#the-hud) vectors assume (four digits, 36 px).
+- **Every existing "long test translation" scenario** ([research](research.md#tests), [arcane](arcane.md#tests), [crucible](crucible.md#tests), [infusion](infusion.md#tests), [golems](golems.md#tests), [Hush](hush.md#tests), [foci](foci.md#tests)) means the wide-font pack, with the longest shipped `en_us` text.
+- **Narration** is tested without a harness op: a unit test swaps `Narration.say`'s sink for a recording `Consumer<Component>` and checks what each act **attempts**; one E2E checks that the platform narrator emits in System mode ("Tests").
+- **The second-locale ticket** adds the pseudo-locale pack (a deterministic accented, padded transform of `en_us` that keeps placeholders, fact spans, markup, protected text and literal arguments) and a partial-locale pack ("Adding a locale").
 
 ## Performance
 
@@ -413,33 +404,31 @@ Test resource packs, generated by the build, never shipped:
 **Hot paths:**
 - **Client, per frame:** the band is a few integer comparisons and allocates nothing; the status line's layout is built when it arrives, the language or resources change, or the scaled screen changes, and our draw code allocates **nothing** per frame (an allocation-budget test).
 - **Client, per arrival:** one wrap and one narration call.
-- **Build:** the validator, the flash test and the contrast test run in `check`; none runs in play.
+- **Build:** the validator, the palette assertion, the state-variant check and the contrast test run in `check`; none runs in play.
 
 ## Tests
 
 **Unit:**
-- **the validator:** every rule under "Validation" rejects its bad case, including a duplicate key inside one object, an unowned key, a key in the wrong owner file and a non-catalogue language code; the placeholder rules (`%1$s %1$s` and `%1$s %2$s %2$s` in English against Args 2, mixed forms, `%d`, a stray `%`, a translation reordering and repeating, which passes); the **parser parity** corpus against `TranslatableContents`, with the accepted-by-vanilla, rejected-by-policy list asserted; fact-span multisets; book markup parsed once;
-- **protected text:** a reordered Void-tongue name, a recased `void` segment, a translated Latin name and a dropped Void word each fail; a moved protected run passes; a protected-only key may be omitted;
-- **lints:** a full-width and an Arabic-Indic digit in prose fail; a listed number word fails unless its key is allowed; `vftv:number_words/1` rejects an uppercase word, an unknown key, an unknown field and a long reason; `pt_br` folds through `pt-br`, and a Turkish list folds `I` the Turkish way;
-- **locale independence:** the format and fact-rendering tests also run with the JVM default locale set to `tr_TR`, `de_DE` and `ar_SA`, each restored in `finally`;
-- **assets:** the flash test with its self-tests; the state-variant regression check with its hue-only self-test; the contrast table with its self-tests (low opacity, a passing sample beside a failing pixel in the same text region, a "uniform" region holding a second colour); subtitle coverage over `sounds.json`, with the 46 Voice line events exempt and `voice.insight` covered;
-- **the pseudo transform:** deterministic; keeps every protected token; introduces no digit; output only from its alphabet;
+- **the validator:** every rule under "Validation" rejects its bad case, including a duplicate key inside one object, an unowned key, a key in the wrong owner file and a non-catalogue language code; the placeholder rules (`%1$s %1$s` and `%1$s %2$s %2$s` in English against Args 2, mixed forms, `%d`, `%f`, a stray `%`); fact-span multisets; book markup parsed once;
+- **lints:** a full-width and an Arabic-Indic digit in prose fail; a listed number word fails unless its key is allowed; `vftv:number_words/1` rejects an uppercase word, an unknown key, an unknown field and a long reason;
+- **assets:** the palette's no-saturated-red assertion; the state-variant regression check with its hue-only self-test; the contrast table with its self-tests (low opacity, a passing sample beside a failing pixel in the same text region, a "uniform" region holding a second colour); subtitle coverage over `sounds.json`, with the 46 Voice line events exempt and `voice.insight` covered;
+- **narration attempts:** with a recording sink in place of the platform narrator, each readout under "HUD narration" is attempted exactly once on arrival and never on a passive refresh, and an identical act makes the same attempts whatever the narrator mode;
 - **the status line:** the `StatusLine` codec round-trips through the bounded `ComponentSerialization.STREAM_CODEC`, and a serialized component beyond its bound is rejected at decode; the lifetime at `notificationDisplayTime` 0.5, 1 and 2; more than 3 wrapped lines show 2 and the `more` hint;
 - **the caption band:** `bandTop` and the revision for every combination of status lines (0–3) and Voice lines (0–4), the status rows' heights, and the ⌊`H` / 3⌋ limit with very tall rows; the revision rising on arrival, expiry, replacement, F1 and `voices.text`;
-- **sheets:** the crucible's combined vectors, replayed; every entry on exactly one sheet; the sheet reset on a new target and clamped on relayout.
+- **sheets:** the [crucible's capped-card vectors](crucible.md#the-hud), replayed (no row pages; the lowest scale is 79/93 under the caption band's maximum with the wide font); on a synthetic card taller than any shipped one, every entry on exactly one sheet, the sheet reset on a new target and clamped on relayout.
 
 **GameTest:**
 - each owner's refusal and status paths send a `StatusLine` whose component is translatable with its owner's key and argument count (the owners' existing refusal tests gain the assertion);
 - no server path sends `ClientboundSetActionBarTextPacket` or an overlay system message of ours.
 
-**E2E** ([quality gates, E2E](quality-gates.md#e2e-mc-agent-harness)), under the pseudo-locale and wide-font packs unless noted:
-- every custom screen and HUD at 320 × 240: screenshots reviewed (no number or name cut, no English left unbracketed outside the exemptions, nothing off screen); HUD outer pose scale ≥ 0.75 in the dump, with the caption band at its maximum over the largest cards, which page as frozen; every mod-owned tooltip within 232 px; the status line's worst messages within 3 visible lines and whole in the details view;
+**E2E** ([quality gates, E2E](quality-gates.md#e2e-mc-agent-harness)), under the wide-font pack unless noted:
+- every custom screen and HUD at 320 × 240: screenshots reviewed (no number or name cut, nothing off screen); HUD outer pose scale ≥ 0.75 in the dump, with the caption band at its maximum over the largest cards, which scale as frozen; every mod-owned tooltip within 232 px; the status line's worst messages within 3 visible lines and whole in the details view;
 - **keyboard only** through each custom screen in its frozen order, including the Lathe's backward cycle, the cost cells' full breakdown, the rank details (a three-aspect quote with flags and spill), the Heart's viewports, both confirms' initial focus on Cancel and `StatusDetailsScreen`; in the world, Page Up and Page Down through every sheet of a paged card, and J opening the last message after it has faded;
-- **narration**, with the capture: each focus target's narration holds its exact values; a clipped field reads its full text; the book reads clean prose; each readout under "HUD narration" is attempted once on arrival and never per frame or per passive refresh; an identical deliberate action in narrator modes **Off, Chat, System and All** makes the same attempts, while emission follows the mode;
+- **narration, one scenario:** with the narrator in **System** mode, a strike's card and a status line are emitted by the platform narrator. Focus-target narration (exact values, clipped fields read in full, the book's clean prose) is reviewed through each owner's narration keys, and attempts are the unit test's;
 - **captions:** the Voice text at `notificationDisplayTime` 2.0 holds twice as long; on its backing over a white sky with the vanilla text-background option at 0; above a status line, which sits above the vanilla action bar while Baffle rows show; a caption **appearing and then expiring over an otherwise unchanged target** re-lays every crosshair card both times; a new line replacing a lingering caption; the ending scene waiting for each extended caption;
 - **long rendered text:** a client resource pack translating a status message to 513 characters displays it (2 lines and the hint) and shows it whole in the details view;
 - **subtitles:** the longest shipped captions, with several cues at once, at 320 × 240;
-- **fallback**, without the pseudo pack: `fr_fr` selected with no file of ours, and with the partial-locale pack (one key French, the rest English, no raw key); `ar_sa` selected (English fallback, usable); a resource reload while the book and a HUD are open rebuilds every font-dependent layout.
+- **fallback:** `fr_fr` selected with no file of ours (English, no raw key); `ar_sa` selected (English fallback, usable); a resource reload while the book and a HUD are open rebuilds every font-dependent layout.
 
 ## Contracts on sibling specs
 
@@ -448,22 +437,22 @@ Each spec is amended in this change, as listed. Each amendment is a criterion in
 - **[Research](research.md):** "Authored content" points to this spec's validator; the digit lint covers `\p{Nd}`; number words move to `content/research/number_words/<code>.json` (`en_us` transcribes the list and absorbs `number-words-allowed.json`); marginalia pools and `.margin.<band>` keys are whole or absent per locale; the [book UI key table](research.md#book-ui-keys) and the book's sound events and subtitles are frozen; the feedback line and every button label follow R2, the confirm's body R1, and confirms open on Cancel; the feedback line is an inspection target; `guiScale` is the effective scale; search folds with `Locale.ROOT`; the foreign hand is `amethyst1`; the GUI sprite ticket gains the state-variant marks and contact sheets; "a long test translation" is the fixtures.
 - **[Aspects](aspects.md):** the [lang key table](aspects.md#lang-keys) (names, glosses, the fork, readout states, sounding, refusal) and the fork's three sound events and subtitles; strike and sounding results narrated on arrival; the client hold multiplied by `max(1, notificationDisplayTime)`; the bearing marker shows its band as a word; the strike card uses the crucible geometry, caption band and sheets, rebuilding on the band's revision and the language.
 - **[Warp](warp.md):** the Voice text's backing, colours, position, hold, replacement, wrapping and per-locale bound ("Voice text"); the 46 line events exempt from subtitles, `voice.insight` not; Void-tongue protected per "Protected text"; the Stilling Draught's refusals on the status line.
-- **[Crucible](crucible.md):** header and spill lines wrap (R3), with frame height counting wrapped lines; the existing no-caption vectors are unchanged; `H′` ends above the published caption band; a card that would draw below 0.75 pages into **sheets** with an indicator and the sheet keys, with **combined vectors** frozen; the layout rebuilds on the band's revision, the language and the sheet; feedback, including the `SHORT` list of at most 8 aspects, goes to the status line.
+- **[Crucible](crucible.md):** header and spill lines wrap (R3), with frame height counting wrapped lines; the existing no-caption vectors are unchanged; `H′` ends above the published caption band; a card that would draw below 0.75 pages into **sheets** with an indicator and the sheet keys; the card is capped at 12 cells, with **capped-card vectors** frozen, none of which pages; the layout rebuilds on the band's revision, the language and the sheet; feedback, including the `SHORT` list of at most 8 aspects, goes to the status line.
 - **[Hush](hush.md):** "at most 4 lines" becomes an English target, keeping the 200-px wrap and the place under the vis frame; the bell's "nothing" goes to the status line.
 - **[Wands](wands.md):** the vis HUD's inert-wand line wraps at its 160-px limit and the frame's height follows; status lines and refusals, tapping's included, go to the status line, including the node tap's five-argument line.
 - **[Arcane crafting](arcane.md):** cost cells are focus targets, each showing and narrating its full cost tooltip (effective and base, pool, factors, flags, spill); the status line is an inspection target; `cost_cell_short` carries its notch; every text region's colour is pinned; tall cost tooltips follow R6.
-- **[Foci](foci.md):** Shift+Enter or Shift+Space cycles a focused socket backward, without also cycling forward; cost cells as arcane's; **the rank details**, a focusable, scrollable body opened by the Details button with mouse or keyboard, hold the complete rank quote and the experience price, while Raise rank's tooltip stays short; button labels follow R2; the detail and status lines are inspection targets; `tooltip.vftv.lathe.rank_xp` is rephrased number-agnostically; text colours and the choice set's marks; cast refusals go to the status line.
+- **[Foci](foci.md):** Shift+Enter or Shift+Space cycles a focused socket backward, without also cycling forward; cost cells as arcane's; **the rank details**, a focusable, scrollable body opened by the Details button with mouse or keyboard, hold the complete rank quote (vis only; ranks cost no experience), while Raise rank's tooltip stays short; button labels follow R2; the detail and status lines are inspection targets; text colours and the choice set's marks; cast refusals go to the status line.
 - **[Golems](golems.md):** a page turn narrates the new page; the card declares its head and foot for sheets and rebuilds on the band's revision and the language; role and status glyphs pass review as silhouettes; refusals go to the status line.
 - **[Eldritch tier](eldritch.md):** the Heart's panels are focusable viewports in its order; its button labels follow R2 and its confirm's body R1; the ending scene's next line waits for the extended caption; Road and Heart messages go to the status line; the boss bar's missing narration is recorded.
 - **[Essentia](essentia.md):** status lines and refusals go to the status line, a shared layer rather than an essentia HUD, so "No HUD layer" stands.
 - **[Infusion](infusion.md):** `InfusionReadout` carries `solicited`, true only for the answer to the player's own strike or commit; lines 1 and 2 of a solicited readout are passed to the narration helper whatever the narrator mode, and no refresh, bump or run update is narrated; the card declares its head and foot for sheets and rebuilds on the band's revision and the language; refusals and the abandon prompt go to the status line, while its HUD-only `status.vftv.infusion.*` keys stay on the HUD.
 - **Other status-line users**, each on its own messages: [worldgen](worldgen.md) (the Reliquary's messages; "No payload of our own" becomes the shared status line), [research](research.md) (the Choir page tip-in messages), [armor](armor.md) (none today: its absorb and break are sounds).
 - **[Armor](armor.md):** the Baffle value draws on the black backing; the Spectacles card declares its head for sheets and rebuilds on the band's revision and the language.
-- **[Art style](art-style.md):** §7's Voice text line points here; §8 adds the flash test, the colour-vision contact sheets, the state-variant check and the contrast table over whole text regions; the palette stays locked.
+- **[Art style](art-style.md):** §7's Voice text line points here; §8 adds the flash rule (each strip's frame timings and mean luminances on its contact sheet, reviewed against "The flash test") and the palette's red assertion, the colour-vision contact sheets, the state-variant check and the contrast table over whole text regions; the palette stays locked.
 - **[Configuration](config.md):** every key's comment is also its translatable tooltip, `options.vftv.<path>.tooltip`; `research.mode` and `nodes.starter` values display through translated names; "Accessibility, already covered" points here; no new key.
-- **[Quality gates](quality-gates.md):** "Static gates" adds `DefaultLocale` and `StringCaseLocaleUsage` and this spec's validator, flash, state-variant and contrast tests; "Language" points here; "Harness work" adds the narration capture, the test packs and setting `notificationDisplayTime`, the narrator mode and the language.
+- **[Quality gates](quality-gates.md):** "Static gates" adds `DefaultLocale` and `StringCaseLocaleUsage` and this spec's validator, palette, state-variant and contrast tests; "Language" points here; "Harness work" adds loading the wide-font pack and setting `notificationDisplayTime`, the narrator mode and the language.
 - **Unchanged:** architecture (`core.text` is an ordinary feature under its rules, using `api`, vanilla Minecraft and the JDK but no other `core` feature, through the existing seams), API (lang keys stay unpromised), compatibility (its positional placeholders are legal), Choristers (marks already shape-coded), lore, progression and `CONTEXT.md`.
 
 ## Production tickets
 
-**None.** v1 ships `en_us` only, the frozen research UI and aspects keys are code-defined with final English and written by datagen, and there are no assets beyond the existing asset tickets' amended briefs. The status details screen reuses the research spec's confirm-panel, scrollbar and button sprites, so it needs no asset. The build ticket for localisation and accessibility delivers the validator, `vftv:number_words/1` and its `en_us` file, the status line, the caption band, the status details screen and key mappings, the narration helper, the test packs, the flash, state-variant and contrast tests, the harness ops and every test above. A later locale is its own content ticket, under "Adding a locale".
+**None.** v1 ships `en_us` only, the frozen research UI and aspects keys are code-defined with final English and written by datagen, and there are no assets beyond the existing asset tickets' amended briefs. The status details screen reuses the research spec's confirm-panel, scrollbar and button sprites, so it needs no asset. The build ticket for localisation and accessibility delivers the validator, `vftv:number_words/1` and its `en_us` file, the status line, the caption band, the status details screen and key mappings, the narration helper, the wide-font pack, the palette, state-variant and contrast tests, and every test above; the harness abilities it uses are the [Build foundations ticket's](quality-gates.md#build-order-foundations-first). The first later locale starts with the second-locale ticket, under "Adding a locale".

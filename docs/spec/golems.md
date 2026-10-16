@@ -131,7 +131,7 @@ A synced datapack registry, **`vftv:golem_material`**, following [ADR 0003](../a
 - A **core item** is a `GolemCoreItem` bound in code to exactly one job key. Ours and an addon's alike implement `api`'s `GolemCore`, which is what the golem reads. The `vftv:golem_core` component names the item, and the job comes from it.
 - **Planning** is one shared, loader-free planner in `core.golem.model`. It works over primitive views: marks (positions as `long`, faces and roles as ordinals, filters as interned ints), per-think resource tokens whose equality the platform adapter defines (an `ItemResource` is item plus components; an aspect is its index in ascending id), and a **slot reader seam** that charges every read to the think's budget. It returns a bounded plan record (`TAKE`/`GIVE`/`FEED`/`TIP`/`COLLECT`, mark index, slot, token, amount), a yield position, `WAIT` with a reason, or `IDLE`. It never sees a capability, transaction, `BlockPos` or `ResourceKey`.
 - **Execution** lives in `neoforge.golem`: the capability calls, the journals, transactions and spawns, which report back what moved.
-- **An addon** may register a job type with its core item, choosing a carry kind and a subset of the five roles (`TAKE` and `GIVE` only for `ESSENTIA`). This is public: the record `GolemJob`, the typed `vftv:golem_job` key and the loader-free binding interface `GolemCore` that a core item implements ([API spec, Golem jobs](api.md#golem-jobs)). A new kind of act needs an API extension, which v1 doesn't offer: acts, the planner and execution stay internal.
+- **An addon** may register a job type with its core item, choosing a carry kind and a subset of the five roles (`TAKE` and `GIVE` only for `ESSENTIA`). This is public: the record `GolemJob`, the typed `vftv:golem_job` key and the loader-free binding interface `GolemCore` that a core item implements ([API spec, Golem jobs](api.md#golem-jobs)). Acts, the planner and execution stay internal, so a new kind of act is a spec amendment, not an addon's: v1.1's `HARVEST` is the first, and its shape is recorded under "What golems don't do".
 - **A missing core or job** (the core item's mod removed) leaves a placed golem **inert** and kept (see "Sync and state").
 
 ## Making a golem
@@ -220,7 +220,7 @@ A **mark** is `{pos, face, role, filter?}`: a face of a block, what to do there,
 
 **`vftv:baton`**, stacking to 1: a conductor's baton of Resonant Brass. Its component **`vftv:baton_attunement`** is `{golem: <UUID>, dimension: <level key>}`; absent means unattuned. It is an ordinary item: copying or handing it over hands over nothing, because **every edit rechecks ownership** at that moment.
 
-**Hands:** main hand only. An off-hand item supplies a filter.
+**Hands:** main hand only. The off hand matters only to a **sneaking** click on a mark, where its item is the filter; plain clicks ignore it, so a torch, shield or totem carried there never changes what a click does.
 
 **On a golem** (`mobInteract`, `MC:world/entity/Mob.java:1213`, reached after NeoForge's cancellable `PlayerInteractEvent.EntityInteract`: `MC:world/entity/player/Player.java:865–877` calls `CommonHooks.onInteractEntity`, `NF:common/CommonHooks.java:845–848`; a cancel wins). First match:
 
@@ -245,11 +245,12 @@ First match, each refusal on the status line and returning `FAIL` (no block use 
 | 3 | the attuned golem isn't loaded in this level (`ServerLevel#getEntity(UUID)`), or the attunement names another level | refused: `.not_here` |
 | 4 | the player isn't its owner now | refused: `.not_yours` |
 | 5 | the golem is dormant, inert, or its operation guard is held | refused: `.unreadable`, `.inert` or `.busy` |
-| 6 | sneaking, on an existing mark (same pos and face) | off hand holds something: the filter is cleared (`.filter_cleared`, 1 arg: the mark's number); else the mark is **removed** (`.mark_removed`, 1 arg); `baton.mark_remove` plays |
-| 7 | sneaking, no mark there | **home** becomes the cell in front of the face, if it is in a loaded chunk (`.home_set`, 3 args: x, y, z), else refused `.home_unloaded`; marks now out of range stay, faulted |
-| 8 | on an existing mark, off hand holds something | its **filter** is set, if valid (`.filter_set`, 2 args: the number and the filter's name); else refused `.bad_filter`, nothing changes |
-| 9 | on an existing mark, off hand empty | its **role** cycles to the next valid role of the job (`.role`, 2 args: the number and the role) |
-| 10 | no mark there | out of range: refused `.out_of_range`; 16 marks already: `.too_many_marks`; an invalid off-hand filter: `.bad_filter`; else a mark is **added** with the job's default role and the off hand's filter if any (`.mark_added`, 2 args: its number and role); `baton.mark_add` plays |
+| 6 | sneaking, on an existing mark (same pos and face) | off hand holds something: its **filter** is set, if valid (`.filter_set`, 2 args: the number and the filter's name), else refused `.bad_filter`, nothing changes; off hand empty: the filter is **cleared** (`.filter_cleared`, 1 arg: the mark's number), `baton.mark_remove` plays. Never removes the mark |
+| 7 | sneaking, no mark there | **home** becomes the cell in front of the face, whatever the off hand holds, if it is in a loaded chunk (`.home_set`, 3 args: x, y, z), else refused `.home_unloaded`; marks now out of range stay, faulted |
+| 8 | on an existing mark | its **role** cycles to the next valid role of the job, in the job's order (`.role`, 2 args: the number and the role); **after the last role the mark is removed** (`.mark_removed`, 1 arg; `baton.mark_remove` plays). Carrying: TAKE → GIVE → FEED → TIP → COLLECT → removed; decanting: TAKE → GIVE → removed |
+| 9 | no mark there | out of range: refused `.out_of_range`; 16 marks already: `.too_many_marks`; else a mark is **added** with the job's default role and no filter (`.mark_added`, 2 args: its number and role); `baton.mark_add` plays |
+
+- **No gesture is both common and destructive:** removal sits at the end of the plain-click role cycle, never on a sneak, and the off hand never redirects a plain click.
 
 - **Valid filters:** for an item job, any non-empty off-hand stack (its item id); for an essentia job, a `vftv:label` naming an aspect the registry holds ([essentia, Labels](essentia.md#labels)). Anything else is invalid, including a blank or missing-aspect label.
 - **Mark numbers** in messages are 1-based.
@@ -263,8 +264,8 @@ First match, each refusal on the status line and returning `FAIL` (no block use 
 | **TAKE** | carry | indexed `extract(slot, R, k)` from `Capabilities.Item.BLOCK` on the mark's face (`NF:capabilities/Capabilities.java:37–38`) |
 | | decant | indexed `extract(slot, aspect, k)` from the [essentia capability](essentia.md#contents-and-the-handler) on the face. A crucible exposes it on every face but `UP` ([crucible, Essentia out](crucible.md#essentia-out)), so a mark on its top has no handler. |
 | **GIVE** | both | indexed `insert(slot, R, k)` into the same capabilities, slots ascending, until the carry is placed or the slots are exhausted. Pedestals and Singing Bowls enforce their own claim and restoration rules through their registered handler ([infusion, Holding items](infusion.md#holding-items-the-item-handler-and-the-container)). |
-| **FEED** | carry | drops the whole carry as one `ItemEntity` **thrown by the owner** (see "Feed and Tip") |
-| **TIP** | carry | the same drop, with **no thrower** |
+| **FEED** | carry | drops **one item** of the carry as an `ItemEntity` **thrown by the owner** (see "Feed and Tip") |
+| **TIP** | carry | the same one-item drop, with **no thrower** |
 | **COLLECT** | carry | picks up one loose `ItemEntity` near the mark (see "Collect") |
 
 - **`ItemResource` keeps components** (`NF:transfer/item/ItemResource.java:35–38,198–203`), so a filled Essentia Jar, a wand or a focus moves whole, and its component-resolved max stack size caps the amount (`:314–332`).
@@ -273,12 +274,13 @@ First match, each refusal on the status line and returning `FAIL` (no block use 
 
 ### Feed and Tip
 
-**The drop:** one `ItemEntity` holding the whole carry, at the mark's position + (0.5, 1.0, 0.5), velocity 0, vanilla's default pickup delay (`ItemEntity#setDefaultPickUpDelay`, `MC:world/entity/item/ItemEntity.java:437`). FEED sets the thrower to the owning player (`setThrower`, `:429`); TIP sets none. Either works on any block; their purpose is the crucible.
+**The drop:** **one item per act** (`k` = 1): one `ItemEntity` holding a single item of the carry, at the mark's position + (0.5, 1.0, 0.5), velocity 0, vanilla's default pickup delay (`ItemEntity#setDefaultPickUpDelay`, `MC:world/entity/item/ItemEntity.java:437`). The remainder stays in the carry, exactly as after a partial GIVE, and the cursor and backoff rules are unchanged. FEED sets the thrower to the owning player (`setThrower`, `:429`); TIP sets none. Either works on any block; their purpose is the crucible.
+- **Why one:** the carry cap is sized for chest logistics, and a crucible wants pacing. One item per act paces a crucible at the golem's think cadence, never floods its pool with a stack's worth of one catalyst, and bounds the handoff loss below to one item, with no count to set on the Baton.
 
-**FEED's owner rule:** a FEED mark is eligible only while the owner resolves to a `ServerPlayer` that is online, alive and in the golem's level, checked at selection, at arrival and again after the spawn.
+**FEED's owner rule:** a FEED mark is eligible only while the owner resolves, **server-wide** (`server.getPlayerList().getPlayer(uuid)`, as the crucible resolves the thrower), to a `ServerPlayer` that is **online and alive**, checked at selection, at arrival and again after the spawn. The owner may be in any dimension: research is per player, not per dimension.
 
 **The handoff warning,** taught in full by the book and the content's messages:
-> The owner must be present at the drop, **and still present when the crucible processes the item.** The crucible resolves the thrower when it processes the entity: at its next step (every `step.interval` ticks, 5 by default), or later if it is cold, dry, full, busy or the item doesn't fit. If by then the owner has logged out, died or left the level, **by any path, even at a boiling crucible**, the item has no thrower that resolves, and it **dissolves** ([crucible, Selection](crucible.md#selection), row 5): a learned catalyst becomes essentia. A crafted result, and a refused catalyst, are thrown toward wherever the owner then stands.
+> The owner must be online at the drop, **and still online when the crucible processes the item.** The crucible resolves the thrower when it processes the entity: at its next step (every `step.interval` ticks, 5 by default), or later if it is cold, dry, full, busy or the item doesn't fit. If by then the owner has logged out or died, **by any path, even at a boiling crucible**, the item has no thrower that resolves, and it **dissolves** ([crucible, Selection](crucible.md#selection), row 5): a learned catalyst becomes essentia. A crafted result, and a refused catalyst, are thrown toward wherever the owner then stands.
 
 This is the crucible contract's documented-risk option: the drop is prevented while the owner is absent, and the window after it is disclosed.
 
@@ -295,7 +297,17 @@ This is the crucible contract's documented-risk option: the drop is prevented wh
 
 ### What golems don't do
 
-Cut from v1: harvesting, guarding, felling, fishing, using items, fluids and opening doors. Each acts on the world as someone, so it needs an owner-attributed identity, protection events for every act and an offline-owner rule: a proposal of its own (see the contracts). Golems never cast, never use the Lathe and never arcane-craft. **Why:** the [progression spec](progression.md#tc4-systems-kept-redesigned-cut) asks for reliable golems with mark-based jobs, not every TC4 core, and the community's complaint was unreliable AI and inexact counting (community pain points, §5).
+Not in v1: harvesting, guarding, felling, fishing, using items, fluids and opening doors. Golems never cast, never use the Lathe and never arcane-craft. **Why:** the [progression spec](progression.md#tc4-systems-kept-redesigned-cut) asks for reliable golems with mark-based jobs, not every TC4 core, and the community's complaint was unreliable AI and inexact counting (community pain points, §5).
+
+**Harvesting is deferred to v1.1, not blocked.** Everything it needs already exists in v1: an owner rule and owner attribution (FEED's), and protection events for free through the player's own block paths (the [foci spec's block work](foci.md#block-work): one `BreakBlockEvent` per `destroyBlock`, one `EntityPlaceEvent` per placement-wrapper call). It waits only on v1's scope.
+
+**Farming in v1** is a vanilla farm feeding a golem: an observer-and-piston (or water-flushed) crop farm drops its harvest, a **COLLECT** mark beside the drop point picks it up one entity per act, and GIVE marks carry it to chests. The book prose teaches this pattern (see the contracts on #35).
+
+**The v1.1 shape,** recorded so it is one role, not a redesign:
+- **One role, `HARVEST`,** on the carry job, cycling after COLLECT; no new job, core or component.
+- **One tag, `#vftv:harvestable`:** a mark acts only on a block in it at its maximum age (`CropBlock#isMaxAge` or the block's age property at its maximum).
+- **One act:** eligible under FEED's owner rule (online and alive); breaks through `owner.gameMode.destroyBlock(pos)`, so the break posts the owner's `BreakBlockEvent` and drops land for a COLLECT mark; then replants one matching seed from the carry through the owner's placement wrapper, as Exchange places. The guard, barriers, exits and work budget are the existing ones.
+- **Open for v1.1:** `ServerPlayerGameMode` breaks in the player's own level, so either `HARVEST` adds "in the golem's level" to its owner rule or the act breaks through a level-explicit path with the same events.
 
 ## Thinking
 
@@ -454,7 +466,8 @@ First match:
 
 **The search queue:** a per-level ordered set of requests (due tick, UUID, golem generation, target), **at most one physical entry per golem**: a newer request **removes** the older entry from the set, and a golem's removal, pickup or unload removes its entry, so the set never holds more entries than loaded golems. A request is also retired, in place, when its target is retired; such a stale entry is dropped when popped.
 - **Only queue service searches.** `GolemNavigation#createPath` returns null unless the queue is servicing that golem. Vanilla calls `recomputePath` from `sendBlockUpdated` for every navigating mob whose path crosses a changed shape (`MC:server/level/ServerLevel.java:1178–1196`); ours **only enqueues a request**.
-- **Per tick, per level:** at most **`MAX_SEARCH_POPS_PER_TICK` (32)** pops, stale ones included, and at most **`MAX_PATH_SEARCHES_PER_TICK` (8)** searches. Left-over requests keep their due time.
+- **Per tick, per level:** at most **`MAX_SEARCH_POPS_PER_TICK` (32)** pops, stale ones included, and at most **`MAX_PATH_SEARCHES_PER_TICK` (2)** searches. Left-over requests keep their due time.
+- **The search cap is a derived quantity,** chosen so that the measured worst-case search × the cap stays under half the p99 share ("Performance") on the reference machine; raise it only with a measurement. One vanilla A* over 512 visited nodes is on the order of 0.1–0.5 ms, so 8 would spend the whole share. Two a tick is 40 searches a second, more than 32 golems repathing at this spec's cadence need; the queue carries the rest.
 
 **Bounds of one search,** with every input set explicitly at queue service, never read from the attribute (another mod's `FOLLOW_RANGE` modifier changes nothing):
 - **The length** `L` = max(`path.max_length`, 16), passed explicitly through `createPath(target, 0, L)` (`PathNavigation.java:128–129`), which uses it as the maximum path length (`:136–162`).
@@ -505,10 +518,10 @@ At arrival, in a think, in this order:
 **TAKE and GIVE:** one root, opened in step 5 and closed within the call. Inside it, each indexed op is a nested transaction followed by a barrier; the ledger's credit (TAKE) or debit (GIVE) is in the same root. The root commits iff every barrier passed and the ledger's change equals the handler's reported moves; otherwise it aborts and nothing moved. A TAKE extracts `min(planned amount, the slot's live amount, the carry's live room, the resource's max stack)`, read after step 4. Arguments are checked first, as every handler of ours does ([crucible, Essentia out](crucible.md#essentia-out)).
 
 **FEED and TIP** follow the [provisional-spawn pattern](crucible.md#committing-a-craft):
-1. create an `ItemEntity` holding **a copy** of the carry, placed and timed as under "Feed and Tip";
+1. create an `ItemEntity` holding **a copy of one item** of the carry (count 1, components kept), placed and timed as under "Feed and Tip";
 2. `addFreshEntity`, inside a `try`;
 3. **revalidate:** it returned `true`; a barrier passes; our entity is alive, not removed, holding exactly the copy (`ItemStack.matches`);
-4. **only then** debit the ledger to empty: `MOVED`.
+4. **only then** debit the ledger by one (to empty if that was the last): `MOVED`.
 
 A false return is `REFUSED`; a barrier failure `RETIRED`; a throw or a changed entity `REFUSED`. In each, our entity is discarded if it was added and nothing is debited. Whatever listeners changed themselves is left as they made it.
 
@@ -551,7 +564,7 @@ The book lists every loss row (see the contracts on #35).
   - **placing** passes vanilla's use checks and the spawn's join event;
   - **running is automatic and isn't re-authorised,** as a relay network isn't ([wands, Creation, removal and sharing](wands.md#creation-removal-and-sharing)). **Stated limitation:** capability access isn't a player action, so a golem marked on a container while its owner was allowed keeps working;
   - **the claim-mod hook** is `GolemWorkEvent`: posted inside the operation guard, after arrival and before any capability call or spawn; a cancel makes the act REFUSED with `refuse.backoff`; after it, everything the act depends on is revalidated (see "An act"). v1 has no integration with a named claim mod ([compatibility, Claim mods](compat.md#claim-mods)).
-- **Offline owner:** the golem keeps working; FEED marks are ineligible (`OWNER_AWAY`).
+- **Offline owner:** the golem keeps working; FEED marks are ineligible (`OWNER_AWAY`). An owner in another dimension is not away.
 - **Two golems at one chest** act in think-queue order (due tick, UUID), one root each. Due-time and UUID ordering make queue service deterministic; the order of players' inputs across runs isn't promised.
 - **No custom client-to-server payload.** Every input is a vanilla use, interact or container click, validated by vanilla and by the tables above; GameTests drive each with a non-owner, the wrong level, out of range and an unloaded golem.
 
@@ -866,7 +879,7 @@ NeoForge events in `api.neoforge` ([ADR 0004](../adr/0004-addon-hooks-are-neofor
 |---|---|
 | `PLACED` | golem UUID; owner UUID; level and position; body; core |
 | `PICKED_UP` | golem UUID; owner UUID; level and position |
-| `MOVED` | golem UUID; owner UUID; level; mark position and face; role (TAKE, GIVE, FEED, TIP or COLLECT); the resource; the amount moved (for FEED and TIP, the dropped count; for COLLECT, the picked-up count) |
+| `MOVED` | golem UUID; owner UUID; level; mark position and face; role (TAKE, GIVE, FEED, TIP or COLLECT); the resource; the amount moved (for FEED and TIP, always 1; for COLLECT, the picked-up count) |
 | `SPILLED` | golem UUID; level and death position; the aspect and amount; cause `api`'s `SpillCause.DIED` |
 | `DIED` | golem UUID; owner UUID; level and position; copies of what dropped |
 
@@ -945,7 +958,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 | `MAX_MARKS` | 16 |
 | `MAX_THINKS_PER_TICK`, `MAX_THINK_POPS_PER_TICK` | 32, 64 per level |
 | `MAX_THINK_WORK` | 1,024 units per think (32,768 per level per tick) |
-| `MAX_PATH_SEARCHES_PER_TICK`, `MAX_SEARCH_POPS_PER_TICK` | 8, 32 per level |
+| `MAX_PATH_SEARCHES_PER_TICK`, `MAX_SEARCH_POPS_PER_TICK` | 2, 32 per level (the search cap derived from measurement, "Pathing") |
 | `MAX_VISITED_NODES` | 1,024 (16 × the maximum `path.max_length`) |
 | `MAX_HANDLER_SLOTS` | 256 |
 | `MAX_COLLECT_ENTITIES` | 16 |
@@ -968,14 +981,14 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 
 **The envelope's running totals** (planning arithmetic, never a combined percentile): the finished specs' server shares (aspects 0.02/0.10, research 0.03/0.15, wands 0.04/0.20, arcane 0.01/0.05, crucible 0.03/0.15, essentia 0.04/0.20, infusion 0.02/0.10, foci 0.03/0.15) total **0.22 ms mean / 1.10 ms p99**; with golems, **0.47 / 1.90**, leaving **0.53 / 1.10** as the collective ceiling for Armor and trinkets, Warp and the Voices, Flux and the Hush, Worldgen and mobs, and the Eldritch tier. Client shares total **0.67 ms p50**, **0.77** with golems, leaving **0.23**.
 
-**Measured separately as load scenarios** (reported): 256 golems gathered at 16 per chunk over 16 chunks (the admission cap bounds placement, not residence); 1,000 item entities in a COLLECT box; all 32 golems repathing after a block flood; 16 marks on 256-slot handlers whose first 255 slots refuse; a stale-queue flood (256 golems unloaded at once); `path.max_length` 64 after a reload.
+**Measured separately as load scenarios** (reported): 256 golems gathered at 16 per chunk over 16 chunks (the admission cap bounds placement, not residence); 1,000 item entities in a COLLECT box; all 32 golems repathing after a block flood, **asserting a maximum tick time**, not only that the caps hold; 16 marks on 256-slot handlers whose first 255 slots refuse; a stale-queue flood (256 golems unloaded at once); `path.max_length` 64 after a reload.
 
 **Hot paths:**
 
 | When | Work |
 |---|---|
 | Per golem per tick | vanilla's mob tick: movement, navigation following, physics. **An O(golems) native term,** disclosed; no push scan |
-| Per tick, per level | think queue: ≤ 64 pops, ≤ 32 thinks; search queue: ≤ 32 pops, ≤ 8 searches; ≤ 32,768 work units in all |
+| Per tick, per level | think queue: ≤ 64 pops, ≤ 32 thinks; search queue: ≤ 32 pops, ≤ 2 searches; ≤ 32,768 work units in all |
 | Per think (selection, travel check or act) | ≤ 1,024 units **in all**: eligibility reads (one chunk check and one cached capability read each, repeated per candidate resource, so not bounded by the 16 marks), indexed slot reads, probes and transfers; ≤ 1 root; a travel check: O(1) |
 | Per search | ≤ 1,024 visited nodes (512 by default); a region of ≤ 100 chunk columns (≤ 36 by default); no column scan |
 | Per COLLECT selection | one entity query over ≤ 5 × 5 × 5 blocks: **a density-dependent native term**, disclosed; ≤ 16 considered |
@@ -1005,16 +1018,16 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **placing:** a committed placement; each refusal; a cancelled join; **a join listener that empties or swaps the placer's hand, kills the placer or moves them to another level, fills the spawn cell, unloads or borders it off, or adds golems up to the cap** (our entity discarded, nothing consumed); the admission cap, our provisional entity excluded from it and from the collision test;
 - **pickup:** the round trip keeps marks, carry and health; refused while busy and **with a full inventory**; a removal callback that fills the inventory meanwhile (the item drops at the player); no duplication;
 - **fitting a core:** in both orientations: fitting from a stack of 16 into an empty socket (15 left); a swap from a stack of 1; **a swap from a stack of 16 refused with nothing changed**; removal to an empty cursor and to an empty slot; refusal while carrying; a primary click (vanilla); marks cleared; a locked slot;
-- **the Baton:** every row of both tables, including a chest marked rather than opened; a cancelled `RightClickBlock`, **a denied item use, and a denied block use alone**; **a block-use denial set by a second `LOWEST` listener registered after ours** (refused); **a denied click then an allowed click at the same position in one tick** (the second marks); a re-entrant click from inside a listener (fail closed); a cancelled `EntityInteract`; a non-owner; **a copied attuned Baton used by another player**; an unloaded golem; another level; an invalid essentia filter (no change); dormant, inert and busy golems;
+- **the Baton:** every row of both tables, including a chest marked rather than opened; **with a torch in the off hand, plain clicks add a mark and cycle its role through every role to removal**, and a sneak-click on a mark sets the filter; a sneak-click on a mark with an empty off hand clears the filter and never removes the mark; a sneak-click elsewhere sets home whatever the off hand holds; a cancelled `RightClickBlock`, **a denied item use, and a denied block use alone**; **a block-use denial set by a second `LOWEST` listener registered after ours** (refused); **a denied click then an allowed click at the same position in one tick** (the second marks); a re-entrant click from inside a listener (fail closed); a cancelled `EntityInteract`; a non-owner; **a copied attuned Baton used by another player**; an unloaded golem; another level; an invalid essentia filter (no change); dormant, inert and busy golems;
 - **carrying:** chest to chest with exact counts; partial delivery across two destinations; a filled jar moved keeps its components; pedestal loading, **promised-stack restoration** by GIVE, and refusal on a claimed pedestal; Singing Bowl loading;
-- **FEED and TIP:** FEED crafts as the owner; FEED waits while the owner is offline, dead or in another level; **at a boiling crucible, the owner logging out after the drop and before the crucible's step: the catalyst dissolves** (the warned handoff); TIP dissolves a learned catalyst; a cancelled spawn and a listener that changes our entity: no loss, no duplication;
+- **FEED and TIP:** FEED crafts as the owner; **a carry of 64 is fed one item per act**, the remainder kept in the carry; FEED waits while the owner is offline or dead, and **keeps feeding while the owner is in another dimension**; **at a boiling crucible, the owner logging out after the drop and before the crucible's step: the catalyst dissolves** (the warned handoff); TIP dissolves a learned catalyst; a cancelled spawn and a listener that changes our entity: no loss, no duplication;
 - **COLLECT:** lowest id first; an ineligible low-id entity doesn't block an eligible one; a listener that removes the planned entity after the hook; **a planned stack of 24 reduced to 1 before arrival, and reduced to 1 inside the hook: exactly 1 credited**; a different entity at the planned id (`RETIRED`);
 - **decanting:** from a crucible's side, refused on its top; into jars; the essentia cap;
 - **transactions:** a nested abort leaves source and ledger exact; a non-`NONE` lifecycle defers; **a source whose `onRootCommit` throws after a successful extraction keeps the move and retries nothing**;
 - **barriers:** a handler whose `extract`, `insert`, `size()` or probe moves the golem out of the sphere, replaces the marked block, changes the owner or edits the marks: the open root aborts, nothing moves, `RETIRED`; the same inside a selection installs no plan; **a `range` reload during travel that puts the mark out of range: the arrival's eligibility rerun retires it**; a filter or role made invalid during travel likewise;
 - **re-entry:** a `GolemWorkEvent` listener that picks the golem up, edits its marks, kills it, or moves it to another level; the act refuses or retires and nothing duplicates; **a death inside an act settles once at the release, on commit and on abort, posting exactly one `LivingDropsEvent` and, when it is cancelled, dropping nothing**; `GolemWorkEvent` cancel gives `REFUSED` and its backoff;
 - **death:** **exactly one `LivingDropsEvent`** on a normal death, then the drops, then the single `SPILLED`, then `DIED`, in that order; `LivingDropsEvent` cancelled; a throwing `LivingDropsEvent`, `SPILLED` or `DIED` listener (the later steps still run); non-owner player and projectile damage with PvP off and on; a wither attacking a golem;
-- **pathing:** a block flood raises requests within the search caps; only queue service searches; `path.max_length` 64 after a reload stays within 1,024 nodes, **and a `FOLLOW_RANGE` modifier from another mod changes nothing**; the queue never holds more entries than loaded golems; **marks on the east, top and bottom faces reached and acted on at `interact.reach_tenths` 15** (the finishing steer), and a path that succeeds without arrival is not an act; UNREACHABLE and its backoff; never a teleport; a target retired by a mark edit clears its request;
+- **pathing:** a block flood raises requests within the search caps (≤ 2 searches per tick); only queue service searches; `path.max_length` 64 after a reload stays within 1,024 nodes, **and a `FOLLOW_RANGE` modifier from another mod changes nothing**; the queue never holds more entries than loaded golems; **marks on the east, top and bottom faces reached and acted on at `interact.reach_tenths` 15** (the finishing steer), and a path that succeeds without arrival is not an act; UNREACHABLE and its backoff; never a teleport; a target retired by a mark edit clears its request;
 - **persistence:** **a chunk unloaded and reloaded mid-carry**; save, quit and reload mid-carry and mid-travel; a golem walking toward a non-ticking chunk; never despawns (peaceful, far away, empty server); a lowered material capacity keeps the carry; dormant and inert records survive save unchanged;
 - **bounds:** no chunk is loaded anywhere; the queues hold their caps under 256 golems; a stale-queue flood;
 - every test id in the discovery guard.
@@ -1024,7 +1037,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - a page turn's narration attempted once with the new page, and none for a passive status update (the localisation capture); a refusal on the status line;
 - **the overlay:** subscribing on equip and on attune, updates on a mark edit, a fault and a target change, and clearing on a hand switch, a level change, unload and logout; a second client sees no overlay and the status glyph;
 - tooltips; every sound and subtitle; the five bodies, carrying and decanting, seen by a second client;
-- the Stage 2 flow: learn `vftv:golems`, craft a terracotta golem and a carrying core, mark a chest and a crucible, and watch a Resonant Brass ingot made by FEED; then learn `vftv:golem_decanting` and decant into jars (a state dump at each step);
+- the Stage 2 flow: learn `vftv:golems`, craft a terracotta golem and a carrying core, mark a chest and a crucible, and watch a Resonant Brass ingot made by FEED, one catalyst per act; then learn `vftv:golem_decanting` and decant into jars (a state dump at each step);
 - sync on join, reconnect and `/reload`;
 - the asset, lang and model validators: every key under "Lang keys", every sound and subtitle, every item definition, the golem item's five cases and its `unknown` fallback, and the entity textures.
 
@@ -1044,7 +1057,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 | Crucible contract | Met by |
 |---|---|
-| A golem dropping items into a crucible sets each `ItemEntity`'s thrower to its owning player; the golem spec documents or prevents delivery while the owner is offline, dead or elsewhere | **FEED:** the thrower is the owner; the drop is **prevented** unless the owner is online, alive and in this level, checked at selection, at arrival and after the spawn; the **complete handoff window** after the drop, until the crucible processes the item, is **documented** in the spec, the messages and the book ("Feed and Tip"), with its GameTest. **TIP** is exempt by the crucible spec's amendment in this change: a deliberate, no-thrower dissolve path. |
+| A golem dropping items into a crucible sets each `ItemEntity`'s thrower to its owning player; the golem spec documents or prevents delivery while the owner is offline, dead or elsewhere | **FEED:** the thrower is the owner; the drop is **prevented** unless the owner is online and alive, resolved server-wide as the crucible now resolves the thrower (amended there in this change), checked at selection, at arrival and after the spawn; one item per act; the **complete handoff window** after the drop, until the crucible processes the item, is **documented** in the spec, the messages and the book ("Feed and Tip"), with its GameTest. **TIP** is exempt by the crucible spec's amendment in this change: a deliberate, no-thrower dissolve path. |
 | Golems touch the pool only through "Essentia out"; their own crucible recipes live in their own content files with the body | decanting TAKE through the essentia capability on a non-`UP` face ("Roles"); the cores in `content/golems/recipes.json` |
 
 **Met here** (the [Essentia logistics spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)'s contracts on this ticket):
@@ -1084,11 +1097,12 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)** (amended in this change), handed to [Stage 2 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/35) and [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36):
 - **Entries:** the three notes under "Stage", with their parents and gates, each carrying `vftv:recipe` pages for the recipes it gates.
 - **Fact sources:** `golem` and `golem_material`, with their keys, formats, absence and live dependencies.
-- **Prose** teaches the Baton's gestures, home and range, roles and filters, that fitting a core clears the marks, FEED's owner rule **with the complete handoff warning** (the owner present at the drop and at processing, any loss between dissolving the item even at a boiling crucible), TIP as the deliberate dissolve path, no suction routing, refusal backoff, and **every carry-loss row** under "Carry conservation", with every number in a `golem`, `golem_material` or `recipe` fact span.
+- **Prose** teaches the Baton's gestures, home and range, roles and filters, that fitting a core clears the marks, FEED's owner rule **with the complete handoff warning** (the owner online at the drop and at processing, in any dimension, any loss between dissolving the item even at a boiling crucible), that FEED and TIP drop one item per act, TIP as the deliberate dissolve path, **the v1 farm pattern** (a vanilla observer-and-piston farm with a COLLECT mark at its drop point, harvesting golems arriving in v1.1), no suction routing, refusal backoff, and **every carry-loss row** under "Carry conservation", with every number in a `golem`, `golem_material` or `recipe` fact span.
 - **The affordability artifact:** `path-stage2.json` learns `vftv:golems` after `vftv:resonant_brass`, and `vftv:golem_decanting` after `vftv:essentia_jars`; `path-stage3.json` learns `vftv:echo_golems` after `vftv:infusion`. The review reads them beside `content/golems/bootstrap.json`, the material half of the proof.
 
 **[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)** (amended in this change)
 - `api`'s `SpillCause` gains **`DIED`**, posted only by `GolemEvent(SPILLED)`.
+- The thrower is resolved server-wide (`server.getPlayerList().getPlayer(uuid)`, online only), so a FEED owner in another dimension still crafts.
 - Its contract on golems now exempts a deliberate **TIP** drop, which has no thrower and always dissolves. Crucible behaviour is unchanged.
 
 **[Flux and the Hush](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)**
@@ -1101,8 +1115,8 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Hand entries (or reviewed exemptions) for the `vftv:golem` entity type and item, the three cores and the Baton.
 - **Round-trip non-amplification** over every golem recipe: the arcane recipes (vis counting as no material input), the two crucible cores and the Echo infusion. Components and carry add no aspect value ([aspects, Coverage and supply](aspects.md#coverage-and-supply)).
 
-**Future world-affecting jobs** (any spec, such as [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28))
-- Harvesting, guarding or any act that changes blocks or hurts entities is an extension its spec proposes, with its own act-specific design: an owner attribution, protection events for each act (for blocks, NeoForge's `event.level.block.BreakBlockEvent` and the placement events, as the [foci spec](foci.md#multiplayer-and-automation) uses them), and an offline-owner rule. A fake player alone is not a protection promise. No casting and no arcane crafting without the [foci](foci.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) conditions.
+**Future world-affecting jobs** (v1.1's `HARVEST`, or any spec, such as [Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28))
+- Harvesting, guarding or any act that changes blocks or hurts entities is a spec amendment with its own act-specific design: an owner attribution, protection events for each act (for blocks, NeoForge's `event.level.block.BreakBlockEvent` and the placement events, through the player's own paths as the [foci spec](foci.md#multiplayer-and-automation) uses them), and an offline-owner rule (FEED's is the model). For harvesting all three exist in v1; its shape is under "What golems don't do". A fake player alone is not a protection promise. No casting and no arcane crafting without the [foci](foci.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) conditions.
 
 **Mod compatibility**
 - `GolemWorkEvent` is the claim-mod hook: its timing (inside the operation guard, after arrival, before any capability call or spawn), its cancellation (REFUSED with `refuse.backoff`) and the revalidation after it are as under "An act".

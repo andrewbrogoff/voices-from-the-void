@@ -81,7 +81,7 @@ Resolved in [Worldgen and mobs spec](https://github.com/andrewbrogoff/voices-fro
 
 **`vftv:find/answerers`:** `player_killed_entity` whose entity is in `#vftv:answerers`. This is the research roster's "advancement for killing one".
 
-- **It is not a guaranteed source.** Peaceful prevents Answerers ("Placement and persistence"), and a ruin's defenders are finite.
+- **It is not a guaranteed source.** A ruin's defenders are finite, and in peaceful they stay but never fight ("Placement and persistence").
 - **So its research entry is a leaf:** no entry lists it in `parents` or `hidden_parents`, and no affordability path `use`s it (the research spec amended).
 
 ### The advancements
@@ -341,7 +341,7 @@ A **server-only datapack registry, `vftv:choir_site`** (`data/<ns>/vftv/choir_si
 | `pages` | yes | 1–64 distinct entry ids | the pages this kind gives, in the order it gives them |
 | `pages_per_claim` | yes | 1–8 | how many a player's first claim at one site takes |
 
-- **The required built-in key** (`WorldgenKeys` in `api`) is `vftv:choir_ruin`. Its `pages` are every Stage 3 entry in `vftv:choir_pages`, with **`vftv:choir/beneath_the_notes` first** and the rest in the narrative order the [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) freezes. `pages_per_claim` is **3**.
+- **The required built-in key** (`WorldgenKeys` in `api`) is `vftv:choir_ruin`. Its `pages` are every Stage 3 entry in `vftv:choir_pages`, with **`vftv:choir/beneath_the_notes` first** and the rest in the narrative order the [Stage 3 research content](https://github.com/andrewbrogoff/voices-from-the-void/issues/36) freezes. `pages_per_claim` is **6**, so two ruins hold every Stage 3 page and the Stage 3 path reaches every commit from at most two batches ("Contracts on sibling specs").
 - **Load validation**, after the research registry. It refuses the world with a clear error naming the entry on: an id that isn't a `find` entry in `vftv:choir_pages`; a duplicate id; a range broken; the built-in key missing.
   - **For the built-in `vftv:choir_ruin` only** (a test failure): a page outside Stage 3; `beneath_the_notes` not first; a Stage 3 Choir page missing.
 - #28 adds its own kinds for Stage 4 pages, `vftv:threshold` and `vftv:road`, under its [own rules](eldritch.md#sites); the rules above that aren't scoped to `vftv:choir_ruin` apply to them too.
@@ -389,7 +389,7 @@ Any hand, not a spectator. Vanilla's `useItemOn` checks and NeoForge's `PlayerIn
   - the 129th claimant is row 8 like the first, since nothing has a capped history (unlike a vanilla vault, which keeps at most 128 UUIDs and evicts the oldest, `MC:world/level/block/entity/vault/VaultServerData.java:29,65–73`);
   - one player's claim never touches another's.
 
-**Offer vectors** (pages `p1`…`p12`, `p1` standing for `beneath_the_notes`, `pages_per_claim` 3; transcribed into the fixtures):
+**Offer vectors** (pages `p1`…`p12`, `p1` standing for `beneath_the_notes`; transcribed into the fixtures). The first table uses `pages_per_claim` 3, a test value that exercises every row with more sites; the second uses the shipped 6:
 
 | Step | Tick | Player state before | Use at | Outcome |
 |---|---|---|---|---|
@@ -408,6 +408,12 @@ Any hand, not a spectator. Vanilla's `useItemOn` checks and NeoForge's `PlayerIn
 | 13 | — | C latches every page | — | — |
 | 14 | 5 | C | R1 | `all_held` |
 | 15 | 6 | C | R1 | `all_held` again: nothing was recorded |
+
+| Step | Tick | Player state before | Use at | Outcome (`pages_per_claim` 6) |
+|---|---|---|---|---|
+| 1 | 0 | D: nothing | R1 | `given` p1 … p6 |
+| 2 | 1 | D | R2 | `given` p7 … p12 (p1 … p6 are claimed at R1) |
+| 3 | 2 | D | R3 | `all_held`: two ruins gave every page |
 
 ### Handing out
 
@@ -440,7 +446,7 @@ Under the player's **operation guard**. It is taken right after rows 0 and 1 pas
 
 **`vftv:answerer`** and **`vftv:answerer_cantor`** (Stage 3). [Lore](lore.md#cosmology): living would-be listeners who speak back to the Voices without understanding them, hostile and found at Choir sites.
 
-- Both are `Monster`s, category `MONSTER`, size 0.6 × 1.95, eye height 1.62, registered with **`.notInPeaceful()`** (`MC:world/entity/EntityType.java:641–643`; `MONSTER` alone doesn't set it), and tagged **`#vftv:answerers`**.
+- Both are `Monster`s, category `MONSTER`, size 0.6 × 1.95, eye height 1.62, registered **without `.notInPeaceful()`**, so they are allowed in peaceful (`MC:world/entity/EntityType.java:641–643`; `MC:world/entity/Mob.java:715–718`) as the [Choristers](choristers.md) are, and tagged **`#vftv:answerers`**.
 - **Stats** *(ours; fixed at registration and asserted by a unit test)*:
 
   | | Health | Attack | Armour | Speed | Follow range | XP |
@@ -448,7 +454,7 @@ Under the player's **operation guard**. It is taken right after rows 0 and 1 pas
   | Answerer | 24 | 4 | 2 | 0.25 | 20 | 8 |
   | Cantor | 20 | 2 | 0 | 0.23 | 20 | 10 |
 
-- **Never:** opens doors, picks up items, breaks or places blocks, burns in daylight, rides, joins raids, or is a Voice spawn.
+- **Never:** opens doors, picks up items, breaks or places blocks, burns in daylight, rides or joins raids.
 
 ### Placement and persistence
 
@@ -456,7 +462,7 @@ Under the player's **operation guard**. It is taken right after rows 0 and 1 pas
   - Each chancel holds 1 Answerer and 1 Cantor; each wing holds 0–2 Answerers ("Pieces and topology").
   - Pool elements finalize template entities (`MC:SinglePoolElement.java:171`), so `finalizeSpawn` runs with `EntitySpawnReason.STRUCTURE` (`MC:StructureTemplate.java:519`). It sets the home with `setHomeTo(own block position, answerer.home_radius)` (`MC:world/entity/Mob.java:1241`).
 - **`requiresCustomPersistence()` returns true** (`Mob.java:710`), so they never despawn, however they arrived. Persistent mobs don't count toward the natural mob cap (`MC:world/level/NaturalSpawner.java:74`), so a ruin never suppresses vanilla spawns. Their number is fixed by the templates.
-- **Peaceful:** `.notInPeaceful()` means creation can fail at generation, and an existing Answerer is discarded at its despawn check (`Mob.java:715–717`). **A ruin generated in peaceful has no defenders, then or later.** Stated.
+- **Peaceful:** Answerers are created and kept in peaceful as at any other difficulty, so switching to peaceful never strips a ruin. Their melee is vanilla's `minecraft:mob_attack`, whose scaling (`when_caused_by_living_non_player`) is difficulty-scaled, so it deals 0 in peaceful (`MC:world/entity/player/Player.java:723,739`). `validTarget` is false in peaceful ("Behaviour"), so they idle at home instead of chasing.
 - **The home radius is saved with the mob** (`Mob.java:393–394,418–420`). A changed `answerer.home_radius` applies to Answerers finalized after it; existing ones keep theirs.
 
 ### Behaviour
@@ -472,7 +478,7 @@ Goals in priority order:
 | 4 | wander within home | `MOVE` |
 | 5 | look at a player | `LOOK` |
 
-**Targeting** (ours) uses **one predicate everywhere: `validTarget(mob, player)`**. It is true iff the player:
+**Targeting** (ours) uses **one predicate everywhere: `validTarget(mob, player)`**. It is true iff the difficulty isn't peaceful and the player:
 - is attackable (alive, in the mob's level, not creative or spectator);
 - stands inside **that mob's** home;
 - is within **that mob's** follow range.
@@ -500,7 +506,7 @@ A tuning change applies at the next chant for the radius and target count, and a
 
 ### Warp and phantoms
 
-- **Never a Voice spawn:** the tags `#vftv:answerers` and `vftv:voice_spawnable` are disjoint, asserted by a datagen test ([warp, Danger](warp.md#danger)).
+- **Never a Voice spawn:** v1 has no Voice spawn event ([warp, Danger](warp.md#danger)), so nothing in the warp spec places an Answerer.
 - **No warp:** Answerers apply none and trigger no Voice event.
 - **Real entities,** so the Tuning Fork reads them truly ([aspects spec](aspects.md)).
 - **Not to be confused with apparitions.** The [warp spec's apparitions](warp.md#phantoms) are robed and **faceless** Choir figures. Answerers are living, with **faces**, mauve cloth and brass mouthpieces; the asset review sets them side by side.
@@ -712,7 +718,7 @@ The advancements, the tags `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:cho
 
 ### Sites
 
-`{"schema": "vftv:choir_sites/1", "sites": {"vftv:choir_ruin": {"pages": [...], "pages_per_claim": 3}}}`, with exactly that one site in the registry format and the load-validation rules under "Site kinds". The `pages` list is transcribed from the Stage 3 research content's frozen narrative order. **Rejected:** another site id; a page list that differs from that order; `pages_per_claim` other than 3.
+`{"schema": "vftv:choir_sites/1", "sites": {"vftv:choir_ruin": {"pages": [...], "pages_per_claim": 6}}}`, with exactly that one site in the registry format and the load-validation rules under "Site kinds". The `pages` list is transcribed from the Stage 3 research content's frozen narrative order. **Rejected:** another site id; a page list that differs from that order; `pages_per_claim` other than the shipped value, 6.
 
 ### The node type
 
@@ -812,7 +818,14 @@ A sketch:
     {"latch": {"player": "C", "pages": ["test:p1", "test:p2", "test:p3", "test:p4", "test:p5", "test:p6",
                                         "test:p7", "test:p8", "test:p9", "test:p10", "test:p11", "test:p12"]}},
     {"use": {"tick": 5, "player": "C", "site": "R1"}, "expect": {"outcome": "all_held"}},
-    {"use": {"tick": 6, "player": "C", "site": "R1"}, "expect": {"outcome": "all_held"}}]}]}
+    {"use": {"tick": 6, "player": "C", "site": "R1"}, "expect": {"outcome": "all_held"}}]},
+  {"pages": ["test:p1", "test:p2", "test:p3", "test:p4", "test:p5", "test:p6",
+             "test:p7", "test:p8", "test:p9", "test:p10", "test:p11", "test:p12"],
+   "pages_per_claim": 6,
+   "steps": [
+    {"use": {"tick": 0, "player": "D", "site": "R1"}, "expect": {"outcome": "given", "pages": ["test:p1", "test:p2", "test:p3", "test:p4", "test:p5", "test:p6"]}},
+    {"use": {"tick": 1, "player": "D", "site": "R2"}, "expect": {"outcome": "given", "pages": ["test:p7", "test:p8", "test:p9", "test:p10", "test:p11", "test:p12"]}},
+    {"use": {"tick": 2, "player": "D", "site": "R3"}, "expect": {"outcome": "all_held"}}]}]}
 ```
 
 **Rejected:** a section missing; an unknown field; a conditional field present when its condition is false, or absent when true; a value outside its type or range; a row of a vector table missing or altered; ticks that decrease. The file above is the one the content ticket ships, so it passes every rule. The fixtures model arithmetic and offer selection only; the guard, callbacks, persistence and generation are proved by the GameTests.
@@ -896,7 +909,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 **Other homes:**
 - spacing 36, separation 14, the salt, pool weights, weathering and biomes: `content/worldgen/choir_ruin.json`, written into worldgen JSON a datapack can override;
 - the fixed structure fields: code ("The structure");
-- `pages_per_claim` 3 and the page order: the `vftv:choir_site` registry (`content/worldgen/sites.json`);
+- `pages_per_claim` 6 and the page order: the `vftv:choir_site` registry (`content/worldgen/sites.json`);
 - node ranges and clarity weights: `content/worldgen/node_types.json`;
 - loot: the loot tables (`content/worldgen/loot.json`);
 - the Answerers' stats: code, fixed at registration and asserted by unit tests.
@@ -932,7 +945,7 @@ Every tunable number, all ours. The home is the server-only datapack file **`dat
 
 **Client:** the same ruin in view: 10 Answerers rendering, the Cantor chanting, the Reliquary and the node on screen.
 
-**Share:** server ≤ **0.12 ms mean, ≤ 0.30 ms p99**, measured in the combined stress world. That includes the Answerers' vanilla AI and pathfinding (**native**, disclosed), the alerts' and chants' AABB queries and effect callbacks, the Reliquary's inventory insertions and drops, and the place query. Client ≤ **0.04 ms p50**. Shares are acceptance targets, not measurements.
+**Share:** server ≤ **0.12 ms mean, ≤ 0.30 ms p99**, measured in the combined stress world. That includes the Answerers' vanilla AI and pathfinding (**native**, disclosed), the alerts' and chants' AABB queries and effect callbacks, the Reliquary's inventory insertions and drops, and the place query. Client ≤ **0.04 ms p50**. Shares are acceptance targets, not measurements, and stay provisional until the first combined reference measurement ([quality gates, What each system spec must declare](quality-gates.md#what-each-system-spec-must-declare)).
 
 **The envelope's running totals** (planning arithmetic, never a combined percentile): the finished specs' server shares total **0.55 ms mean / 2.22 ms p99** with the Hush; with worldgen, **0.67 / 2.52**, leaving **0.33 / 0.48** for the Eldritch tier. Client shares total **0.84 ms p50**, **0.88** with worldgen, leaving **0.12**.
 
@@ -977,7 +990,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **the offer function:** every row of "Using it", including unknown pages filtered while their claims are kept, `all_held` recording nothing, and the attempt cap;
 - **codecs:** the claims record (bounds, defaults, unknown and future formats kept raw, duplicate keys refused, unknown ids kept), the Reliquary record (fresh initialization against raw retention), the site registry entry, the tuning file and every `content/` schema;
 - **every `content/` rejection rule:** templates (each listed rule, including role counts, footing, paths, connectors and namespaces), `choir_ruin.json` (including the 55-biome coverage), `sites.json`, `node_types.json`, `loot.json` and the fixtures;
-- the Answerers' stats; `#vftv:answerers` ∩ `vftv:voice_spawnable` = ∅;
+- the Answerers' stats;
 - the place query's allocation budget.
 
 **Datagen-phase:**
@@ -1016,9 +1029,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
   - **cross-role alerts:** hitting the Cantor alerts the Answerers for which the player is valid, and none whose home doesn't contain the player. A recipient whose home contains the player but who stands beyond follow range from them stays untargeted;
   - the chant runs **concurrently** with melee (the Cantor attacks and chants in the same window), reaches ≤ `max_targets` within the radius, and waits a full interval after a reload;
   - a lowered `cantor.radius` applies at the next chant;
-  - peaceful creates none in a newly placed ruin and discards existing ones;
-  - drops;
-  - a warp spawn event naming `vftv:answerer` is rejected at load.
+  - **peaceful:** a ruin placed in peaceful has its Answerers; existing ones survive a switch to peaceful and back; in peaceful they take no target, even when hit, and an Answerer's hit on a player deals 0;
+  - drops.
 - **Finds:**
   - picking up pointed dripstone grants `vftv:find/distillation`;
   - picking up a page grants `vftv:find/ruins`;
@@ -1070,7 +1082,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **Met here** (the [Infusion spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/21)): no advancement shipped for progression requires an infusion craft criterion. Every criterion is `inventory_changed` or `player_killed_entity` ("The advancements"), checked by a datagen test.
 
-**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)): a place query for Choir sites backed by vanilla's per-chunk structure references written at generation, read and never followed, loaded-only and bounded by 8 lookups ("The Choir-site place query"). No Void-touched mob is added to `vftv:voice_spawnable`, so "Danger"'s extension isn't invoked. The Answerers are never Voice spawns (disjoint tags, tested).
+**Met here** (the [Warp and the Voices spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)): a place query for Choir sites backed by vanilla's per-chunk structure references written at generation, read and never followed, loaded-only and bounded by 8 lookups ("The Choir-site place query"). v1 has no Voice spawn event, so the Answerers are never Voice spawns.
 
 **Met here** (the [Flux and the Hush spec](https://github.com/andrewbrogoff/voices-from-the-void/issues/26)): no feature, structure, processor or loot places a hushed block, a `vftv:hushed` node, a Hollow or an aura. This is checked on every generated file **and** on every generated template's parsed NBT palette, block-entity and entity data, including any `neoforge:attachments` ("Templates", "Processors", "Loot"). The place query is independent of the Hush's.
 
@@ -1087,7 +1099,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - **World sources**, in the research spec's "Affordability paths":
   - **#34:** `path-stage1.json` ends by `use` of `{"advancement": "vftv:find/distillation"}`: Distillation evidence.
   - **#35:** `path-stage2.json` ends by `use` of `{"advancement": "vftv:find/ruins"}`: acquiring the first ruin's batch latches Ruins. The early Clearing Bell order stays as set.
-  - **#36:** `path-stage3.json` tips the pages in, through `{"choir_page": <id>, "site": "vftv:choir_ruin"}` sources.
+  - **#36:** `path-stage3.json` tips the pages in, through `{"choir_page": <id>, "site": "vftv:choir_ruin"}` sources, and reaches every Stage 3 commit from **at most two batches** (two ruins at `pages_per_claim` 6), `beneath_the_notes` first.
 
   Acquisition and tip-in are one copy each, never published as two guaranteed copies.
 - **#34 and #35** are blocked by this spec. #34's hint for the Stage 2 opener points at stone that weeps into stone (dripstone caves), with traders as an aside. #35's hint for the Stage 3 opener points at bell towers over the treeline in unexplored land, and the Reliquary at their heart.
@@ -1105,7 +1117,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Hand values for the entities `vftv:answerer` and `vftv:answerer_cantor`, and a block value or a reviewed exemption for `vftv:reliquary`. No new item or recipe adds a conversion to prove.
 
 **Configuration**
-- No option of ours. Peaceful removes the defenders, not the ruins. A pack disables ruins by overriding the structure set (for example `frequency` 0.0).
+- No option of ours. Peaceful keeps the defenders and makes them harmless. A pack disables ruins by overriding the structure set (for example `frequency` 0.0).
 
 **API**
 - In `api`: the marker interface `ChoirSite` (the registry is server-only), `WorldgenKeys` (the `vftv:choir_site` registry key, the `#vftv:choir_sites`, `#vftv:answerers` and `#vftv:choir_weathering` tag keys, the `vftv:choir_ruin` structure and site keys, the `vftv:choir` node-type key and the `vftv:choir_claims` attachment's id) and `WorldgenLimits`.

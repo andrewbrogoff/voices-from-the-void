@@ -3,7 +3,7 @@
 What a Listener wears. This covers:
 - the **Tuned Spectacles**, which show what the wearer has already struck about whatever they look at;
 - **wearables**: the one data map that gives every worn item its protection, vis discount and Baffle;
-- **vis-discount gear**: the Felted garments, the Chime Pendant and the Void set, through the wands spec's one attribute;
+- **vis-discount gear**: the spectacles, the Felted garments and the Chime Pendant, through the wands spec's one attribute;
 - the **Baffle**, the renamed runic shield: a layer of resonance that soaks up blows before health and comes back after a quiet spell, and **Baffling**, the infusion-only enchantment that adds to it;
 - **trinkets** and Curios, and how trinkets work without Curios;
 - **Brass armour** (Stage 2) and the **Void set** (Stage 4), with its gear warp and its warp-scaled Baffle.
@@ -23,7 +23,7 @@ Resolved in [Armor and trinkets spec](https://github.com/andrewbrogoff/voices-fr
 
 **Every number in this spec is ours.** None is taken from TC4: its set protections, durabilities, per-piece discounts, goggle discount, shield amounts and per-piece warping were not reused, and nothing here is a TC4 ratio rescaled. Each tunable number is listed with its data home under "Tuning and limits". Numbers inside the JSON examples are illustrative unless the text says they are the shipped values; the content tickets set the real ones.
 
-**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses Java `float`, `double` and `long` arithmetic as the mod will. Both print the same 60 lines (3,701 bytes, SHA-256 `7eb9a5b257dbdae293a4a4d71efda75fec983db7a47b2ccb99559640cc4dd2a7`). Baffle vectors use halves, which `float` and `double` hold exactly. The references cover arithmetic only; synchronisation, ordering against other listeners and Curios behaviour are proved by the GameTests (see "Tests").
+**Vectors** throughout come from one reference implementation, cross-checked against an independent JDK port that uses Java `float`, `double` and `long` arithmetic as the mod will. Both print the same 60 lines (3,676 bytes, SHA-256 `3bd24e7fd99115032a902e9cd0b87959cbfab0f7d5f7d094305f8171a6f28604`). Baffle vectors use halves, which `float` and `double` hold exactly. The references cover arithmetic only; synchronisation, ordering against other listeners and Curios behaviour are proved by the GameTests (see "Tests").
 
 **Source citations:** `MC:` is the `minecraft-patched-26.2.0.88` sources (with NeoForge's patches to vanilla classes), `NF:` the NeoForge `26.2.0.88` sources, and `CU:` the Curios `16.0.0+26.2` sources, each path relative to `net/minecraft/`, `net/neoforged/neoforge/` or `top/theillusivec4/curios/`. `NFP:` cites the matching NeoForge userdev jar's `patches/net/minecraft/client/gui/Hud.java.patch`, by patch-file line.
 
@@ -68,13 +68,13 @@ Fourteen items. **Attribute numbers** (armour, toughness, discount, Baffle) live
 | `vftv:resonant_brass_leggings` | legs | 5 | 1.0 | 0 | 0 | — | 1 | 300 | 16 | `vftv:resonant_brass_ingot` |
 | `vftv:resonant_brass_boots` | feet | 2 | 1.0 | 0 | 0 | — | 1 | 260 | 16 | `vftv:resonant_brass_ingot` |
 | `vftv:baffle_ring` (trinket) | off hand; Curios `ring` | 0 | 0 | 0 | 3 | — | 1 | none | — | — |
-| `vftv:void_helmet` | head | 3 | 2.0 | 0.04 | 1 | 2 | 1 | 286 | 12 | `#vftv:repairs_void_armor` |
-| `vftv:void_chestplate` | chest | 8 | 2.0 | 0.06 | 1 | 3 | 1 | 416 | 12 | `#vftv:repairs_void_armor` |
-| `vftv:void_leggings` | legs | 6 | 2.0 | 0.04 | 1 | 2 | 1 | 390 | 12 | `#vftv:repairs_void_armor` |
-| `vftv:void_boots` | feet | 2 | 2.0 | 0.02 | 1 | 2 | 1 | 338 | 12 | `#vftv:repairs_void_armor` |
+| `vftv:void_helmet` | head | 3 | 2.0 | 0 | 1 | 2 | 1 | 286 | 12 | `#vftv:repairs_void_armor` |
+| `vftv:void_chestplate` | chest | 8 | 2.0 | 0 | 1 | 3 | 1 | 416 | 12 | `#vftv:repairs_void_armor` |
+| `vftv:void_leggings` | legs | 6 | 2.0 | 0 | 1 | 2 | 1 | 390 | 12 | `#vftv:repairs_void_armor` |
+| `vftv:void_boots` | feet | 2 | 2.0 | 0 | 1 | 2 | 1 | 338 | 12 | `#vftv:repairs_void_armor` |
 
 - **Durability** is vanilla's unit per piece (helmet 11, chestplate 16, leggings 15, boots 13; `MC:world/item/equipment/ArmorType.java`) times a multiplier: Felted 9, Brass 20, Void 26 (vectors: Felted 144/135/117; Brass 220/320/300/260; Void 286/416/390/338). Every Void piece outlasts its Brass centre, so damage carried by the transmute stays valid ("Void armour").
-- **The Stage 2 choice:** Brass protects (16 armour in all, between iron's 15 and diamond's 20, `MC:world/item/equipment/ArmorMaterials.java`); Felted makes magic cheaper (0.09) with little protection; without Curios the spectacles compete with a helmet for the head. The Void set joins both at a warp price.
+- **The Stage 2 choice:** Brass protects (16 armour in all, between iron's 15 and diamond's 20, `MC:world/item/equipment/ArmorMaterials.java`); Felted makes magic cheaper (0.09) with little protection; without Curios the spectacles compete with a helmet for the head. The Void set joins both at a warp price: the mod's only toughness, the Baffle and its warp-scaled bonus, and **no vis discount**, because its own gear warp would tax away any modest one (0.84 × 1.18 ≈ 0.99), and a tooltip must not promise what it can't deliver.
 - **Registration properties** (fixed in code, asserted by a unit test against this table): durability, enchantment value, the `Equippable` slot, equip sound and equipment asset (`MC:world/item/Item.java:583–591` shows vanilla's `humanoidArmor` wiring the same parts), the `REPAIRABLE` tag, stack size and allowed entities. **Our items carry no code `ATTRIBUTE_MODIFIERS`**: `Properties.attributes` would be a second home for the same numbers (`Item.java:715–717`).
 - **The spectacles** are `Equippable` in the head slot with `damage_on_hurt` false (`MC:world/item/equipment/Equippable.java:230`) and no durability: lenses don't wear out. Trinkets are not equippable at all.
 - **Allowed entities:** every equippable here sets `allowed_entities` to `minecraft:player` and `minecraft:armor_stand` (`Equippable.java:175–176`). Mob pickup checks it (`MC:world/entity/Mob.java:560–563` through `LivingEntity#isEquippableInSlot`, `MC:world/entity/LivingEntity.java:4050–4054`), so zombies don't pick these up. That is ordinary pickup only: a command or an addon can still equip a mob, and then any of our attributes the mob lacks are skipped (`LivingEntity.java:3078–3084`; `MC:world/entity/ai/attributes/AttributeMap.java:73–87`). The Baffle stays players-only ("The Baffle").
@@ -98,7 +98,7 @@ Fourteen items. **Attribute numbers** (armour, toughness, discount, Baffle) live
 
 **Validation runs in two places**, because NeoForge passes only the value to a data map's codec, never the item that owns it (`NF:registries/datamaps/DataMapEntry.java:21–26`; `DataMapType.java:79–86`):
 1. **The value codec** checks structure and ranges: an unknown field, a value out of range or with more places, every numeric field 0. A data-map file decodes through a strict map (`NF:registries/datamaps/DataMapFile.java:47–50`) whose result is taken with `getOrThrow()` inside a per-resource catch (`DataMapLoader.java:166–177`), so **one bad value discards that whole resource file**, logged; the other pack layers' files for the same map still load. It is not a rollback of the reload.
-2. **The validated view** checks the item: `slot` must equal the item's `Equippable` slot, and `offhand` is allowed only on an item that isn't `Equippable`. After each load, `core.armor` post-processes the resolved item → entry map into an immutable **validated view** that **excludes** each incompatible entry with one error naming the item, and keeps the rest. The view is rebuilt on `DataMapsUpdatedEvent` for the item registry, with cause `SERVER_RELOAD` on the server, `CLIENT_SYNC` on a remote client, and in an integrated world on the server's `SERVER_RELOAD` through the client flag ("After a reload"). **Every consumer reads the view, never the raw map:** the modifier listener, the Curios hook, the reload refresh, tooltips, the fact source and the content lint.
+2. **The validated view** checks the item: `slot` must equal the item's `Equippable` slot, and `offhand` is allowed only on an item that isn't `Equippable`. After each load, `core.armor` post-processes the resolved item → entry map into an immutable **validated view** that **excludes** each incompatible entry with one error naming the item, and keeps the rest. The view is rebuilt on `DataMapsUpdatedEvent` for the item registry, with cause `SERVER_RELOAD` on the server, `CLIENT_SYNC` on a remote client, and in an integrated world on the server's `SERVER_RELOAD` through the client flag ("After a reload"). **Every consumer reads the view, never the raw map:** the modifier listener, the Curios hook, tooltips, the fact source and the content lint.
 
 Datagen rejects a slot mismatch outright, so built-in content never reaches step 2.
 
@@ -110,23 +110,17 @@ Datagen rejects a slot mismatch outright, so built-in content never reaches step
 
 ### After a reload
 
-Vanilla re-applies modifiers only on an equipment change, so a `/reload` that changes `vftv:wearable` would leave worn values stale, and a field the reload removed would never be taken off.
+Vanilla re-applies modifiers only on an equipment change, and so do we: **worn modifiers follow a changed `vftv:wearable` at the next equipment change** (re-equipping the piece applies the new values and drops a removed field), as vanilla asks after many data changes. Only a pack developer editing the map on a live server ever sees the gap.
 
-1. **Queue:** `DataMapsUpdatedEvent` (`NF:registries/datamaps/DataMapsUpdatedEvent.java:80–93`) for the item registry with cause `SERVER_RELOAD` sets a pending flag. It fires **during** reload application, before Curios reconciles its slots (`CU:common/CuriosCommonEvents.java:193–210`), so nothing is rebuilt inside it.
-2. **Refresh** at the next server `ServerTickEvent.Post`, once, for each online player:
-   - remove, from `minecraft:armor`, `minecraft:armor_toughness`, `minecraft:knockback_resistance`, `vftv:vis_discount` and `vftv:baffle`, **every modifier whose id is in namespace `vftv` with a path starting `wearable/`**: ours in vanilla slots and the ids Curios derived from our base id alike;
-   - re-add through the **effective** query paths, so other mods' modifier events still apply: for each vanilla slot that our map can name (head, chest, legs, feet, off hand), the stack's `forEachModifier` filtered to our ids; for **every** active functional Curios position, Curios's own attribute query for that position's stack, filtered the same way ("Curios"). This is a **full traversal**, never cut at `MAX_GEAR_SLOTS`: everything the refresh removed must come back, and Curios applies modifiers in every position however many there are (`CU:common/CuriosCommonEvents.java:491–580`; slot sizes have no such ceiling, `CU:common/slot/SlotType.java:210–218`);
-   - a stack whose query throws is logged once and skipped; the rest of the refresh runs.
-3. **Clients** rebuild the validated view, tooltips, the spectacles card and the Baffle HUD on `DataMapsUpdatedEvent` with cause `CLIENT_SYNC` (a remote client) or, in an integrated world whose connection is in memory and receives no `CLIENT_SYNC`, on the same `SERVER_RELOAD` event, through a flag the client tick reads.
-
-**Cost, per player, once per reload:** removing touches the modifiers present on 5 attributes; re-adding queries ≤ 5 vanilla slots plus every functional Curios position, an **O(S + T log T)** traversal for *S* slot positions over *T* slot types (the collector's order, "The collector"). That term is Curios's and the pack's, not ours to cap: **disclosed** as a reload term and measured as a load scenario.
+1. **Server:** `DataMapsUpdatedEvent` (`NF:registries/datamaps/DataMapsUpdatedEvent.java:80–93`) for the item registry with cause `SERVER_RELOAD` rebuilds the validated view ("Wearables"); nothing else is rebuilt.
+2. **Clients** rebuild the validated view, tooltips, the spectacles card and the Baffle HUD on `DataMapsUpdatedEvent` with cause `CLIENT_SYNC` (a remote client) or, in an integrated world whose connection is in memory and receives no `CLIENT_SYNC`, on the same `SERVER_RELOAD` event, through a flag the client tick reads.
 
 ## Vis discount
 
 - **Discounts exist only as `vftv:wearable.vis_discount`,** turned into modifiers on `vftv:vis_discount`, which the [wands quote](wands.md#the-quote) caps at `quote.max_discount` (0.30) and flags. Nothing else discounts, and no gear changes a focus's magnitude ([foci, Contracts](foci.md#contracts-on-sibling-specs)).
 - **The flag compares per mille** (amended in the wands spec in this change): `discount_capped` iff `Math.round(value × 1000) > Math.round(quote.max_discount × 1000)`. The attribute sums its modifiers in `double` (`MC:world/entity/ai/attributes/AttributeInstance.java:148–165`), so 0.10 + 0.20 is 0.30000000000000004, which the old `value > max` flagged although `d` is 300 either way.
 - **Display:** `vftv:vis_discount` is NeoForge's `PercentageAttribute` (`NF:common/PercentageAttribute.java:34–54`, `add_value` shown at scale 100; amended in the wands spec), so a tooltip reads "+3% Vis Discount".
-- **The best built-in loadout** (four armour slots, the off hand, and one Curios `head`, `necklace` and `ring` slot, Curios's default size, `CU:common/slot/SlotType.java:204–212`) is the Void set, spectacles in the Curios head slot and two pendants: **0.23**, below the cap (a content lint). `discount_capped` is reached only by packs; the wands contract's GameTest uses a test-pack value of 0.40.
+- **The best built-in loadout** (four armour slots, the off hand, and one Curios `head`, `necklace` and `ring` slot, Curios's default size, `CU:common/slot/SlotType.java:204–212`) is the spectacles in the vanilla head slot and again in the Curios head slot, the Felted set, and two pendants: **0.19**, below the cap (a content lint). The Void set adds nothing to it. `discount_capped` is reached only by packs; the wands contract's GameTest uses a test-pack value of 0.40.
 
 **Vectors** (cap 0.85, Aer 10, Ignis 3, Ordo 1; modifiers summed in order as `double`):
 
@@ -134,8 +128,8 @@ Vanilla re-applies modifiers only on an equipment change, so a `/reload` that ch
 |---|---|---|---|---|---|---|
 | nothing | 0.0 | 0 | no / no | 1.00 | 850 | Aer 9, Ignis 3, Ordo 1 |
 | spectacles, Felted set, a pendant in the off hand | 0.14 | 140 | no / no | 1.00 | 731 | Aer 8, Ignis 3, Ordo 1 |
-| the Void set, at its own gear warp 9 | 0.16 | 160 | no / no | 1.09 | 778 | Aer 8, Ignis 3, Ordo 1 |
-| the best built-in loadout, **tax switch off** (discount isolation; with the tax on, the Void set's warp 9 makes `W` 1.09) | 0.22999999999999998 | 230 | no / no | 1.00 | 655 | Aer 7, Ignis 2, Ordo 1 |
+| the Void set, at its own gear warp 9 (no discount; the tax alone) | 0.0 | 0 | no / no | 1.18 | 1003 | Aer 11, Ignis 4, Ordo 2 |
+| the best built-in loadout (no gear warp) | 0.19 | 190 | no / no | 1.00 | 689 | Aer 7, Ignis 3, Ordo 1 |
 | two modifiers, 0.10 and 0.20 | 0.30000000000000004 | 300 | **yes** / no | 1.00 | 595 | Aer 6, Ignis 2, Ordo 1 |
 | a test-pack 0.40 | 0.4 | 300 | yes / yes | 1.00 | 595 | Aer 6, Ignis 2, Ordo 1 |
 
@@ -154,15 +148,12 @@ While the player **wears a revealing item** (an item in `#vftv:reveals_aspects` 
 | 1 | an entity of type `vftv:apparition` | **none**: the fork's silence ([warp, Phantoms](warp.md#phantoms)) |
 | 2 | a node whose block entity is dormant or whose id is unset | the type "Unknown" (`node.vftv.unknown_type`), as a strike shows it ([wands, Inspection](wands.md#inspection-and-teaching)), no aspects |
 | 3 | a node whose `node:<id>` key isn't in the viewer's ledger | its name and `hud.vftv.spectacles.unstruck` |
-| 4 | a node in the ledger | type, clarity and each aspect as current / max, from the synced state **settled to the client's game time** through the wands spec's pure regeneration ([wands, Regeneration](wands.md#regeneration)) and `VisRules` |
-| 5 | a block, entity or dropped item whose scan key is **partly scanned** | the ledger's **stored snapshot** values, whatever its current values are now, even if a reload has emptied them or removed its entry |
-| 6 | no current aspect entry, or `{}` | its name and `hud.vftv.spectacles.nothing` ("Nothing answers.") |
-| 7 | its scan key isn't in the ledger | its name and `hud.vftv.spectacles.unstruck` ("I haven't struck this.") |
-| 8 | its key is **completed** | its **current** values from the synced data maps |
+| 4 | a node in the ledger | type, clarity and each aspect as current / max, from the synced state **settled to the client's game time** through the wands spec's pure regeneration ([wands, Regeneration](wands.md#regeneration)) and `VisRules`: the one thing a strike can't show, a node regenerating in place |
+| 5 | anything else (a block, entity or dropped item) | its scan key in the ledger: the strike card's readout for that key, from the ledger and the synced maps by the [aspects spec's](aspects.md#what-a-strike-reveals) own rules, read-only; not in the ledger: its name and `hud.vftv.spectacles.unstruck` ("I haven't struck this.") |
 
-- **Masking** (rows 4, 5, 8): an aspect in the viewer's **current known set** shows its icon; any other shows the **unheard** icon with its exact amount and the parent hint ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)). Prerequisites that have since become known **don't** reveal an undiscovered aspect: only a strike discovers ([aspects, Knowledge](aspects.md#knowledge)), so the card can never name an unheard aspect.
-- **Own aspects only:** a jar, crucible or bowl reads as its block, never its contents, as the fork does; a dropped item reads as the item it carries.
-- **Disguises** are client drawings over real blocks, and the client level holds the real block, so the card names the real block. Instruments never lie ([progression, Reality slipping](progression.md#reality-slipping)).
+- **Row 5 delegates:** partial snapshots, completed keys and empty entries are the aspects spec's readout rules, never restated here, so the card can't drift from the strike card.
+- **Masking** (rows 4, 5): an aspect in the viewer's **current known set** shows its icon; any other shows the **unheard** icon with its exact amount and the parent hint ([aspects, What a strike reveals](aspects.md#what-a-strike-reveals)). Prerequisites that have since become known **don't** reveal an undiscovered aspect: only a strike discovers ([aspects, Knowledge](aspects.md#knowledge)), so the card can never name an unheard aspect.
+- **Own aspects only:** a jar, crucible or bowl reads as its block, never its contents, as the fork does; a dropped item reads as the item it carries. Instruments never lie ([progression, Reality slipping](progression.md#reality-slipping)).
 - **Never:** a strike, points, discovery, a ledger write or a packet.
 
 ### Drawing
@@ -276,8 +267,8 @@ The runic-augmentation equivalent, with no new recipe form.
 ## Void armour
 
 - **Made by infusion transmute** from Brass: four `vftv:infusion` bodies, `kind: void`, `research: vftv:void_armor` (a Stage 4 gate, as the [infusion](infusion.md#contracts-on-sibling-specs) and [arcane](arcane.md#contracts-on-sibling-specs) contracts require), centre the matching Brass piece, result `{"item": {"id": "vftv:void_<piece>", "count": 1}, "transmute": true}` ([infusion, The recipe type](infusion.md#the-recipe-type)), so enchantments, trims and damage carry over. A content lint checks each Void piece's durability against its Brass centre's. No #28 material is needed.
-- **The amplifier** scales the Baffle bonus only ("Capacity"), bounded by `void.max_bonus`. Protection and discount stay flat, so the one warp-scaled number is visible and capped, and no focus magnitude is touched.
-- **Gear warp** `vftv:gear_warp` 2 / 3 / 2 / 2 = **9**, against the warp spec's shared `gear.max` 12 ([warp, Gear warp](warp.md#gear-warp)): carried, sampled every 20 ticks. **The set alone** (vectors): `total` 9 → band 1, ORDINARY vis factor 1090 ‰, infusion penalty 2, amplifier 9 → Baffle bonus 1. With its 0.16 discount and a Brass cap, a quote's `m` is 778 against a bare 850, and every further warp point erodes it.
+- **The amplifier** scales the Baffle bonus only ("Capacity"), bounded by `void.max_bonus`. Protection stays flat and the set carries no discount, so the one warp-scaled number is visible and capped, and no focus magnitude is touched. Its value is toughness 8 (the mod's only toughness source), the Baffle and Void amplification.
+- **Gear warp** `vftv:gear_warp` 2 / 3 / 2 / 2 = **9**, against the warp spec's shared `gear.max` 12 ([warp, Gear warp](warp.md#gear-warp)): carried, sampled every 20 ticks. **The set alone** (vectors, at the warp spec's bands [6, 14, 24], tax 20 ‰ and infusion 500 ‰ per point): `total` 9 → band 1, ORDINARY vis factor 1180 ‰, infusion penalty 4, amplifier 9 → Baffle bonus 1. With no discount and a Brass cap, a quote's `m` is 1003 against a bare 850: the set's warp is a price, never offset by a decoy discount.
 - **Names** are Void-tongue ([lore, Naming register](lore.md#vocabulary-policy)): each 1–2 words of the [lexicon](warp.md#the-lexicon), capitalised as proper item names, linted for lexicon membership and phonology. Item ids stay `vftv:void_<piece>`.
 
 ## Repair and enchanting
@@ -309,17 +300,16 @@ One bounded enumerator in `neoforge.compat.curios`, **`CuriosWorn.collect(entity
 - **Cost:** the budget bounds what it **emits**, not what it **inspects**. Empty positions are walked and skipped, and the slot types are ordered first, so a full walk is **O(S + T log T)** for *S* slot positions over *T* slot types. *S* is set by Curios and the pack, with no ceiling of ours (`CU:common/slot/SlotType.java:210–218`), so this is **a native term, disclosed** wherever a caller may walk it all.
 
 **Wiring:** the callers sit outside `neoforge.compat.curios`, so none references `CuriosWorn` ([compatibility, Wiring the collector](compat.md#wiring-the-collector)).
-- `CuriosWorn` implements **`WornSlots`**, a loader-free interface in `neoforge.armor`: `collect` is the enumerator above, and `forEachWearableModifier` is the reload refresh's full Curios query.
+- `CuriosWorn` implements **`WornSlots`**, a loader-free interface in `neoforge.armor` whose one method, `collect`, is the enumerator above.
 - The entry method `static WornSlots init(IEventBus modBus)` on `CuriosCompat` returns it, typed as the interface, and the `@Mod` constructor passes it, or **`WornSlots.NONE`** without Curios, to each caller.
 - `NONE` emits nothing, so each caller reads only its vanilla slots ("Without Curios").
 
-Its three callers, all in `neoforge`:
+Its two callers, both in `neoforge`:
 
 | Caller | Takes | Budget | Walk |
 |---|---|---|---|
 | the [warp spec's](warp.md#gear-warp) gear sample (**carried**: functional and cosmetic), every 20 ticks | every entry | what remains of `MAX_GEAR_SLOTS` (128) after the player's vanilla inventory, armour and off hand, read first in container index order: **one shared allowance**, never 128 each (amended in the warp spec) | up to the full O(S + T log T), disclosed |
 | the spectacles' worn check (client, each client tick) | functional entries whose stack is in `#vftv:reveals_aspects`; **skipped** when the vanilla head slot already reveals, and stopped at the first revealing entry | unlimited | up to the full O(S + T log T), disclosed |
-| the reload refresh (server, once per reload) | **every** functional entry, through Curios's attribute query ("After a reload") | unlimited: reconstruction is never truncated | the full O(S + T log T), disclosed |
 
 ### Without Curios
 
@@ -334,7 +324,7 @@ Its three callers, all in `neoforge`:
 - **`core.armor.model`** (Minecraft-free): `baffle_max`, absorbing, the recharge step, the wearable-to-modifier conversion (as plain records), the spectacles' card selection and masking over loader-free inputs, the HUD pip layout. Every vector above is a unit test against it.
 - **`core.armor`**: the attachment record and codec, `ArmorRules`, the wearables' validated view, the services the listeners call. It imports `core.warp` (for `amplifier_warp`) and `core.aspect` (for the readout); neither imports it.
 - **`core.armor.client`**: the card and the Baffle HUD renderers.
-- **`neoforge.armor`**: thin listeners: `ItemAttributeModifierEvent`, `LivingDamageEvent.Pre`, `PlayerTickEvent.Post`, `DataMapsUpdatedEvent` and the queued refresh, attribute registration (`PercentageAttribute` construction stays here); `WornSlots` and `WornSink`. **`neoforge.armor.client`**: layer registration, and the worn check through the `WornSlots` it is given. **`neoforge.compat.curios`**: as above, entered only through `CuriosCompat.init`.
+- **`neoforge.armor`**: thin listeners: `ItemAttributeModifierEvent`, `LivingDamageEvent.Pre`, `PlayerTickEvent.Post`, `DataMapsUpdatedEvent`, attribute registration (`PercentageAttribute` construction stays here); `WornSlots` and `WornSink`. **`neoforge.armor.client`**: layer registration, and the worn check through the `WornSlots` it is given. **`neoforge.compat.curios`**: as above, entered only through `CuriosCompat.init`.
 - **No `DamageContainer`, Curios or `PercentageAttribute` type reaches `core`.** No seam is needed: discount and Baffle ride attributes, which vanilla and Curios apply, and every other Curios caller is already in `neoforge`.
 
 ## In the Commonplace Book
@@ -459,7 +449,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
                  "base": {"vftv:aer": 10, "vftv:ignis": 3, "vftv:ordo": 1},
                  "expect": {"sum": "0.30000000000000004", "raw_gt": true, "d": 300, "discount_capped": false, "m": 595,
                             "effective": {"vftv:aer": 6, "vftv:ignis": 2, "vftv:ordo": 1}}}],
- "dials":      [{"gear": [2, 3, 2, 2], "expect": {"total": 9, "band": 1, "factor": 1090, "penalty": 2, "bonus": 1}}],
+ "dials":      [{"gear": [2, 3, 2, 2], "expect": {"total": 9, "band": 1, "factor": 1180, "penalty": 4, "bonus": 1}}],
  "durability": [{"set": "void", "multiplier": 26, "expect": {"helmet": 286, "chestplate": 416, "leggings": 390, "boots": 338}}],
  "baffling":   [{"level": 2, "expect": 4}],
  "pips":       [{"current": 27.5, "max": 28, "expect": {"pips": 14, "full": 13, "half": 1, "empty": 0, "rows": 2, "text": "27.5/28"}}],
@@ -482,7 +472,7 @@ A recipe id declared in two `content/` files, of any type, fails datagen ([infus
 | `enchantment.vftv.baffling` | 0 | "Baffling" |
 | `tooltip.vftv.spectacles` | 0 | "What I have struck, I see." |
 | `tooltip.vftv.trinket.offhand` | 0 | "Counts in my off hand." |
-| `hud.vftv.spectacles.unstruck`, `.nothing` | 0 | "I haven't struck this.", "Nothing answers." |
+| `hud.vftv.spectacles.unstruck` | 0 | "I haven't struck this." |
 | `hud.vftv.baffle` | 2 | "%s/%s" |
 | `wearable.vftv.slot.head`, `.chest`, `.legs`, `.feet`, `.offhand` | 0 | "Head", "Body", "Legs", "Feet", "Off hand" |
 | `wearable.vftv.fact.none` | 0 | "none" |
@@ -510,7 +500,7 @@ The `vftv:baffle` attachment itself is internal; only its id is public. The dama
 |---|---|---|
 | the Baffle record | the `vftv:baffle` player attachment (persisted; not copied on death) | the owner, through `AttachmentSyncHandler` filtered to the owner (`NF:attachment/AttachmentSyncHandler.java:28–40`); one send per change: ≤ 1 per hit, ≤ 1 per `baffle.interval`, ≤ 1 per clamp |
 | `next_recharge` | transient per-player memory | never |
-| `vftv:baffle`, `vftv:vis_discount` and vanilla armour attributes | vanilla attribute modifiers, re-applied on equip, unequip and the reload refresh | **tracking players and self**, as vanilla syncs syncable attributes (`MC:server/level/ServerEntity.java:287–290,352–355`) |
+| `vftv:baffle`, `vftv:vis_discount` and vanilla armour attributes | vanilla attribute modifiers, re-applied on equip and unequip | **tracking players and self**, as vanilla syncs syncable attributes (`MC:server/level/ServerEntity.java:287–290,352–355`) |
 | `vftv:wearable`, `vftv:gear_warp` | data maps | every player, as synced data maps are |
 | armour rules | the tuning record | **`ArmorRules`**, S2C to every player through `OnDatapackSyncEvent` (join and `/reload`) |
 | the card and HUD layouts | client caches | never |
@@ -524,7 +514,7 @@ The `vftv:baffle` attachment itself is internal; only its id is public. The dama
 | Change | Effect |
 |---|---|
 | Tuning (`/reload`) | a new record, validated; `ArmorRules` re-sent; capacity and the HUD follow at once; the clamp applies at the next tick |
-| `vftv:wearable` (`/reload`) | a file with a bad value is dropped whole; the validated view rebuilt on each side ("Wearables"); the queued refresh ("After a reload"); client caches rebuilt |
+| `vftv:wearable` (`/reload`) | a file with a bad value is dropped whole; the validated view rebuilt on each side ("Wearables"); worn modifiers follow at the next equipment change ("After a reload"); client caches rebuilt |
 | Tags (`/reload`) | `#vftv:baffle_ignores`, `#vftv:void_armor` and `#vftv:reveals_aspects` take effect at the next hit, tick or client tick |
 | The enchantment registry | needs the world reopened |
 | Resource reload | sprites, layouts and the card rebuild |
@@ -575,7 +565,7 @@ On the client: one player wearing the spectacles whose target changes every tick
 
 **The envelope's running totals** (planning arithmetic, never a combined percentile): the finished specs' server shares total **0.49 ms mean / 1.98 ms p99** with warp, and **0.50 / 2.02** with armour, leaving **0.50 / 0.98** for Flux and the Hush, Worldgen and mobs, and the Eldritch tier. Client shares total **0.81 ms p50**, **0.82** with armour, leaving **0.18**.
 
-**Measured separately as load scenarios** (reported): a `/reload` that changes `vftv:wearable` with 64 players online; the same with one player wearing more than 128 Curios items; a pack with thousands of empty Curios positions, for the client worn check and the gear sample; 1,000 hits in one tick across 8 players.
+**Measured separately as load scenarios** (reported): a pack with thousands of empty Curios positions, for the client worn check and the gear sample; 1,000 hits in one tick across 8 players.
 
 **Hot paths:**
 
@@ -584,7 +574,6 @@ On the client: one player wearing the spectacles whose target changes every tick
 | Per player per tick | the clamp and recharge compare, O(1), **zero allocation** (an allocation-budget test) |
 | Per hit | one tag test, O(1) arithmetic; ≤ 1 sync, ≤ 1 sound and its callbacks: **a native term**, disclosed |
 | Per equipment change | the modifier event per changed stack, ≤ 5 modifiers, at vanilla's cadence |
-| Per reload | the refresh: per player, the modifiers present on 5 attributes, ≤ 5 vanilla slots, and every functional Curios position: **O(S + T log T), a native term**, disclosed |
 | Per client tick | one hit-result read; O(1) ledger and map lookups; the worn check: the head slot, then, only if it doesn't reveal, the Curios walk to the first revealing entry, **up to O(S + T log T), a native term**, disclosed; for a node target, ≤ 6 settled values |
 | Per frame (client) | the cached card and ≤ 20 pips with their text; **zero allocation in our code** |
 | Packets | ≤ 1 record sync per hit, recharge or clamp; vanilla's attribute sync; one `ArmorRules` per join or reload |
@@ -595,7 +584,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 
 **Unit (`model` tier and codecs):**
 - **every vector** in this spec, replayed from `content/armor/fixtures.json`: capacity at default and widest tuning, absorbing, both schedules, the quote rows including 0.10 + 0.20, the Void dials, durabilities, Baffling, pips, HUD geometry and percentages;
-- **the card:** every first-match row; a partial scan whose missing prerequisite has since become known shows that aspect **still unheard**, from the **snapshot**; a value-changing reload changes a completed key's card and leaves a partial key's snapshot; a partial key whose current entry a reload **removed**, and one whose current values became **`{}`**, both still show the snapshot, not "Nothing answers."; masking against the current known set; a stationary node's settled values advancing while the target is unchanged; a dropped item's carried item changing;
+- **the card:** every first-match row; row 5 equal to the strike card's readout for the same key and ledger (one partial and one completed key), and `unstruck` for a key not in the ledger; masking against the current known set; a stationary node's settled values advancing while the target is unchanged; a dropped item's carried item changing;
 - the wearable-to-modifier conversion; a `vftv:wearable` entry with a field removed gives no modifier for it;
 - the validated view: a slot-mismatched entry and an `offhand` entry on an equippable item are excluded with an error naming the item, and the rest kept;
 - codecs: the attachment (bounds, the raw round trip of an unreadable record), `ArmorRules`, the data-map entry;
@@ -610,20 +599,20 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **absorbing:** order with exact numbers (armour, then the Baffle, then golden hearts, then health); each ignored type leaves the clock alone; the invulnerability-frame case; no exhaustion on a fully baffled hit; a later LOWEST listener that raises damage and one that lowers it; a sound listener that hurts the player again (a nested container, the record consistent); a mob with our armour forced on by command takes no Baffle;
 - **recharge:** the delay, the interval, the clamp when a ring is taken off, the Void bonus under `/vftv warp set` and with `warp.amplifier` off;
 - **persistence:** save and reload keep `current`; death resets it; a dimension change keeps it; an unreadable record is never written, clamped, recharged or used to absorb;
-- **reload:** a `/reload` that changes, and one that removes, a worn item's `vftv:wearable` values refreshes the worn modifiers at the next tick, not during the reload;
+- **reload:** after a `/reload` that changes, and one that removes, a worn item's `vftv:wearable` values, the worn modifiers stay as they were until the piece is re-equipped, which applies the new values and drops the removed field;
 - Baffling by altar to level 2, refused on a book; a Void transmute keeps enchantments, trims and damage; anvil repair with each tag;
 - the packaged jar without Curios;
 - every test id in the discovery guard.
 
-**Curios integration** (in `runCuriosGameTestServer` with Curios present, on every PR; [compatibility, Tests](compat.md#tests)): a ring and a pendant in their slots add modifiers with Curios's derived ids and remove them; a cosmetic slot adds none; the spectacles in a functional head slot enable the card, in a cosmetic one they don't; the collector's order and shared budget; the gear sample counts Curios stacks; the reload refresh removes and rebuilds Curios-derived ids after Curios's own reconciliation; **a player wearing more than 128 Curios items, a Baffle Ring last in the order, keeps its Baffle through a `/reload`**; a pack with thousands of empty Curios positions, its worn-check and sample work measured.
+**Curios integration** (in `runCuriosGameTestServer` with Curios present, on every PR; [compatibility, Tests](compat.md#tests)): a ring and a pendant in their slots add modifiers with Curios's derived ids and remove them; a cosmetic slot adds none; the spectacles in a functional head slot enable the card, in a cosmetic one they don't; the collector's order and shared budget; the gear sample counts Curios stacks; a pack with thousands of empty Curios positions, its worn-check and sample work measured.
 
 **E2E:**
-- **the card:** struck, partial (an unheard icon with its amount), unstruck, nothing-to-learn, a node regenerating in place, a disguise (the real block), an apparition (no card), with dumps; yielding to the strike card, the crucible HUD and the infusion HUD; `spectacles.card` off; cleared on a dimension change;
+- **the card:** struck, unstruck, a node regenerating in place, an apparition (no card), with dumps; yielding to the strike card, the crucible HUD and the infusion HUD; `spectacles.card` off; cleared on a dimension change;
 - **the client over-cap quote:** wearing the test-pack 0.40 item, the Worktable's cost tooltip shows `discount_capped` and the capped cost, and the dump equals the server's quote;
 - **the Baffle row** equals the dump through a hit, a break and a recharge, at capacities 12, 28 and 40, hidden at 0 and in creative; at the pinned coordinates, with absorption hearts and full armour below it, nothing overlaps, and vanilla's air row stays on the right; `hud.leftHeight` raised by 10 × rows only while drawn; `baffle.hud` off; the value on its backing over a white sky;
 - "+3% Vis Discount" in a tooltip; each set rendered on the player and a small armour stand (screenshots);
 - sync on join, reconnect, dimension change and `/reload`;
-- **with Curios present on the client:** the spectacles in a functional Curios head slot show the card, in a cosmetic one they don't; after a `/reload` that changes `vftv:wearable`, a ring in a Curios slot keeps the right Baffle row;
+- **with Curios present on the client:** the spectacles in a functional Curios head slot show the card, in a cosmetic one they don't;
 - the asset, lang, equipment-asset and sound validators.
 
 ## Contracts on sibling specs
@@ -674,9 +663,9 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 
 **Met here** (the [lore spec](lore.md#vocabulary-policy)): Thaumium → Resonant Brass armour; Goggles of Revealing → Tuned Spectacles; Runic Shielding → Baffle; acoustic imagery; Void-tongue only for the Void set.
 
-**Met here** (the [aspects spec](aspects.md#what-a-strike-reveals) and the [warp spec's](warp.md#phantoms) phantom rules): unheard amounts exact and identities withheld, against the current known set and the stored snapshot; apparitions silent; disguises read as the real block.
+**Met here** (the [aspects spec](aspects.md#what-a-strike-reveals) and the [warp spec's](warp.md#phantoms) phantom rules): unheard amounts exact and identities withheld, against the current known set, by the strike card's own readout rules; apparitions silent.
 
-**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with bounded work at every allowed tuning, allocation budgets, and disclosed native terms, among them the Curios walk, O(S + T log T), which the reload refresh always takes in full so it never truncates reconstruction, and which the client worn check and the gear sample may take ("The collector", "Performance").
+**Met here** (the [quality gates](quality-gates.md#what-each-system-spec-must-declare)): a sustained workload, a share, hot paths with bounded work at every allowed tuning, allocation budgets, and disclosed native terms, among them the Curios walk, O(S + T log T), which the client worn check and the gear sample may take ("The collector", "Performance").
 
 **[Crucible alchemy](https://github.com/andrewbrogoff/voices-from-the-void/issues/19)**, **[Essentia logistics](https://github.com/andrewbrogoff/voices-from-the-void/issues/20)** and **[Golems](https://github.com/andrewbrogoff/voices-from-the-void/issues/23)** place no contract on this ticket.
 
@@ -696,7 +685,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - The gear sample reads the player's vanilla inventory first, in container index order, then Curios entries from `CuriosWorn.collect` with what remains of the one `MAX_GEAR_SLOTS` allowance.
 
 **[Eldritch tier and the Choir's Road](https://github.com/andrewbrogoff/voices-from-the-void/issues/28)**
-- Its Void weapons share `gear.max` 12 with the Void set's 9; the sample clips beyond it.
+- The Void set is the only built-in gear warp in v1 (9 of `gear.max` 12); #28 adds none.
 - It may add its Void material to `#vftv:repairs_void_armor`.
 - Any Void-tongue word the Void set's names need beyond the lexicon is added through the lexicon.
 

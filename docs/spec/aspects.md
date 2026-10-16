@@ -42,7 +42,7 @@ The lore's central revelation, carried by data rather than special code ([ADR 00
 - **Data:** `parents: []` (it truly is a primal) and `hidden_primal: {taught_parents: [vftv:aer, vftv:perditio], revealed_by: <research id>}`.
 - **Taught view (before the reveal, per player):** the book draws Vacuos as Aer + Perditio, discovery treats Aer and Perditio as its prerequisites, and the puzzle links it to Aer and Perditio.
 - **After the reveal:** the book draws it as a primal. The puzzle keeps the taught links and *adds* a link to every exposed primal ("the other primals sit on top of it"). Old notes stay valid.
-- **The world is truthful from the start.** Vacuos never decomposes, and the fork never shows parentage. Only the notebook's prose made the claim, which the lore allows. Whether Aer and Perditio essentia combine into Vacuos is the crucible's call (see "Contracts"), but the book never states a recipe the world refuses.
+- **The world is truthful from the start.** Vacuos never decomposes, and the fork's readout never asserts a recipe. An unheard aspect's hint (under "What a strike reveals") shows its *prerequisites*, which for a hidden primal are the notebook's taught ones: the notebook's claim, drawn as the notebook's, never the world's. Only the notebook made the claim, which the lore allows. Whether Aer and Perditio essentia combine into Vacuos is the crucible's call (see "Contracts"), but the book never states a recipe the world refuses.
 
 ### The aspects
 
@@ -133,7 +133,7 @@ What a thing is made of is one fact about the world, so scanning and the [crucib
 
 - **`vftv:aspects`**, a synced data map on **item**, **block** and **entity_type**. Value: `{"vftv:ignis": 3, …}`, positive integers, at most 5 aspects (one HUD row). `{}` is an explicit "nothing to learn", distinct from no entry.
 - **`vftv:aspect_defaults`**, a synced item data map keyed by `c:` convention tags (e.g. `#c:ingots` → Metallum, `#c:gems` → Vitreus). It is consulted only when `vftv:aspects` has no entry, so a broad tag can never override a specific value.
-- **Lookup:** a placed block uses its block entry, else its `asItem()` item entry, else the defaults. An item uses its entry, else the defaults. An entity uses its entry; a dropped item entity reads as the item it carries. Anything else has nothing to learn.
+- **Lookup:** a placed block uses its block entry, else its `asItem()` item entry, else the defaults, else the derived values. An item uses its entry, else the defaults, else the derived values ("Derived values at load"). An entity uses its entry; a dropped item entity reads as the item it carries. Anything else has nothing to learn.
 - The block map holds only itemless blocks (water, lava, fire, portals) and blocks that genuinely differ from their item.
 - **Precedence inside a map is NeoForge's:** the last pack wins per key, with `replace` and `remove`. NeoForge promises no ordering between an id entry and a tag entry, or between overlapping tags, so our built-in data never lets two entries in one map cover the same object (a datagen test checks it). Pack makers get whole-value replacement; nothing sums across packs.
 
@@ -156,18 +156,27 @@ A hand **base table** plus **recipe derivation at datagen**, committed to `src/g
 - **Reversible conversions** (nugget ↔ ingot ↔ storage block, and the like) are hand-entered as exact multiples of each other; derivation never applies to them. That is the only way minimum-1 rounding and non-amplification hold together, and the scan-once rule bounds the large values storage blocks get.
 - **Value scale:** small integers. A common raw block totals 2–5, a rare material 8–16, a mob 4–12. These are authoring targets, not caps.
 
-**Unknown and modded content** gets the `c:` tag defaults in v1, and otherwise nothing. **There is no runtime derivation in v1**, and the lookup above is the same with or without other mods ([compatibility, In play](compat.md#in-play)).
-- **The derivation export:** an operator's `/vftv aspects derive` runs this derivation over the live server's data and writes **reviewable datapacks** that the operator installs by hand ([compatibility, The derivation export](compat.md#the-derivation-export), which owns its rules).
+**Unknown and modded content** gets the `c:` tag defaults, and otherwise its **derived values at load** (below), so a modded item has aspects with no operator step. The lookup above is the same with or without other mods ([compatibility, In play](compat.md#in-play)).
+
+- **The derivation export:** an operator's `/vftv aspects derive` runs this derivation over the live server's data and writes **reviewable datapacks** that the operator may install by hand ([compatibility, The derivation export](compat.md#the-derivation-export), which owns its rules). It stays as an **audit dump** of what the load-time table holds; an installed value is an authored entry, which overrides the table.
 - **What it derives over:** only items with **neither** a `vftv:aspects` entry **nor** a default. An explicit `{}` is authored suppression and is never derived over.
 - **Conservation:** it excludes every item on a conversion cycle of the recipes it accepts.
-- **Shared adapter:** the adapter from a recipe to the model's input is one class in `core.aspect`, `DerivationRecipes`. Datagen's capture and the export both use it, and it accepts exactly vanilla's recipe classes, as that section lists.
+- **Shared adapter:** the adapter from a recipe to the model's input is one class in `core.aspect`, `DerivationRecipes`. Datagen's capture, the export and the load-time table all use it, and it accepts exactly vanilla's recipe classes, as that section lists.
+
+#### Derived values at load
+
+- **When:** the server runs the derivation at data load, after recipes are loaded, into the server table **`DerivedAspects`** (item → values), immutable once built. Every `/reload` invalidates it and builds it again.
+- **Where it sits:** the lookup consults it **after** `vftv:aspect_defaults`, so any authored entry or default overrides it, and an explicit `{}` suppresses it.
+- **Rules:** exactly the export's: the same adapter, the same "what it derives over", the same cycle exclusion and the same limits (at most 5 aspects per value). The `derivation.*` tuning keys (`derivation.factor` and `derivation.smelt_bonus`, under "Tuning") feed this load-time derivation as loaded, as they feed datagen and the export. An item it can't resolve gets nothing; nothing refuses the world.
+- **Sync:** it goes to every client with the other aspect maps, on join and after every `/reload`, as the S2C payload **`DerivedAspectsSync`** ([compatibility, The derivation at load](compat.md#the-derivation-at-load) owns its framing; under "Sync and state"), so tooltips and JEI agree with the server.
+- **Switch:** the server config key **`aspects.derive_modded`** (bool, default `true`), which the [configuration spec](config.md#server-keys) files. Off, the table is empty and the lookup ends at the defaults.
 
 ### Coverage and supply
 
 - **Coverage:** every survival-obtainable vanilla item, block and entity has an entry or sits in a reviewed exempt list (air, barrier, command blocks, spawn eggs…).
 - **Known limitation:** scans ignore item components and block states in v1, so potions, tipped arrows, enchanted books and suspicious stew each share one value per item. They are listed as such.
 - **Supply:** every aspect has ≥ 3 accessible sources, across vanilla *and* VFTV content, obtainable in the Stage where it is first needed. Hush and Choir aspects may come from VFTV content alone.
-- **Affordability:** a test checks that the Stage 1 research #16 defines is affordable from Stage 1 supply alone, starting from the bootstrap.
+- **Reachability:** a test checks that every Stage 1 note #16 defines can be begun from Stage 1 supply alone, starting from the bootstrap: its anchors discoverable and connected ([research, Affordability and recovery](research.md#affordability-and-recovery)). Points don't bind (under "Aspect points"), so this is the check that can strand a player.
 - **Non-amplification:** no round trip through crafting recipes yields more aspects than went in.
 
 ## The Tuning Fork
@@ -200,7 +209,7 @@ Right-click with the fork in hand. Reach is vanilla interaction reach.
 
 - **Blocks, items, entities:** their own aspects only (never container contents), in one row.
 - **Nodes:** their aspects with current / max, plus whatever type and brightness #17 defines. Rows **wrap**; nothing is silently truncated.
-- **Unheard aspects** (see "Knowledge") show the unheard icon with the **exact amount**, and a hint: the icons of their parents the player already knows, and a blank for each one they don't.
+- **Unheard aspects** (see "Knowledge") show the unheard icon with the **exact amount**, and a hint: the icons of their prerequisites (under "Knowledge") the player already knows, and a blank for each one they don't.
 - **Feedback states,** each with its own lang key:
 
 | State | Readout |
@@ -211,11 +220,12 @@ Right-click with the fork in hand. Reach is vanilla interaction reach.
 | partly scanned | known aspects, unheard ones with their hint (`hud.vftv.strike.partial`) |
 | silence (a block or entity strike whose target the server does not have: a phantom) | silence: no ring, no card |
 | no answer (sounding found no node) | "No answer." (`hud.vftv.sounding.none`) |
+| no answer while no starter node exists (the wands spec's `starter` flag absent) | "No answer. No Wellspring stands in this world." (`hud.vftv.sounding.no_wellspring`, the [wands spec's](wands.md#lang-keys) key) |
 
 - **Tooltips:** once a thing's key is scanned (fully or partly), its item tooltip shows its aspects while Shift is held. JEI shows aspects only once the player knows them.
 - **Teaching:** the fork's own tooltip carries the inventory-strike instruction ("Carry the fork and right-click an item to strike it"), and the first Commonplace Book entry repeats it. No external wiki is needed.
 
-**Phantoms.** Warp's phantom blocks and mobs are client-only, so the server answers what is truly there. Struck phantom mob: the server has no such entity → silence. Struck phantom block over air → silence (the client sent a block strike, which the server cannot match; this is not sounding). Struck phantom block over a real block → the card names the real block, and the phantom vanishes when touched. The fork is how a Listener tells what's real; this is a contract on the warp spec (below).
+**Phantoms.** Warp's apparitions are client-only, so the server answers what is truly there. Struck apparition: the server has no such entity → silence. A block-targeted strike on a position the server holds as air → silence (the server cannot match it; this is not sounding). The fork is how a Listener tells what's real; this is a contract on the warp spec (below).
 
 ### Sounding for nodes
 
@@ -225,9 +235,9 @@ Strike air to sound. Listening stays a deliberate act; nothing hums on its own.
 - **Bands:** near is `d < near`, mid is `near ≤ d < mid`, and far is `mid ≤ d ≤ radius`.
 - **Answer:** a positional answer sound always played at the answer offset along the bearing, never at the node, plus a few teal particles drifting that way. Distance is carried by the band alone.
 - **Bearing:** a HUD marker showing the direction taken at the strike (including up or down) and the distance band (near, mid, far). The band is printed beneath the marker as its word (`hud.vftv.sounding.near`, `.mid`, `.far`), never carried by colour or pitch alone. It stays until the next strike or until the fork leaves the hand. Only a direction and a band reach the client, never a node position.
-- **Narration:** when the answer arrives, `narration.vftv.sounding` is queued once as system narration: the compass direction (one of eight, `hud.vftv.sounding.dir.*`), up, down or level (`hud.vftv.sounding.up`, `.down`, `.level`), and the band; or `hud.vftv.sounding.none`.
-- **No answer:** beyond the radius the fork says so explicitly.
-- A **starter node** within the sounding radius of the bootstrap location is #17's guarantee (see the contracts), so the first sounding always answers.
+- **Narration:** when the answer arrives, `narration.vftv.sounding` is queued once as system narration: the compass direction (one of eight, `hud.vftv.sounding.dir.*`), up, down or level (`hud.vftv.sounding.up`, `.down`, `.level`), and the band; or `hud.vftv.sounding.none` (or `.no_wellspring`, below).
+- **No answer:** beyond the radius the fork says so explicitly. While no starter node exists (the starter is absent or `REMOVED`) and `nodes.starter` isn't `off`, an empty sounding shows and narrates `hud.vftv.sounding.no_wellspring` instead of `hud.vftv.sounding.none` ([wands, The starter](wands.md#the-starter)).
+- A **starter node** within the sounding radius of the bootstrap location is #17's guarantee (see the contracts), so the first sounding answers whenever the starter was placed.
 
 ### Knowledge
 
@@ -249,18 +259,20 @@ Per player. **A scan always succeeds**: there is no wall of "you don't have the 
 | Discovering an aspect | its `discovery_bonus` of that aspect |
 | First strike on a node, per player per node | ceil(max capacity ÷ node reward divisor) of each of its aspects, using the max capacity at that first strike |
 | Choir pages, research rewards | #16's |
-| The Voices: insight events and `points` Bargains | [#25](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)'s ([warp spec, Event types](warp.md#event-types), [Bargains](warp.md#bargains)): points of aspects the player **already knows**, credited through the knowledge service |
+| The Voices: insight events | [#25](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)'s ([warp spec, Event types](warp.md#event-types)): points of aspects the player **already knows**, credited through the knowledge service |
 
-Points are spent in #16's puzzle and in skip mode.
+Points are spent when #16's research is learned (a solved note's Learn) or bought in skip mode.
 
-- **Voice credits never teach.** An insight draws only from the known aspects, and a `points` Bargain is offered and accepted only while every one of its aspects is known. Neither runs discovery, pays a discovery bonus or fires `AspectDiscoveredEvent`, so the Voices can never name an unheard aspect.
+- **Points are abundant, by design.** Supply (first scans, discoveries, first node strikes) outruns demand (about one point per placed cell, with synthesis turning primals into any compound) within the first few notes. Points were never the gate: knowing the aspects and making the finds are. So nothing trades in points as a scarce good (no Bargain pays in them), and #16 proves that research is *reachable*, not that it is affordable.
+- **Voice credits never teach.** An insight draws only from the known aspects. It never runs discovery, pays a discovery bonus or fires `AspectDiscoveredEvent`, so the Voices can never name an unheard aspect.
 
 ### The Commonplace Book
 
-Striking a **blank Book and Quill** in the inventory turns it into the Commonplace Book. This is the one built-in instance of a minimal data-defined recipe type, **`vftv:strike`** (an ingredient and a result): types in code, instances in data.
+Striking a plain **`minecraft:book`** in the inventory turns it into the Commonplace Book. A book is leather and paper, so the first hour needs a cow and sugar cane, never a squid. This is one of the two built-in instances of a minimal data-defined recipe type, **`vftv:strike`** (an ingredient and a result): types in code, instances in data. The other accepts a **blank Book and Quill**, for players who already made one.
 
 - It runs through the inventory strike path, before scanning.
 - **A Book and Quill with writing is refused**, and the readout tells the player why ("The ink would be lost.", `hud.vftv.strike.ink`). Player text is never destroyed.
+- **Books stack; a strike converts one.** With a single book the Commonplace Book takes its slot. From a stack, the rest stays in the slot and the Commonplace Book goes into the inventory, or drops at the player's feet if it is full (as a vanilla bottle fill does).
 - The Commonplace Book item itself is #16's.
 - **JEI** shows strike recipes in the ungated Striking category, up to the compatibility cap; gameplay accepts every one ([compatibility, Striking](compat.md#striking)).
 
@@ -361,7 +373,7 @@ No `ThingScannedEvent` fires for sounding, silence, "nothing to learn", or a `vf
 - **Knowledge** is one player `AttachmentType` with `copyOnDeath`: known aspects, scan keys (with partial snapshots) and the point pool. It sends a **full baseline on join**, then deltas through `AttachmentSyncHandler`, **filtered to the owner explicitly** (the handler defaults to every tracking player).
 - **No sharing** of knowledge or points in v1; gates are per player.
 - **No custom client-to-server payload.** Every strike arrives through vanilla use, interact or container-click packets, and those inputs are validated like any other (range, menu, slot, held item).
-- **One server-to-client payload,** `ScanResult`, to the striker only: target name, aspects and amounts, unheard hints, state, and for sounding the bearing and band. It also carries the readout hold, so the tuning file stays server-only. The strike sound is broadcast; the readout is private.
+- **Two server-to-client payloads.** `ScanResult`, to the striker only: target name, aspects and amounts, unheard hints, state, and for sounding the bearing and band. It also carries the readout hold, so the tuning file stays server-only. The strike sound is broadcast; the readout is private. **`DerivedAspectsSync`**, to every player on `OnDatapackSyncEvent` (join and every `/reload`): the whole load-time `DerivedAspects` table ("Derived values at load") in ascending item id, split into payloads of at most 4,096 entries with the last flagged, each entry bounded like a data-map value (≤ 5 aspects per item); the client replaces its copy on the last payload ([compatibility, The derivation at load](compat.md#the-derivation-at-load)).
 - The registry and both data maps are synced by their network codecs. A client mod can read every value; that is no worse than reading the datapack.
 
 ## Tuning
@@ -378,7 +390,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 | `sounding.near`, `sounding.mid` | 16, 64 | band edges; far runs to the radius. Valid only if 0 < `near` < `mid` ≤ `radius` |
 | `sounding.answer_offset` | 6 | blocks along the bearing |
 | `sounding.particles` | 3 | |
-| `derivation.factor` | 0.75 | used by datagen, and by the [derivation export](compat.md#the-derivation-export), which reads the loaded value; nothing reads it in play |
+| `derivation.factor` | 0.75 | used by datagen, by the load-time `DerivedAspects` table and by the [derivation export](compat.md#the-derivation-export), the last two reading the loaded value; nothing reads it per strike |
 | `derivation.smelt_bonus` | `{"vftv:ignis": 1}` | as above |
 
 **Validation:** a `sounding.radius` outside 1–256, or band edges that break 0 < `near` < `mid` ≤ `radius`, makes the file invalid. An invalid file refuses the world at open; on `/reload` the previous record is kept and an error logged.
@@ -389,7 +401,7 @@ Every tunable number, all ours. Unless noted, the home is the server-only datapa
 
 **Heavy-base workload:** one player striking on every cooldown, alternating block, entity, inventory and sounding strikes, with 2,000 known scan keys, the HUD card up, and a 36-slot inventory hovered with Shift. The sounding runs in an area at #17's maximum node density with moved nodes; one strike reads a node with #17's maximum aspect count; one partial completion pays several aspects at once; and one join sends the full baseline.
 
-**Share:** server ≤ 0.02 ms mean, ≤ 0.1 ms p99; client ≤ 0.02 ms p50, which also covers the JEI Striking category's drawing while it is open ([compatibility, Performance](compat.md#performance)). The derivation export is an operator load scenario there, outside this share.
+**Share:** server ≤ 0.02 ms mean, ≤ 0.1 ms p99; client ≤ 0.02 ms p50, which also covers the JEI Striking category's drawing while it is open ([compatibility, Performance](compat.md#performance)). The derivation export is an operator load scenario there, outside this share; so is building `DerivedAspects` at data load and on `/reload` (once per load, linear in recipes, never per tick or per strike), reported as a load scenario with a large modpack's recipe set.
 
 **Hot paths:**
 - **Server, per tick:** none.
@@ -408,12 +420,13 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **non-amplification** across every reversible conversion in the generated table, replayed over the recipes as datagen writes them, with their ingredients widened to `c:` tags ([compatibility, Consumed](compat.md#consumed));
 - the knowledge ledger: first scan, partial then completed, repeat pays 0, discovery bonus, **same-strike discovery order** (one result for any map iteration order), taught prerequisites for Vacuos;
 - **reload reward conservation:** values change between a partial scan and its completion, and the payout follows the snapshot;
-- **mixed-map ordering:** block entry over item entry over defaults; `{}` versus no entry;
+- **mixed-map ordering:** block entry over item entry over defaults over derived values; `{}` versus no entry (`{}` suppresses derivation);
+- **load-time derivation:** the table equals the export's output on the same data; cycles excluded; rebuilt on `/reload`; empty with `aspects.derive_modded` off;
 - nearest-node selection and band and bearing maths, including exact band and radius edges and ties by id;
 - tuning validation: a radius of 257, and band edges out of order or beyond the radius, are rejected;
-- codecs: the aspect entry, both data-map values, the tuning file, the knowledge attachment with its baseline and delta `StreamCodec`s, `ScanResult`, the strike recipe.
+- codecs: the aspect entry, both data-map values, the tuning file, the knowledge attachment with its baseline and delta `StreamCodec`s, `ScanResult`, `DerivedAspectsSync`, the strike recipe.
 
-**Datagen and unit gates:** coverage, supply, Stage 1 affordability, no two built-in entries in one map covering the same object, and palette membership of built-in colours.
+**Datagen and unit gates:** coverage, supply, Stage 1 reachability, no two built-in entries in one map covering the same object, and palette membership of built-in colours.
 
 **GameTest:**
 - the registry, both maps and the tuning file load; bad entries are rejected with clear errors (1 parent, a cycle, a duplicate pair, an unknown aspect, more than 5 aspects, zero or negative values, an unknown `revealed_by`);
@@ -421,7 +434,8 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - **cooldown click suppression:** a struck chest does not open, and a click during cooldown does nothing;
 - the inventory strike, including the server's own cooldown and input checks;
 - a partial scan, then completion;
-- the Book and Quill transform, and **refusal of a written book** (the book is unchanged);
+- the plain book transform (a single book, and one from a stack with a full inventory), the blank Book and Quill transform, and **refusal of a written book** (the book is unchanged);
+- a test item with a recipe and no entry or default reads its derived values on the server and in a client tooltip, before and after a `/reload` that changes its recipe;
 - knowledge survives save and reload, and death;
 - **two-player privacy:** one player's strike changes nothing for the other, and no knowledge payload reaches them;
 - sounding is bounded and loads no chunks; no answer beyond the radius; neither `ScanResult` nor the answer sound packet carries a node's coordinates;
@@ -434,7 +448,7 @@ All three layers ([quality gates](quality-gates.md#test-layers)).
 - a strike shows the HUD card (screenshot, plus a state dump of the pool);
 - Shift tooltips after a scan;
 - the sounding bearing marker;
-- **phantom targeting** on a real client: a phantom mob and a phantom block over air give silence, and a phantom block over a real block reads the real one;
+- **phantom targeting** on a real client: an apparition gives silence;
 - sync on join, reconnect and `/reload` (values update, rewards do not);
 - the asset and lang validators cover icons, glosses and every feedback key;
 - **narration** from the [localisation capture](accessibility.md#fixtures): a strike's card and a sounding's answer are each attempted once on arrival (unheard aspects as `aspect.vftv.unheard` with exact amounts) and never per frame; the bearing marker shows its band's word;
@@ -447,7 +461,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 **[Research and the Commonplace Book](https://github.com/andrewbrogoff/voices-from-the-void/issues/16)**
 - The puzzle links aspects by the taught view before a player's reveal, and by the taught links plus every exposed primal after it. Notes made before the reveal stay valid.
 - It owns the research entry named in Vacuos's `revealed_by`, and the revealing listen shows its warp cost before the player commits.
-- **Affordability and recovery:** Stage 1 research is affordable from the supply this spec guarantees, and there is an active way to recover from spending mistakes (a refund or a renewable source), so no player can strand themselves.
+- **Reachability and recovery:** Stage 1 research is reachable from the supply this spec guarantees (anchors discoverable and connected), and there is an active way to recover from spending mistakes (nothing spent before Learn, or a renewable source), so no player can strand themselves.
 - It owns the Commonplace Book item, records Stage 1 on the trigger under "Stage", and teaches the inventory strike in the first entry.
 - It consumes `ThingScannedEvent` and `AspectDiscoveredEvent` rather than polling knowledge.
 
@@ -465,7 +479,7 @@ Acceptance requirements those specs must meet. Each is a criterion in that ticke
 - Jars and tubes carry labels as well as tint.
 
 **[Warp and the Voices](https://github.com/andrewbrogoff/voices-from-the-void/issues/25)**
-- Phantom mobs have no server identity, and phantom blocks vanish when struck, so the fork's readout always names what is really there. *Met by the [warp spec](warp.md#phantoms): apparitions are client-only entities under negative ids, and a strike at one is cancelled on the client with its swing turned off, so nothing is sent and the fork stays silent rather than sounding; phantom blocks are only ever disguises over real blocks, so every strike reaches the real block, and the disguise vanishes. A phantom over air never arises.*
+- Phantom mobs have no server identity, so the fork's readout always names what is really there. *Met by the [warp spec](warp.md#phantoms): apparitions are client-only entities under negative ids, and a strike at one is cancelled on the client with its swing turned off, so nothing is sent and the fork stays silent rather than sounding. Phantom-block disguises are cut, so no phantom block exists to strike.*
 
 ## Production tickets
 
@@ -474,5 +488,5 @@ This spec settles every decision. Three required child tickets deliver the asset
 | Ticket | Delivers |
 |---|---|
 | **Aspect icons** | the generator `tools/art/aspects.py`; one 16×16 icon per aspect (37) plus the unheard icon, to the glyph briefs above and the approved palette and colour assignments above; the greyscale contact-sheet review; provenance rows |
-| **Vanilla aspect value table** | authored inputs under `content/aspects/`: the hand base table (tag- or id-keyed), semantic overrides, reversible-conversion entries and the reviewed exempt list, in a schema the future datagen reads. No code: the `VanillaRecipeProvider` capture, the derivation output in `src/generated`, and the coverage, supply, affordability and non-amplification checks are build-phase acceptance criteria |
+| **Vanilla aspect value table** | authored inputs under `content/aspects/`: the hand base table (tag- or id-keyed), semantic overrides, reversible-conversion entries and the reviewed exempt list, in a schema the future datagen reads. No code: the `VanillaRecipeProvider` capture, the derivation output in `src/generated`, and the coverage, supply, reachability and non-amplification checks are build-phase acceptance criteria |
 | **Tuning Fork final assets** | the final `tuning_fork` texture and model from the prototype, plus its "ringing" cooldown variant; strike ×4, node answer ×3 and discovery chime ×1 sounds, for the events `vftv:fork.strike`, `.answer` and `.discover`; the HUD readout frame sprite, its interior opaque `ink1` ([localisation, Text contrast](accessibility.md#text-contrast)); provenance rows |

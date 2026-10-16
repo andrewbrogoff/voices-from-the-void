@@ -20,23 +20,23 @@ All listening is **acoustic**: tuning forks, bells, resonating glass, ear-trumpe
 - **The Void is the silence beneath it.** It isn't somewhere you visit by default; it lies under every place.
 - **The Voices are what the Choir became.** The Choir was an earlier order of scholars who listened too long and went in. They aren't malicious, but they are no longer human, and they want to be heard. Whether joining them is doom or release is **deliberately left unresolved**.
 - **Choir ruins** are scattered across the world. They are the source of Choir pages and the TC4-obelisk-equivalent structures, and they lead toward wherever the Choir went.
-- **The Answerers** are living would-be listeners who speak back to the Voices without understanding them. They are hostile, they are found at Choir sites, and they are the mid-game threat with a human face. Their roster and mechanics belong to the worldgen and mobs spec.
+- **The Answerers** are living would-be listeners who speak back to the Voices without understanding them. They are hostile, they are found at Choir sites, and they are the mid-game threat with a human face. Their roster and mechanics belong to the [worldgen and mobs spec](worldgen.md).
 
 ## Listening and warp
 
-- **Listening is always a deliberate act**, done through an instrument or a rite. It never happens to the player.
+- **Listening is always a deliberate act**, done through an instrument or a rite (the [warp spec's Listen rite](warp.md#the-listen-rite)). It never happens to the player.
 - **What it pays:** knowledge (research hints, aspect insights) and power (Void-tier crafting, opt-in bargains).
-- **What it costs: warp**, meaning *the Void can now hear you back*. Warp grows through listening and Void-tier work. The more you have, the more you *sound like them*, and the more the Voices intrude. The permanent share of warp is "what you can never un-hear".
-- **Never a hidden tax.** Warp is only ever the consequence of a choice the player can see. Its numbers, decay, cures and effects belong to the warp spec. They must keep warp chosen, legible and bounded, as the [community pain points research](https://github.com/andrewbrogoff/voices-from-the-void/issues/5) requires.
+- **What it costs: warp**, meaning *the Void can now hear you back*. Warp grows through listening and Void-tier work. The more you have, the more you *sound like them*, and the more the Voices intrude. The permanent share of warp is what you *chose* never to un-hear: named milestones, each taken knowingly.
+- **Never a hidden tax.** Warp is only ever the consequence of a choice the player can see. Its numbers, decay, cures and effects belong to the [warp spec](warp.md). They must keep warp chosen, legible and bounded, as the [community pain points research](https://github.com/andrewbrogoff/voices-from-the-void/issues/5) requires.
 
 ## Aspects
 
 - **Vacuos is a hidden primal.** At first the player is taught that it is the compound Aer + Perditio. Listening reveals that it is fundamental, and that the other primals sit *on top of* it. This is the mod's central revelation, and it is the first time a Choir page contradicts the player's own notes.
-- The rest of the aspect tree (its pairs and tiers) is redesigned in the aspects spec. All aspects keep Latin names.
+- The rest of the aspect tree (its pairs and tiers) is redesigned in the [aspects spec](aspects.md). All aspects keep Latin names.
 
 ## The Hush (replaces taint)
 
-Flux is the spilled residue of magic. Where it pools, the world thins until the Void seeps through and the land goes **quiet**: colour drains, sound dies away, and things hollow out. The Hush looks desaturated and silent, never like TC4's purple, fleshy goo. Its spread, budgets and counterplay belong to the taint and flux spec.
+Flux is the spilled residue of magic. Where it pools, the world thins until the Void seeps through and the land goes **quiet**: colour drains, sound dies away, and things hollow out. The Hush looks desaturated and silent, never like TC4's purple, fleshy goo. Its spread, budgets and counterplay belong to the [Flux and the Hush spec](hush.md).
 
 ## Vocabulary policy
 
