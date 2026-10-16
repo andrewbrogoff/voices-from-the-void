@@ -2,7 +2,6 @@ package com.andrewbrogoff.vftv.neoforge.config;
 
 import com.andrewbrogoff.vftv.core.flux.FluxRulesService;
 import com.andrewbrogoff.vftv.core.flux.HushConfig;
-import com.andrewbrogoff.vftv.neoforge.flux.FluxNeoForge;
 import java.util.List;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
@@ -36,6 +35,6 @@ final class FluxServerKeys {
                         FluxRulesService::config,
                         FluxRulesService::installConfig,
                         HushConfig.DEFAULT,
-                        FluxNeoForge::sendRules));
+                        FluxRulesService::sendToAll));
     }
 }

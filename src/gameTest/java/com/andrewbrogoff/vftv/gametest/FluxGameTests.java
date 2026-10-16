@@ -1,11 +1,12 @@
 package com.andrewbrogoff.vftv.gametest;
 
 import com.andrewbrogoff.vftv.api.flux.FluxRules;
+import com.andrewbrogoff.vftv.core.common.Network;
 import com.andrewbrogoff.vftv.core.flux.FluxRulesPayload;
 import com.andrewbrogoff.vftv.core.flux.FluxRulesService;
 import com.andrewbrogoff.vftv.core.flux.HushConfig;
 import com.andrewbrogoff.vftv.core.flux.model.FluxTuning;
-import com.andrewbrogoff.vftv.neoforge.flux.FluxNeoForge;
+import com.andrewbrogoff.vftv.neoforge.common.NeoForgeNetwork;
 import com.mojang.serialization.DataResult;
 import io.netty.channel.embedded.EmbeddedChannel;
 import java.io.IOException;
@@ -41,7 +42,9 @@ final class FluxGameTests {
     static void register(Map<String, Consumer<GameTestHelper>> tests, IEventBus modBus) {
         tests.put("flux_tuning_loaded", FluxGameTests::tuningLoaded);
         tests.put("flux_tuning_reload_rollback", FluxGameTests::tuningReloadRollback);
-        tests.put("flux_rules_sync_unnegotiated", FluxGameTests::rulesSyncUnnegotiated);
+        // A second sender over the same seam, registering nothing, to drive every send path.
+        Network network = new NeoForgeNetwork(modBus);
+        tests.put("flux_rules_sync_unnegotiated", helper -> rulesSyncUnnegotiated(helper, network));
     }
 
     /**
@@ -90,10 +93,10 @@ final class FluxGameTests {
 
     /**
      * A connection that never negotiated the payload (as a mock player's) would make an unguarded
-     * send throw; the rules sync skips it instead. The player is never joined, so no other mod's
-     * join sync runs against it.
+     * send throw; the shared sender ({@code NeoForgeNetwork}) skips it on every path instead. The
+     * player is never joined, so no other mod's join sync runs against it.
      */
-    private static void rulesSyncUnnegotiated(GameTestHelper helper) {
+    private static void rulesSyncUnnegotiated(GameTestHelper helper, Network network) {
         MinecraftServer server = helper.getLevel().getServer();
         ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(GameType.SURVIVAL);
         Connection connection = new Connection(PacketFlow.SERVERBOUND);
@@ -109,8 +112,11 @@ final class FluxGameTests {
         helper.assertTrue(
                 throwsUnsupported(() -> PacketDistributor.sendToPlayer(player, payload)),
                 "an unguarded send throws");
-        FluxNeoForge.sendRulesTo(player);
-        FluxNeoForge.sendRules(server);
+        FluxRulesService.sendTo(player);
+        FluxRulesService.sendToAll(server);
+        network.toPlayer(player, payload);
+        network.toTracking(player, payload);
+        network.toTracking(helper.getLevel(), player.chunkPosition(), payload);
         helper.succeed();
     }
 

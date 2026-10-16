@@ -1,9 +1,13 @@
 package com.andrewbrogoff.vftv.core.flux;
 
 import com.andrewbrogoff.vftv.api.flux.FluxRules;
+import com.andrewbrogoff.vftv.core.common.Network;
 import com.andrewbrogoff.vftv.core.flux.model.FluxTuning;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.DataResult;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -23,8 +27,28 @@ public final class FluxRulesService {
     private static volatile int[] tuning = FluxTuning.defaults();
     private static volatile HushConfig config = HushConfig.DEFAULT;
     private static volatile FluxRules current = build();
+    private static @Nullable Network network;
 
     private FluxRulesService() {}
+
+    /** Takes the network seam the rules are sent through; called once from the feature's init. */
+    static void init(Network seam) {
+        network = seam;
+    }
+
+    /** Sends the rules in force to one player, as on join and after {@code /reload}. */
+    public static void sendTo(ServerPlayer player) {
+        Network seam = network;
+        if (seam == null) {
+            throw new IllegalStateException("FluxFeature.init has not run");
+        }
+        seam.toPlayer(player, new FluxRulesPayload(current));
+    }
+
+    /** Sends the rules in force to every player, as after a Hush config change. */
+    public static void sendToAll(MinecraftServer server) {
+        server.getPlayerList().getPlayers().forEach(FluxRulesService::sendTo);
+    }
 
     /** The rules in force. */
     public static FluxRules current() {

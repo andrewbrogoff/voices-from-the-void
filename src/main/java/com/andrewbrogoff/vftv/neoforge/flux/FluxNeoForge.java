@@ -1,6 +1,5 @@
 package com.andrewbrogoff.vftv.neoforge.flux;
 
-import com.andrewbrogoff.vftv.core.flux.FluxRulesPayload;
 import com.andrewbrogoff.vftv.core.flux.FluxRulesService;
 import com.andrewbrogoff.vftv.core.flux.model.FluxTuning;
 import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
@@ -10,8 +9,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import net.minecraft.resources.Identifier;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
@@ -19,7 +16,6 @@ import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /**
@@ -44,23 +40,7 @@ public final class FluxNeoForge {
         // On join and after every /reload, once the new tuning is applied.
         gameBus.addListener(
                 OnDatapackSyncEvent.class,
-                event -> event.getRelevantPlayers().forEach(FluxNeoForge::sendRulesTo));
-    }
-
-    /** Sends the rules in force to every player, as after a Hush config change. */
-    public static void sendRules(MinecraftServer server) {
-        server.getPlayerList().getPlayers().forEach(FluxNeoForge::sendRulesTo);
-    }
-
-    /**
-     * Sends the rules in force to one player whose connection has negotiated the payload; a
-     * connection without it (a mock player) gets nothing rather than an exception.
-     */
-    public static void sendRulesTo(ServerPlayer player) {
-        if (player.connection.hasChannel(FluxRulesPayload.TYPE)) {
-            PacketDistributor.sendToPlayer(
-                    player, new FluxRulesPayload(FluxRulesService.current()));
-        }
+                event -> event.getRelevantPlayers().forEach(FluxRulesService::sendTo));
     }
 
     /** Reads {@code hush.json} off-thread and applies it on the reload's own thread. */
