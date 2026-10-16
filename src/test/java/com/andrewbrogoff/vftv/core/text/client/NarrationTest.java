@@ -65,6 +65,12 @@ class NarrationTest {
         assertFalse(StatusLineHud.showing());
     }
 
+    private static boolean reversed(String range) {
+        int dash = range.indexOf('-');
+        return Integer.parseInt(range.substring(0, dash))
+                >= Integer.parseInt(range.substring(dash + 1));
+    }
+
     @Test
     void aSheetTurnNarratesTheNewSheetsBodyOnce() {
         List<String> narrated = new ArrayList<>();
@@ -108,6 +114,28 @@ class NarrationTest {
 
         assertTrue(card.turn(1));
         assertEquals(1, card.sheet());
+
+        // A tail that spills onto its own sheets: those sheets narrate only their own lines.
+        narrated.clear();
+        said.clear();
+        List<Component> tail = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            tail.add(Component.literal("t" + i));
+        }
+        card.content("long tail", List.of(), 40, 42, tail, List.of());
+        CardLayout longTail =
+                CardLayout.compute(
+                        320, 240, 83, new CardLayout.Card(1, 50, 40, 42, 10, 100, 0, 0), s -> 100);
+        card.install(longTail);
+        while (card.turn(1)) {
+            // through every sheet
+        }
+        assertTrue(longTail.sheetStart(longTail.sheets() - 1) > longTail.rows());
+        assertTrue(narrated.stream().noneMatch(NarrationTest::reversed), "no empty grid range");
+        String last = said.get(said.size() - 1).getString();
+        assertFalse(
+                last.contains("t0"), "a later tail sheet doesn't repeat earlier lines: " + last);
+        assertTrue(last.endsWith("t9"), last);
         card.content("other", List.of(), 40, 42, List.of(), List.of());
         assertEquals(0, card.sheet(), "a new target starts on the first sheet");
     }

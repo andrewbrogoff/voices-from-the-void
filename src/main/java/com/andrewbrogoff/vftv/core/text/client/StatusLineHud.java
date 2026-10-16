@@ -153,10 +153,15 @@ public final class StatusLineHud {
         if (CaptionBand.statusTruncated(wrapped.size())) {
             logical[0] = wrapped.get(0);
             logical[1] = TextFit.ellipsize(font, wrapped.get(1), width);
+            // The hint is ours and short; a pack's over-long translation is clipped, never
+            // offscreen.
             logical[2] =
-                    Component.translatable(
-                            AccessibilityKeys.STATUS_MORE,
-                            TextKeys.STATUS_DETAILS.getTranslatedKeyMessage());
+                    TextFit.clip(
+                            font,
+                            Component.translatable(
+                                    AccessibilityKeys.STATUS_MORE,
+                                    TextKeys.STATUS_DETAILS.getTranslatedKeyMessage()),
+                            width);
         } else {
             for (int i = 0; i < shown; i++) {
                 logical[i] = wrapped.get(i);

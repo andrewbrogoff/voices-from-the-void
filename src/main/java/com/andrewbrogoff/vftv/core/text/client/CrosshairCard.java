@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.core.text.model.CardLayout;
 import com.andrewbrogoff.vftv.core.text.model.NumberFormats;
 import com.andrewbrogoff.vftv.core.text.model.Palette;
 import com.andrewbrogoff.vftv.core.text.model.SheetCursor;
+import java.util.ArrayList;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
@@ -13,6 +14,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.util.FormattedCharSequence;
@@ -66,6 +68,10 @@ public final class CrosshairCard {
     private FormattedCharSequence[] headLines = NONE;
     private FormattedCharSequence[] tailLines = NONE;
     private FormattedCharSequence[] footLines = NONE;
+
+    // For each wrapped tail line, the tail component it came from; identity before a layout.
+    private int[] tailOwners = new int[0];
+
     private @Nullable FormattedCharSequence indicator;
 
     /** A card drawing its grid through {@code body}. */
@@ -183,10 +189,17 @@ public final class CrosshairCard {
         int sheet = cursor.sheet();
         int from = l.sheetStart(sheet);
         int to = l.sheetEnd(sheet);
-        MutableComponent text = body.narrate(from, Math.min(to, l.rows())).copy();
-        if (to > l.rows()) {
-            for (Component line : tail) {
-                text.append(CommonComponents.SPACE).append(line);
+        MutableComponent text =
+                from < l.rows()
+                        ? body.narrate(from, Math.min(to, l.rows())).copy()
+                        : Component.empty();
+        int previous = -1;
+        for (int unit = Math.max(from, l.rows()); unit < to; unit++) {
+            int line = unit - l.rows();
+            int owner = line < tailOwners.length ? tailOwners[line] : line;
+            if (owner != previous && owner < tail.size()) {
+                text.append(CommonComponents.SPACE).append(tail.get(owner));
+                previous = owner;
             }
         }
         Narration.say(text);
@@ -208,7 +221,16 @@ public final class CrosshairCard {
     private CardLayout relayout(Font font, int width, int height, CaptionBand band, int fontKey) {
         int inner = CardLayout.maxInner(width);
         headLines = wrap(font, head, inner);
-        tailLines = wrap(font, tail, inner);
+        List<FormattedCharSequence> wrappedTail = new ArrayList<>();
+        List<Integer> owners = new ArrayList<>();
+        for (int i = 0; i < tail.size(); i++) {
+            for (FormattedText line : TextFit.wrap(font, tail.get(i), inner)) {
+                wrappedTail.add(TextFit.visual(line));
+                owners.add(i);
+            }
+        }
+        tailLines = wrappedTail.toArray(FormattedCharSequence[]::new);
+        tailOwners = owners.stream().mapToInt(Integer::intValue).toArray();
         footLines = wrap(font, foot, inner);
         CardLayout.Card card =
                 new CardLayout.Card(

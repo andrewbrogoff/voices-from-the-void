@@ -21,22 +21,30 @@ public final class TextClient {
     public static void init(ClientNetwork network) {
         network.handler(
                 StatusLine.TYPE,
-                line ->
-                        StatusLineHud.arrive(
-                                line.text(),
-                                Minecraft.getInstance().options.notificationDisplayTime().get()));
+                line -> {
+                    Minecraft minecraft = Minecraft.getInstance();
+                    // A level change handled earlier in this packet batch clears before, not after.
+                    syncLevel(minecraft);
+                    StatusLineHud.arrive(
+                            line.text(), minecraft.options.notificationDisplayTime().get());
+                });
     }
 
     /** Once per client tick, after the game's own tick. */
     public static void tick() {
         Minecraft minecraft = Minecraft.getInstance();
+        syncLevel(minecraft);
+        ticks++;
+        StatusLineHud.tick();
+        TextKeys.tick(minecraft);
+    }
+
+    /** Forgets the status line at a level change or disconnect. */
+    private static void syncLevel(Minecraft minecraft) {
         if (!Objects.equals(minecraft.level, level)) {
             level = minecraft.level;
             StatusLineHud.clear();
         }
-        ticks++;
-        StatusLineHud.tick();
-        TextKeys.tick(minecraft);
     }
 
     /** After every client resource reload, which a language change includes. */
@@ -55,6 +63,8 @@ public final class TextClient {
      */
     static int fontKey() {
         Minecraft minecraft = Minecraft.getInstance();
-        return reloads * 2 + (minecraft.options.forceUnicodeFont().get() ? 1 : 0);
+        return reloads * 4
+                + (minecraft.options.forceUnicodeFont().get() ? 1 : 0)
+                + (minecraft.options.japaneseGlyphVariants().get() ? 2 : 0);
     }
 }

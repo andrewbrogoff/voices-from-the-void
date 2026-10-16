@@ -83,6 +83,17 @@ public final class TextViewport extends AbstractTextAreaWidget {
         return getRight() + 2;
     }
 
+    /** Vanilla's hit box ends at the unshifted scrollbar; it covers ours. */
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        return super.isMouseOver(mouseX, mouseY)
+                || (isActive()
+                        && mouseX >= getRight()
+                        && mouseX < scrollBarX() + scrollbarWidth()
+                        && mouseY >= getY()
+                        && mouseY < getBottom());
+    }
+
     @Override
     protected void extractContents(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float a) {
         for (int i = 0; i < lines.size(); i++) {
