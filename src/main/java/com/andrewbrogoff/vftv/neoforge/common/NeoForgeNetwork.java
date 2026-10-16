@@ -63,18 +63,37 @@ public final class NeoForgeNetwork implements Network {
         registrations.add(r -> r.playToClient(type, codec));
     }
 
+    /**
+     * Sends to one player, skipping a connection that never negotiated the payload's channel (a
+     * mock or vanilla connection), where NeoForge's send would throw.
+     */
     @Override
     public void toPlayer(ServerPlayer player, CustomPacketPayload payload) {
-        PacketDistributor.sendToPlayer(player, payload);
+        if (player.connection.hasChannel(payload)) {
+            PacketDistributor.sendToPlayer(player, payload);
+        }
     }
 
+    /**
+     * Each tracking player through {@link #toPlayer}, so non-negotiated connections are skipped.
+     */
     @Override
     public void toTracking(ServerLevel level, ChunkPos chunk, CustomPacketPayload payload) {
-        PacketDistributor.sendToPlayersTrackingChunk(level, chunk, payload);
+        for (ServerPlayer player : level.getChunkSource().chunkMap.getPlayers(chunk, false)) {
+            toPlayer(player, payload);
+        }
     }
 
+    /** Each tracking player and the entity itself through {@link #toPlayer}. */
     @Override
     public void toTracking(Entity entity, CustomPacketPayload payload) {
-        PacketDistributor.sendToPlayersTrackingEntityAndSelf(entity, payload);
+        if (entity.level() instanceof ServerLevel level) {
+            for (ServerPlayer player : level.getChunkSource().chunkMap.getPlayersWatching(entity)) {
+                toPlayer(player, payload);
+            }
+            if (entity instanceof ServerPlayer self) {
+                toPlayer(self, payload);
+            }
+        }
     }
 }
