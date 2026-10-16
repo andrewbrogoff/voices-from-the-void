@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
@@ -21,8 +22,14 @@ import net.minecraft.resources.Identifier;
  * assets/vftv/lang/<code>.json}, sorted by key, with the code-defined keys in {@code en_us}.
  */
 public final class LangProvider extends ContentProvider {
-    /** Every owner's lang table. Each system ticket adds its table here. */
-    public static final List<LangEntry> TABLES = List.copyOf(SharedMessages.TABLE);
+    /**
+     * Every owner's lang table: the shared messages, then each feature's {@link FeatureData#lang}.
+     */
+    public static final List<LangEntry> TABLES =
+            Stream.concat(
+                            SharedMessages.TABLE.stream(),
+                            VftvData.FEATURES.stream().flatMap(f -> f.lang().stream()))
+                    .toList();
 
     private final Set<String> catalogue;
 

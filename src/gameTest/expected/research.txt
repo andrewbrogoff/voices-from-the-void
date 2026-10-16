@@ -1,0 +1,1 @@
+# The discovery guard's ids for the research feature: one vftv:research_<what> id per line.

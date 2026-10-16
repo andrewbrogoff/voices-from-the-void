@@ -1,8 +1,0 @@
-# The discovery guard's set: every vftv GameTest id that runGameTestServer must run and pass.
-# A vftv id that ran but is missing here fails the guard too.
-vftv:player_slot_round_trip
-vftv:player_slot_keeps_unreadable
-vftv:level_slot_round_trip
-vftv:command_root_permission
-vftv:tick_budget_records
-vftv:server_config_publish

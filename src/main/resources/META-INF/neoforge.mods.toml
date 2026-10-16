@@ -24,3 +24,17 @@ type = "required"
 versionRange = "[26.2,26.3)"
 ordering = "NONE"
 side = "BOTH"
+
+[[dependencies.vftv]]
+modId = "jei"
+type = "optional"
+versionRange = "[30.38.0.230,31)"
+ordering = "NONE"
+side = "CLIENT"
+
+[[dependencies.vftv]]
+modId = "curios"
+type = "optional"
+versionRange = "[16.0.0,17)"
+ordering = "NONE"
+side = "BOTH"

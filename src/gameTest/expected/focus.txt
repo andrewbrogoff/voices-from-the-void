@@ -1,0 +1,1 @@
+# The discovery guard's ids for the focus feature: one vftv:focus_<what> id per line.

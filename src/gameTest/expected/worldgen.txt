@@ -1,0 +1,1 @@
+# The discovery guard's ids for the worldgen feature: one vftv:worldgen_<what> id per line.

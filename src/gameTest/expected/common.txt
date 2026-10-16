@@ -1,0 +1,10 @@
+# The discovery guard reads every file in src/gameTest/expected/: together they are every vftv
+# GameTest id runGameTestServer must run and pass, and a vftv id that ran but is in none of them
+# fails the guard too. This file holds the shared tests; each feature lists its own in <f>.txt.
+vftv:player_slot_round_trip
+vftv:player_slot_keeps_unreadable
+vftv:level_slot_round_trip
+vftv:command_root_permission
+vftv:tick_budget_records
+vftv:server_config_publish
+vftv:api_data_maps_registered

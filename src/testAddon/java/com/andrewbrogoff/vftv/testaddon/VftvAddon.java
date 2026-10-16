@@ -16,8 +16,10 @@ import net.minecraft.resources.ResourceKey;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
 import net.neoforged.neoforge.registries.DeferredRegister;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The example addon (API spec, "testAddon"): compiled against the built {@code vftv-api} jar only,
@@ -36,11 +38,35 @@ public final class VftvAddon {
     private static final DeferredRegister<Consumer<GameTestHelper>> TESTS =
             DeferredRegister.create(Registries.TEST_FUNCTION, MOD_ID);
 
-    /** Registers the addon's test function and its instance. */
+    /**
+     * Registers the addon's test function and its instance, and each feature's example use of the
+     * API. Every feature is wired here once; a feature ticket edits only its own {@code <F>Addon}.
+     */
     public VftvAddon(IEventBus modBus) {
         TESTS.register("api_present", () -> VftvAddon::apiPresent);
         TESTS.register(modBus);
         modBus.addListener(RegisterGameTestsEvent.class, VftvAddon::registerInstances);
+        IEventBus gameBus = NeoForge.EVENT_BUS;
+        FluxAddon.register(modBus, gameBus);
+        AspectAddon.register(modBus, gameBus);
+        WarpAddon.register(modBus, gameBus);
+        ResearchAddon.register(modBus, gameBus);
+        VisAddon.register(modBus, gameBus);
+        ArcaneAddon.register(modBus, gameBus);
+        CrucibleAddon.register(modBus, gameBus);
+        EssentiaAddon.register(modBus, gameBus);
+        InfusionAddon.register(modBus, gameBus);
+        FocusAddon.register(modBus, gameBus);
+        GolemAddon.register(modBus, gameBus);
+        ArmorAddon.register(modBus, gameBus);
+        HushAddon.register(modBus, gameBus);
+        WorldgenAddon.register(modBus, gameBus);
+        RoadAddon.register(modBus, gameBus);
+    }
+
+    /** A sink for the values an example listener reads, as an addon would use them. */
+    static void consume(@Nullable Object... values) {
+        // Nothing to do: reading every accessor is the example.
     }
 
     private static void registerInstances(RegisterGameTestsEvent event) {
