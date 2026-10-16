@@ -45,6 +45,9 @@ jobs:
       - name: Example-addon GameTests with the discovery guard
         run: ./gradlew runAddonGameTestServer
 
+      - name: GameTests with Curios present, with the discovery guard
+        run: ./gradlew runCuriosGameTestServer
+
       - name: Datagen output is committed and current
         run: tools/check-datagen.sh
 
@@ -63,4 +66,5 @@ jobs:
             build/gametest/
             run/gametest/logs/
             run/gametest-addon/logs/
+            run/gametest-curios/logs/
             build/packaged-server/*.log

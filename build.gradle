@@ -14,14 +14,34 @@ base.archivesName = 'vftv'
 
 java { toolchain.languageVersion = JavaLanguageVersion.of(25) }
 
-repositories { mavenCentral() }
+def jeiVersion = providers.gradleProperty('jei_version').get()
+def curiosVersion = providers.gradleProperty('curios_version').get()
+
+repositories {
+    mavenCentral()
+    // The soft dependencies, each from its own Maven (compatibility, "Version ranges").
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.blamejared.com/' } }
+        filter {
+            includeGroup 'mezz.jei'
+            includeGroup 'net.mezzdev.config'
+        }
+    }
+    exclusiveContent {
+        forRepository { maven { url = 'https://maven.theillusivec4.top/' } }
+        filter { includeGroup 'top.theillusivec4.curios' }
+    }
+}
 
 // ADR 0001: one project. `api` compiles alone; `main` (core, neoforge, datagen) sees it.
-// `gameTest` and `testAddon` are dev-only mods that are never shipped.
+// `gameTest` and `testAddon` are dev-only mods that are never shipped. `curiosRun` and `jeiRun`
+// have no sources: they are the runtime classpaths of the runs with that soft dependency present.
 sourceSets {
     api
     gameTest
     testAddon
+    curiosRun
+    jeiRun
 }
 sourceSets.main.resources.srcDir 'src/generated/resources'
 
@@ -58,6 +78,19 @@ dependencies {
     // The example addon sees the built api jar only, never `main` (API spec, "The fixtures").
     testAddonCompileOnly files(apiJar)
 
+    // Soft dependencies: compiled against their API jars only, never shipped or nested.
+    compileOnly "mezz.jei:jei-26.2-common-api:${jeiVersion}"
+    compileOnly "mezz.jei:jei-26.2-neoforge-api:${jeiVersion}"
+    compileOnly "top.theillusivec4.curios:curios-neoforge:${curiosVersion}:api"
+    // Their full jars, on the runtime classpath of their own runs only.
+    [curiosRunRuntimeOnly: "top.theillusivec4.curios:curios-neoforge:${curiosVersion}",
+     jeiRunRuntimeOnly   : "mezz.jei:jei-26.2-neoforge:${jeiVersion}"].each { configuration, jar ->
+        add(configuration, jar)
+        add(configuration, sourceSets.main.output)
+        add(configuration, sourceSets.api.output)
+    }
+    curiosRunRuntimeOnly sourceSets.gameTest.output
+
     errorprone 'com.google.errorprone:error_prone_core:2.50.0'
     errorprone 'com.uber.nullaway:nullaway:0.14.2'
 }
@@ -67,6 +100,8 @@ neoForge {
     addModdingDependenciesTo sourceSets.api
     addModdingDependenciesTo sourceSets.gameTest
     addModdingDependenciesTo sourceSets.testAddon
+    addModdingDependenciesTo sourceSets.curiosRun
+    addModdingDependenciesTo sourceSets.jeiRun
 
     mods {
         vftv {
@@ -103,6 +138,28 @@ neoForge {
             loadedMods = [mods.vftv, mods.vftv_addon]
             gameDirectory = file('run/gametest-addon')
             programArguments.addAll('--report', file('build/gametest/vftv_addon.xml').absolutePath)
+        }
+        // The same GameTests with Curios at its pinned version (quality gates, "Shipping artifact").
+        curiosGameTestServer {
+            type = 'gameTestServer'
+            sourceSet = sourceSets.curiosRun
+            loadedMods = [mods.vftv, mods.vftv_gametest]
+            gameDirectory = file('run/gametest-curios')
+            systemProperty 'vftv.tickBudget', 'true'
+            programArguments.addAll('--report', file('build/gametest/vftv_curios.xml').absolutePath)
+        }
+        // Dev clients with one soft dependency present (compatibility, "Tests").
+        clientCurios {
+            client()
+            sourceSet = sourceSets.curiosRun
+            loadedMods = [mods.vftv]
+            gameDirectory = file('run/client-curios')
+        }
+        clientJei {
+            client()
+            sourceSet = sourceSets.jeiRun
+            loadedMods = [mods.vftv]
+            gameDirectory = file('run/client-jei')
         }
         // One data run only: every provider, client and server, registers on GatherDataEvent.Client.
         // Two runs into one output folder would each purge the other's files (HashCache deletes
@@ -228,12 +285,13 @@ tasks.named('jacocoTestCoverageVerification', JacocoCoverageVerification) {
 // enough, because vanilla's tests run alongside ours (quality gates, "GameTest").
 abstract class VerifyGameTests extends DefaultTask {
     @InputFile abstract RegularFileProperty getReport()
-    @InputFile abstract RegularFileProperty getExpected()
+    @InputFiles abstract ConfigurableFileCollection getExpected()
     @Input abstract Property<String> getNamespace()
 
     @TaskAction
     void verify() {
-        def expectedIds = expected.get().asFile.readLines()*.trim().findAll { it && !it.startsWith('#') } as Set
+        def expectedIds = expected.files.collectMany { it.readLines()*.trim() }
+                .findAll { it && !it.startsWith('#') } as Set
         def results = [:]
         new groovy.xml.XmlSlurper().parse(report.get().asFile).'**'.findAll { it.name() == 'testcase' }.each {
             results[it.@name.toString()] = it.children().size() == 0
@@ -249,15 +307,18 @@ abstract class VerifyGameTests extends DefaultTask {
     }
 }
 
+// Every file in src/gameTest/expected/ (common.txt and one <f>.txt per feature) is one list.
+def gameTestIds = fileTree('src/gameTest/expected') { include '*.txt' }
 [
-        [run: 'runGameTestServer', report: 'build/gametest/vftv.xml', expected: 'src/gameTest/expected-tests.txt', namespace: 'vftv'],
-        [run: 'runAddonGameTestServer', report: 'build/gametest/vftv_addon.xml', expected: 'src/testAddon/expected-tests.txt', namespace: 'vftv_addon'],
+        [run: 'runGameTestServer', report: 'build/gametest/vftv.xml', expected: gameTestIds, namespace: 'vftv'],
+        [run: 'runCuriosGameTestServer', report: 'build/gametest/vftv_curios.xml', expected: gameTestIds, namespace: 'vftv'],
+        [run: 'runAddonGameTestServer', report: 'build/gametest/vftv_addon.xml', expected: files('src/testAddon/expected-tests.txt'), namespace: 'vftv_addon'],
 ].each { guard ->
     def reportFile = file(guard.report)
     def verify = tasks.register("verify${guard.run.substring(3)}", VerifyGameTests) {
         dependsOn guard.run
         report = reportFile
-        expected = file(guard.expected)
+        expected.from(guard.expected)
         namespace = guard.namespace
     }
     tasks.named(guard.run) {
