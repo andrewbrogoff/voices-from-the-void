@@ -1,0 +1,16 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MPL-2.0"
+
+[[mods]]
+modId = "vftv_addon"
+version = "0.0.0"
+displayName = "Voices From The Void example addon"
+description = "Dev-only: the example addon, compiled against the vftv api jar. Never shipped."
+
+[[dependencies.vftv_addon]]
+modId = "vftv"
+type = "required"
+versionRange = "[0.1,)"
+ordering = "AFTER"
+side = "BOTH"

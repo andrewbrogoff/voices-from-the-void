@@ -1,0 +1,26 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "MPL-2.0 (code), MIT (api), CC-BY-4.0 (assets and data); see NOTICE.md"
+issueTrackerURL = "https://github.com/andrewbrogoff/voices-from-the-void/issues"
+
+[[mods]]
+modId = "vftv"
+version = "${mod_version}"
+displayName = "Voices From The Void"
+authors = "Andrew Rogoff and contributors"
+displayURL = "https://github.com/andrewbrogoff/voices-from-the-void"
+description = "Voices From The Void for NeoForge."
+
+[[dependencies.vftv]]
+modId = "neoforge"
+type = "required"
+versionRange = "[26.2.0.88,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.vftv]]
+modId = "minecraft"
+type = "required"
+versionRange = "[26.2,26.3)"
+ordering = "NONE"
+side = "BOTH"
