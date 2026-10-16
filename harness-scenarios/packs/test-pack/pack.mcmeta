@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "vftv E2E: a test resource pack that changes nothing",
+    "min_format": 88,
+    "max_format": 88
+  }
+}

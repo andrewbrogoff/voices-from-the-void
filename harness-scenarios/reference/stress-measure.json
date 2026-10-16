@@ -1,0 +1,21 @@
+{
+  "projectDir": "../..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 1800,
+  "world": "stress",
+  "render": {"width": 1920, "height": 1080},
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "block", "pos": [0, 119, 0]}, "expect": {"state": "minecraft:lodestone"}},
+    {"op": "dump", "args": {"kind": "world"}, "expect": {"folder": "stress", "gameTime": {"gt": 100}}},
+    {"op": "dump", "args": {"kind": "render"}},
+    {"op": "wait_ticks", "args": {"ticks": 600}},
+    {"op": "dump", "args": {"kind": "vftv:tick_budget", "reset": true}, "expect": {"enabled": true, "reset": true}},
+    {"op": "wait_ticks", "args": {"ticks": 6000}},
+    {"op": "dump", "args": {"kind": "vftv:tick_budget"},
+     "expect": {"sections[0].section": "total", "sections[0].ticks": {"gte": 5000}}},
+    {"op": "dump", "args": {"kind": "world"}},
+    {"op": "screenshot", "args": {"name": "stress-measured.png"}},
+    {"op": "quit", "args": {}}
+  ]
+}

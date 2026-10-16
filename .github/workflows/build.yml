@@ -15,7 +15,7 @@ concurrency:
 jobs:
   # Quality gates, "CI", job 1. The e2e job waits for mc-agent-harness to be published: CI cannot
   # check out a private local repo, so settings.gradle includes the harness only when
-  # local.properties sets harness.dir.
+  # local.properties sets harness.dir. harness-version.properties pins the commit CI will check out.
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 60

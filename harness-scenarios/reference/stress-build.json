@@ -1,0 +1,19 @@
+{
+  "projectDir": "../..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 1800,
+  "world": "stress",
+  "freshWorld": true,
+  "render": {"width": 1920, "height": 1080},
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "cmd", "args": {"command": "forceload add -64 -64 63 63"}},
+    {"op": "cmd", "args": {"command": "setblock 0 119 0 minecraft:lodestone"}},
+    {"op": "cmd", "args": {"command": "tp @s 0.5 120 0.5"}},
+    {"include": "../stress/*.json"},
+    {"op": "wait_ticks", "args": {"ticks": 100}},
+    {"op": "dump", "args": {"kind": "world"}, "expect": {"loaded": true, "folder": "stress"}},
+    {"op": "screenshot", "args": {"name": "stress-built.png"}},
+    {"op": "quit", "args": {}}
+  ]
+}

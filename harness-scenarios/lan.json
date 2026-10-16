@@ -1,0 +1,22 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "world"}, "expect": {"loaded": true, "published": false}},
+    {"op": "dump", "args": {"kind": "vftv:data_reloads"}, "expect": {"clientRebuilds": {"gte": 1}}},
+    {"op": "cmd", "args": {"command": "reload"}},
+    {"op": "wait_ticks", "args": {"ticks": 60}},
+    {"op": "dump", "args": {"kind": "vftv:data_reloads"}, "expect": {"clientRebuilds": {"gte": 2}}},
+    {"op": "cmd", "args": {"command": "publish"}},
+    {"op": "wait_ticks", "args": {"ticks": 20}},
+    {"op": "dump", "args": {"kind": "world"}, "expect": {"published": true, "lanPort": {"gt": 0}}},
+    {"op": "cmd", "args": {"command": "reload"}},
+    {"op": "wait_ticks", "args": {"ticks": 60}},
+    {"op": "dump", "args": {"kind": "vftv:data_reloads"}, "expect": {"clientRebuilds": {"gte": 3}}},
+    {"op": "dump", "args": {"kind": "chat"}, "expect": {"messages[*].text": {"contains": "port"}}},
+    {"op": "screenshot", "args": {"name": "lan.png"}},
+    {"op": "quit", "args": {}}
+  ]
+}

@@ -1,0 +1,7 @@
+{
+  "pack": {
+    "description": "vftv E2E: breaks stone's texture and a sound file, so the resource-load check must report both",
+    "min_format": 88,
+    "max_format": 88
+  }
+}

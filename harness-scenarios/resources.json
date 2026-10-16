@@ -1,0 +1,29 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "resources", "namespace": "vftv"},
+     "expect": {"ok": true, "logCapture": true, "warningsCaptured": {"gte": 0},
+                "missing.blockModels": {"len": 0}, "missing.itemModels": {"len": 0},
+                "missing.lang": {"len": 0}, "missing.sounds": {"len": 0},
+                "missing.subtitles": {"len": 0}, "log": {"len": 0}}},
+    {"op": "dump", "args": {"kind": "resources", "namespace": "minecraft"},
+     "expect": {"counts.blocks": {"gt": 1000}, "counts.items": {"gt": 1000}, "missing.blockModels": {"len": 0}}},
+    {"op": "options", "args": {"resourcePacks": ["harness-scenarios/packs/broken-pack"]},
+     "expect": {"resourcePacks": {"contains": "file/broken-pack"}}},
+    {"op": "dump", "args": {"kind": "resources", "namespace": "minecraft"},
+     "expect": {"ok": false,
+                "log": {"contains": "minecraft:block/vftv_e2e_missing"},
+                "log[*]": {"contains": "minecraft:sounds/vftv_e2e_missing.ogg"}}},
+    {"op": "cmd", "args": {"command": "forceload add 0 0"}},
+    {"op": "cmd", "args": {"command": "setblock 0 119 0 minecraft:glass"}},
+    {"op": "cmd", "args": {"command": "tp @s 0.5 120 0.5"}},
+    {"op": "cmd", "args": {"command": "setblock 2 120 0 minecraft:stone"}},
+    {"op": "wait_ticks", "args": {"ticks": 40}},
+    {"op": "look", "args": {"at": [2.5, 120.5, 0.5]}},
+    {"op": "screenshot", "args": {"name": "broken-stone.png"}},
+    {"op": "quit", "args": {}}
+  ]
+}
