@@ -1,12 +1,9 @@
-package com.andrewbrogoff.vftv.core;
-
-import com.andrewbrogoff.vftv.core.common.DataSlots;
-import com.andrewbrogoff.vftv.core.common.Network;
-import com.andrewbrogoff.vftv.core.common.Registrar;
+package com.andrewbrogoff.vftv.core.common;
 
 /**
  * Every platform implementation {@code core} needs, built once by the platform's entrypoint and
- * passed to {@link Vftv#init} (ADR 0002: explicit wiring, no service discovery).
+ * passed to {@code Vftv.init} (ADR 0002: explicit wiring, no service discovery). It lives in the
+ * shared leaf so every feature's init, the leaf {@code core.flux} included, can take it.
  *
  * @param registrar static and datapack registration
  * @param network payload registration and the server's sender

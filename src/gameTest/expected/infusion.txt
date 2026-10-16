@@ -1,0 +1,1 @@
+# The discovery guard's ids for the infusion feature: one vftv:infusion_<what> id per line.

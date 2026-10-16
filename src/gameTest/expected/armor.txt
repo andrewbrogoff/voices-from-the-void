@@ -1,0 +1,1 @@
+# The discovery guard's ids for the armor feature: one vftv:armor_<what> id per line.

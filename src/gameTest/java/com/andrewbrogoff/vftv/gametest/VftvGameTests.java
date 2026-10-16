@@ -1,5 +1,8 @@
 package com.andrewbrogoff.vftv.gametest;
 
+import com.andrewbrogoff.vftv.api.neoforge.armor.ArmorDataMaps;
+import com.andrewbrogoff.vftv.api.neoforge.aspect.AspectDataMaps;
+import com.andrewbrogoff.vftv.api.neoforge.warp.WarpDataMaps;
 import com.andrewbrogoff.vftv.core.Vftv;
 import com.andrewbrogoff.vftv.core.common.DataSlot;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec;
@@ -44,11 +47,15 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.ModConfigSpec;
 import net.neoforged.neoforge.event.RegisterGameTestsEvent;
+import net.neoforged.neoforge.registries.RegistryManager;
+import net.neoforged.neoforge.registries.datamaps.DataMapType;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The vftv GameTests: a dev-only mod loaded by {@code runGameTestServer}, never shipped. Every test
- * id here is listed in {@code src/gameTest/expected-tests.txt}, the discovery guard's set.
+ * id here is listed in {@code src/gameTest/expected/common.txt}, and each feature's {@code
+ * <F>GameTests} ids in {@code expected/<f>.txt}: together, the discovery guard's set. Every feature
+ * is wired here once; a feature ticket edits only its own class and list.
  */
 @Mod("vftv_gametest")
 public final class VftvGameTests {
@@ -101,6 +108,22 @@ public final class VftvGameTests {
         tests.put("command_root_permission", VftvGameTests::commandRootPermission);
         tests.put("tick_budget_records", VftvGameTests::tickBudgetRecords);
         tests.put("server_config_publish", VftvGameTests::serverConfigPublish);
+        tests.put("api_data_maps_registered", VftvGameTests::apiDataMapsRegistered);
+        FluxGameTests.register(tests, modBus);
+        AspectGameTests.register(tests, modBus);
+        WarpGameTests.register(tests, modBus);
+        ResearchGameTests.register(tests, modBus);
+        VisGameTests.register(tests, modBus);
+        ArcaneGameTests.register(tests, modBus);
+        CrucibleGameTests.register(tests, modBus);
+        EssentiaGameTests.register(tests, modBus);
+        InfusionGameTests.register(tests, modBus);
+        FocusGameTests.register(tests, modBus);
+        GolemGameTests.register(tests, modBus);
+        ArmorGameTests.register(tests, modBus);
+        HushGameTests.register(tests, modBus);
+        WorldgenGameTests.register(tests, modBus);
+        RoadGameTests.register(tests, modBus);
         tests.forEach(
                 (name, test) -> registrar.register(Registries.TEST_FUNCTION, name, () -> test));
         modBus.addListener(RegisterGameTestsEvent.class, this::registerInstances);
@@ -278,6 +301,27 @@ public final class VftvGameTests {
                     helper.assertValueEqual(installed.get(), "default", "a stop resets the record");
                     helper.succeed();
                 });
+    }
+
+    /**
+     * Every API data-map type is registered under its id with a network codec (API spec, "Data maps
+     * and other data": all four maps are synced).
+     */
+    private static void apiDataMapsRegistered(GameTestHelper helper) {
+        for (DataMapType<?, ?> type :
+                List.of(
+                        AspectDataMaps.ITEM,
+                        AspectDataMaps.BLOCK,
+                        AspectDataMaps.ENTITY_TYPE,
+                        AspectDataMaps.DEFAULTS,
+                        WarpDataMaps.GEAR_WARP,
+                        ArmorDataMaps.WEARABLE)) {
+            helper.assertTrue(
+                    RegistryManager.getDataMap(type.registryKey(), type.id()) == type,
+                    "registered: " + type.id() + " on " + type.registryKey().identifier());
+            helper.assertTrue(type.networkCodec() != null, type.id() + " is synced");
+        }
+        helper.succeed();
     }
 
     private static CompoundTag save(Player player) {

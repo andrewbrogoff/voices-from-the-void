@@ -1,0 +1,1 @@
+# The discovery guard's ids for the arcane feature: one vftv:arcane_<what> id per line.
