@@ -1,0 +1,11 @@
+.gradle/
+build/
+run/
+runs/
+out/
+.idea/
+*.iml
+.scratch/
+local.properties
+src/generated/resources/.cache/
+harness-results/
