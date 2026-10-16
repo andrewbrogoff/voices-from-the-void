@@ -34,6 +34,7 @@ public final class ClientWiring {
      */
     public static void init(IEventBus modBus, ModContainer container, WornSlots worn) {
         Vftv.initClient(new NeoForgeClientNetwork(modBus));
+        CommonNeoForgeClient.register(modBus);
         FluxNeoForgeClient.register(modBus);
         AspectNeoForgeClient.register(modBus);
         WarpNeoForgeClient.register(modBus);
