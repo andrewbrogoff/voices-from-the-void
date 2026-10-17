@@ -81,11 +81,6 @@ final class NeoForgeEssentiaSeam implements EssentiaSeam {
             EssentiaSuction s = suction.getCapability();
             return s == null ? 0 : s.hold(aspect);
         }
-
-        @Override
-        public boolean hasSuction() {
-            return suction.getCapability() != null;
-        }
     }
 
     @Override

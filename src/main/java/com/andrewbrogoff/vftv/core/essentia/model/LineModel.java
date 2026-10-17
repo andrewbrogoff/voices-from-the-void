@@ -111,11 +111,6 @@ public final class LineModel {
         this.order = new int[endpoints];
     }
 
-    /** How many endpoints. */
-    public int endpoints() {
-        return endpoints;
-    }
-
     /** The executed-pulse counter. */
     public int executed() {
         return executed;

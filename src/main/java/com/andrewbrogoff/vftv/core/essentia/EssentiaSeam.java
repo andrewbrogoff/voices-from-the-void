@@ -33,9 +33,6 @@ public interface EssentiaSeam {
 
         /** The hold for {@code aspect}, raw (the caller clamps); 0 with no suction. */
         int hold(ResourceKey<Aspect> aspect);
-
-        /** Whether the endpoint exposes a suction capability on this side. */
-        boolean hasSuction();
     }
 
     /**

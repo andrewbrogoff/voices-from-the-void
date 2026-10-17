@@ -65,11 +65,6 @@ public final class Labels {
 
     private Labels() {}
 
-    /** Whether the stack is a label. */
-    public static boolean isLabel(ItemStack stack) {
-        return stack.is(EssentiaContent.label());
-    }
-
     /** A label stack naming {@code aspect}, or blank for null. */
     public static ItemStack labelStack(@Nullable ResourceKey<Aspect> aspect) {
         ItemStack stack = new ItemStack(EssentiaContent.label());
@@ -87,7 +82,7 @@ public final class Labels {
             BlockPos pos,
             Player player,
             InteractionHand hand) {
-        boolean label = isLabel(held);
+        boolean label = held.is(EssentiaContent.label());
         boolean shears = held.is(SHEARS);
         if (!label && !shears) {
             return InteractionResult.TRY_WITH_EMPTY_HAND;

@@ -930,14 +930,4 @@ public final class EssentiaLines {
                 m == null ? 0 : m.stalledCount(),
                 l.skipped);
     }
-
-    /** How many live lines this level holds (diagnostics and tests). */
-    public int liveLines() {
-        return live.size();
-    }
-
-    /** Whether the rebuild and refresh queues are empty and no build is in progress. */
-    public boolean settled() {
-        return rebuild.isEmpty() && refresh.isEmpty() && build == null;
-    }
 }
