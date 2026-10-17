@@ -9,6 +9,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
@@ -16,6 +17,10 @@ import net.minecraft.world.item.Item;
 /**
  * The client's copy of the {@code DerivedAspects} table: slices gather until the one flagged last,
  * which swaps the whole copy into the lookup; logout clears it. Client thread only.
+ *
+ * <p>A client hosting the integrated server shares the lookup's static table with it, so it keeps
+ * the server's own table: installing a slice queued before a {@code /reload} would overwrite the
+ * table that reload just built, and the server would then send the stale one.
  */
 public final class DerivedAspectsClient {
     private static Map<Item, AspectValues> pending = new LinkedHashMap<>();
@@ -28,7 +33,9 @@ public final class DerivedAspectsClient {
         arrivals++;
         payload.entries().forEach(e -> pending.put(e.item(), e.values()));
         if (payload.last()) {
-            AspectLookup.installDerived(pending);
+            if (!hostsServer()) {
+                AspectLookup.installDerived(pending);
+            }
             pending = new LinkedHashMap<>();
         }
     }
@@ -59,6 +66,11 @@ public final class DerivedAspectsClient {
         }
         data.add("value", value);
         return data.toString();
+    }
+
+    private static boolean hostsServer() {
+        Minecraft minecraft = Minecraft.getInstance();
+        return minecraft != null && minecraft.hasSingleplayerServer();
     }
 
     /** Logout: the copy and any partial slices are dropped. */

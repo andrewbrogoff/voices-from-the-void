@@ -152,6 +152,8 @@ public final class DerivationRecipes {
         if (placement.isImpossibleToPlace()) {
             return reject(Rejection.NO_ALTERNATIVES);
         }
+        // Only a crafting grid returns remainders; a furnace or stonecutter consumes the input.
+        boolean crafting = recipe.getType().equals(RecipeType.CRAFTING);
         List<List<Derivation.Alternative>> ingredients = new ArrayList<>();
         for (Ingredient ingredient : placement.ingredients()) {
             if (ingredient.isCustom()) {
@@ -159,7 +161,7 @@ public final class DerivationRecipes {
             }
             List<Derivation.Alternative> alternatives =
                     ingredient.getValues().stream()
-                            .map(DerivationRecipes::alternative)
+                            .map(item -> alternative(item, crafting))
                             .sorted(Comparator.comparing(Derivation.Alternative::item))
                             .toList();
             if (alternatives.isEmpty()) {
@@ -186,8 +188,9 @@ public final class DerivationRecipes {
         return BuiltInRegistries.ITEM.getKey(item).toString();
     }
 
-    private static Derivation.Alternative alternative(Holder<Item> item) {
-        ItemStackTemplate left = new ItemStackTemplate(item).getCraftingRemainder();
+    private static Derivation.Alternative alternative(Holder<Item> item, boolean crafting) {
+        ItemStackTemplate left =
+                crafting ? new ItemStackTemplate(item).getCraftingRemainder() : null;
         Derivation.Remainder remainder =
                 left == null || left.item().value().equals(Items.AIR) || left.count() < 1
                         ? null

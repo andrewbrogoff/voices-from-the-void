@@ -191,6 +191,18 @@ class DerivationRecipesTest {
         Derivation.Alternative milk = r.ingredients().get(0).getFirst();
         assertEquals(new Derivation.Remainder("minecraft:bucket", 1), milk.remainder());
         assertNull(r.ingredients().get(1).getFirst().remainder());
+        Derivation.Recipe smelted =
+                accept(
+                        new SmeltingRecipe(
+                                INFO,
+                                COOKING,
+                                Ingredient.of(Items.MILK_BUCKET),
+                                new ItemStackTemplate(Items.CAKE),
+                                0,
+                                200));
+        assertNull(
+                smelted.ingredients().getFirst().getFirst().remainder(),
+                "a furnace returns no remainder");
     }
 
     @Test
