@@ -1,5 +1,6 @@
 package com.andrewbrogoff.vftv.core.aspect.client;
 
+import com.andrewbrogoff.vftv.core.aspect.DerivedAspectsSync;
 import com.andrewbrogoff.vftv.core.aspect.ScanResult;
 import com.andrewbrogoff.vftv.core.common.client.ClientNetwork;
 
@@ -13,5 +14,6 @@ public final class AspectClientFeature {
     /** Registers the feature's client payload handlers. */
     public static void init(ClientNetwork network) {
         network.handler(ScanResult.TYPE, AspectHud::arrive);
+        network.handler(DerivedAspectsSync.TYPE, DerivedAspectsClient::arrive);
     }
 }

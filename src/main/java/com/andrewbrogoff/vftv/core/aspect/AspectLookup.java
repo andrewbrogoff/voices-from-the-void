@@ -80,14 +80,25 @@ public final class AspectLookup {
         derived = Map.copyOf(table);
     }
 
+    /** The derived values in force: the server's table, or a client's synced copy. */
+    public static Map<Item, AspectValues> derived() {
+        return derived;
+    }
+
     /** An item's values: its entry, else its defaults, else its derived values; null for none. */
     public static @Nullable AspectValues item(Item item) {
+        AspectValues v = authored(item);
+        return v != null ? v : derived.get(item);
+    }
+
+    /**
+     * An item's authored value: its entry, else its defaults; null when neither covers it. An item
+     * with one is resolved, and the derivation never derives over it.
+     */
+    public static @Nullable AspectValues authored(Item item) {
         Maps m = maps;
         AspectValues v = m.item(item);
-        if (v == null) {
-            v = m.defaults(item);
-        }
-        return v != null ? v : derived.get(item);
+        return v != null ? v : m.defaults(item);
     }
 
     /** A placed block's values: its block entry, else its item form's values; null for none. */
