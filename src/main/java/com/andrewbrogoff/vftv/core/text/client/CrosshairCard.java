@@ -69,8 +69,8 @@ public final class CrosshairCard {
     private FormattedCharSequence[] tailLines = NONE;
     private FormattedCharSequence[] footLines = NONE;
 
-    // For each wrapped tail line, the tail component it came from; identity before a layout.
-    private int[] tailOwners = new int[0];
+    // Each wrapped tail line's text, narrated with its sheet; one per component before a layout.
+    private String[] tailText = new String[0];
 
     private @Nullable FormattedCharSequence indicator;
 
@@ -102,6 +102,7 @@ public final class CrosshairCard {
         this.cells = cells;
         this.cellWidth = cellWidth;
         this.tail = List.copyOf(tail);
+        tailText = new String[0];
         this.foot = List.copyOf(foot);
         contentSerial++;
     }
@@ -193,14 +194,13 @@ public final class CrosshairCard {
                 from < l.rows()
                         ? body.narrate(from, Math.min(to, l.rows())).copy()
                         : Component.empty();
-        int previous = -1;
         for (int unit = Math.max(from, l.rows()); unit < to; unit++) {
             int line = unit - l.rows();
-            int owner = line < tailOwners.length ? tailOwners[line] : line;
-            if (owner != previous && owner < tail.size()) {
-                text.append(CommonComponents.SPACE).append(tail.get(owner));
-                previous = owner;
-            }
+            Component segment =
+                    line < tailText.length
+                            ? Component.literal(tailText[line])
+                            : line < tail.size() ? tail.get(line) : Component.empty();
+            text.append(CommonComponents.SPACE).append(segment);
         }
         Narration.say(text);
         return true;
@@ -221,16 +221,12 @@ public final class CrosshairCard {
     private CardLayout relayout(Font font, int width, int height, CaptionBand band, int fontKey) {
         int inner = CardLayout.maxInner(width);
         headLines = wrap(font, head, inner);
-        List<FormattedCharSequence> wrappedTail = new ArrayList<>();
-        List<Integer> owners = new ArrayList<>();
-        for (int i = 0; i < tail.size(); i++) {
-            for (FormattedText line : TextFit.wrap(font, tail.get(i), inner)) {
-                wrappedTail.add(TextFit.visual(line));
-                owners.add(i);
-            }
+        List<FormattedText> wrappedTail = new ArrayList<>();
+        for (Component line : tail) {
+            wrappedTail.addAll(TextFit.wrap(font, line, inner));
         }
-        tailLines = wrappedTail.toArray(FormattedCharSequence[]::new);
-        tailOwners = owners.stream().mapToInt(Integer::intValue).toArray();
+        tailLines = wrappedTail.stream().map(TextFit::visual).toArray(FormattedCharSequence[]::new);
+        tailText = wrappedTail.stream().map(FormattedText::getString).toArray(String[]::new);
         footLines = wrap(font, foot, inner);
         CardLayout.Card card =
                 new CardLayout.Card(

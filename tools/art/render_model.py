@@ -148,7 +148,7 @@ for el in elements:
         u1, v1, u2, v2 = f.get("uv", default_uv(name, a, b))
         uv = [(u1, v1), (u2, v1), (u2, v2), (u1, v2)]
         rot = (f.get("rotation", 0) // 90) % 4
-        uv = uv[rot:] + uv[:rot]
+        uv = uv[-rot:] + uv[:-rot] if rot else uv  # clockwise, as Minecraft rotates face textures
         base = len(verts)
         for x, y, z in corners(name, a, b):
             verts.append(((x - 8) / 16, -(z - 8) / 16, y / 16))  # MC (x,y,z) -> Blender (x,-z,y)
