@@ -22,6 +22,7 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
+import java.util.function.Consumer;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerPlayer;
@@ -39,6 +40,7 @@ public final class KnowledgeService {
     private static final Map<UUID, Long> BUSY_SENT = new HashMap<>();
     private static final Set<UUID> WARNED = new HashSet<>();
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static Consumer<String> warner = LOGGER::warn;
     private static @Nullable DataSlot<Player, Retained<Knowledge>> slot;
 
     private KnowledgeService() {}
@@ -183,13 +185,32 @@ public final class KnowledgeService {
      */
     private static @Nullable Knowledge readable(ServerPlayer player) {
         Retained<Knowledge> raw = slot().get(player);
-        if (raw instanceof Retained.Unreadable<Knowledge> u && WARNED.add(player.getUUID())) {
-            LOGGER.warn(
-                    "The vftv:knowledge of {} is unreadable ({}); it is kept as it is",
-                    player.getGameProfile().name(),
-                    u.reason());
+        if (raw instanceof Retained.Read<Knowledge> r) {
+            WARNED.remove(player.getUUID());
+            return r.value();
         }
-        return raw instanceof Retained.Read<Knowledge> r ? r.value() : null;
+        if (raw instanceof Retained.Unreadable<Knowledge> u && WARNED.add(player.getUUID())) {
+            warner.accept(
+                    "The vftv:knowledge of "
+                            + player.getGameProfile().name()
+                            + " is unreadable ("
+                            + u.reason()
+                            + "); it is kept as it is");
+        }
+        return null;
+    }
+
+    /** Replaces where the unreadable WARN goes and returns the previous; for GameTests. */
+    public static Consumer<String> swapWarner(Consumer<String> next) {
+        Consumer<String> previous = warner;
+        warner = next;
+        return previous;
+    }
+
+    /** The server session ended: the next session warns afresh and owes no busy line. */
+    public static void onServerStopped() {
+        WARNED.clear();
+        BUSY_SENT.clear();
     }
 
     /** {@code message.vftv.busy}, at most once per player per tick. */

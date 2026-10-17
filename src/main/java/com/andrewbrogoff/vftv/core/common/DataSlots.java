@@ -18,7 +18,7 @@ import org.jspecify.annotations.Nullable;
 public interface DataSlots {
     /**
      * A player slot, kept through death and synced to the owning player only when {@code sync} is
-     * non-null.
+     * non-null: in full when they log in, respawn or change dimension, and on each write.
      */
     <T> DataSlot<Player, T> player(
             String name,

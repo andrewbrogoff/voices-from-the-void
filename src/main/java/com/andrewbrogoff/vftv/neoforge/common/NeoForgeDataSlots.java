@@ -37,20 +37,35 @@ public final class NeoForgeDataSlots implements DataSlots {
             Codec<T> codec,
             Supplier<T> defaultValue,
             @Nullable StreamCodec<? super RegistryFriendlyByteBuf, T> sync) {
+        if (sync != null) {
+            // Owner-only on every path: the full value is its own baseline and its own delta.
+            return playerWithDeltas(
+                    name,
+                    codec,
+                    defaultValue,
+                    new DeltaSync<>() {
+                        @Override
+                        public void write(RegistryFriendlyByteBuf buf, T value, boolean baseline) {
+                            sync.encode(buf, value);
+                        }
+
+                        @Override
+                        public T read(RegistryFriendlyByteBuf buf, @Nullable T previous) {
+                            return sync.decode(buf);
+                        }
+                    });
+        }
         AttachmentType.Builder<T> builder =
                 AttachmentType.builder(defaultValue).serialize(codec.fieldOf("data")).copyOnDeath();
-        if (sync != null) {
-            builder.sync((holder, to) -> holder.equals(to), sync);
-        }
         return new Slot<>(
                 registrar.register(NeoForgeRegistries.Keys.ATTACHMENT_TYPES, name, builder::build));
     }
 
     /**
-     * NeoForge's initial sync (join, and every player that starts tracking the holder) never asks
-     * {@code sendToPlayer}, so it would hand the record to watchers. This slot writes nothing then,
-     * and instead sends the owner a baseline through the filtered update path when they log in,
-     * respawn or change dimension.
+     * NeoForge's initial sync (the owner's own on join, respawn and dimension change, and every
+     * player that starts tracking the holder) never asks {@code sendToPlayer}, so it would hand the
+     * record to watchers. This slot writes nothing then, and instead sends the owner a baseline
+     * through the filtered update path when they log in, respawn or change dimension.
      */
     @Override
     public <T> DataSlot<Player, T> playerWithDeltas(

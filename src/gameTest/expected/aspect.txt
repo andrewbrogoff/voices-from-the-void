@@ -13,3 +13,4 @@ vftv:aspect_two_player_privacy
 vftv:aspect_phantom_is_silent
 vftv:aspect_sounding_and_nodes
 vftv:aspect_credit_never_teaches
+vftv:aspect_unreadable_warns_per_session

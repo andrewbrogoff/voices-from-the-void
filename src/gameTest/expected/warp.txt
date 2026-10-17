@@ -11,5 +11,6 @@ vftv:warp_switches
 vftv:warp_silence
 vftv:warp_joining
 vftv:warp_context
+vftv:warp_owner_only_sync
 vftv:warp_persistence
 vftv:warp_commands
