@@ -54,8 +54,11 @@ class AccessibilityGatesTest {
      */
     record Region(String texture, int x, int y, int w, int h, int text, @Nullable String uniform) {}
 
-    /** No text-bearing sprite ships yet; asset tickets add their rows. */
-    private static final List<Region> REGIONS = List.of();
+    /** Every text-bearing sprite; asset tickets add their rows. */
+    private static final List<Region> REGIONS =
+            List.of(
+                    // aspect: the crosshair cards' nine-slice frame, its interior opaque ink1.
+                    new Region("gui/sprites/hud/vis_frame", 4, 4, 8, 8, Palette.HUSH3, "ink1"));
 
     // --- the palette -----------------------------------------------------------------------
 
