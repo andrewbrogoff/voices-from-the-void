@@ -1,0 +1,33 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "world": "warp_sync",
+  "freshWorld": true,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:warp_client"},
+     "expect": {"rulesReceived": true, "readable": true, "total": 0, "rules.bands": [6, 14, 24]}},
+    {"op": "cmd", "args": {"command": "vftv warp add @s lasting 4"}},
+    {"op": "cmd", "args": {"command": "vftv warp add @s temporary 3"}},
+    {"op": "wait_ticks", "args": {"ticks": 5}},
+    {"op": "dump", "args": {"kind": "vftv:warp_client"},
+     "expect": {"lasting": 4, "temporary": {"lte": 3}, "counter": 70, "readable": true}},
+    {"op": "dump", "args": {"kind": "vftv:warp"},
+     "expect": {"players[0].lasting": 4, "players[0].counter": 70, "rules.bands": [6, 14, 24]}},
+    {"op": "cmd", "args": {"command": "vftv warp get @s"}},
+    {"op": "wait_ticks", "args": {"ticks": 2}},
+    {"op": "dump", "args": {"kind": "chat"}, "expect": {"messages[*].text": {"contains": "lasting 4"}}},
+    {"op": "cmd", "args": {"command": "reload"}},
+    {"op": "wait_ticks", "args": {"ticks": 60}},
+    {"op": "dump", "args": {"kind": "vftv:warp_client"}, "expect": {"rulesReceived": true, "lasting": 4}},
+    {"op": "screenshot", "args": {"name": "warp_sync.png"}},
+    {"op": "disconnect", "args": {}},
+    {"op": "join", "args": {}},
+    {"op": "wait_ticks", "args": {"ticks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:warp_client"},
+     "expect": {"rulesReceived": true, "lasting": 4, "counter": 70, "revision": {"gte": 2}}},
+    {"op": "dump", "args": {"kind": "resources", "namespace": "vftv"}, "expect": {"missing.lang": {"len": 0}}},
+    {"op": "quit", "args": {}}
+  ]
+}

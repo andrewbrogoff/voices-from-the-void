@@ -1,1 +1,15 @@
 # The discovery guard's ids for the warp feature: one vftv:warp_<what> id per line.
+vftv:warp_tuning_loaded
+vftv:warp_tuning_reload_rollback
+vftv:warp_commit_entry
+vftv:warp_commit_refusals
+vftv:warp_commit_reentry
+vftv:warp_milestones
+vftv:warp_gear_sample
+vftv:warp_void_work
+vftv:warp_switches
+vftv:warp_silence
+vftv:warp_joining
+vftv:warp_context
+vftv:warp_persistence
+vftv:warp_commands

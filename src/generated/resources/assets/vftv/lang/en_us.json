@@ -1,4 +1,6 @@
 {
+  "commands.vftv.warp.get": "%s: temporary %s, lasting %s, permanent %s, gear %s, in all %s, band %s, counter %s, chance %s",
+  "commands.vftv.warp.set": "%s: %s.",
   "hud.vftv.card.sheet": "Sheet %s of %s (%s, %s)",
   "hud.vftv.status.more": "More: press %s",
   "key.category.vftv.main": "Voices From The Void",
@@ -15,6 +17,17 @@
   "options.vftv.hush.spread.tooltip": "Flux turns ground into the Hush. Off: no spread; flux still pools. Default: true.",
   "options.vftv.hush.unattended": "Spread without players",
   "options.vftv.hush.unattended.tooltip": "Hush spread and Pealing Bells run with no player nearby. Default: false.",
+  "options.vftv.warp": "Warp",
+  "options.vftv.warp.amplifier": "Warp amplifier",
+  "options.vftv.warp.amplifier.tooltip": "Warp strengthens Void workings and Void armour. Off: no amplification. Default: true.",
+  "options.vftv.warp.gear": "Gear warp",
+  "options.vftv.warp.gear.tooltip": "Warp from worn and carried gear. Off: gear adds none. Default: true.",
+  "options.vftv.warp.tax": "Warp vis tax",
+  "options.vftv.warp.tax.tooltip": "Warp raises vis costs and lowers infusion stability. Off: neither. Running infusions keep their plan. Default: true.",
+  "options.vftv.warp.voices": "The Voices",
+  "options.vftv.warp.voices.enabled": "Voices",
+  "options.vftv.warp.voices.enabled.tooltip": "Voice events at all. Off: no check rolls. Default: true.",
   "screen.vftv.close": "Close",
-  "screen.vftv.status_details": "The last message"
+  "screen.vftv.status_details": "The last message",
+  "tooltip.vftv.gear_warp": "Gear warp +%s"
 }

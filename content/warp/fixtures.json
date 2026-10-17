@@ -1,0 +1,73 @@
+{
+  "schema": "vftv:warp_fixtures/1",
+  "phase": [
+    {"msb": "0011223344556677", "lsb": "8899AABBCCDDEEFF", "expect": [805, 5, 5]},
+    {"msb": "0000000000000000", "lsb": "0000000000000001", "expect": [872, 72, 12]},
+    {"msb": "FFFFFFFFFFFFFFFF", "lsb": "FFFFFFFFFFFFFFFF", "expect": [92, 92, 12]}
+  ],
+  "dials": [
+    {"total": 0, "expect": {"band": 0, "factor_ordinary": 1000, "factor_void": 1000, "penalty_ordinary": 0, "penalty_void": 0}},
+    {"total": 3, "expect": {"band": 0, "factor_ordinary": 1060, "factor_void": 1000, "penalty_ordinary": 1, "penalty_void": 0}},
+    {"total": 5, "expect": {"band": 0, "factor_ordinary": 1100, "factor_void": 1000, "penalty_ordinary": 2, "penalty_void": 0}},
+    {"total": 6, "expect": {"band": 1, "factor_ordinary": 1120, "factor_void": 1000, "penalty_ordinary": 3, "penalty_void": 0}},
+    {"total": 13, "expect": {"band": 1, "factor_ordinary": 1260, "factor_void": 1000, "penalty_ordinary": 6, "penalty_void": 0}},
+    {"total": 14, "expect": {"band": 2, "factor_ordinary": 1280, "factor_void": 1000, "penalty_ordinary": 7, "penalty_void": 0}},
+    {"total": 23, "expect": {"band": 2, "factor_ordinary": 1460, "factor_void": 1000, "penalty_ordinary": 11, "penalty_void": 0}},
+    {"total": 24, "expect": {"band": 3, "factor_ordinary": 1480, "factor_void": 1000, "penalty_ordinary": 12, "penalty_void": 0}},
+    {"total": 25, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 12, "penalty_void": 0}},
+    {"total": 26, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 13, "penalty_void": 0}},
+    {"total": 39, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 19, "penalty_void": 0}},
+    {"total": 40, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 20, "penalty_void": 0}},
+    {"total": 41, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 20, "penalty_void": 0}},
+    {"total": 2200, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 20, "penalty_void": 0}},
+    {"total": 24, "tax": false, "expect": {"band": 3, "factor_ordinary": 1000, "factor_void": 1000, "penalty_ordinary": 0, "penalty_void": 0}}
+  ],
+  "preview": [
+    {"state": [0, 0, 0], "cost": [0, 4, 0], "source": {"kind": "entry", "id": "vftv:silence_beneath"}, "expect": {"actual": [0, 4, 0], "clipped": false}},
+    {"state": [3, 4, 9], "cost": [0, 0, 2], "source": {"kind": "milestone", "id": "vftv:under_the_silence"}, "expect": {"actual": [0, 0, 1], "clipped": true}},
+    {"state": [0, 998, 0], "cost": [0, 5, 0], "source": {"kind": "bargain", "id": "vftv:quick_hands"}, "expect": {"actual": [0, 2, 0], "clipped": true}},
+    {"state": [0, 7, 0], "cost": [0, -4, 0], "source": {"kind": "stilling"}, "expect": {"actual": [0, -4, 0], "clipped": false}},
+    {"state": [0, 2, 0], "cost": [0, -4, 0], "source": {"kind": "stilling"}, "expect": {"actual": [0, -2, 0], "clipped": true}},
+    {"state": [0, 0, 4], "cost": [0, 0, 2], "source": {"kind": "entry", "id": "vftv:under_the_silence"}, "paid": ["vftv:under_the_silence"], "expect": {"actual": [0, 0, 0], "clipped": true}},
+    {"state": [995, 0, 0], "cost": [9, 0, 0], "source": {"kind": "entry", "id": "vftv:being_heard"}, "expect": {"actual": [5, 0, 0], "clipped": true}},
+    {"state": [0, 0, 0], "cost": [0, 0, 4], "source": {"kind": "milestone", "id": "vftv:joining"}, "expect": "invalid"},
+    {"state": [0, 0, 0], "cost": [0, 0, 2], "source": {"kind": "entry", "id": "vftv:being_heard"}, "expect": "invalid"},
+    {"state": [0, 0, 9], "cost": [0, 0, 2], "source": {"kind": "command"}, "cap": 10, "expect": {"actual": [0, 0, 1], "clipped": true}},
+    {"state": [0, 0, 9], "cost": [0, 0, 5], "source": {"kind": "milestone", "id": "vftv:joining"}, "cap": 6, "expect": {"actual": [0, 0, 0], "clipped": true}},
+    {"state": [0, 0, 9], "cost": [0, 0, -2], "source": {"kind": "command"}, "cap": 6, "expect": {"actual": [0, 0, -2], "clipped": false}}
+  ],
+  "background": [
+    {"total": 4, "permanent": 0, "counter": 0, "expect_pm": 15},
+    {"total": 0, "permanent": 0, "counter": 0, "expect_pm": 0},
+    {"total": 10, "permanent": 10, "counter": 0, "expect_pm": 65}
+  ],
+  "schedule": [
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff",
+     "start": {"T": 3, "L": 4, "P": 0, "gear": 0, "counter": 70},
+     "gear_held": {"from": 790, "to": 1499, "value": 2},
+     "until": 2005,
+     "expect": [
+       {"tick": 5, "op": "decay", "T": 2, "total": 6},
+       {"tick": 405, "op": "decay", "T": 1, "total": 5},
+       {"tick": 805, "op": "decay", "T": 0, "total": 4},
+       {"tick": 805, "op": "gear", "gear": 2, "total": 6},
+       {"tick": 805, "op": "check", "total": 6, "band": 1, "index": 0, "expect": {"roll": 188, "pm": 85, "outcome": "quiet", "counter": 70}},
+       {"tick": 1505, "op": "gear", "gear": 0, "total": 4},
+       {"tick": 2005, "op": "check", "total": 4, "band": 0, "index": 1, "expect": {"roll": 859, "pm": 85, "outcome": "quiet", "counter": 70}}
+     ]}
+  ],
+  "reconcile": [
+    {"counter": 900, "counter_max": 150, "total": 9, "permanent": 0, "expect": {"pm": 165, "after_fire": 120, "after_gain_2": 150, "after_void_work": 150}},
+    {"counter": 0, "counter_max": 1000, "total": 9, "permanent": 0, "expect": {"pm": 15, "after_fire": 0, "after_gain_2": 20, "after_void_work": 5}},
+    {"counter": 997, "counter_max": 1000, "total": 9, "permanent": 0, "expect": {"pm": 250, "after_fire": 967, "after_gain_2": 1000, "after_void_work": 1000}}
+  ],
+  "amplifier": [
+    {"total": 12, "joined": false, "expect": {"w": 12, "amp_pm": 1480, "out": 5920}},
+    {"total": 12, "joined": true, "expect": {"w": 22, "amp_pm": 1880, "out": 7520}},
+    {"total": 5, "joined": true, "expect": {"w": 15, "amp_pm": 1600, "out": 6400}},
+    {"total": 0, "joined": true, "expect": {"w": 10, "amp_pm": 1400, "out": 5600}},
+    {"total": 12, "joined": true, "bonus": 0, "expect": {"w": 12, "amp_pm": 1480, "out": 5920}},
+    {"total": 2200, "joined": true, "bonus": 50, "expect": {"w": 2250, "amp_pm": 2000, "out": 8000}},
+    {"total": 12, "joined": true, "on": false, "expect": {"w": 0, "amp_pm": 1000, "out": 4000}}
+  ]
+}

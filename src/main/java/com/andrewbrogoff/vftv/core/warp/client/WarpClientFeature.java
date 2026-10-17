@@ -1,6 +1,8 @@
 package com.andrewbrogoff.vftv.core.warp.client;
 
 import com.andrewbrogoff.vftv.core.common.client.ClientNetwork;
+import com.andrewbrogoff.vftv.core.warp.WarpRulesPayload;
+import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 
 /**
  * The warp feature's client entry: {@code Vftv.initClient} calls {@link #init} once, during client
@@ -10,5 +12,8 @@ public final class WarpClientFeature {
     private WarpClientFeature() {}
 
     /** Registers the feature's client payload handlers. */
-    public static void init(ClientNetwork network) {}
+    public static void init(ClientNetwork network) {
+        network.handler(
+                WarpRulesPayload.TYPE, payload -> WarpRulesService.receive(payload.rules()));
+    }
 }
