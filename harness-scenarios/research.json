@@ -1,0 +1,23 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:research"},
+     "expect": {"inWorld": true, "entries": 50, "categories": 5, "readable": true, "stage": 0,
+                "learned": 0}},
+    {"op": "cmd", "args": {"command": "clear @s"}},
+    {"op": "cmd", "args": {"command": "give @s vftv:commonplace_book"}},
+    {"op": "cmd", "args": {"command": "give @s vftv:choir_page[vftv:page=\"vftv:choir/beneath_the_notes\"]"}},
+    {"op": "cmd", "args": {"command": "give @s vftv:choir_page"}},
+    {"op": "wait_ticks", "args": {"ticks": 20}},
+    {"op": "screenshot", "args": {"name": "research-items.png"}},
+    {"op": "disconnect", "args": {}},
+    {"op": "join", "args": {}},
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:research"},
+     "expect": {"inWorld": true, "entries": 50, "categories": 5, "readable": true, "stage": 0}},
+    {"op": "quit", "args": {}}
+  ]
+}

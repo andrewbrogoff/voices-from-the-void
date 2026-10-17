@@ -1,0 +1,144 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:foci": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        -1,
+        7
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:arcane_crafting"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:focus_ranks": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        1,
+        4
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:foci",
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:delving": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        -2,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:foci",
+        "vftv:distillation"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:far_workings": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        -3,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:focus_ranks",
+        "vftv:ruins"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:void_foci": {
+      "stage": 4,
+      "category": "vftv:choirs_road",
+      "position": [
+        -2,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:far_workings",
+        "vftv:choirs_road"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

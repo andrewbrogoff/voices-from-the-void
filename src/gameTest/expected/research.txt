@@ -1,1 +1,11 @@
 # The discovery guard's ids for the research feature: one vftv:research_<what> id per line.
+vftv:research_registries_load
+vftv:research_load_rules_refuse
+vftv:research_codec_rejects
+vftv:research_view_live
+vftv:research_attachment_persists
+vftv:research_attachment_unreadable
+vftv:research_advancements
+vftv:research_items
+vftv:research_config_mode
+vftv:research_strike_makes_the_book

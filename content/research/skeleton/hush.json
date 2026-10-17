@@ -1,0 +1,60 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:clearing_bell": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        0,
+        5
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:the_hush": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        0,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:infusion",
+        "vftv:clearing_bell"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,160 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:first_wand": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        4
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "free",
+      "parents": [
+        "vftv:knots_in_the_air"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:tapping": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        5
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:first_wand"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:singing_wands": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        2,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:cultivating_nodes": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        2,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:distillation"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:vis_relays": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        3,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:distillation"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:moving_nodes": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        4,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:distillation"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

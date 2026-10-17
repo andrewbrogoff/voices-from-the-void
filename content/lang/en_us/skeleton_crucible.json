@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.crucible.title": "The Crucible",
+    "research.vftv.crucible.hint": "I have not written this down yet.",
+    "research.vftv.crucible.page.0": "This page is still to be written.",
+    "research.vftv.resonant_brass.title": "Resonant Brass",
+    "research.vftv.resonant_brass.hint": "I have not written this down yet.",
+    "research.vftv.resonant_brass.page.0": "This page is still to be written."
+  }
+}

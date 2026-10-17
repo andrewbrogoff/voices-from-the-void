@@ -1,0 +1,20 @@
+{
+  "category": "vftv:resonance",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "free",
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:resonance"
+  ],
+  "position": [
+    0,
+    1
+  ],
+  "stage": 1
+}

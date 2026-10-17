@@ -1,0 +1,29 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:resonance",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:commonplace_book",
+    "vftv:notes_of_things",
+    "vftv:sounding"
+  ],
+  "position": [
+    0,
+    2
+  ],
+  "stage": 1
+}

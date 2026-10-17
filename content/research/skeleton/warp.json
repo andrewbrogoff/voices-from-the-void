@@ -1,0 +1,90 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:being_heard": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        3,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "listen",
+      "parents": [
+        "vftv:ruins"
+      ],
+      "warp": {
+        "temporary": 3
+      },
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:under_the_silence": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        3,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "listen",
+      "parents": [
+        "vftv:silence_beneath"
+      ],
+      "warp": {
+        "permanent": 2
+      },
+      "rewards": {
+        "points": {
+          "vftv:silentium": 6,
+          "vftv:alienis": 4
+        }
+      },
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:learning_the_tongue": {
+      "stage": 4,
+      "category": "vftv:choirs_road",
+      "position": [
+        3,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "listen",
+      "parents": [
+        "vftv:choirs_road",
+        "vftv:silence_beneath"
+      ],
+      "warp": {
+        "permanent": 3
+      },
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

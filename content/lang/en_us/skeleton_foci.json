@@ -1,0 +1,20 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.foci.title": "Foci",
+    "research.vftv.foci.hint": "I have not written this down yet.",
+    "research.vftv.foci.page.0": "This page is still to be written.",
+    "research.vftv.focus_ranks.title": "Focus Ranks",
+    "research.vftv.focus_ranks.hint": "I have not written this down yet.",
+    "research.vftv.focus_ranks.page.0": "This page is still to be written.",
+    "research.vftv.delving.title": "Delving",
+    "research.vftv.delving.hint": "I have not written this down yet.",
+    "research.vftv.delving.page.0": "This page is still to be written.",
+    "research.vftv.far_workings.title": "Far Workings",
+    "research.vftv.far_workings.hint": "I have not written this down yet.",
+    "research.vftv.far_workings.page.0": "This page is still to be written.",
+    "research.vftv.void_foci.title": "Void Foci",
+    "research.vftv.void_foci.hint": "I have not written this down yet.",
+    "research.vftv.void_foci.page.0": "This page is still to be written."
+  }
+}

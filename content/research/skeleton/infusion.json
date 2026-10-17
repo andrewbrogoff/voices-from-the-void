@@ -1,0 +1,91 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:infusion": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        0,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:ruins",
+        "vftv:essentia_jars",
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:echo_wands": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        1,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:infusion"
+      ],
+      "hidden_parents": [
+        "vftv:singing_wands"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:infused_enchanting": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        -1,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:infusion"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

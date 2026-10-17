@@ -1,0 +1,23 @@
+{
+  "category": "vftv:choir_pages",
+  "icon": {
+    "item": "vftv:choir_page"
+  },
+  "kind": "find",
+  "pages": [
+    {
+      "type": "vftv:choir"
+    }
+  ],
+  "position": [
+    0,
+    0
+  ],
+  "stage": 3,
+  "triggers": [
+    {
+      "type": "vftv:choir_page",
+      "page": "vftv:choir/beneath_the_notes"
+    }
+  ]
+}

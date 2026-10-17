@@ -1,0 +1,29 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:ruins",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:ruins",
+    "vftv:essentia_jars",
+    "vftv:resonant_brass"
+  ],
+  "position": [
+    0,
+    1
+  ],
+  "stage": 3
+}

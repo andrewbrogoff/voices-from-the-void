@@ -1,0 +1,20 @@
+{
+  "category": "vftv:choirs_road",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "free",
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:the_road"
+  ],
+  "position": [
+    0,
+    4
+  ],
+  "stage": 4
+}

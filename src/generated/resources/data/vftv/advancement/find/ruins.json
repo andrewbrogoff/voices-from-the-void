@@ -1,0 +1,20 @@
+{
+  "criteria": {
+    "page": {
+      "conditions": {
+        "items": [
+          {
+            "items": "vftv:choir_page"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "page"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

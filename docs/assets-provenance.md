@@ -30,6 +30,7 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/item/commonplace_book.png`, `choir_page.png` | Python 3 + Pillow/numpy (no model) | MPL-2.0 (our generator) | `tools/art/research_items.py` (deterministic, no seed) | `lib.save()` palette check; contact sheet reviewed at GUI scale 2 | 2026-10-17 | none (agent-written code) |
 
 ## vis
 

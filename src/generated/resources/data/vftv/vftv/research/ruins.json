@@ -1,0 +1,28 @@
+{
+  "category": "vftv:ruins",
+  "hinted_by": "vftv:distillation",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "find",
+  "opens_stage": 3,
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:distillation"
+  ],
+  "position": [
+    0,
+    0
+  ],
+  "stage": 3,
+  "triggers": [
+    {
+      "type": "vftv:advancement",
+      "advancement": "vftv:find/ruins"
+    }
+  ]
+}

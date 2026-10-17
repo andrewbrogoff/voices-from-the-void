@@ -1,0 +1,35 @@
+{
+  "category": "vftv:ruins",
+  "hinted_by": "vftv:choir/beneath_the_notes",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "listen",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:ruins",
+    "vftv:being_heard"
+  ],
+  "position": [
+    3,
+    1
+  ],
+  "reveal": [
+    {
+      "type": "vftv:choir_page",
+      "page": "vftv:choir/beneath_the_notes"
+    }
+  ],
+  "secret": true,
+  "stage": 3,
+  "warp": {
+    "lasting": 4
+  }
+}

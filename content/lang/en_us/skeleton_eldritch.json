@@ -1,0 +1,24 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.choir.where_they_went.title": "Where They Went",
+    "research.vftv.choir.where_they_went.hint": "I have not written this down yet.",
+    "research.vftv.choir.where_they_went.page.0": "This page is still to be written.",
+    "research.vftv.hollow_bell.title": "The Hollow Bell",
+    "research.vftv.hollow_bell.hint": "I have not written this down yet.",
+    "research.vftv.hollow_bell.page.0": "This page is still to be written.",
+    "research.vftv.the_road.title": "The Road",
+    "research.vftv.the_road.page.0": "This page is still to be written.",
+    "research.vftv.void_wands.title": "Void Wands",
+    "research.vftv.void_wands.hint": "I have not written this down yet.",
+    "research.vftv.void_wands.page.0": "This page is still to be written.",
+    "research.vftv.the_heart.title": "The Heart",
+    "research.vftv.the_heart.page.0": "This page is still to be written.",
+    "research.vftv.heard.title": "Heard",
+    "research.vftv.heard.hint": "I have not written this down yet.",
+    "research.vftv.heard.page.0": "This page is still to be written.",
+    "research.vftv.unheard.title": "Unheard",
+    "research.vftv.unheard.hint": "I have not written this down yet.",
+    "research.vftv.unheard.page.0": "This page is still to be written."
+  }
+}

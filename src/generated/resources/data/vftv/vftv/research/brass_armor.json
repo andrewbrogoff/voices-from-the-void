@@ -1,0 +1,20 @@
+{
+  "category": "vftv:distillation",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "free",
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:resonant_brass"
+  ],
+  "position": [
+    2,
+    4
+  ],
+  "stage": 2
+}

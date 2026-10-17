@@ -1,0 +1,24 @@
+{
+  "category": "vftv:resonance",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "find",
+  "opens_stage": 1,
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "position": [
+    0,
+    0
+  ],
+  "stage": 1,
+  "triggers": [
+    {
+      "type": "vftv:advancement",
+      "advancement": "vftv:find/resonance"
+    }
+  ]
+}

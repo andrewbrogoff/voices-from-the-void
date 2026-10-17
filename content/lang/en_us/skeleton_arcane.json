@@ -1,0 +1,8 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.arcane_crafting.title": "Arcane Crafting",
+    "research.vftv.arcane_crafting.hint": "I have not written this down yet.",
+    "research.vftv.arcane_crafting.page.0": "This page is still to be written."
+  }
+}

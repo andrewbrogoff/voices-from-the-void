@@ -1,0 +1,145 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:tuned_spectacles": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        1,
+        7
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:arcane_crafting"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:brass_armor": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        2,
+        4
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "free",
+      "parents": [
+        "vftv:resonant_brass"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:felted_garments": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        3,
+        4
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:resonant_brass",
+        "vftv:tuned_spectacles"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:baffling": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        -1,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:infused_enchanting",
+        "vftv:brass_armor"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:void_armor": {
+      "stage": 4,
+      "category": "vftv:choirs_road",
+      "position": [
+        -2,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:choirs_road",
+        "vftv:baffling"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "secret": true,
+      "reveal": [
+        {
+          "type": "vftv:warp_at_least",
+          "kind": "lasting_plus_permanent",
+          "value": 4
+        }
+      ],
+      "hinted_by": "vftv:baffling",
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

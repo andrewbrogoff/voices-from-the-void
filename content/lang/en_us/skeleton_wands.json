@@ -1,0 +1,22 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.first_wand.title": "The First Wand",
+    "research.vftv.first_wand.page.0": "This page is still to be written.",
+    "research.vftv.tapping.title": "Tapping",
+    "research.vftv.tapping.hint": "I have not written this down yet.",
+    "research.vftv.tapping.page.0": "This page is still to be written.",
+    "research.vftv.singing_wands.title": "Singing Wands",
+    "research.vftv.singing_wands.hint": "I have not written this down yet.",
+    "research.vftv.singing_wands.page.0": "This page is still to be written.",
+    "research.vftv.cultivating_nodes.title": "Cultivating Nodes",
+    "research.vftv.cultivating_nodes.hint": "I have not written this down yet.",
+    "research.vftv.cultivating_nodes.page.0": "This page is still to be written.",
+    "research.vftv.vis_relays.title": "Vis Relays",
+    "research.vftv.vis_relays.hint": "I have not written this down yet.",
+    "research.vftv.vis_relays.page.0": "This page is still to be written.",
+    "research.vftv.moving_nodes.title": "Moving Nodes",
+    "research.vftv.moving_nodes.hint": "I have not written this down yet.",
+    "research.vftv.moving_nodes.page.0": "This page is still to be written."
+  }
+}
