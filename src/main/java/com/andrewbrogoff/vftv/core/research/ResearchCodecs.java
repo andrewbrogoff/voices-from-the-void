@@ -216,6 +216,10 @@ public final class ResearchCodecs {
                                                     .apply(i, ResearchEntry.Warp::new)))
                     .codec();
 
+    /** {@code rewards}: its {@code points} object, aspect to 1-256, paid on first learning. */
+    private static final Codec<Map<String, Integer>> REWARDS =
+            strict(Codec.unboundedMap(ID, Codec.intRange(1, 256)).fieldOf("points")).codec();
+
     private static final Codec<List<Integer>> POSITION = sized(Codec.intRange(-16, 16), 2, 2);
 
     /** The fields every entry has, the first half of {@link #ENTRY}. */
@@ -297,8 +301,7 @@ public final class ResearchCodecs {
                                                     .forGetter(Tail::opensStage),
                                             WARP.optionalFieldOf("warp", ResearchEntry.Warp.NONE)
                                                     .forGetter(Tail::warp),
-                                            Codec.unboundedMap(ID, Codec.intRange(1, 256))
-                                                    .optionalFieldOf("rewards", Map.of())
+                                            REWARDS.optionalFieldOf("rewards", Map.of())
                                                     .forGetter(Tail::rewards))
                                     .apply(i, Tail::new));
 

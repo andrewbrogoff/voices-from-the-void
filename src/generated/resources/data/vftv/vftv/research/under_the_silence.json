@@ -20,8 +20,10 @@
     2
   ],
   "rewards": {
-    "vftv:alienis": 4,
-    "vftv:silentium": 6
+    "points": {
+      "vftv:alienis": 4,
+      "vftv:silentium": 6
+    }
   },
   "stage": 3,
   "warp": {

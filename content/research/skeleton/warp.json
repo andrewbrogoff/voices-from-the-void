@@ -45,8 +45,10 @@
         "permanent": 2
       },
       "rewards": {
-        "vftv:silentium": 6,
-        "vftv:alienis": 4
+        "points": {
+          "vftv:silentium": 6,
+          "vftv:alienis": 4
+        }
       },
       "pages": [
         {

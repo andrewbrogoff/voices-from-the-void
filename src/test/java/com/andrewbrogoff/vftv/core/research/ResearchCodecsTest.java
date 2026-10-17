@@ -27,7 +27,7 @@ class ResearchCodecsTest {
              "secret": true,
              "reveal": [{"type": "vftv:choir_page", "page": "vftv:choir/beneath_the_notes"}],
              "hinted_by": "vftv:choir/beneath_the_notes", "warp": {"lasting": 4},
-             "rewards": {"vftv:silentium": 4},
+             "rewards": {"points": {"vftv:silentium": 4}},
              "pages": [{"type": "vftv:text"}, {"type": "vftv:text"}, {"type": "vftv:action"}]}
             """;
 
@@ -60,6 +60,7 @@ class ResearchCodecsTest {
         assertEquals(EntryKind.LISTEN, e.kind());
         assertEquals(List.of("vftv:x"), e.hiddenParents());
         assertEquals(new ResearchEntry.Warp(0, 4, 0), e.warp());
+        assertEquals(java.util.Map.of("vftv:silentium", 4), e.rewards());
         assertEquals(List.of(new Trigger.ChoirPage("vftv:choir/beneath_the_notes")), e.reveal());
         assertEquals("vftv:choir/beneath_the_notes", e.hintedBy());
         JsonElement encoded = ResearchCodecs.ENTRY.encodeStart(JsonOps.INSTANCE, e).getOrThrow();
@@ -148,7 +149,8 @@ class ResearchCodecsTest {
         rejects(entry("").replace("[0, 0]", "[0]"), "");
         rejects(entry(", \"warp\": {\"temporary\": 101}"), "101");
         rejects(entry(", \"warp\": {\"bargain\": 1}"), "unknown fields [bargain]");
-        rejects(entry(", \"rewards\": {\"vftv:aer\": 257}"), "257");
+        rejects(entry(", \"rewards\": {\"points\": {\"vftv:aer\": 257}}"), "257");
+        rejects(entry(", \"rewards\": {\"vftv:aer\": 2}"), "unknown fields [vftv:aer]");
         rejects(entry(", \"skip_cost\": {\"vftv:aer\": 0}"), "0");
         rejects(entry(", \"opens_stage\": 0"), "0");
         rejects(

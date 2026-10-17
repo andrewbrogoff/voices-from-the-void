@@ -215,6 +215,14 @@ class ResearchRecordTest {
                 IllegalArgumentException.class,
                 () -> new Note.Snapshot(2, 0, Note.PaletteHelp.PARENTS, 1, 0));
         assertEquals(3, new Note.Cell(-3, 1).distance());
+        // An extreme coordinate is outside the grid, never wrapped to the centre.
+        List<Note.Placed> extreme =
+                List.of(
+                        new Note.Placed(new Note.Cell(Integer.MIN_VALUE, 0), "a:a"),
+                        new Note.Placed(new Note.Cell(1, 0), "a:b"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new Note("a:n", s, 1, extreme, List.of(), List.of(), 0));
         assertEquals("parents", Note.PaletteHelp.PARENTS.id());
     }
 

@@ -118,9 +118,11 @@ public record Note(
      * @param r the row
      */
     public record Cell(int q, int r) {
-        /** The hex distance from {@code (0, 0)}. */
-        public int distance() {
-            return (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+        /** The hex distance from {@code (0, 0)}, in {@code long} so no coordinate overflows. */
+        public long distance() {
+            long lq = q;
+            long lr = r;
+            return (Math.abs(lq) + Math.abs(lr) + Math.abs(lq + lr)) / 2;
         }
     }
 
