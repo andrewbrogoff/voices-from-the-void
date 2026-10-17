@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.management.ManagementFactory;
 import org.junit.jupiter.api.Test;
 
 class TickHistogramTest {
@@ -90,16 +89,7 @@ class TickHistogramTest {
     @Test
     void recordingAllocatesNothing() {
         TickHistogram h = new TickHistogram();
-        var threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
-        long thread = Thread.currentThread().threadId();
-        long allocated = Long.MAX_VALUE;
-        // Warm-up rounds first; one-off costs (class loading, compilation) land there.
-        for (int round = 0; round < 5; round++) {
-            long before = threads.getThreadAllocatedBytes(thread);
-            recordMany(h);
-            allocated = threads.getThreadAllocatedBytes(thread) - before;
-        }
-        assertEquals(0, allocated, "bytes allocated while recording 100,000 values");
+        Allocations.assertNone("recording 100,000 values", () -> recordMany(h));
     }
 
     private static void recordMany(TickHistogram h) {
