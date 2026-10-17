@@ -31,14 +31,6 @@ public final class EntryRules {
     static final int MAX_CELLS =
             3 * ResearchLimits.MAX_GRID_RADIUS * (ResearchLimits.MAX_GRID_RADIUS + 1) + 1;
 
-    /**
-     * The most silent cells any preset may ask for (the tuning's range).
-     *
-     * <p>ponytail: the warning uses the range's top until the tuning file exists; read the hard
-     * preset's {@code silent_cells} once it does.
-     */
-    static final int MAX_SILENT = 12;
-
     private EntryRules() {}
 
     /**
@@ -267,7 +259,8 @@ public final class EntryRules {
             found.add("its anchors don't connect in the taught view");
         } else if (chain.size() == anchors.size()) {
             found.add("its reference vector is empty: every anchor links to the next");
-        } else if (chain.size() + MAX_SILENT > MAX_CELLS) {
+        } else if (chain.size() + Note.MAX_SILENT > MAX_CELLS) {
+            // ponytail: the tuning range's top silent cells, until research.json exists (T14).
             warnings.add(
                     name(id)
                             + ": its full-knowledge chain of "

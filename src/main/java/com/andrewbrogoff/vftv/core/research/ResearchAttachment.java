@@ -192,6 +192,9 @@ public record ResearchAttachment(Retained<ResearchRecord> record, @Nullable Rese
     private static final StreamCodec<ByteBuf, List<Note>> NOTES =
             NOTE_STREAM.apply(ByteBufCodecs.list(ResearchLimits.MAX_OPEN_NOTES));
 
+    private static final StreamCodec<ByteBuf, List<String>> DROPPED =
+            ID_STREAM.apply(ByteBufCodecs.list(ResearchLimits.MAX_OPEN_NOTES));
+
     /** The owner-only sync: an unreadable flag, a baseline of the synced fields, or a delta. */
     public static final DeltaSync<ResearchAttachment> SYNC =
             new DeltaSync<>() {
@@ -290,7 +293,7 @@ public record ResearchAttachment(Retained<ResearchRecord> record, @Nullable Rese
         }
         BOOKMARKS.encode(buf, d.bookmarks());
         NOTES.encode(buf, d.notes());
-        ID_STREAM.apply(ByteBufCodecs.list(ResearchLimits.MAX_OPEN_NOTES)).encode(buf, d.dropped());
+        DROPPED.encode(buf, d.dropped());
     }
 
     static ResearchDelta readDelta(ByteBuf buf) {
@@ -302,8 +305,7 @@ public record ResearchAttachment(Retained<ResearchRecord> record, @Nullable Rese
         }
         List<String> bookmarks = BOOKMARKS.decode(buf);
         List<Note> notes = NOTES.decode(buf);
-        List<String> dropped =
-                ID_STREAM.apply(ByteBufCodecs.list(ResearchLimits.MAX_OPEN_NOTES)).decode(buf);
+        List<String> dropped = DROPPED.decode(buf);
         if (stage < 0 || stage > 4 || revision < 0) {
             throw new DecoderException("research delta out of range");
         }
