@@ -216,6 +216,28 @@ class EntryRulesTest {
     }
 
     @Test
+    void onlyTheChoirPagesCategoryHasNoStage() {
+        ResearchEntry.Icon icon = new ResearchEntry.Icon(false, "a:b");
+        Map<String, CategoryEntry> categories = Fixtures.categories();
+        categories.put("x:extra", new CategoryEntry(null, icon, 9));
+        categories.put("vftv:choir_pages", new CategoryEntry(3, icon, 4));
+        List<String> errors =
+                EntryRules.validate(
+                                Fixtures.build(Fixtures.world()),
+                                categories,
+                                Fixtures.aspects(),
+                                java.util.Set.of(),
+                                java.util.Set.of())
+                        .errors();
+        assertTrue(
+                errors.stream().anyMatch(e -> e.contains("research category x:extra")),
+                errors::toString);
+        assertTrue(
+                errors.stream().anyMatch(e -> e.contains("research category vftv:choir_pages")),
+                errors::toString);
+    }
+
+    @Test
     void warnings() {
         Map<String, Fixtures.B> world = Fixtures.world();
         Fixtures.B early =

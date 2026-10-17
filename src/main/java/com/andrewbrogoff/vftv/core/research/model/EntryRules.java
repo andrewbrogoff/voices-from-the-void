@@ -117,6 +117,18 @@ public final class EntryRules {
                 .sorted()
                 .filter(id -> !categories.containsKey(id))
                 .forEach(id -> errors.add("the required built-in category " + id + " is missing"));
+        new TreeMap<>(categories)
+                .forEach(
+                        (id, c) -> {
+                            if ((c.stage() == null) != id.equals(CHOIR_PAGES)) {
+                                errors.add(
+                                        "research category "
+                                                + id
+                                                + ": only "
+                                                + CHOIR_PAGES
+                                                + " has no stage");
+                            }
+                        });
         return new Report(errors, warnings);
     }
 

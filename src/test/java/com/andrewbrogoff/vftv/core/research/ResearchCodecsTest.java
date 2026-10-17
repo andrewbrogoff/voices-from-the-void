@@ -167,6 +167,15 @@ class ResearchCodecsTest {
         rejects(
                 entry(", \"triggers\": [{\"type\": \"vftv:scanned\", \"key\": \"gem\"}]"),
                 "not a scan key");
+        assertTrue(
+                parse(
+                                ResearchCodecs.ENTRY,
+                                entry(
+                                                ", \"kind\": \"find\", \"triggers\": [{\"type\":"
+                                                        + " \"vftv:scanned\", \"key\": \"node:-42\"}]")
+                                        .replace("\"kind\": \"free\",", ""))
+                        .isSuccess(),
+                "a signed node key, as ScanKey.Node prints it");
         rejects(
                 entry(", \"triggers\": [{\"type\": \"vftv:scanned\", \"tag\": \"item:c:gems\"}]"),
                 "not a scan tag");

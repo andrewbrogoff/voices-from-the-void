@@ -40,7 +40,7 @@ public final class ResearchCodecs {
 
     /** A scan key: {@code item:}, {@code block:} or {@code entity:} and an id, or {@code node:}. */
     static final Codec<String> SCAN_KEY =
-            pattern("(item|block|entity):" + ID_TEXT + "|node:[0-9]+", "a scan key");
+            pattern("(item|block|entity):" + ID_TEXT + "|node:-?[0-9]{1,19}", "a scan key");
 
     /** A scan key of a thing (never a node). */
     static final Codec<String> THING_KEY = pattern("(item|block|entity):" + ID_TEXT, "a scan key");
