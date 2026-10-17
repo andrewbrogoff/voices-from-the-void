@@ -1,7 +1,7 @@
 package com.andrewbrogoff.vftv.core.research;
 
 import com.andrewbrogoff.vftv.api.research.ResearchLimits;
-import com.andrewbrogoff.vftv.core.common.DeltaSync;
+import com.andrewbrogoff.vftv.core.common.DataSlots.DeltaSync;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.research.model.Note;

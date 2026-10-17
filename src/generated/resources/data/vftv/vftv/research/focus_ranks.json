@@ -1,0 +1,28 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:distillation",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:foci",
+    "vftv:resonant_brass"
+  ],
+  "position": [
+    1,
+    4
+  ],
+  "stage": 2
+}

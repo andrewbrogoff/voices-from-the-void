@@ -1,0 +1,27 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:resonance",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:arcane_crafting"
+  ],
+  "position": [
+    1,
+    7
+  ],
+  "stage": 1
+}

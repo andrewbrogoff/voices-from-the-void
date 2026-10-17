@@ -1,0 +1,23 @@
+{
+  "category": "vftv:choir_pages",
+  "icon": {
+    "item": "vftv:choir_page"
+  },
+  "kind": "find",
+  "pages": [
+    {
+      "type": "vftv:choir"
+    }
+  ],
+  "position": [
+    1,
+    0
+  ],
+  "stage": 4,
+  "triggers": [
+    {
+      "type": "vftv:choir_page",
+      "page": "vftv:choir/where_they_went"
+    }
+  ]
+}

@@ -1,0 +1,28 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:ruins",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:infused_enchanting",
+    "vftv:brass_armor"
+  ],
+  "position": [
+    -1,
+    3
+  ],
+  "stage": 3
+}

@@ -1,0 +1,37 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:choirs_road",
+  "hinted_by": "vftv:baffling",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:choirs_road",
+    "vftv:baffling"
+  ],
+  "position": [
+    -2,
+    2
+  ],
+  "reveal": [
+    {
+      "type": "vftv:warp_at_least",
+      "kind": "lasting_plus_permanent",
+      "value": 4
+    }
+  ],
+  "secret": true,
+  "stage": 4
+}

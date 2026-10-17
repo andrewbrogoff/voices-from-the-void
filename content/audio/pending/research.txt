@@ -1,0 +1,12 @@
+# The research feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:book.page_turn
+vftv:book.place
+vftv:book.link
+vftv:book.solve
+vftv:book.learn
+vftv:book.stage_1
+vftv:book.stage_2
+vftv:book.stage_3
+vftv:book.stage_4
+vftv:book.tip_in
+vftv:book.listen

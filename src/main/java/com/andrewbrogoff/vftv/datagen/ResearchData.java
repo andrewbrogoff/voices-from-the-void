@@ -3,6 +3,8 @@ package com.andrewbrogoff.vftv.datagen;
 import com.andrewbrogoff.vftv.api.research.Research;
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.core.Vftv;
+import com.andrewbrogoff.vftv.core.aspect.AspectContent;
+import com.andrewbrogoff.vftv.core.aspect.StrikeRecipe;
 import com.andrewbrogoff.vftv.core.research.ResearchCodecs;
 import com.andrewbrogoff.vftv.core.research.ResearchConfig;
 import com.andrewbrogoff.vftv.core.research.ResearchItems;
@@ -34,10 +36,14 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.level.ItemLike;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
@@ -152,6 +158,17 @@ final class ResearchData implements FeatureData {
             {"book.vftv.cell.unanswered", 1, "%s, unanswered"},
             {"narration.vftv.book.palette", 3, "%s, %s: I hold %s."},
             {"narration.vftv.book.bookmark", 2, "Bookmark %s: %s"},
+            {"subtitles.vftv.book.page_turn", 0, "Page turns"},
+            {"subtitles.vftv.book.place", 0, "Note placed"},
+            {"subtitles.vftv.book.link", 0, "Notes link"},
+            {"subtitles.vftv.book.solve", 0, "Note resolves"},
+            {"subtitles.vftv.book.learn", 0, "Entry learned"},
+            {"subtitles.vftv.book.stage_1", 0, "A new chapter opens"},
+            {"subtitles.vftv.book.stage_2", 0, "A new chapter opens"},
+            {"subtitles.vftv.book.stage_3", 0, "A new chapter opens"},
+            {"subtitles.vftv.book.stage_4", 0, "A new chapter opens"},
+            {"subtitles.vftv.book.tip_in", 0, "Page tipped in"},
+            {"subtitles.vftv.book.listen", 0, "The silence answers"},
         };
         for (Object[] row : table) {
             rows.add(LangEntry.codeDefined((String) row[0], (Integer) row[1], UI, (String) row[2]));
@@ -159,12 +176,36 @@ final class ResearchData implements FeatureData {
         return rows;
     }
 
+    /**
+     * The two built-in {@code vftv:strike} instances (aspects spec, "The Commonplace Book"): a
+     * plain book, and a Book and Quill, which the strike refuses while it holds writing.
+     */
+    @Override
+    public void recipes(HolderLookup.Provider registries, RecipeOutput output) {
+        strike(output, "commonplace_book", Items.BOOK);
+        strike(output, "commonplace_book_from_book_and_quill", Items.WRITABLE_BOOK);
+    }
+
+    private static void strike(RecipeOutput output, String name, Item from) {
+        output.accept(
+                ResourceKey.create(
+                        Registries.RECIPE, Identifier.fromNamespaceAndPath(Vftv.MOD_ID, name)),
+                new StrikeRecipe(
+                        new Recipe.CommonInfo(false),
+                        Ingredient.of(from),
+                        new ItemStackTemplate(ResearchItems.commonplaceBook())),
+                null);
+    }
+
     /** The hidden find and ending advancements: no display, no parent, no rewards. */
     @Override
     public void advancements(HolderLookup.Provider registries, Consumer<AdvancementHolder> output) {
         HolderGetter<Item> items = registries.lookupOrThrow(Registries.ITEM);
-        // ponytail: the Tuning Fork joins the shard once the aspects feature registers it.
-        find(output, "find/resonance", "geode", has(items, Items.AMETHYST_SHARD));
+        find(
+                output,
+                "find/resonance",
+                "geode",
+                has(items, Items.AMETHYST_SHARD, AspectContent.tuningFork()));
         find(
                 output,
                 "find/distillation",

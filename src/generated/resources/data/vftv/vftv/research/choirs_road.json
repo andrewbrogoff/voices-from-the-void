@@ -1,0 +1,29 @@
+{
+  "category": "vftv:choirs_road",
+  "hinted_by": "vftv:choir/beneath_the_notes",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "find",
+  "opens_stage": 4,
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:ruins",
+    "vftv:silence_beneath"
+  ],
+  "position": [
+    0,
+    0
+  ],
+  "stage": 4,
+  "triggers": [
+    {
+      "type": "vftv:advancement",
+      "advancement": "vftv:find/choirs_road"
+    }
+  ]
+}

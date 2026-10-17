@@ -1,0 +1,28 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:ruins",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:focus_ranks",
+    "vftv:ruins"
+  ],
+  "position": [
+    -3,
+    1
+  ],
+  "stage": 3
+}

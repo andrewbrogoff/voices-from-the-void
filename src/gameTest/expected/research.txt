@@ -8,3 +8,4 @@ vftv:research_attachment_unreadable
 vftv:research_advancements
 vftv:research_items
 vftv:research_config_mode
+vftv:research_strike_makes_the_book

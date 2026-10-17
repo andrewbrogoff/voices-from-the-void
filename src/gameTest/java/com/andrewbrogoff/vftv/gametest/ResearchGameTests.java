@@ -3,6 +3,8 @@ package com.andrewbrogoff.vftv.gametest;
 import com.andrewbrogoff.vftv.api.neoforge.research.ResearchCapabilities;
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.api.research.ResearchView;
+import com.andrewbrogoff.vftv.core.aspect.AspectContent;
+import com.andrewbrogoff.vftv.core.aspect.Strikes;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.research.ResearchAttachment;
 import com.andrewbrogoff.vftv.core.research.ResearchCodecs;
@@ -22,16 +24,20 @@ import java.util.function.Consumer;
 import net.minecraft.advancements.AdvancementHolder;
 import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.network.Filterable;
 import net.minecraft.util.ProblemReporter;
+import net.minecraft.world.entity.SlotAccess;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.neoforged.bus.api.IEventBus;
@@ -56,6 +62,7 @@ final class ResearchGameTests {
         tests.put("research_advancements", ResearchGameTests::advancements);
         tests.put("research_items", ResearchGameTests::items);
         tests.put("research_config_mode", ResearchGameTests::configMode);
+        tests.put("research_strike_makes_the_book", ResearchGameTests::strikeMakesTheBook);
     }
 
     /**
@@ -323,6 +330,7 @@ final class ResearchGameTests {
             }
         }
         assertDone(helper, new ItemStack(Items.AMETHYST_SHARD), "find/resonance", true);
+        assertDone(helper, new ItemStack(AspectContent.tuningFork()), "find/resonance", true);
         assertDone(helper, new ItemStack(Items.POINTED_DRIPSTONE), "find/distillation", true);
         assertDone(helper, page("choir/beneath_the_notes"), "find/ruins", true);
         assertDone(helper, page("choir/beneath_the_notes"), "find/choirs_road", false);
@@ -371,6 +379,37 @@ final class ResearchGameTests {
                 new ItemStack(ResearchItems.choirPage()).get(ResearchItems.page()) == null,
                 "a blank page");
         helper.succeed();
+    }
+
+    /**
+     * The two built-in strike instances: an inventory strike turns a plain book, and a blank Book
+     * and Quill, into the Commonplace Book; a written one is refused and kept.
+     */
+    private static void strikeMakesTheBook(GameTestHelper helper) {
+        helper.assertTrue(
+                struck(helper, new ItemStack(Items.BOOK)).is(ResearchItems.commonplaceBook()),
+                "a book becomes the Commonplace Book");
+        helper.assertTrue(
+                struck(helper, new ItemStack(Items.WRITABLE_BOOK))
+                        .is(ResearchItems.commonplaceBook()),
+                "a blank Book and Quill becomes the Commonplace Book");
+        ItemStack written = new ItemStack(Items.WRITABLE_BOOK);
+        written.set(
+                DataComponents.WRITABLE_BOOK_CONTENT,
+                new WritableBookContent(List.of(Filterable.passThrough("my notes"))));
+        helper.assertTrue(struck(helper, written).is(Items.WRITABLE_BOOK), "writing is never lost");
+        helper.succeed();
+    }
+
+    private static ItemStack struck(GameTestHelper helper, ItemStack stack) {
+        ServerPlayer player = ResearchTestSupport.player(helper);
+        List<ItemStack> slot = new java.util.ArrayList<>(List.of(stack));
+        Strikes.strikeStack(
+                player,
+                new ItemStack(AspectContent.tuningFork()),
+                SlotAccess.forListElement(slot, 0),
+                s -> true);
+        return slot.getFirst();
     }
 
     /** {@code research.mode} defaults to standard, and an installed switch is read back. */

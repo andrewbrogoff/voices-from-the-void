@@ -1,0 +1,31 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:choirs_road",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:choirs_road"
+  ],
+  "position": [
+    0,
+    1
+  ],
+  "stage": 4,
+  "warp": {
+    "lasting": 2,
+    "temporary": 2
+  }
+}

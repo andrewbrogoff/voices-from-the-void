@@ -1,0 +1,40 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:choirs_road",
+  "hinted_by": "vftv:the_road",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:hollow_bell",
+    "vftv:echo_wands"
+  ],
+  "position": [
+    1,
+    3
+  ],
+  "reveal": [
+    {
+      "type": "vftv:warp_at_least",
+      "kind": "lasting_plus_permanent",
+      "value": 4
+    }
+  ],
+  "secret": true,
+  "stage": 4,
+  "warp": {
+    "lasting": 2
+  }
+}

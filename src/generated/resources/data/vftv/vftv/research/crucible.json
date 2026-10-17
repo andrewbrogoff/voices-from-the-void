@@ -1,0 +1,28 @@
+{
+  "anchors": [
+    "vftv:aer",
+    "vftv:ignis"
+  ],
+  "category": "vftv:distillation",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "note",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:distillation",
+    "vftv:arcane_crafting"
+  ],
+  "position": [
+    0,
+    1
+  ],
+  "stage": 2
+}

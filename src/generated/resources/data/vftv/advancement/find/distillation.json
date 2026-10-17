@@ -1,0 +1,23 @@
+{
+  "criteria": {
+    "dripstone": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:pointed_dripstone",
+              "minecraft:dripstone_block"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "dripstone"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

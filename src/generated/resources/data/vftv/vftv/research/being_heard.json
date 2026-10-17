@@ -1,0 +1,26 @@
+{
+  "category": "vftv:ruins",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "listen",
+  "pages": [
+    {
+      "type": "vftv:text"
+    },
+    {
+      "type": "vftv:action"
+    }
+  ],
+  "parents": [
+    "vftv:ruins"
+  ],
+  "position": [
+    3,
+    0
+  ],
+  "stage": 3,
+  "warp": {
+    "temporary": 3
+  }
+}

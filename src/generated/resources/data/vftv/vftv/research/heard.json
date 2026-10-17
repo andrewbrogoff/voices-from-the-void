@@ -1,0 +1,34 @@
+{
+  "category": "vftv:choirs_road",
+  "hinted_by": "vftv:the_heart",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "find",
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:the_heart"
+  ],
+  "position": [
+    -1,
+    5
+  ],
+  "reveal": [
+    {
+      "type": "vftv:advancement",
+      "advancement": "vftv:end/joined"
+    }
+  ],
+  "secret": true,
+  "stage": 4,
+  "triggers": [
+    {
+      "type": "vftv:advancement",
+      "advancement": "vftv:end/joined"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "category": "vftv:resonance",
+  "icon": {
+    "item": "vftv:commonplace_book"
+  },
+  "kind": "find",
+  "pages": [
+    {
+      "type": "vftv:text"
+    }
+  ],
+  "parents": [
+    "vftv:taking_notes"
+  ],
+  "position": [
+    0,
+    3
+  ],
+  "stage": 1,
+  "triggers": [
+    {
+      "type": "vftv:scanned",
+      "node": true
+    }
+  ]
+}

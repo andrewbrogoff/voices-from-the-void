@@ -1,0 +1,8 @@
+{
+  "type": "vftv:strike",
+  "ingredient": "minecraft:writable_book",
+  "result": {
+    "id": "vftv:commonplace_book"
+  },
+  "show_notification": false
+}

@@ -1,0 +1,23 @@
+{
+  "criteria": {
+    "page": {
+      "conditions": {
+        "items": [
+          {
+            "components": {
+              "vftv:page": "vftv:choir/where_they_went"
+            },
+            "items": "vftv:choir_page"
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "page"
+    ]
+  ],
+  "sends_telemetry_event": true
+}

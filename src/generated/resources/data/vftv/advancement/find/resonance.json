@@ -1,0 +1,23 @@
+{
+  "criteria": {
+    "geode": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "minecraft:amethyst_shard",
+              "vftv:tuning_fork"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    }
+  },
+  "requirements": [
+    [
+      "geode"
+    ]
+  ],
+  "sends_telemetry_event": true
+}
