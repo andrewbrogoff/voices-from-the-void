@@ -32,9 +32,16 @@ import net.minecraft.resources.Identifier;
  * error. Cross-field and cross-entry rules are {@code EntryRules}'.
  */
 public final class ResearchCodecs {
-    /** A namespaced id, kept as its {@code ns:path} string. */
+    /**
+     * A namespaced id, kept as its {@code ns:path} string: written with its namespace, never
+     * defaulted to {@code minecraft}, so a saved record round-trips exactly.
+     */
     public static final Codec<String> ID =
-            Identifier.CODEC.xmap(Identifier::toString, Identifier::parse);
+            Codec.STRING.validate(
+                    s ->
+                            s.indexOf(':') > 0 && Identifier.tryParse(s) != null
+                                    ? DataResult.success(s)
+                                    : DataResult.error(() -> s + " is not a namespaced id"));
 
     private static final String ID_TEXT = "[a-z0-9_.-]+:[a-z0-9_./-]+";
 

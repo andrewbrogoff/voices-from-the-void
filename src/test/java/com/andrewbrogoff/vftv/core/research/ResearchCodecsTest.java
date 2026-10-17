@@ -136,6 +136,7 @@ class ResearchCodecsTest {
     @Test
     void strictAboutFieldsTypesAndRanges() {
         rejects(entry(", \"colour\": 1"), "unknown fields [colour]");
+        rejects(entry(", \"parents\": [\"resonance\"]"), "resonance is not a namespaced id");
         rejects(
                 entry(", \"triggers\": [{\"type\": \"vftv:nothing\"}]"),
                 "unknown trigger type vftv:nothing");
