@@ -3,7 +3,9 @@ package com.andrewbrogoff.vftv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.andrewbrogoff.vftv.api.TestItems;
 import com.andrewbrogoff.vftv.core.Vftv;
+import com.andrewbrogoff.vftv.core.common.model.PendingAudio;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -49,7 +51,8 @@ class ResourceReferencesTest {
             Set<String> visibleBlocks,
             Map<String, String> itemModels,
             Set<String> soundEvents,
-            Set<String> nameKeys) {}
+            Set<String> nameKeys,
+            Set<String> pendingAudio) {}
 
     /**
      * Every broken reference, sorted. {@code exists} answers for any {@code assets/...} path;
@@ -130,9 +133,24 @@ class ResourceReferencesTest {
                 exists.test(soundsFile)
                         ? JsonParser.parseString(read.apply(soundsFile)).getAsJsonObject()
                         : new JsonObject();
+        // A pending event (PendingAudio) has no entry yet, but keeps its subtitle key.
         for (String event : registered.soundEvents()) {
-            if (!sounds.has(Identifier.parse(event).getPath())) {
+            String path = Identifier.parse(event).getPath();
+            if (registered.pendingAudio().contains(event)) {
+                if (sounds.has(path)) {
+                    problems.add("pending audio " + event + " has a sounds.json entry");
+                }
+                String subtitle = "subtitles." + namespace + "." + path;
+                if (!langKeys.contains(subtitle)) {
+                    problems.add("missing lang key " + subtitle);
+                }
+            } else if (!sounds.has(path)) {
                 problems.add("missing sounds.json entry for " + event);
+            }
+        }
+        for (String event : registered.pendingAudio()) {
+            if (event.startsWith(namespace + ":") && !registered.soundEvents().contains(event)) {
+                problems.add("pending audio " + event + " is not a registered sound event");
             }
         }
         for (Map.Entry<String, JsonElement> event : sounds.entrySet()) {
@@ -245,6 +263,7 @@ class ResourceReferencesTest {
 
     @Test
     void everyReferencedResourceExists() throws IOException {
+        TestItems.bindComponents();
         Set<String> visibleBlocks = new TreeSet<>();
         Set<String> nameKeys = new TreeSet<>();
         ours(BuiltInRegistries.BLOCK)
@@ -272,7 +291,8 @@ class ResourceReferencesTest {
                         visibleBlocks,
                         itemModels,
                         ours(BuiltInRegistries.SOUND_EVENT).keySet(),
-                        nameKeys);
+                        nameKeys,
+                        PendingAudio.read(PROJECT));
         Predicate<String> exists =
                 path ->
                         existsInProject(path)
@@ -294,7 +314,9 @@ class ResourceReferencesTest {
     @Test
     void theValidatorRejectsEveryKindOfBrokenReference() {
         Map<String, String> files = new TreeMap<>();
-        files.put("assets/t/lang/en_us.json", "{\"block.t.ok\":\"Ok\",\"subtitles.t.ok\":\"Ok\"}");
+        files.put(
+                "assets/t/lang/en_us.json",
+                "{\"block.t.ok\":\"Ok\",\"subtitles.t.ok\":\"Ok\",\"subtitles.t.quiet\":\"Q\"}");
         files.put(
                 "assets/t/blockstates/ok.json",
                 "{\"variants\":{\"\":[{\"model\":\"t:block/ok\"},{\"model\":\"t:block/gone\"}]}}");
@@ -317,8 +339,9 @@ class ResourceReferencesTest {
                 new Registered(
                         Set.of("t:ok", "t:no_state"),
                         Map.of("t:ok", "t:ok", "t:plain", "t:plain"),
-                        Set.of("t:ok", "t:unlisted"),
-                        Set.of("block.t.ok", "item.t.plain"));
+                        Set.of("t:ok", "t:unlisted", "t:quiet", "t:hushed", "t:loud"),
+                        Set.of("block.t.ok", "item.t.plain"),
+                        Set.of("t:quiet", "t:hushed", "t:loud", "t:stale"));
         assertEquals(
                 List.of(
                         "missing assets/t/blockstates/no_state.json",
@@ -328,8 +351,11 @@ class ResourceReferencesTest {
                         "missing assets/t/sounds/loud.ogg",
                         "missing assets/t/textures/block/no_top.png (texture of t:block/ok)",
                         "missing lang key item.t.plain",
+                        "missing lang key subtitles.t.hushed",
                         "missing lang key subtitles.t.loud",
-                        "missing sounds.json entry for t:unlisted"),
+                        "missing sounds.json entry for t:unlisted",
+                        "pending audio t:loud has a sounds.json entry",
+                        "pending audio t:stale is not a registered sound event"),
                 problems("t", registered, files::containsKey, files::get, files.keySet()));
     }
 }

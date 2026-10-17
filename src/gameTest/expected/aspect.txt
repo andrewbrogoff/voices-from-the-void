@@ -1,1 +1,15 @@
 # The discovery guard's ids for the aspect feature: one vftv:aspect_<what> id per line.
+vftv:aspect_registry_and_maps_load
+vftv:aspect_bad_entries_rejected
+vftv:aspect_lookup_order
+vftv:aspect_strike_block
+vftv:aspect_strike_entity_and_drop
+vftv:aspect_chest_stays_shut
+vftv:aspect_inventory_strike
+vftv:aspect_partial_then_complete
+vftv:aspect_strike_conversion
+vftv:aspect_knowledge_persists
+vftv:aspect_two_player_privacy
+vftv:aspect_phantom_is_silent
+vftv:aspect_sounding_and_nodes
+vftv:aspect_credit_never_teaches

@@ -1,0 +1,15 @@
+{
+  "derivation.factor": 0.75,
+  "derivation.smelt_bonus": {
+    "vftv:ignis": 1
+  },
+  "discovery_bonus": 4,
+  "node_reward_divisor": 8,
+  "readout_hold_ticks": 60,
+  "sounding.answer_offset": 6,
+  "sounding.mid": 64,
+  "sounding.near": 16,
+  "sounding.particles": 3,
+  "sounding.radius": 192,
+  "strike_cooldown_ticks": 16
+}

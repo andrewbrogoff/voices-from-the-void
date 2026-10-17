@@ -1,5 +1,6 @@
 package com.andrewbrogoff.vftv.core.aspect;
 
+import com.andrewbrogoff.vftv.api.aspect.AspectKeys;
 import com.andrewbrogoff.vftv.core.common.Platform;
 
 /**
@@ -12,5 +13,12 @@ public final class AspectFeature {
     private AspectFeature() {}
 
     /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    public static void init(Platform platform) {
+        platform.registrar()
+                .dataPackRegistry(
+                        AspectKeys.REGISTRY, AspectEntry.ELEMENT_CODEC, AspectEntry.ELEMENT_CODEC);
+        AspectContent.register(platform.registrar());
+        KnowledgeService.init(platform.dataSlots());
+        Strikes.init(platform.network());
+    }
 }

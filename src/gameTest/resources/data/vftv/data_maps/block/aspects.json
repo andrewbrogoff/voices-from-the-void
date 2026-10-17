@@ -1,0 +1,6 @@
+{
+  "values": {
+    "minecraft:glass": {"vftv:vitreus": 2},
+    "minecraft:water": {"vftv:aqua": 3}
+  }
+}

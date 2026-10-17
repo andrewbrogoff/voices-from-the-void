@@ -17,6 +17,9 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/gui/sprites/aspect/*.png` (37 aspects and `unheard`), `tools/art/aspect_identity.json` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/aspects.py` (letter grids per the aspects spec's glyph briefs; `machina` procedural); deterministic, no seed | `lib.outline()`, palette lock in `lib.save()`; greyscale contact sheet `build/previews/aspects.png` reviewed at GUI scale 1 and 4 | 2026-10-17 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/item/tuning_fork.png`, `tuning_fork_ringing.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/fork.py`, from the chosen prototype `prototype/art-pipeline:prototype/art/B-ink-and-brass/gen/textures.py` `tuning_fork()` | `lib.outline()`, palette lock; contact sheet `build/previews/fork.png` beside the vanilla-style slot | 2026-10-17 | owner chose the prototype direction (art style §1) |
+| `src/main/resources/assets/vftv/textures/gui/sprites/hud/vis_frame.png` (+ datagen `.mcmeta`, nine-slice border 4) | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/fork.py` `card_frame()` | palette lock; interior opaque `ink1`, checked by `AccessibilityGatesTest` | 2026-10-17 | none (agent-authored) |
 
 ## warp
 

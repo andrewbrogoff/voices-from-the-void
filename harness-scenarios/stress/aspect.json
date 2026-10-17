@@ -1,4 +1,15 @@
 {
   "feature": "aspect",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "give @s vftv:tuning_fork 2"}},
+    {"op": "cmd", "args": {"command": "fill 3 120 -2 3 120 2 minecraft:stone"}},
+    {"op": "cmd", "args": {"command": "setblock 3 121 0 minecraft:chest"}},
+    {"op": "cmd", "args": {"command": "summon minecraft:cow -3 120 0 {NoAI:1b}"}},
+    {"op": "cmd", "args": {"command": "give @s minecraft:oak_log 36"}},
+    {"op": "hotbar", "args": {"slot": 0}},
+    {"op": "use", "args": {"target": "block", "pos": [3, 120, 0], "face": "west", "hand": "main_hand"}},
+    {"op": "wait_ticks", "args": {"ticks": 17}},
+    {"op": "use", "args": {"target": "air", "hand": "main_hand"}},
+    {"op": "wait_ticks", "args": {"ticks": 17}}
+  ]
 }
