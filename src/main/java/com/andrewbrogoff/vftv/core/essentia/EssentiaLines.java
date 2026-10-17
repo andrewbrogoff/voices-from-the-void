@@ -184,6 +184,7 @@ public final class EssentiaLines {
             touched |= b.visited.contains(BlockPos.offset(pos, d));
         }
         if (touched) {
+            retire(b.overgrown);
             build = null;
             rebuild.addFirst(b.start);
         }
@@ -761,12 +762,13 @@ public final class EssentiaLines {
             }
             line.skipped = skipped;
             long[] at = line.ends.stream().mapToLong(End::pos).toArray();
+            // Cleared first: a jar's root-commit publication wakes this line, which must be a
+            // no-op here, or the line would hold two entries.
+            boolean wasSleeping = line.sleeping;
+            line.sleeping = false;
             LineModel.Outcome o =
                     model.pulse(
-                            port(probes, index, at),
-                            line.sleeping,
-                            t.tubeIdleEvery(),
-                            t.tubeRate());
+                            port(probes, index, at), wasSleeping, t.tubeIdleEvery(), t.tubeRate());
             if (o.moved() > 0) {
                 ResourceKey<Aspect> aspect =
                         index.holders().get(o.aspect()).unwrapKey().orElseThrow();
