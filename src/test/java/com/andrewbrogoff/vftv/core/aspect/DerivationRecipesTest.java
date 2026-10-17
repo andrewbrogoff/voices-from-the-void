@@ -206,6 +206,30 @@ class DerivationRecipesTest {
     }
 
     @Test
+    void captureStopsAtTheFirstRecipePastTheEdgeBound() {
+        Ingredient everything =
+                Ingredient.of(BuiltInRegistries.ITEM.stream().filter(i -> !i.equals(Items.AIR)));
+        int alternatives = (int) everything.getValues().stream().count();
+        List<RecipeHolder<?>> holders = new java.util.ArrayList<>();
+        for (int i = 0; i < 3000; i++) {
+            holders.add(
+                    new RecipeHolder<>(
+                            ResourceKey.create(
+                                    Registries.RECIPE, Identifier.parse("test:r" + 10_000 + i)),
+                            new StonecutterRecipe(
+                                    INFO, everything, new ItemStackTemplate(Items.STONE))));
+        }
+        DerivationRecipes.Capture capture = DerivationRecipes.capture(holders, REGISTRIES);
+        assertEquals(
+                (int) (Derivation.MAX_EDGES / alternatives) + 1,
+                capture.recipes().size(),
+                "stopped one recipe past the bound");
+        assertTrue(
+                Derivation.overLimit(
+                        capture.recipes().size(), Derivation.edges(capture.recipes())));
+    }
+
+    @Test
     void capturesInIdOrderAndCountsRejections() {
         RecipeHolder<?> a =
                 new RecipeHolder<>(

@@ -336,8 +336,9 @@ class DerivationTest {
     }
 
     @Test
-    void totalsSaturate() {
-        assertEquals(Integer.MAX_VALUE, Derivation.total(Map.of("a", Integer.MAX_VALUE, "b", 1)));
+    void totalsAreExact() {
+        assertEquals(
+                Integer.MAX_VALUE + 1L, Derivation.total(Map.of("a", Integer.MAX_VALUE, "b", 1)));
     }
 
     @Test

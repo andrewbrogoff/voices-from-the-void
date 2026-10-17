@@ -246,7 +246,7 @@ public final class Derivation {
         while (!ready.isEmpty()) {
             String item = ready.poll();
             SortedMap<String, Integer> best = null;
-            int bestTotal = 0;
+            long bestTotal = 0;
             for (Recipe r : byResult.getOrDefault(item, List.of())) {
                 SortedMap<String, Integer> value = evaluate(r, lookup, tuning);
                 if (value != null && (best == null || total(value) < bestTotal)) {
@@ -314,7 +314,7 @@ public final class Derivation {
             if (in == null) {
                 continue;
             }
-            long made = (long) total(result) * r.count();
+            long made = total(result) * r.count();
             long put = in.values().stream().mapToLong(Long::longValue).sum();
             if (made > put) {
                 out.add(
@@ -417,9 +417,8 @@ public final class Derivation {
     }
 
     /** A value's total. */
-    public static int total(Map<String, Integer> value) {
-        long total = value.values().stream().mapToLong(Integer::longValue).sum();
-        return (int) Math.min(Integer.MAX_VALUE, total);
+    public static long total(Map<String, Integer> value) {
+        return value.values().stream().mapToLong(Integer::longValue).sum();
     }
 
     private static int add(int a, int b) {

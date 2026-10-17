@@ -110,17 +110,25 @@ public final class DerivationRecipes {
 
     private DerivationRecipes() {}
 
-    /** Adapts every holder, in ascending recipe id. */
+    /**
+     * Adapts every holder, in ascending recipe id. The bounds are counted as it goes: it stops at
+     * the first recipe past either one, so an oversized pack never expands in full.
+     */
     public static Capture capture(
             Collection<RecipeHolder<?>> holders, HolderLookup.Provider registries) {
         List<RecipeHolder<?>> sorted = new ArrayList<>(holders);
         sorted.sort(Comparator.comparing(h -> h.id().identifier().toString()));
         List<Derivation.Recipe> recipes = new ArrayList<>();
         Map<Rejection, Integer> rejected = new EnumMap<>(Rejection.class);
+        long edges = 0;
         for (RecipeHolder<?> holder : sorted) {
             Adapted adapted = adapt(holder, registries);
             if (adapted.recipe() != null) {
                 recipes.add(adapted.recipe());
+                edges += Derivation.edges(List.of(adapted.recipe()));
+                if (Derivation.overLimit(recipes.size(), edges)) {
+                    break;
+                }
             } else {
                 rejected.merge(adapted.rejection(), 1, Integer::sum);
             }
