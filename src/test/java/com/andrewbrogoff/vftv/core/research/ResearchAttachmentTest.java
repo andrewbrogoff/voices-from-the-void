@@ -100,6 +100,7 @@ class ResearchAttachmentTest {
         unreadableAfter(t -> t.putInt("stage", 5));
         unreadableAfter(t -> t.putLong("revision", -1));
         unreadableAfter(t -> t.getListOrEmpty("learned").add(StringTag.valueOf("Not An Id")));
+        unreadableAfter(t -> t.getListOrEmpty("learned").add(StringTag.valueOf("vftv:a")));
         unreadableAfter(
                 t -> {
                     ListTag bookmarks = new ListTag();

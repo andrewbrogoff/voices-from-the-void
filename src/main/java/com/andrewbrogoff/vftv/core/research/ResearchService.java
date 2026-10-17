@@ -265,11 +265,15 @@ public final class ResearchService {
         int colon = key.indexOf(':');
         Identifier thing = Identifier.parse(key.substring(colon + 1));
         return switch (key.substring(0, colon)) {
-            // Air is never struck, and a dropped item is keyed as its item.
+            // Air (item or block) is never struck, and a dropped item is keyed as its item.
             case "item" ->
                     BuiltInRegistries.ITEM.containsKey(thing)
                             && !thing.equals(BuiltInRegistries.ITEM.getDefaultKey());
-            case "block" -> BuiltInRegistries.BLOCK.containsKey(thing);
+            case "block" ->
+                    BuiltInRegistries.BLOCK
+                            .getOptional(thing)
+                            .filter(b -> !b.defaultBlockState().isAir())
+                            .isPresent();
             case "entity" ->
                     BuiltInRegistries.ENTITY_TYPE.containsKey(thing)
                             && !thing.equals(EntityType.getKey(EntityTypes.ITEM));

@@ -8,6 +8,7 @@ import com.andrewbrogoff.vftv.core.research.model.Note;
 import com.andrewbrogoff.vftv.core.research.model.ResearchDelta;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.DecoderException;
@@ -106,7 +107,16 @@ public record ResearchAttachment(Retained<ResearchRecord> record, @Nullable Rese
                                     .apply(i, Note::new));
 
     private static final Codec<NavigableSet<String>> IDS =
-            ResearchCodecs.ID.listOf().xmap(TreeSet::new, ArrayList::new);
+            ResearchCodecs.ID
+                    .listOf(0, ResearchRecord.MAX_IDS)
+                    .comapFlatMap(
+                            list -> {
+                                NavigableSet<String> set = new TreeSet<>(list);
+                                return set.size() == list.size()
+                                        ? DataResult.success(set)
+                                        : DataResult.error(() -> "a duplicate id in " + list);
+                            },
+                            ArrayList::new);
 
     /**
      * The bounded record codec: format bounds only, every field written, so raw retention sees any
