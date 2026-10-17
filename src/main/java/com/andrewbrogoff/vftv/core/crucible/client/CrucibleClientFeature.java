@@ -56,12 +56,6 @@ public final class CrucibleClientFeature {
                 : null;
     }
 
-    /** The preview of one recipe for the local player, or null when the client lacks it. */
-    public static @Nullable CruciblePreview preview(Player reader, Identifier recipe) {
-        RecipeHolder<CrucibleRecipe> holder = CrucibleRecipes.client().get(recipe);
-        return holder == null ? null : CruciblePreview.of(reader, holder, context());
-    }
-
     private static final class Preview implements RecipePreviewSource {
         @Override
         public Set<String> fields() {

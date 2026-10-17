@@ -136,11 +136,6 @@ public final class CrucibleBlockEntity extends BlockEntity {
         return busy;
     }
 
-    /** Whether an emptying operation is open. */
-    public boolean operationOpen() {
-        return operation;
-    }
-
     /**
      * Whether the essentia handler is unavailable: removed or replaced, unreadable, in an
      * operation, or mid-step (crucible spec, "Essentia out").

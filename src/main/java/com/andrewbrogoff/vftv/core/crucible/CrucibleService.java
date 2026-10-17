@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
 import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
@@ -58,7 +57,6 @@ import net.minecraft.world.item.component.WritableBookContent;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.chunk.LevelChunk;
 import net.minecraft.world.level.gameevent.GameEvent;
@@ -461,8 +459,7 @@ public final class CrucibleService {
         boolean crafted;
         boolean dissolved;
         boolean refused;
-        final Map<UUID, Component> feedback = new LinkedHashMap<>();
-        final Map<UUID, ServerPlayer> players = new HashMap<>();
+        final Map<ServerPlayer, Component> feedback = new LinkedHashMap<>();
     }
 
     /** One step (crucible spec, "Admission" and "Processing an entity"). */
@@ -494,10 +491,7 @@ public final class CrucibleService {
         if (sound != null) {
             play(level, pos, sound);
         }
-        result.players.forEach(
-                (uuid, player) ->
-                        StatusLines.send(
-                                player, result.feedback.getOrDefault(uuid, Component.empty())));
+        result.feedback.forEach(StatusLines::send);
     }
 
     private static boolean live(
@@ -653,13 +647,12 @@ public final class CrucibleService {
         double[] v = velocity(level, pos, thrower);
         item.setDeltaMovement(v[0], v[1], v[2]);
         result.refused = true;
-        if (thrower != null && !result.feedback.containsKey(thrower.getUUID())) {
-            result.feedback.put(
-                    thrower.getUUID(),
+        if (thrower != null) {
+            result.feedback.putIfAbsent(
+                    thrower,
                     argument == null
                             ? Component.translatable(refusal.key())
                             : Component.translatable(refusal.key(), argument));
-            result.players.put(thrower.getUUID(), thrower);
         }
     }
 
@@ -832,11 +825,5 @@ public final class CrucibleService {
         if (player != null) {
             StatusLines.send(player, line);
         }
-    }
-
-    /** The block entity at a position if it is a crucible's, else null. */
-    static @Nullable CrucibleBlockEntity at(Level level, BlockPos pos) {
-        BlockEntity be = level.getBlockEntity(pos);
-        return be instanceof CrucibleBlockEntity c ? c : null;
     }
 }
