@@ -12,5 +12,9 @@ public final class WarpFeature {
     private WarpFeature() {}
 
     /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    public static void init(Platform platform) {
+        platform.network().clientbound(WarpRulesPayload.TYPE, WarpRulesPayload.STREAM_CODEC);
+        WarpRulesService.init(platform.network());
+        WarpService.init(platform.dataSlots());
+    }
 }

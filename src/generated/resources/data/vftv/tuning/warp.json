@@ -1,0 +1,41 @@
+{
+  "bands": [
+    6,
+    14,
+    24
+  ],
+  "bargain.ttl": 12000,
+  "chance.base_pm": 15,
+  "chance.max_pm": 250,
+  "chance.per_counter_pm": 1,
+  "chance.per_permanent_pm": 5,
+  "check.interval": 1200,
+  "context.dimensions": [
+    "vftv:vuulas"
+  ],
+  "context.window": 600,
+  "counter.max": 1000,
+  "counter.per_event": 30,
+  "counter.per_gain": 10,
+  "counter.per_void_work": 5,
+  "gear.max": 12,
+  "grace": 600,
+  "infusion.max_penalty": 20,
+  "infusion.per_warp_pm": 500,
+  "joining.amplifier_bonus": 10,
+  "listen.cooldown": 6000,
+  "listen.cost": {
+    "lasting": 2,
+    "temporary": 0
+  },
+  "permanent.cap": 10,
+  "permanent.milestones": {
+    "vftv:joining": 5,
+    "vftv:learning_the_tongue": 3,
+    "vftv:under_the_silence": 2
+  },
+  "still.amount": 4,
+  "tax.max_pm": 500,
+  "tax.per_warp_pm": 20,
+  "temporary.decay_interval": 400
+}

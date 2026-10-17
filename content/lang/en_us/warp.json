@@ -1,0 +1,8 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "commands.vftv.warp.get": "%s: temporary %s, lasting %s, permanent %s, gear %s, in all %s, band %s, counter %s, chance %s",
+    "commands.vftv.warp.set": "%s: %s.",
+    "tooltip.vftv.gear_warp": "Gear warp +%s"
+  }
+}
