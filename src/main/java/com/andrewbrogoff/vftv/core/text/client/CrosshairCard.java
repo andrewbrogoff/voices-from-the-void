@@ -183,7 +183,11 @@ public final class CrosshairCard {
     /** Turns one way, stopping at the ends; a turn narrates the new sheet's body once. */
     boolean turn(int delta) {
         CardLayout l = layout;
-        if (l == null || !l.paged() || !cursor.turn(delta, l.sheets())) {
+        // A layout of older content (no draw since content(...)) must not turn or narrate.
+        if (l == null
+                || layoutContent != contentSerial
+                || !l.paged()
+                || !cursor.turn(delta, l.sheets())) {
             return false;
         }
         indicator = null;
@@ -214,6 +218,7 @@ public final class CrosshairCard {
     /** Installs a layout directly, as a relayout would; for tests without a font. */
     void install(CardLayout l) {
         layout = l;
+        layoutContent = contentSerial;
         cursor.clamp(l.sheets());
         indicator = null;
     }

@@ -123,6 +123,8 @@ class NarrationTest {
             tail.add(Component.literal("t" + i));
         }
         card.content("long tail", List.of(), 40, 42, tail, List.of());
+        assertFalse(card.turn(1), "the old content's layout neither turns nor narrates");
+        assertTrue(said.isEmpty());
         CardLayout longTail =
                 CardLayout.compute(
                         320, 240, 83, new CardLayout.Card(1, 50, 40, 42, 10, 100, 0, 0), s -> 100);
