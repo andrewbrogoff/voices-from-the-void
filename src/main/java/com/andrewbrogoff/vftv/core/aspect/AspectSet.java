@@ -80,7 +80,9 @@ public final class AspectSet {
             @Override
             public List<String> prerequisites(String aspect) {
                 AspectGraph.Node node = nodes.get(aspect);
-                return node == null ? List.of() : node.prerequisites();
+                // An id the registry lacks (a snapshot outliving a pack) waits on itself: never
+                // discovered, never paid, until the pack returns.
+                return node == null ? List.of(aspect) : node.prerequisites();
             }
 
             @Override
