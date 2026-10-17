@@ -24,6 +24,10 @@ public final class Allocations {
     /** Fails unless one run of {@code round} allocates nothing; {@code what} names the round. */
     public static void assertNone(String what, Runnable round) {
         var threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
+        if (!threads.isThreadAllocatedMemorySupported()
+                || !threads.isThreadAllocatedMemoryEnabled()) {
+            fail("thread allocation measurement is unavailable, so every round would read 0");
+        }
         long thread = Thread.currentThread().threadId();
         long[] bytes = new long[ROUNDS];
         for (int i = 0; i < ROUNDS; i++) {
