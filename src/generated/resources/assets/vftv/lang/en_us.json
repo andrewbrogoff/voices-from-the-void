@@ -1,4 +1,10 @@
 {
+  "hud.vftv.card.sheet": "Sheet %s of %s (%s, %s)",
+  "hud.vftv.status.more": "More: press %s",
+  "key.category.vftv.main": "Voices From The Void",
+  "key.vftv.card.next_sheet": "Next card sheet",
+  "key.vftv.card.previous_sheet": "Previous card sheet",
+  "key.vftv.status_details": "Read the last message",
   "message.vftv.busy": "Not now.",
   "message.vftv.cost_changed": "The cost has changed.",
   "message.vftv.unreadable": "I can't read it, so I won't touch it.",
@@ -8,5 +14,7 @@
   "options.vftv.hush.spread": "Hush spreads",
   "options.vftv.hush.spread.tooltip": "Flux turns ground into the Hush. Off: no spread; flux still pools. Default: true.",
   "options.vftv.hush.unattended": "Spread without players",
-  "options.vftv.hush.unattended.tooltip": "Hush spread and Pealing Bells run with no player nearby. Default: false."
+  "options.vftv.hush.unattended.tooltip": "Hush spread and Pealing Bells run with no player nearby. Default: false.",
+  "screen.vftv.close": "Close",
+  "screen.vftv.status_details": "The last message"
 }
