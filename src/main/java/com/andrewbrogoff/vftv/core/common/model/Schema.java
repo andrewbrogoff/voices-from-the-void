@@ -97,7 +97,8 @@ public record Schema(String id, List<Field> fields, Function<JsonObject, List<St
     }
 
     /** A field type. */
-    public sealed interface Type permits Str, Int, Num, Bool, Id, OneOf, ListOf, MapOf, Obj {}
+    public sealed interface Type
+            permits Str, Int, Num, Bool, Id, OneOf, ListOf, MapOf, Obj, Checked {}
 
     /** A string of {@code min}..{@code max} code points, optionally matching a pattern. */
     public record Str(int min, int max, @Nullable Pattern pattern) implements Type {}
@@ -125,6 +126,12 @@ public record Schema(String id, List<Field> fields, Function<JsonObject, List<St
 
     /** A nested object with fixed fields; unknown fields are rejected. */
     public record Obj(List<Field> fields) implements Type {}
+
+    /**
+     * A value the owner checks itself, e.g. through its registry codec when the shape is a typed
+     * union the other types can't express. The check returns problems relative to the value.
+     */
+    public record Checked(Function<JsonElement, List<String>> check) implements Type {}
 
     private static void check(JsonElement value, Type type, String path, List<String> problems) {
         switch (type) {
@@ -177,6 +184,7 @@ public record Schema(String id, List<Field> fields, Function<JsonObject, List<St
                 }
                 checkObject(value.getAsJsonObject(), o.fields(), path, problems);
             }
+            case Checked c -> c.check().apply(value).forEach(p -> problems.add(path + ": " + p));
         }
     }
 

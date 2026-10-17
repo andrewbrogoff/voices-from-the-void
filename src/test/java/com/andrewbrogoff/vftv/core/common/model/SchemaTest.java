@@ -155,6 +155,27 @@ class SchemaTest {
     }
 
     @Test
+    void aCheckedValueRunsTheOwnersCheckUnderItsPath() {
+        Schema checked =
+                Schema.of(
+                        "vftv:checked/1",
+                        required(
+                                "value",
+                                new Schema.Checked(
+                                        v -> v.isJsonArray() ? List.of() : List.of("not mine"))));
+        Map<String, Schema> known = Map.of(checked.id(), checked);
+        assertEquals(
+                List.of(),
+                Schema.check(
+                        StrictJson.parse("{\"schema\": \"vftv:checked/1\", \"value\": []}"),
+                        known));
+        assertEquals(
+                List.of("$.value: not mine"),
+                Schema.check(
+                        StrictJson.parse("{\"schema\": \"vftv:checked/1\", \"value\": 1}"), known));
+    }
+
+    @Test
     void schemaIdsHaveTheVftvShape() {
         assertThrows(IllegalArgumentException.class, () -> Schema.of("widgets"));
         assertThrows(IllegalArgumentException.class, () -> Schema.of("vftv:widgets/0"));
