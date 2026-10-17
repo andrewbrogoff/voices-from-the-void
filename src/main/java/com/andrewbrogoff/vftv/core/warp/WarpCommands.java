@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.warp.WarpLimits;
 import com.andrewbrogoff.vftv.api.warp.WarpRules;
 import com.andrewbrogoff.vftv.api.warp.WarpSource;
 import com.andrewbrogoff.vftv.api.warp.WarpSourceKind;
+import com.andrewbrogoff.vftv.core.text.model.NumberFormats;
 import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
 import com.andrewbrogoff.vftv.core.warp.model.WarpMath;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
@@ -102,7 +103,7 @@ public final class WarpCommands {
         WarpRules rules = WarpRulesService.current();
         int total = r.total();
         int chance = WarpMath.chancePm(total, r.permanent(), r.counter(), rules);
-        String percent = String.format(Locale.ROOT, "%d.%d%%", chance / 10, chance % 10);
+        String percent = NumberFormats.percent(chance);
         c.getSource()
                 .sendSuccess(
                         () ->
