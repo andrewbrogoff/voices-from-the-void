@@ -40,7 +40,9 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.PacketFlow;
+import net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -53,10 +55,17 @@ import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.storage.TagValueInput;
 import net.minecraft.world.level.storage.TagValueOutput;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.attachment.AttachmentSync;
+import net.neoforged.neoforge.attachment.AttachmentType;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.payload.SyncAttachmentsPayload;
+import net.neoforged.neoforge.network.registration.ChannelAttributes;
+import net.neoforged.neoforge.registries.NeoForgeRegistries;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -108,6 +117,7 @@ final class WarpGameTests {
         tests.put("warp_silence", WarpGameTests::silence);
         tests.put("warp_joining", WarpGameTests::joining);
         tests.put("warp_context", WarpGameTests::context);
+        tests.put("warp_owner_only_sync", WarpGameTests::ownerOnlySync);
         tests.put("warp_persistence", WarpGameTests::persistence);
         tests.put("warp_commands", WarpGameTests::commands);
     }
@@ -496,6 +506,77 @@ final class WarpGameTests {
             placePos = null;
         }
         helper.succeed();
+    }
+
+    // ---- Owner-only sync ---------------------------------------------------------------------
+
+    /**
+     * Player B, whose client negotiated attachment sync, is never sent A's record: not in what B is
+     * sent on starting to track A (B's or A's join, A's respawn or dimension change), not by A's
+     * baselines, not by A's update. A is sent the full record on each.
+     */
+    private static void ownerOnlySync(GameTestHelper helper) {
+        ServerPlayer a = negotiated(helper);
+        ServerPlayer b = negotiated(helper);
+        WarpSource source = new WarpSource(WarpSourceKind.COMMAND, null);
+        WarpService.apply(a, new WarpCost(1, 0, 0), source);
+        drain(a);
+        AttachmentType<?> warp =
+                Objects.requireNonNull(
+                        NeoForgeRegistries.ATTACHMENT_TYPES.getValue(
+                                Identifier.fromNamespaceAndPath("vftv", "warp")));
+
+        List<Packet<?>> pairing = new ArrayList<>();
+        AttachmentSync.syncInitialEntityAttachments(a, b, pairing::add);
+        helper.assertTrue(warpIn(pairing, warp).isEmpty(), "b's pairing with a carries no warp");
+
+        AttachmentSync.syncInitialPlayerAttachments(a);
+        NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerLoggedInEvent(a));
+        NeoForge.EVENT_BUS.post(new PlayerEvent.PlayerRespawnEvent(a, false));
+        NeoForge.EVENT_BUS.post(
+                new PlayerEvent.PlayerChangedDimensionEvent(a, Level.OVERWORLD, Level.NETHER));
+        WarpService.apply(a, new WarpCost(1, 0, 0), source);
+        List<SyncAttachmentsPayload> toA = warpIn(drain(a), warp);
+        helper.assertValueEqual(
+                toA.size(), 4, "a's baselines on login, respawn, dimension, update");
+        ServerPlayer copy = player(helper);
+        SyncAttachmentsPayload last = toA.getLast();
+        AttachmentSync.receiveSyncedDataAttachments(
+                copy, a.registryAccess(), last.types(), last.syncPayload());
+        helper.assertValueEqual(record(helper, copy), record(helper, a), "a's full record");
+        helper.assertTrue(warpIn(drain(b), warp).isEmpty(), "b was sent none of a's warp");
+        helper.succeed();
+    }
+
+    /** A mock player whose client negotiated NeoForge's attachment sync, but not our channel. */
+    private static ServerPlayer negotiated(GameTestHelper helper) {
+        ServerPlayer player = player(helper);
+        ChannelAttributes.getOrCreateAdHocChannels(player.connection.getConnection())
+                .add(SyncAttachmentsPayload.TYPE.id());
+        return player;
+    }
+
+    /** Takes every packet sent to the player's connection so far. */
+    private static List<Packet<?>> drain(ServerPlayer player) {
+        EmbeddedChannel channel = (EmbeddedChannel) player.connection.getConnection().channel();
+        channel.flushOutbound();
+        List<Packet<?>> sent = new ArrayList<>();
+        for (Object o; (o = channel.readOutbound()) != null; ) {
+            sent.add((Packet<?>) o);
+        }
+        return sent;
+    }
+
+    /** The attachment-sync payloads among {@code packets} that carry {@code type}. */
+    private static List<SyncAttachmentsPayload> warpIn(
+            List<Packet<?>> packets, AttachmentType<?> type) {
+        return packets.stream()
+                .filter(ClientboundCustomPayloadPacket.class::isInstance)
+                .map(p -> ((ClientboundCustomPayloadPacket) p).payload())
+                .filter(SyncAttachmentsPayload.class::isInstance)
+                .map(SyncAttachmentsPayload.class::cast)
+                .filter(s -> s.types().contains(type))
+                .toList();
     }
 
     // ---- Persistence and commands ------------------------------------------------------------
