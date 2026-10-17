@@ -199,6 +199,24 @@ final class ResearchGameTests {
                 validate(access, missing).errors().stream()
                         .anyMatch(e -> e.contains("required built-in entry")),
                 "a missing required key refuses");
+        String scanned =
+                "{"
+                        + base
+                        + "\"position\": [9, 9], \"kind\": \"find\", \"triggers\": ["
+                        + "{\"type\": \"vftv:scanned\", \"key\": \"item:minecraft:torch\"},"
+                        + "{\"type\": \"vftv:scanned\", \"key\": \"entity:vftv:nothing\"}],"
+                        + text
+                        + "}";
+        List<String> scanProblems =
+                ResearchService.scanKeyProblems(
+                        Map.of(
+                                "vftv:bad",
+                                ResearchCodecs.ENTRY
+                                        .parse(JsonOps.INSTANCE, JsonParser.parseString(scanned))
+                                        .getOrThrow()));
+        helper.assertTrue(
+                scanProblems.size() == 1 && scanProblems.getFirst().contains("entity:vftv:nothing"),
+                "a scan key naming nothing registered refuses: " + scanProblems);
         helper.succeed();
     }
 

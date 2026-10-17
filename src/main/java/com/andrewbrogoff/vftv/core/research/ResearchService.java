@@ -16,6 +16,7 @@ import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
 import com.mojang.logging.LogUtils;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,6 +26,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
@@ -217,12 +219,55 @@ public final class ResearchService {
 
     /** Runs the load validation over the world's registries. */
     public static EntryRules.Report validate(HolderLookup.Provider access) {
-        return EntryRules.validate(
-                entries(access),
-                categories(access),
-                aspects(access),
-                REQUIRED_ENTRIES,
-                REQUIRED_CATEGORIES);
+        Map<String, ResearchEntry> entries = entries(access);
+        EntryRules.Report report =
+                EntryRules.validate(
+                        entries,
+                        categories(access),
+                        aspects(access),
+                        REQUIRED_ENTRIES,
+                        REQUIRED_CATEGORIES);
+        List<String> errors = new ArrayList<>(report.errors());
+        errors.addAll(scanKeyProblems(entries));
+        return new EntryRules.Report(errors, report.warnings());
+    }
+
+    /**
+     * The exact {@code vftv:scanned} keys naming an item, block or entity type that isn't
+     * registered: an id in a trigger that doesn't exist refuses the world, like any other.
+     */
+    public static List<String> scanKeyProblems(Map<String, ResearchEntry> entries) {
+        List<String> problems = new ArrayList<>();
+        entries.forEach(
+                (id, e) ->
+                        Stream.concat(e.triggers().stream(), e.reveal().stream())
+                                .<String>mapMulti(
+                                        (t, out) -> {
+                                            if (t instanceof Trigger.Scanned s && s.key() != null) {
+                                                out.accept(s.key());
+                                            }
+                                        })
+                                .filter(key -> !scanKeyExists(key))
+                                .forEach(
+                                        key ->
+                                                problems.add(
+                                                        "research entry "
+                                                                + id
+                                                                + ": its trigger's key "
+                                                                + key
+                                                                + " names nothing registered")));
+        return problems;
+    }
+
+    private static boolean scanKeyExists(String key) {
+        int colon = key.indexOf(':');
+        Identifier thing = Identifier.parse(key.substring(colon + 1));
+        return switch (key.substring(0, colon)) {
+            case "item" -> BuiltInRegistries.ITEM.containsKey(thing);
+            case "block" -> BuiltInRegistries.BLOCK.containsKey(thing);
+            case "entity" -> BuiltInRegistries.ENTITY_TYPE.containsKey(thing);
+            default -> true; // a node key: nodes live in the world, not a registry
+        };
     }
 
     /**

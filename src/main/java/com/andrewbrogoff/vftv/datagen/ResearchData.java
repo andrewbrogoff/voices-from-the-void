@@ -292,6 +292,7 @@ final class ResearchData implements FeatureData {
                         // Built-ins: every warning is a failure, and so is a total warp gate.
                         List<String> problems = new ArrayList<>(report.errors());
                         problems.addAll(report.warnings());
+                        problems.addAll(ResearchService.scanKeyProblems(content.plainEntries()));
                         content.plainEntries()
                                 .forEach(
                                         (id, e) -> {
