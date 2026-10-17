@@ -264,10 +264,7 @@ public final class Strikes {
                 reward.isEmpty()
                         ? null
                         : KnowledgeService.strike(
-                                player,
-                                new ScanKey.Node(node.id()),
-                                ScanTargetKind.NODE,
-                                new AspectValues(reward));
+                                player, new ScanKey.Node(node.id()), ScanTargetKind.NODE, reward);
         Knowledge known = struck != null ? struck.after() : KnowledgeService.get(player);
         if (known == null) {
             return;
@@ -302,7 +299,8 @@ public final class Strikes {
             send(player, ScanResult.plain(ScanResult.State.NOTHING, name, hold));
             return;
         }
-        KnowledgeService.Struck struck = KnowledgeService.strike(player, key, kind, values);
+        KnowledgeService.Struck struck =
+                KnowledgeService.strike(player, key, kind, values.aspects());
         if (struck == null) {
             return;
         }

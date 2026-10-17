@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
-import java.util.function.BiConsumer;
 import java.util.regex.Pattern;
 import net.minecraft.advancements.triggers.InventoryChangeTrigger;
 import net.minecraft.core.HolderLookup;
@@ -104,17 +103,6 @@ final class AspectData implements FeatureData {
                         output,
                         ResourceKey.create(
                                 Registries.RECIPE, AspectContent.TUNING_FORK_KEY.identifier()));
-    }
-
-    @Override
-    public void sounds(BiConsumer<Identifier, String> subtitles) {
-        for (Identifier id :
-                List.of(
-                        AspectContent.STRIKE_SOUND,
-                        AspectContent.ANSWER_SOUND,
-                        AspectContent.DISCOVER_SOUND)) {
-            subtitles.accept(id, "subtitles.vftv." + id.getPath());
-        }
     }
 
     @Override

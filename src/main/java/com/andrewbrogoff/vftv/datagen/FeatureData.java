@@ -10,6 +10,7 @@ import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.data.recipes.RecipeOutput;
 import net.minecraft.resources.Identifier;
 import net.neoforged.neoforge.common.data.DataMapProvider;
+import net.neoforged.neoforge.common.data.SoundDefinition;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 /**
@@ -44,11 +45,10 @@ public interface FeatureData {
             HolderLookup.Provider registries, Consumer<AdvancementHolder> output) {}
 
     /**
-     * {@code sounds.json} entries: each sound event's id and its subtitle key, written with an
-     * empty sound list until the audio ticket (NeoForge's {@code SoundDefinition} cannot serialise
-     * an empty list, so the hook takes the subtitle alone).
+     * {@code sounds.json} entries: each with its subtitle key and, until the audio ticket, an empty
+     * sound list.
      */
-    default void sounds(BiConsumer<Identifier, String> subtitles) {}
+    default void sounds(BiConsumer<Identifier, SoundDefinition> sounds) {}
 
     /** Datapack registry entries: worldgen and any other registry bootstrapped in code. */
     default void datapackEntries(DatapackEntries entries) {}

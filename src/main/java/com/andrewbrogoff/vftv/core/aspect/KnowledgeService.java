@@ -2,8 +2,8 @@ package com.andrewbrogoff.vftv.core.aspect;
 
 import com.andrewbrogoff.vftv.api.aspect.Aspect;
 import com.andrewbrogoff.vftv.api.aspect.AspectDiscoveredPayload;
-import com.andrewbrogoff.vftv.api.aspect.AspectValues;
 import com.andrewbrogoff.vftv.api.aspect.ScanKey;
+import com.andrewbrogoff.vftv.api.aspect.ScanOutcome;
 import com.andrewbrogoff.vftv.api.aspect.ScanTargetKind;
 import com.andrewbrogoff.vftv.api.aspect.ThingScannedPayload;
 import com.andrewbrogoff.vftv.core.aspect.model.Knowledge;
@@ -79,12 +79,16 @@ public final class KnowledgeService {
             Knowledge.Strike strike, SortedMap<String, Integer> gained, Knowledge after) {}
 
     /**
-     * Records a strike on a thing with values (non-empty) and posts its events.
+     * Records a strike on a thing with values (non-empty; a node may hold more than a data-map
+     * value's 5) and posts its events.
      *
      * @return what it did, or null when it was refused (unreadable knowledge, or the guard held)
      */
     public static @Nullable Struck strike(
-            ServerPlayer player, ScanKey key, ScanTargetKind kind, AspectValues values) {
+            ServerPlayer player,
+            ScanKey key,
+            ScanTargetKind kind,
+            Map<ResourceKey<Aspect>, Integer> values) {
         try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
             if (scope == null) {
                 busy(player);
@@ -97,13 +101,15 @@ public final class KnowledgeService {
             }
             AspectSet set = AspectSet.of(player.registryAccess());
             Map<String, Integer> amounts = new TreeMap<>();
-            values.aspects().forEach((aspect, n) -> amounts.put(AspectSet.text(aspect), n));
+            values.forEach((aspect, n) -> amounts.put(AspectSet.text(aspect), n));
             Knowledge.Strike strike =
                     before.strike(
                             key.toString(),
                             amounts,
                             set.rules(ScanningService.tuning().discoveryBonus()));
-            slot().set(player, new Retained.Read<>(strike.next()));
+            if (strike.outcome() != ScanOutcome.REPEAT) { // a repeat changes nothing to sync
+                slot().set(player, new Retained.Read<>(strike.next()));
+            }
             SortedMap<String, Integer> gained = new TreeMap<>(strike.points());
             for (Knowledge.Discovery d : strike.discovered()) {
                 gained.merge(d.aspect(), d.bonus(), Integer::sum);
