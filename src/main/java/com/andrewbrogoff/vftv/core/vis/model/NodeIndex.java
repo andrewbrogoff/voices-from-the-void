@@ -58,16 +58,6 @@ public final class NodeIndex {
         return c == null ? new long[0] : Arrays.copyOf(c.ids, c.count);
     }
 
-    /** Whether the index holds a node with this id. */
-    public boolean contains(long id) {
-        for (Cell c : table) {
-            if (c != null && indexOf(c, id) >= 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /**
      * Adds a node. A full cell refuses it: callers check {@link #count} first, so the cap holds at
      * every insertion.

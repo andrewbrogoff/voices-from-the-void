@@ -378,7 +378,6 @@ class VisModelTest {
         }
         assertTrue(sink > 0);
         assertEquals(0, allocated, "nearest allocates nothing");
-        assertTrue(index.contains(1));
         index.clear();
         assertEquals(0, index.size());
     }

@@ -18,7 +18,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -56,34 +55,30 @@ final class VisData implements FeatureData {
     /** {@code vftv:wand_parts/1}. */
     static final Schema PARTS =
             Schema.of(
-                            "vftv:wand_parts/1",
-                            Schema.required(
-                                    "rods",
-                                    new Schema.MapOf(
-                                            KEY,
-                                            new Schema.Obj(
-                                                    List.of(
-                                                            Schema.required(
-                                                                    "item", new Schema.Id()),
-                                                            Schema.required(
-                                                                    "capacity",
-                                                                    new Schema.Int(1, 1000)))),
-                                            0,
-                                            1000)),
-                            Schema.required(
-                                    "caps",
-                                    new Schema.MapOf(
-                                            KEY,
-                                            new Schema.Obj(
-                                                    List.of(
-                                                            Schema.required(
-                                                                    "item", new Schema.Id()),
-                                                            Schema.required(
-                                                                    "cost_multiplier",
-                                                                    new Schema.Num(0.25, 2.0)))),
-                                            0,
-                                            1000)))
-                    .withExtra(VisData::partRules);
+                    "vftv:wand_parts/1",
+                    Schema.required(
+                            "rods",
+                            new Schema.MapOf(
+                                    KEY,
+                                    new Schema.Obj(
+                                            List.of(
+                                                    Schema.required("item", new Schema.Id()),
+                                                    Schema.required(
+                                                            "capacity", new Schema.Int(1, 1000)))),
+                                    0,
+                                    1000)),
+                    Schema.required(
+                            "caps",
+                            new Schema.MapOf(
+                                    KEY,
+                                    new Schema.Obj(
+                                            List.of(
+                                                    Schema.required("item", new Schema.Id()),
+                                                    Schema.required(
+                                                            "cost_multiplier",
+                                                            new Schema.Num(0.25, 2.0)))),
+                                    0,
+                                    1000)));
 
     /** {@code vftv:wand_recipes/1}: the assembly instance (the Stage 2 bodies are T08b's). */
     static final Schema RECIPES =
@@ -301,52 +296,6 @@ final class VisData implements FeatureData {
     }
 
     // --- extra rules --------------------------------------------------------------------------
-
-    private static List<String> partRules(JsonObject root) {
-        Map<String, VisRegistryRules.Part> rods = parts(root.getAsJsonObject("rods"), "capacity");
-        Map<String, VisRegistryRules.Part> caps =
-                parts(root.getAsJsonObject("caps"), "cost_multiplier");
-        List<String> problems = new ArrayList<>();
-        caps.forEach(
-                (id, cap) -> {
-                    String p = VisRegistryRules.capValue(cap.value());
-                    if (p != null) {
-                        problems.add("$.caps." + id + ": " + p);
-                    }
-                });
-        Map<String, String> owner = new HashMap<>();
-        for (var part : merge(rods, caps).entrySet()) {
-            String other = owner.putIfAbsent(part.getValue().item(), part.getKey());
-            if (other != null) {
-                problems.add(
-                        part.getKey() + ": item " + part.getValue().item() + " is also " + other);
-            }
-        }
-        return problems;
-    }
-
-    private static Map<String, VisRegistryRules.Part> merge(
-            Map<String, VisRegistryRules.Part> rods, Map<String, VisRegistryRules.Part> caps) {
-        Map<String, VisRegistryRules.Part> all = new LinkedHashMap<>();
-        rods.forEach((k, v) -> all.put("rod " + k, v));
-        caps.forEach((k, v) -> all.put("cap " + k, v));
-        return all;
-    }
-
-    private static Map<String, VisRegistryRules.Part> parts(JsonObject parts, String value) {
-        Map<String, VisRegistryRules.Part> out = new TreeMap<>();
-        parts.entrySet()
-                .forEach(
-                        e -> {
-                            JsonObject p = e.getValue().getAsJsonObject();
-                            out.put(
-                                    e.getKey(),
-                                    new VisRegistryRules.Part(
-                                            p.get("item").getAsString(),
-                                            p.get(value).getAsDouble()));
-                        });
-        return out;
-    }
 
     private static List<String> recipeRules(JsonObject root) {
         JsonObject recipes = root.getAsJsonObject("recipes");
