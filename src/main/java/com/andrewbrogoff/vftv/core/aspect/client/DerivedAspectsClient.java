@@ -4,7 +4,9 @@ import com.andrewbrogoff.vftv.api.aspect.AspectValues;
 import com.andrewbrogoff.vftv.core.aspect.AspectLookup;
 import com.andrewbrogoff.vftv.core.aspect.AspectSet;
 import com.andrewbrogoff.vftv.core.aspect.DerivedAspectsSync;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -33,14 +35,16 @@ public final class DerivedAspectsClient {
 
     /**
      * The harness dump {@code vftv:derived}: the copy's size, how many slices arrived, and the
-     * values of the item id given as the argument (empty when it has none).
+     * derived values of the {@code item} argument (empty when it has none).
      */
     public static String dump(String args) {
         JsonObject data = new JsonObject();
         data.addProperty("size", AspectLookup.derived().size());
         data.addProperty("arrivals", arrivals);
         JsonObject value = new JsonObject();
-        Identifier id = Identifier.tryParse(args.trim());
+        JsonElement item =
+                args.isBlank() ? null : JsonParser.parseString(args).getAsJsonObject().get("item");
+        Identifier id = item == null ? null : Identifier.tryParse(item.getAsString());
         if (id != null) {
             BuiltInRegistries.ITEM
                     .getOptional(id)

@@ -608,7 +608,8 @@
     "minecraft:bow": {
       "vftv:arbor": 2,
       "vftv:bestia": 2,
-      "vftv:pannus": 2
+      "vftv:pannus": 2,
+      "vftv:telum": 2
     },
     "minecraft:bowl": {
       "vftv:arbor": 1
@@ -732,6 +733,7 @@
       "vftv:aer": 1,
       "vftv:arbor": 1,
       "vftv:bestia": 1,
+      "vftv:instrumentum": 1,
       "vftv:metallum": 6
     },
     "minecraft:bubble_coral": {
@@ -800,7 +802,7 @@
       "vftv:bestia": 1,
       "vftv:fames": 1,
       "vftv:herba": 1,
-      "vftv:pannus": 1
+      "vftv:instrumentum": 1
     },
     "minecraft:cartography_table": {
       "vftv:aqua": 1,
@@ -1357,7 +1359,8 @@
       "vftv:arbor": 3,
       "vftv:bestia": 1,
       "vftv:metallum": 9,
-      "vftv:pannus": 1
+      "vftv:pannus": 1,
+      "vftv:telum": 2
     },
     "minecraft:crying_obsidian": {
       "vftv:lux": 1,
@@ -1984,6 +1987,7 @@
     "minecraft:fishing_rod": {
       "vftv:arbor": 2,
       "vftv:bestia": 1,
+      "vftv:instrumentum": 1,
       "vftv:pannus": 1
     },
     "minecraft:fletching_table": {
@@ -1996,6 +2000,8 @@
       "vftv:terra": 1
     },
     "minecraft:flint_and_steel": {
+      "vftv:ignis": 1,
+      "vftv:instrumentum": 1,
       "vftv:metallum": 6,
       "vftv:telum": 1,
       "vftv:terra": 1
@@ -2814,7 +2820,7 @@
       "vftv:metallum": 6,
       "vftv:motus": 1,
       "vftv:ordo": 1,
-      "vftv:potentia": 1
+      "vftv:telum": 3
     },
     "minecraft:magenta_banner": {
       "vftv:arbor": 1,
@@ -4353,11 +4359,13 @@
       "vftv:praecantatio": 2
     },
     "minecraft:shears": {
+      "vftv:instrumentum": 2,
       "vftv:metallum": 13
     },
     "minecraft:shield": {
       "vftv:arbor": 4,
-      "vftv:metallum": 6
+      "vftv:metallum": 6,
+      "vftv:tutamen": 3
     },
     "minecraft:short_dry_grass": {
       "vftv:herba": 1,
@@ -4961,7 +4969,7 @@
       "vftv:bestia": 1,
       "vftv:herba": 1,
       "vftv:ignis": 1,
-      "vftv:pannus": 1
+      "vftv:instrumentum": 1
     },
     "minecraft:warped_hanging_sign": {
       "vftv:arbor": 2,
