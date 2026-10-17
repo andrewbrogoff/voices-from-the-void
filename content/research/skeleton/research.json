@@ -1,0 +1,287 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:resonance": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "find",
+      "triggers": [
+        {
+          "type": "vftv:advancement",
+          "advancement": "vftv:find/resonance"
+        }
+      ],
+      "opens_stage": 1,
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:commonplace_book": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        -2,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "free",
+      "parents": [
+        "vftv:resonance"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:notes_of_things": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "free",
+      "parents": [
+        "vftv:resonance"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:sounding": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        2,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "free",
+      "parents": [
+        "vftv:resonance"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:taking_notes": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:commonplace_book",
+        "vftv:notes_of_things",
+        "vftv:sounding"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:knots_in_the_air": {
+      "stage": 1,
+      "category": "vftv:resonance",
+      "position": [
+        0,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "find",
+      "parents": [
+        "vftv:taking_notes"
+      ],
+      "triggers": [
+        {
+          "type": "vftv:scanned",
+          "node": true
+        }
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:distillation": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        0,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "find",
+      "parents": [
+        "vftv:resonance"
+      ],
+      "triggers": [
+        {
+          "type": "vftv:advancement",
+          "advancement": "vftv:find/distillation"
+        }
+      ],
+      "hinted_by": "vftv:sounding",
+      "opens_stage": 2,
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:ruins": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        0,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "find",
+      "parents": [
+        "vftv:distillation"
+      ],
+      "triggers": [
+        {
+          "type": "vftv:advancement",
+          "advancement": "vftv:find/ruins"
+        }
+      ],
+      "hinted_by": "vftv:distillation",
+      "opens_stage": 3,
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    },
+    "vftv:choir/beneath_the_notes": {
+      "stage": 3,
+      "category": "vftv:choir_pages",
+      "position": [
+        0,
+        0
+      ],
+      "icon": {
+        "item": "vftv:choir_page"
+      },
+      "kind": "find",
+      "triggers": [
+        {
+          "type": "vftv:choir_page",
+          "page": "vftv:choir/beneath_the_notes"
+        }
+      ],
+      "pages": [
+        {
+          "type": "vftv:choir"
+        }
+      ]
+    },
+    "vftv:silence_beneath": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        3,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "listen",
+      "parents": [
+        "vftv:ruins",
+        "vftv:being_heard"
+      ],
+      "secret": true,
+      "reveal": [
+        {
+          "type": "vftv:choir_page",
+          "page": "vftv:choir/beneath_the_notes"
+        }
+      ],
+      "hinted_by": "vftv:choir/beneath_the_notes",
+      "warp": {
+        "lasting": 4
+      },
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:choirs_road": {
+      "stage": 4,
+      "category": "vftv:choirs_road",
+      "position": [
+        0,
+        0
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "find",
+      "parents": [
+        "vftv:ruins",
+        "vftv:silence_beneath"
+      ],
+      "triggers": [
+        {
+          "type": "vftv:advancement",
+          "advancement": "vftv:find/choirs_road"
+        }
+      ],
+      "hinted_by": "vftv:choir/beneath_the_notes",
+      "opens_stage": 4,
+      "pages": [
+        {
+          "type": "vftv:text"
+        }
+      ]
+    }
+  }
+}

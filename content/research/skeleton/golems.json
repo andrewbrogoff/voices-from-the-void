@@ -1,0 +1,88 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:golems": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        0,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:golem_decanting": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        -1,
+        4
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:golems",
+        "vftv:essentia_jars"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:echo_golems": {
+      "stage": 3,
+      "category": "vftv:ruins",
+      "position": [
+        2,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:golems",
+        "vftv:infusion"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

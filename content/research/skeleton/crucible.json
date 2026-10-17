@@ -1,0 +1,60 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:crucible": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        0,
+        1
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:distillation",
+        "vftv:arcane_crafting"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:resonant_brass": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        0,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:crucible"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,60 @@
+{
+  "schema": "vftv:research_entries/1",
+  "entries": {
+    "vftv:essentia_jars": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        -2,
+        2
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:crucible"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    },
+    "vftv:essentia_tubes": {
+      "stage": 2,
+      "category": "vftv:distillation",
+      "position": [
+        -2,
+        3
+      ],
+      "icon": {
+        "item": "vftv:commonplace_book"
+      },
+      "kind": "note",
+      "parents": [
+        "vftv:essentia_jars",
+        "vftv:resonant_brass"
+      ],
+      "anchors": [
+        "vftv:aer",
+        "vftv:ignis"
+      ],
+      "pages": [
+        {
+          "type": "vftv:text"
+        },
+        {
+          "type": "vftv:action"
+        }
+      ]
+    }
+  }
+}

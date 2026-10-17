@@ -1,0 +1,14 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.being_heard.title": "Being Heard",
+    "research.vftv.being_heard.hint": "I have not written this down yet.",
+    "research.vftv.being_heard.page.0": "This page is still to be written.",
+    "research.vftv.under_the_silence.title": "Under the Silence",
+    "research.vftv.under_the_silence.hint": "I have not written this down yet.",
+    "research.vftv.under_the_silence.page.0": "This page is still to be written.",
+    "research.vftv.learning_the_tongue.title": "Learning the Tongue",
+    "research.vftv.learning_the_tongue.hint": "I have not written this down yet.",
+    "research.vftv.learning_the_tongue.page.0": "This page is still to be written."
+  }
+}

@@ -1,0 +1,7 @@
+{"schema": "vftv:research_categories/1", "categories": {
+  "vftv:resonance":    {"stage": 1,    "icon": {"item": "vftv:tuning_fork"},      "order": 0},
+  "vftv:distillation": {"stage": 2,    "icon": {"item": "vftv:crucible"},         "order": 1},
+  "vftv:ruins":        {"stage": 3,    "icon": {"sprite": "vftv:research/ruins"}, "order": 2},
+  "vftv:choirs_road":  {"stage": 4,    "icon": {"item": "vftv:hollow_bell"},      "order": 3},
+  "vftv:choir_pages":  {"stage": null, "icon": {"item": "vftv:choir_page"},       "order": 4}
+}}

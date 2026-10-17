@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "research.vftv.clearing_bell.title": "The Clearing Bell",
+    "research.vftv.clearing_bell.hint": "I have not written this down yet.",
+    "research.vftv.clearing_bell.page.0": "This page is still to be written.",
+    "research.vftv.the_hush.title": "The Hush",
+    "research.vftv.the_hush.hint": "I have not written this down yet.",
+    "research.vftv.the_hush.page.0": "This page is still to be written."
+  }
+}
