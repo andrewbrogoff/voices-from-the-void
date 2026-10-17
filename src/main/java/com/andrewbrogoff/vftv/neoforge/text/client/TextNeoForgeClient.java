@@ -3,9 +3,13 @@ package com.andrewbrogoff.vftv.neoforge.text.client;
 import com.andrewbrogoff.vftv.core.text.client.StatusLineHud;
 import com.andrewbrogoff.vftv.core.text.client.TextClient;
 import com.andrewbrogoff.vftv.core.text.client.TextKeys;
+import java.util.Map;
+import java.util.function.Function;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.InterModComms;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterGuiLayersEvent;
@@ -55,5 +59,15 @@ public final class TextNeoForgeClient {
                                 (ResourceManagerReloadListener)
                                         manager -> TextClient.onResourcesReloaded()));
         gameBus.addListener(ClientTickEvent.Post.class, event -> TextClient.tick());
+        // The harness's vftv:text dump; goes nowhere without the harness.
+        modBus.addListener(
+                InterModEnqueueEvent.class,
+                event ->
+                        InterModComms.sendTo(
+                                "mc_agent_harness",
+                                "dump_client",
+                                () ->
+                                        Map.<String, Function<String, String>>entry(
+                                                "vftv:text", TextClient::dump)));
     }
 }

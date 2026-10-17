@@ -2,8 +2,12 @@ package com.andrewbrogoff.vftv.core.text.client;
 
 import com.andrewbrogoff.vftv.core.common.client.ClientNetwork;
 import com.andrewbrogoff.vftv.core.text.StatusLine;
+import com.andrewbrogoff.vftv.core.text.model.CaptionBand;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.Objects;
 import net.minecraft.client.Minecraft;
+import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -50,6 +54,30 @@ public final class TextClient {
     /** After every client resource reload, which a language change includes. */
     public static void onResourcesReloaded() {
         reloads++;
+    }
+
+    /**
+     * The E2E harness's {@code vftv:text} dump (client thread): the status line and the published
+     * caption band. {@code {"arrive": "<text>"}} first delivers that text as a status line on the
+     * client, as the payload handler would, for the scenario's render and key checks.
+     */
+    public static String dump(String args) {
+        JsonObject request = JsonParser.parseString(args).getAsJsonObject();
+        if (request.has("arrive")) {
+            StatusLineHud.arrive(
+                    Component.literal(request.get("arrive").getAsString()),
+                    Minecraft.getInstance().options.notificationDisplayTime().get());
+        }
+        Component latest = StatusLineHud.latest();
+        CaptionBand band = StatusLineHud.BAND;
+        JsonObject data = new JsonObject();
+        data.addProperty("statusShowing", StatusLineHud.showing());
+        data.addProperty("latest", latest == null ? "" : latest.getString());
+        data.addProperty("bandShowing", band.showing());
+        data.addProperty("bandTop", band.bandTop());
+        data.addProperty("bandBottom", band.bottom());
+        data.addProperty("revision", band.revision());
+        return data.toString();
     }
 
     /** The client tick count, for "shown this tick" checks. */

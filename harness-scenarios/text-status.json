@@ -1,0 +1,28 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "render": {"width": 640, "height": 480},
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:text"},
+     "expect": {"statusShowing": false, "bandShowing": false, "latest": ""}},
+    {"op": "dump", "args": {"kind": "vftv:text", "arrive": "The crucible refuses the Resonant Brass ingot: its pool holds Aer 12, Aqua 40, Ignis 3, Terra 5, Ordo 7, Perditio 1, Vacuos 2 and Lux 9, which is far more than one status line can show in three lines at this size, so the rest waits in the details view."},
+     "expect": {"statusShowing": true}},
+    {"op": "wait_ticks", "args": {"ticks": 3}},
+    {"op": "dump", "args": {"kind": "vftv:text"},
+     "expect": {"bandShowing": true, "bandBottom": 164, "bandTop": 133}},
+    {"op": "screenshot", "args": {"name": "status-three-lines.png"}},
+    {"op": "wait_ticks", "args": {"ticks": 70}},
+    {"op": "dump", "args": {"kind": "vftv:text"},
+     "expect": {"statusShowing": false, "bandShowing": false, "latest": {"contains": "details view"}}},
+    {"op": "key", "args": {"mapping": "key.vftv.status_details"}},
+    {"op": "wait_ticks", "args": {"ticks": 3}},
+    {"op": "screen", "args": {},
+     "expect": {"open": true, "class": {"matches": ".*StatusDetailsScreen"}, "title": "The last message",
+                "widgets[0].class": {"matches": ".*TextViewport"}}},
+    {"op": "screenshot", "args": {"name": "status-details.png"}},
+    {"op": "close_screen", "args": {}},
+    {"op": "quit", "args": {}}
+  ]
+}
