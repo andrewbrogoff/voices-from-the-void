@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.server.ServerStartingEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 
 /**
  * The arcane feature's NeoForge wiring, called once from the {@code @Mod} constructor: game-bus and
@@ -27,5 +28,6 @@ public final class ArcaneNeoForge {
                     ArcaneRecipes.beforeSync(event.getPlayerList().getServer().getRecipeManager());
                     event.sendRecipes(ArcaneRecipe.TYPE);
                 });
+        gameBus.addListener(ServerStoppedEvent.class, event -> ArcaneRecipes.clearServer());
     }
 }

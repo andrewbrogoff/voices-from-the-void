@@ -220,6 +220,11 @@ class ArcaneRecipeSnapshotTest {
         ArcaneRecipes.beforeSync(manager(many(ArcaneLimits.MAX_ARCANE_RECIPES + 1)));
         assertEquals(List.of(), ArcaneRecipes.server().recipes(), "over the cap: empty");
         assertEquals(ArcaneRecipes.server(), ArcaneRecipes.of(false));
+        ArcaneRecipes.onServerStarting(loaded);
+        ArcaneRecipes.clearServer();
+        assertEquals(ArcaneRecipeSnapshot.EMPTY, ArcaneRecipes.server(), "stopped: dropped");
+        ArcaneRecipes.beforeSync(loaded);
+        assertEquals(2, ArcaneRecipes.server().recipes().size(), "the next sync rebuilds");
     }
 
     @Test

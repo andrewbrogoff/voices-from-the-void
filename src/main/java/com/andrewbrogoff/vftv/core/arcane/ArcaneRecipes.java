@@ -62,6 +62,12 @@ public final class ArcaneRecipes {
         }
     }
 
+    /** Drops the server snapshot when the server stops, so no closed world's recipes stay held. */
+    public static void clearServer() {
+        server = ArcaneRecipeSnapshot.EMPTY;
+        builtFrom = null;
+    }
+
     /** Replaces the client snapshot with the recipes just received, by the server's rule. */
     public static void onRecipesReceived(RecipeMap recipes) {
         client = orEmpty(recipes);
