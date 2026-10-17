@@ -1,6 +1,9 @@
 package com.andrewbrogoff.vftv.core.arcane;
 
 import com.andrewbrogoff.vftv.core.common.Platform;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.world.item.crafting.RecipeSerializer;
+import net.minecraft.world.item.crafting.RecipeType;
 
 /**
  * The arcane feature's entry into {@code core}: {@code Vftv.init} calls {@link #init} once, during
@@ -11,6 +14,13 @@ import com.andrewbrogoff.vftv.core.common.Platform;
 public final class ArcaneFeature {
     private ArcaneFeature() {}
 
-    /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    /** Registers the {@code vftv:arcane} recipe type and serializer. */
+    public static void init(Platform platform) {
+        String name = ArcaneRecipe.ID.getPath();
+        platform.registrar()
+                .<RecipeType<?>>register(Registries.RECIPE_TYPE, name, () -> ArcaneRecipe.TYPE);
+        platform.registrar()
+                .<RecipeSerializer<?>>register(
+                        Registries.RECIPE_SERIALIZER, name, () -> ArcaneRecipe.SERIALIZER);
+    }
 }

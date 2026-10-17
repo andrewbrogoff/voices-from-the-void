@@ -1,6 +1,10 @@
 package com.andrewbrogoff.vftv.neoforge.arcane.client;
 
+import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipes;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
+import net.neoforged.neoforge.client.event.RecipesReceivedEvent;
+import net.neoforged.neoforge.common.NeoForge;
 
 /**
  * The arcane feature's client registration, called once from the client wiring on a physical client
@@ -9,6 +13,13 @@ import net.neoforged.bus.api.IEventBus;
 public final class ArcaneNeoForgeClient {
     private ArcaneNeoForgeClient() {}
 
-    /** Registers the feature's client-side types on the mod bus. */
-    public static void register(IEventBus modBus) {}
+    /** Keeps the client's arcane recipe snapshot: replaced on each sync, cleared at logout. */
+    public static void register(IEventBus modBus) {
+        IEventBus gameBus = NeoForge.EVENT_BUS;
+        gameBus.addListener(
+                RecipesReceivedEvent.class,
+                event -> ArcaneRecipes.onRecipesReceived(event.getRecipeMap()));
+        gameBus.addListener(
+                ClientPlayerNetworkEvent.LoggingOut.class, event -> ArcaneRecipes.clearClient());
+    }
 }
