@@ -189,7 +189,7 @@ class ArcaneRecipeTest {
                                 .parse(
                                         items.createSerializationContext(JsonOps.INSTANCE),
                                         json("{" + SHAPED + "}")));
-        assertTrue(message.contains("unknown research entry vftv:test_entry"), message);
+        assertTrue(message.contains("vftv:aer is not a vis aspect"), message);
     }
 
     @Test

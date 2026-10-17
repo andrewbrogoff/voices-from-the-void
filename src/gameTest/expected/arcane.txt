@@ -4,3 +4,4 @@ vftv:arcane_snapshot_at_start
 vftv:arcane_sync_sends_recipes
 vftv:arcane_cap_on_reload
 vftv:arcane_cap_at_start
+vftv:arcane_vis_keys_checked

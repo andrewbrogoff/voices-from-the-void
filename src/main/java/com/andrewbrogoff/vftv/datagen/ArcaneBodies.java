@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -121,9 +122,18 @@ public final class ArcaneBodies {
             return List.of(where + "exactly one of pattern+key or ingredients is required");
         }
         List<String> problems = new ArrayList<>();
+        // Datagen's lookup binds no tags, so a #tag stands in as a plain item here; the runtime
+        // decode resolves the real tag.
+        JsonObject untagged =
+                mapIngredients(
+                        body,
+                        i ->
+                                i.getAsString().startsWith("#")
+                                        ? new JsonPrimitive("minecraft:stick")
+                                        : i);
         ArcaneRecipe.BODY_CODEC
                 .codec()
-                .parse(registries.createSerializationContext(JsonOps.INSTANCE), body)
+                .parse(registries.createSerializationContext(JsonOps.INSTANCE), untagged)
                 .ifError(e -> problems.add(where + e.message()))
                 .ifSuccess(
                         recipe -> {
@@ -148,15 +158,20 @@ public final class ArcaneBodies {
 
     /** A copy of the body with the ingredient widening applied to {@code key} and ingredients. */
     public static JsonObject widen(JsonObject body) {
+        return mapIngredients(body, ArcaneBodies::widen);
+    }
+
+    /** A copy of the body with {@code change} applied to each {@code key} value and ingredient. */
+    private static JsonObject mapIngredients(JsonObject body, UnaryOperator<JsonElement> change) {
         JsonObject copy = body.deepCopy();
         if (copy.get("key") instanceof JsonObject key) {
             for (Map.Entry<String, JsonElement> entry : key.entrySet()) {
-                entry.setValue(widen(entry.getValue()));
+                entry.setValue(change.apply(entry.getValue()));
             }
         }
         if (copy.get("ingredients") instanceof JsonArray ingredients) {
             for (int i = 0; i < ingredients.size(); i++) {
-                ingredients.set(i, widen(ingredients.get(i)));
+                ingredients.set(i, change.apply(ingredients.get(i)));
             }
         }
         return copy;

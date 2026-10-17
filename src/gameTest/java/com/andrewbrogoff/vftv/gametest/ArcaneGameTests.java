@@ -7,7 +7,11 @@ import com.andrewbrogoff.vftv.api.vis.VisKind;
 import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipe;
 import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipeSnapshot;
 import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipes;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.datafixers.util.Either;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.JsonOps;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +49,48 @@ final class ArcaneGameTests {
         tests.put("arcane_sync_sends_recipes", ArcaneGameTests::syncSendsRecipes);
         tests.put("arcane_cap_on_reload", ArcaneGameTests::capOnReload);
         tests.put("arcane_cap_at_start", ArcaneGameTests::capAtStart);
+        tests.put("arcane_vis_keys_checked", ArcaneGameTests::visKeysChecked);
+    }
+
+    private static DataResult<ArcaneRecipe> decode(GameTestHelper helper, String vis) {
+        JsonObject body =
+                JsonParser.parseString(
+                                ("{'research': 'vftv:commonplace_book',"
+                                                + " 'ingredients': ['minecraft:stick'],"
+                                                + " 'result': {'id': 'minecraft:bell'},"
+                                                + " 'vis': {"
+                                                + vis
+                                                + "}}")
+                                        .replace('\'', '"'))
+                        .getAsJsonObject();
+        return ArcaneRecipe.MAP_CODEC
+                .codec()
+                .parse(
+                        helper.getLevel()
+                                .registryAccess()
+                                .createSerializationContext(JsonOps.INSTANCE),
+                        body);
+    }
+
+    private static String message(DataResult<ArcaneRecipe> result) {
+        return result.error().map(DataResult.Error::message).orElse("decoded");
+    }
+
+    /**
+     * Cost keys are checked against the loaded {@code vftv:aspect} registry: the six built-in
+     * primals are vis aspects; a compound, Vacuos (hidden) and an unknown aspect are not.
+     */
+    private static void visKeysChecked(GameTestHelper helper) {
+        for (String key : List.of("vftv:sonus", "vftv:vacuos", "vftv:nowhere")) {
+            String found = message(decode(helper, "'" + key + "': 1"));
+            helper.assertValueEqual(found, key + " is not a vis aspect", key);
+        }
+        String primals =
+                "'vftv:aer': 1, 'vftv:aqua': 1, 'vftv:ignis': 1, 'vftv:ordo': 1,"
+                        + " 'vftv:perditio': 1, 'vftv:terra': 1";
+        helper.assertFalse(
+                message(decode(helper, primals)).contains("vis aspect"), "the six primals pass");
+        helper.succeed();
     }
 
     /** {@code vftv:arcane} is a recipe type and a serializer. */

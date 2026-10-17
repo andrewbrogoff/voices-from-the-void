@@ -150,15 +150,14 @@ class ArcaneDataTest {
 
     @Test
     void bodiesMeetTheRecipeTypesRules() {
-        String valid =
-                BELL.replace("vftv:arcane_crafting", "vftv:test_entry")
-                        .replace("#minecraft:wooden_slabs", "minecraft:oak_slab");
+        // The test lookup, like datagen's, binds no tags: a tag ingredient still checks.
+        String valid = BELL.replace("vftv:arcane_crafting", "vftv:test_entry");
         assertEquals(List.of(), check(valid));
         assertEquals(
                 List.of("recipe vftv:x: exactly one of pattern+key or ingredients is required"),
                 check(valid + ", 'ingredients': ['minecraft:stick']"));
         assertTrue(
-                check(valid.replace("minecraft:oak_slab", "minecraft:no_such_item"))
+                check(valid.replace("minecraft:copper_ingot", "minecraft:no_such_item"))
                         .getFirst()
                         .startsWith("recipe vftv:x: "));
         assertEquals(

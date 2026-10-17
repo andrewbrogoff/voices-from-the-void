@@ -393,16 +393,16 @@ public final class ArcaneRecipe implements Recipe<CraftingInput> {
         if (!(ops instanceof RegistryOps<T> registryOps)) {
             return DataResult.error(() -> "an arcane recipe decodes only with registry access");
         }
-        Optional<HolderGetter<Research>> entries = registryOps.getter(ResearchKeys.REGISTRY);
-        if (entries.isEmpty() || entries.get().get(recipe.research).isEmpty()) {
-            return DataResult.error(() -> "unknown research entry " + recipe.research.identifier());
-        }
         Optional<HolderGetter<Aspect>> aspects = registryOps.getter(AspectKeys.REGISTRY);
         for (ResourceKey<Aspect> key : recipe.vis.keySet()) {
             Optional<Holder.Reference<Aspect>> aspect = aspects.flatMap(getter -> getter.get(key));
             if (aspect.isEmpty() || !isVisAspect(aspect.get().value())) {
                 return DataResult.error(() -> key.identifier() + " is not a vis aspect");
             }
+        }
+        Optional<HolderGetter<Research>> entries = registryOps.getter(ResearchKeys.REGISTRY);
+        if (entries.isEmpty() || entries.get().get(recipe.research).isEmpty()) {
+            return DataResult.error(() -> "unknown research entry " + recipe.research.identifier());
         }
         return DataResult.success(recipe);
     }
