@@ -1,0 +1,449 @@
+{
+  "values": {
+    "minecraft:allay": {
+      "vftv:aer": 2,
+      "vftv:sonus": 2,
+      "vftv:spiritus": 3
+    },
+    "minecraft:armadillo": {
+      "vftv:bestia": 3,
+      "vftv:terra": 1,
+      "vftv:tutamen": 3
+    },
+    "minecraft:axolotl": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 3,
+      "vftv:sano": 1
+    },
+    "minecraft:bat": {
+      "vftv:aer": 2,
+      "vftv:bestia": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:bee": {
+      "vftv:aer": 1,
+      "vftv:bestia": 2,
+      "vftv:herba": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:blaze": {
+      "vftv:aer": 1,
+      "vftv:ignis": 6,
+      "vftv:potentia": 3
+    },
+    "minecraft:bogged": {
+      "vftv:exanimis": 3,
+      "vftv:mortuus": 3,
+      "vftv:telum": 1,
+      "vftv:venenum": 2
+    },
+    "minecraft:breeze": {
+      "vftv:aer": 6,
+      "vftv:motus": 4
+    },
+    "minecraft:camel": {
+      "vftv:bestia": 4,
+      "vftv:motus": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:camel_husk": {
+      "vftv:bestia": 3,
+      "vftv:exanimis": 3,
+      "vftv:terra": 2
+    },
+    "minecraft:cat": {
+      "vftv:bestia": 4,
+      "vftv:motus": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:cave_spider": {
+      "vftv:bestia": 3,
+      "vftv:tenebrae": 1,
+      "vftv:venenum": 3
+    },
+    "minecraft:chicken": {
+      "vftv:aer": 1,
+      "vftv:bestia": 2,
+      "vftv:victus": 1
+    },
+    "minecraft:cod": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 2
+    },
+    "minecraft:copper_golem": {
+      "vftv:machina": 3,
+      "vftv:metallum": 6,
+      "vftv:spiritus": 2
+    },
+    "minecraft:cow": {
+      "vftv:bestia": 4,
+      "vftv:corpus": 2,
+      "vftv:victus": 2
+    },
+    "minecraft:creaking": {
+      "vftv:alienis": 1,
+      "vftv:arbor": 4,
+      "vftv:spiritus": 2,
+      "vftv:tenebrae": 3
+    },
+    "minecraft:creeper": {
+      "vftv:herba": 1,
+      "vftv:ignis": 3,
+      "vftv:perditio": 4
+    },
+    "minecraft:dolphin": {
+      "vftv:aqua": 4,
+      "vftv:bestia": 4,
+      "vftv:motus": 2
+    },
+    "minecraft:donkey": {
+      "vftv:bestia": 5,
+      "vftv:motus": 2
+    },
+    "minecraft:drowned": {
+      "vftv:aqua": 3,
+      "vftv:exanimis": 4,
+      "vftv:humanus": 1
+    },
+    "minecraft:elder_guardian": {
+      "vftv:aqua": 6,
+      "vftv:bestia": 4,
+      "vftv:praecantatio": 2,
+      "vftv:tutamen": 3
+    },
+    "minecraft:end_crystal": {
+      "vftv:alienis": 3,
+      "vftv:lux": 3,
+      "vftv:potentia": 3,
+      "vftv:vitreus": 2
+    },
+    "minecraft:ender_dragon": {
+      "vftv:alienis": 8,
+      "vftv:bestia": 6,
+      "vftv:ignis": 4,
+      "vftv:praecantatio": 4,
+      "vftv:vacuos": 6
+    },
+    "minecraft:enderman": {
+      "vftv:alienis": 5,
+      "vftv:motus": 3,
+      "vftv:vacuos": 2
+    },
+    "minecraft:endermite": {
+      "vftv:alienis": 2,
+      "vftv:bestia": 2
+    },
+    "minecraft:evoker": {
+      "vftv:humanus": 4,
+      "vftv:praecantatio": 4,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:fox": {
+      "vftv:bestia": 4,
+      "vftv:herba": 1,
+      "vftv:motus": 2
+    },
+    "minecraft:frog": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 3,
+      "vftv:motus": 1
+    },
+    "minecraft:ghast": {
+      "vftv:aer": 3,
+      "vftv:ignis": 3,
+      "vftv:spiritus": 4
+    },
+    "minecraft:glow_squid": {
+      "vftv:aqua": 3,
+      "vftv:bestia": 3,
+      "vftv:lux": 3
+    },
+    "minecraft:goat": {
+      "vftv:bestia": 4,
+      "vftv:motus": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:guardian": {
+      "vftv:aqua": 4,
+      "vftv:bestia": 3,
+      "vftv:tutamen": 2
+    },
+    "minecraft:happy_ghast": {
+      "vftv:aer": 4,
+      "vftv:spiritus": 4,
+      "vftv:victus": 2
+    },
+    "minecraft:hoglin": {
+      "vftv:bestia": 6,
+      "vftv:corpus": 2,
+      "vftv:ignis": 2
+    },
+    "minecraft:horse": {
+      "vftv:bestia": 5,
+      "vftv:motus": 3
+    },
+    "minecraft:husk": {
+      "vftv:exanimis": 4,
+      "vftv:humanus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:iron_golem": {
+      "vftv:machina": 3,
+      "vftv:metallum": 8,
+      "vftv:tutamen": 3
+    },
+    "minecraft:llama": {
+      "vftv:bestia": 5,
+      "vftv:pannus": 2
+    },
+    "minecraft:magma_cube": {
+      "vftv:ignis": 4,
+      "vftv:motus": 2,
+      "vftv:victus": 2
+    },
+    "minecraft:mooshroom": {
+      "vftv:bestia": 4,
+      "vftv:herba": 2,
+      "vftv:victus": 2
+    },
+    "minecraft:mule": {
+      "vftv:bestia": 5,
+      "vftv:motus": 2
+    },
+    "minecraft:nautilus": {
+      "vftv:aqua": 3,
+      "vftv:bestia": 3,
+      "vftv:tutamen": 1
+    },
+    "minecraft:ocelot": {
+      "vftv:bestia": 4,
+      "vftv:herba": 1,
+      "vftv:motus": 1
+    },
+    "minecraft:panda": {
+      "vftv:bestia": 5,
+      "vftv:herba": 2
+    },
+    "minecraft:parched": {
+      "vftv:exanimis": 3,
+      "vftv:ignis": 2,
+      "vftv:mortuus": 3
+    },
+    "minecraft:parrot": {
+      "vftv:aer": 2,
+      "vftv:bestia": 2,
+      "vftv:sonus": 2
+    },
+    "minecraft:phantom": {
+      "vftv:aer": 3,
+      "vftv:exanimis": 3,
+      "vftv:spiritus": 2
+    },
+    "minecraft:pig": {
+      "vftv:bestia": 4,
+      "vftv:corpus": 2
+    },
+    "minecraft:piglin": {
+      "vftv:bestia": 2,
+      "vftv:humanus": 3,
+      "vftv:ignis": 1,
+      "vftv:metallum": 1
+    },
+    "minecraft:piglin_brute": {
+      "vftv:bestia": 3,
+      "vftv:humanus": 3,
+      "vftv:ignis": 1,
+      "vftv:telum": 2
+    },
+    "minecraft:pillager": {
+      "vftv:humanus": 4,
+      "vftv:telum": 2
+    },
+    "minecraft:player": {
+      "vftv:cognitio": 3,
+      "vftv:humanus": 6,
+      "vftv:spiritus": 3
+    },
+    "minecraft:polar_bear": {
+      "vftv:bestia": 6,
+      "vftv:gelum": 3
+    },
+    "minecraft:pufferfish": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 2,
+      "vftv:venenum": 3
+    },
+    "minecraft:rabbit": {
+      "vftv:bestia": 3,
+      "vftv:motus": 2
+    },
+    "minecraft:ravager": {
+      "vftv:bestia": 8,
+      "vftv:motus": 1,
+      "vftv:telum": 3
+    },
+    "minecraft:salmon": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 2,
+      "vftv:motus": 1
+    },
+    "minecraft:sheep": {
+      "vftv:bestia": 4,
+      "vftv:pannus": 3
+    },
+    "minecraft:shulker": {
+      "vftv:alienis": 4,
+      "vftv:tutamen": 3,
+      "vftv:vacuos": 1
+    },
+    "minecraft:silverfish": {
+      "vftv:bestia": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:skeleton": {
+      "vftv:exanimis": 3,
+      "vftv:mortuus": 3,
+      "vftv:telum": 2
+    },
+    "minecraft:skeleton_horse": {
+      "vftv:bestia": 3,
+      "vftv:exanimis": 4,
+      "vftv:mortuus": 2
+    },
+    "minecraft:slime": {
+      "vftv:aqua": 2,
+      "vftv:motus": 2,
+      "vftv:victus": 3
+    },
+    "minecraft:sniffer": {
+      "vftv:bestia": 6,
+      "vftv:herba": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:snow_golem": {
+      "vftv:gelum": 4,
+      "vftv:machina": 1,
+      "vftv:spiritus": 1
+    },
+    "minecraft:spider": {
+      "vftv:bestia": 4,
+      "vftv:tenebrae": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:squid": {
+      "vftv:aqua": 3,
+      "vftv:bestia": 3,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:stray": {
+      "vftv:exanimis": 3,
+      "vftv:gelum": 2,
+      "vftv:mortuus": 3
+    },
+    "minecraft:strider": {
+      "vftv:bestia": 4,
+      "vftv:ignis": 3
+    },
+    "minecraft:sulfur_cube": {
+      "vftv:terra": 1,
+      "vftv:venenum": 3,
+      "vftv:victus": 2
+    },
+    "minecraft:tadpole": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:trader_llama": {
+      "vftv:bestia": 5,
+      "vftv:pannus": 2,
+      "vftv:permutatio": 1
+    },
+    "minecraft:tropical_fish": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 2
+    },
+    "minecraft:turtle": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 3,
+      "vftv:tutamen": 3
+    },
+    "minecraft:vex": {
+      "vftv:praecantatio": 2,
+      "vftv:spiritus": 3,
+      "vftv:telum": 2
+    },
+    "minecraft:villager": {
+      "vftv:cognitio": 2,
+      "vftv:humanus": 5,
+      "vftv:permutatio": 2
+    },
+    "minecraft:vindicator": {
+      "vftv:humanus": 4,
+      "vftv:telum": 3
+    },
+    "minecraft:wandering_trader": {
+      "vftv:humanus": 4,
+      "vftv:motus": 1,
+      "vftv:permutatio": 3
+    },
+    "minecraft:warden": {
+      "vftv:mortuus": 2,
+      "vftv:silentium": 4,
+      "vftv:sonus": 6,
+      "vftv:spiritus": 4,
+      "vftv:tenebrae": 6
+    },
+    "minecraft:witch": {
+      "vftv:humanus": 4,
+      "vftv:praecantatio": 2,
+      "vftv:venenum": 3
+    },
+    "minecraft:wither": {
+      "vftv:exanimis": 8,
+      "vftv:mortuus": 6,
+      "vftv:perditio": 4,
+      "vftv:spiritus": 4,
+      "vftv:tenebrae": 6
+    },
+    "minecraft:wither_skeleton": {
+      "vftv:exanimis": 4,
+      "vftv:mortuus": 4,
+      "vftv:telum": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:wolf": {
+      "vftv:bestia": 5,
+      "vftv:motus": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:zoglin": {
+      "vftv:bestia": 5,
+      "vftv:exanimis": 4
+    },
+    "minecraft:zombie": {
+      "vftv:corpus": 2,
+      "vftv:exanimis": 4,
+      "vftv:humanus": 1
+    },
+    "minecraft:zombie_horse": {
+      "vftv:bestia": 4,
+      "vftv:exanimis": 4
+    },
+    "minecraft:zombie_nautilus": {
+      "vftv:aqua": 3,
+      "vftv:exanimis": 3,
+      "vftv:tutamen": 1
+    },
+    "minecraft:zombie_villager": {
+      "vftv:corpus": 1,
+      "vftv:exanimis": 4,
+      "vftv:humanus": 2
+    },
+    "minecraft:zombified_piglin": {
+      "vftv:exanimis": 4,
+      "vftv:humanus": 2,
+      "vftv:ignis": 1
+    }
+  }
+}
