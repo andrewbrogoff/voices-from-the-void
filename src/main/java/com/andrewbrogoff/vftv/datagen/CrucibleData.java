@@ -368,6 +368,10 @@ final class CrucibleData implements FeatureData {
                         Map<String, JsonObject> arcane = new LinkedHashMap<>();
                         Map<String, JsonObject> crucible = new LinkedHashMap<>();
                         List<String> problems = new ArrayList<>();
+                        Set<String> research =
+                                envelopes.isEmpty()
+                                        ? Set.of()
+                                        : ResearchContent.read(contentRoot()).entries().keySet();
                         for (Envelope envelope : envelopes) {
                             JsonObject json = envelope.json().getAsJsonObject();
                             if (!json.has("recipes")) {
@@ -375,10 +379,18 @@ final class CrucibleData implements FeatureData {
                             }
                             JsonObject recipes = json.getAsJsonObject("recipes");
                             JsonObject vessel = recipes.getAsJsonObject(VESSEL);
-                            problems.addAll(ArcaneBodies.check(VESSEL, vessel, registries));
+                            problems.addAll(
+                                    ArcaneBodies.check(VESSEL, vessel, registries, research));
                             arcane.put(VESSEL, vessel);
                             JsonObject brass = recipes.getAsJsonObject(BRASS);
                             problems.addAll(check(BRASS, brass, registries));
+                            if (!research.contains(brass.get("research").getAsString())) {
+                                problems.add(
+                                        "recipe "
+                                                + BRASS
+                                                + ": unknown research entry "
+                                                + brass.get("research").getAsString());
+                            }
                             crucible.put(BRASS, brass);
                         }
                         if (!problems.isEmpty()) {
