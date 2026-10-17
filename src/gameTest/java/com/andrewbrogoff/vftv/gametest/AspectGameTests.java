@@ -104,6 +104,8 @@ final class AspectGameTests {
         tests.put("aspect_phantom_is_silent", AspectGameTests::phantomIsSilent);
         tests.put("aspect_sounding_and_nodes", AspectGameTests::soundingAndNodes);
         tests.put("aspect_credit_never_teaches", AspectGameTests::creditNeverTeaches);
+        tests.put(
+                "aspect_unreadable_warns_per_session", AspectGameTests::unreadableWarnsPerSession);
         // Record what each mock player would be sent, and which events name them.
         Strikes.swapSender(
                 (player, result) ->
@@ -541,6 +543,49 @@ final class AspectGameTests {
                 save(future).getCompoundOrEmpty("neoforge:attachments"),
                 saved.getCompoundOrEmpty("neoforge:attachments"),
                 "written back unchanged");
+        helper.succeed();
+    }
+
+    /**
+     * An unreadable record WARNs once per player per server session (conventions, "What an
+     * unreadable record does", rule 2): again after it has decoded, and again after the server
+     * stops.
+     */
+    private static void unreadableWarnsPerSession(GameTestHelper helper) {
+        ServerPlayer source = player(helper);
+        KnowledgeService.set(source, Knowledge.EMPTY);
+        CompoundTag good = save(source);
+        CompoundTag bad = good.copy();
+        bad.getCompoundOrEmpty("neoforge:attachments")
+                .getCompoundOrEmpty("vftv:knowledge")
+                .getCompoundOrEmpty("data")
+                .putInt("format", 9);
+        // Each use loads the tag into the same player, then tries a write.
+        ServerPlayer p = player(helper);
+        Consumer<CompoundTag> use =
+                tag -> {
+                    p.load(
+                            TagValueInput.create(
+                                    ProblemReporter.DISCARDING, p.registryAccess(), tag));
+                    KnowledgeService.credit(p, AspectKeys.AER, 1);
+                };
+        // Tests run one at a time on the server thread, so every WARN until the swap back is ours.
+        List<String> warns = new ArrayList<>();
+        Consumer<String> previous = KnowledgeService.swapWarner(warns::add);
+        try {
+            use.accept(bad);
+            use.accept(bad);
+            helper.assertValueEqual(warns.size(), 1, "one WARN while it stays unreadable");
+            use.accept(good);
+            use.accept(bad);
+            helper.assertValueEqual(warns.size(), 2, "again once it has decoded");
+            use.accept(bad);
+            KnowledgeService.onServerStopped();
+            use.accept(bad);
+            helper.assertValueEqual(warns.size(), 3, "again in the next session");
+        } finally {
+            KnowledgeService.swapWarner(previous);
+        }
         helper.succeed();
     }
 

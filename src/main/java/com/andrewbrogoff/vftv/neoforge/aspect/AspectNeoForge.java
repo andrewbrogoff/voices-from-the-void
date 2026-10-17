@@ -8,6 +8,7 @@ import com.andrewbrogoff.vftv.api.neoforge.aspect.ThingScannedEvent;
 import com.andrewbrogoff.vftv.core.aspect.AspectEntry;
 import com.andrewbrogoff.vftv.core.aspect.AspectEvents;
 import com.andrewbrogoff.vftv.core.aspect.AspectLookup;
+import com.andrewbrogoff.vftv.core.aspect.KnowledgeService;
 import com.andrewbrogoff.vftv.core.aspect.ScanningService;
 import com.andrewbrogoff.vftv.core.aspect.Strikes;
 import com.andrewbrogoff.vftv.core.aspect.model.ScanningTuning;
@@ -36,6 +37,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -100,6 +102,7 @@ public final class AspectNeoForge {
                                 Identifier.fromNamespaceAndPath("vftv", "scanning_tuning"),
                                 new TuningListener(
                                         ServerLifecycleHooks.getCurrentServer() == null)));
+        gameBus.addListener(ServerStoppedEvent.class, event -> KnowledgeService.onServerStopped());
         gameBus.addListener(
                 TagsUpdatedEvent.class,
                 event ->
