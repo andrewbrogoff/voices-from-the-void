@@ -1,4 +1,10 @@
 {
   "feature": "warp",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "vftv warp set @s lasting 20"}},
+    {"op": "cmd", "args": {"command": "vftv warp set @s permanent 10"}},
+    {"op": "cmd", "args": {"command": "vftv warp set @s counter 1000"}},
+    {"op": "wait_ticks", "args": {"ticks": 5}},
+    {"op": "dump", "args": {"kind": "vftv:warp_client"}, "expect": {"total": {"gte": 24}, "counter": 1000}}
+  ]
 }
