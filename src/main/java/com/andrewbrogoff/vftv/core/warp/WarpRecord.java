@@ -5,6 +5,9 @@ import com.andrewbrogoff.vftv.api.warp.WarpState;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.codecs.PrimitiveCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -54,41 +57,77 @@ public record WarpRecord(
     public static final WarpRecord EMPTY =
             new WarpRecord(FORMAT, 0, 0, 0, 0, 0, 0, List.of(), -1, false, 0);
 
+    /**
+     * An int that never narrows: a fraction or a value outside {@code int} fails, so the raw record
+     * codec keeps the tag instead of rewriting it. ({@code Codec.INT} would truncate.)
+     */
+    private static final Codec<Integer> EXACT_INT =
+            new PrimitiveCodec<>() {
+                @Override
+                public <T> DataResult<Integer> read(DynamicOps<T> ops, T input) {
+                    return exact(ops, input)
+                            .flatMap(
+                                    v ->
+                                            v == (int) (long) v
+                                                    ? DataResult.success((int) (long) v)
+                                                    : DataResult.error(() -> "not an int: " + v));
+                }
+
+                @Override
+                public <T> T write(DynamicOps<T> ops, Integer value) {
+                    return ops.createInt(value);
+                }
+            };
+
+    /** A long that never narrows: a fraction or a value outside {@code long} fails. */
+    private static final Codec<Long> EXACT_LONG =
+            new PrimitiveCodec<>() {
+                @Override
+                public <T> DataResult<Long> read(DynamicOps<T> ops, T input) {
+                    return exact(ops, input);
+                }
+
+                @Override
+                public <T> T write(DynamicOps<T> ops, Long value) {
+                    return ops.createLong(value);
+                }
+            };
+
     /** The bounded persisted form: every field required; the constructor checks the bounds. */
     public static final Codec<WarpRecord> CODEC =
             RecordCodecBuilder.create(
                     i ->
                             i.group(
-                                            Codec.INT
+                                            EXACT_INT
                                                     .fieldOf("format")
                                                     .forGetter(WarpRecord::format),
-                                            Codec.INT
+                                            EXACT_INT
                                                     .fieldOf("temporary")
                                                     .forGetter(WarpRecord::temporary),
-                                            Codec.INT
+                                            EXACT_INT
                                                     .fieldOf("lasting")
                                                     .forGetter(WarpRecord::lasting),
-                                            Codec.INT
+                                            EXACT_INT
                                                     .fieldOf("permanent")
                                                     .forGetter(WarpRecord::permanent),
-                                            Codec.INT.fieldOf("gear").forGetter(WarpRecord::gear),
-                                            Codec.INT
+                                            EXACT_INT.fieldOf("gear").forGetter(WarpRecord::gear),
+                                            EXACT_INT
                                                     .fieldOf("counter")
                                                     .forGetter(WarpRecord::counter),
-                                            Codec.LONG
+                                            EXACT_LONG
                                                     .fieldOf("checks")
                                                     .forGetter(WarpRecord::checks),
                                             Identifier.CODEC
                                                     .listOf()
                                                     .fieldOf("milestones_paid")
                                                     .forGetter(WarpRecord::milestonesPaid),
-                                            Codec.LONG
+                                            EXACT_LONG
                                                     .fieldOf("last_listen")
                                                     .forGetter(WarpRecord::lastListen),
                                             Codec.BOOL
                                                     .fieldOf("silenced")
                                                     .forGetter(WarpRecord::silenced),
-                                            Codec.LONG
+                                            EXACT_LONG
                                                     .fieldOf("revision")
                                                     .forGetter(WarpRecord::revision))
                                     .apply(i, WarpRecord::new));
@@ -159,6 +198,24 @@ public record WarpRecord(
             json.add("milestonesPaid", paid);
         }
         return json;
+    }
+
+    /** A number as a long, only when that is exact: integer types, or an integral double. */
+    private static <T> DataResult<Long> exact(DynamicOps<T> ops, T input) {
+        return ops.getNumberValue(input)
+                .flatMap(
+                        n -> {
+                            if (n instanceof Long
+                                    || n instanceof Integer
+                                    || n instanceof Short
+                                    || n instanceof Byte) {
+                                return DataResult.success(n.longValue());
+                            }
+                            double d = n.doubleValue();
+                            return d == Math.rint(d) && Math.abs(d) <= (1L << 53)
+                                    ? DataResult.success((long) d)
+                                    : DataResult.error(() -> "not an integer: " + n);
+                        });
     }
 
     private static void check(boolean ok, String what) {

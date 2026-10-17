@@ -25,8 +25,11 @@ public record WarpRulesPayload(WarpRules rules) implements CustomPacketPayload {
     public static final Type<WarpRulesPayload> TYPE =
             new Type<>(Identifier.fromNamespaceAndPath("vftv", "warp_rules"));
 
-    /** The longest encoded record accepted, in characters; the defaults take about 800. */
-    static final int MAX_CHARS = 8192;
+    /**
+     * The longest encoded record accepted, in characters: the defaults take about 800, and the
+     * largest valid record (16 dimensions and 16 milestones of 256 characters) under 10,000.
+     */
+    static final int MAX_CHARS = 16_384;
 
     /**
      * The rules' codec: the record's JSON form (every tuning key, {@code format} and the switches),

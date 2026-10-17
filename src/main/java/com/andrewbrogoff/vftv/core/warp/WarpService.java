@@ -218,6 +218,12 @@ public final class WarpService {
     private static @Nullable WarpPreview preview(
             WarpRecord r, WarpCost cost, WarpSource source, WarpRules rules) {
         Identifier id = source.id();
+        if (id != null
+                && r.milestonesPaid().size() >= WarpLimits.MAX_MILESTONES
+                && !r.milestonesPaid().contains(id)
+                && WarpMath.isMilestone(cost.permanent(), source.kind(), id.toString(), rules)) {
+            return null; // the paid set is full: a new milestone can't be recorded
+        }
         return WarpMath.preview(
                 r.temporary(),
                 r.lasting(),

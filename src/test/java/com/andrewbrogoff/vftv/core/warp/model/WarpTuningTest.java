@@ -84,7 +84,11 @@ class WarpTuningTest {
         assertTrue(rejected("{\"grace\": 6001}").contains("outside"));
         assertTrue(rejected("{\"check.interval\": 199}").contains("outside"));
         assertTrue(rejected("{\"bands\": [1, 2]}").contains("entries"));
-        assertTrue(rejected("{\"context.dimensions\": [\"Not An Id\"]}").contains("id"));
+        assertTrue(
+                rejected("{\"context.dimensions\": [\"Not An Id\"]}").contains("does not match"));
+        assertTrue(
+                rejected("{\"context.dimensions\": [\"vftv:" + "x".repeat(260) + "\"]}")
+                        .contains("length"));
         assertTrue(rejected("{\"grace\": 1, \"grace\": 2}").contains("malformed"));
         assertTrue(rejected("[]").contains("not a JSON object"));
     }

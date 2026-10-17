@@ -94,6 +94,10 @@ class WarpRecordTest {
                         t -> t.putLong("revision", -1),
                         t -> t.putString("from_the_future", "kept"),
                         t -> t.putString("temporary", "three"),
+                        t -> t.putLong("temporary", 4_294_967_296L),
+                        t -> t.putDouble("counter", 1.5),
+                        t -> t.putDouble("checks", 1.5),
+                        t -> t.putDouble("format", 1.25),
                         t -> {
                             ListTag paid = new ListTag();
                             paid.add(StringTag.valueOf("vftv:joining"));

@@ -102,6 +102,26 @@ class WarpRulesServiceTest {
                         .isError());
     }
 
+    /** 16 dimensions and 16 milestones, each id 256 characters long, still fit the wire bound. */
+    @Test
+    void theLargestRecordFitsTheWire() {
+        var json = WarpTuning.toJson(WarpTuning.DEFAULTS, true);
+        var dimensions = new com.google.gson.JsonArray();
+        var milestones = new com.google.gson.JsonObject();
+        for (int i = 0; i < 16; i++) {
+            String id = "vftv:" + (char) ('a' + i) + "x".repeat(250);
+            dimensions.add(id);
+            milestones.addProperty(i == 0 ? WarpTuning.JOINING : id, 1);
+        }
+        json.add("context.dimensions", dimensions);
+        json.add("permanent.milestones", milestones);
+        json.addProperty("permanent.cap", 100);
+        WarpRules big = WarpTuning.fromJson(json, true);
+        ByteBuf buf = Unpooled.buffer();
+        WarpRulesPayload.STREAM_CODEC.encode(buf, new WarpRulesPayload(big));
+        assertEquals(big, WarpRulesPayload.STREAM_CODEC.decode(buf).rules());
+    }
+
     @Test
     void aHostilePayloadIsRejectedAtDecode() {
         for (String text :

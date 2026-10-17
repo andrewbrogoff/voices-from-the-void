@@ -238,7 +238,7 @@ public final class WarpTuning {
         fields.add(
                 new Schema.Field(
                         "context.dimensions",
-                        new Schema.ListOf(new Schema.Id(), 0, 16, true),
+                        new Schema.ListOf(new Schema.Str(1, 256, ID), 0, 16, true),
                         record));
         fields.add(
                 new Schema.Field(
