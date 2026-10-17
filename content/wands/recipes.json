@@ -1,0 +1,6 @@
+{
+  "schema": "vftv:wand_recipes/1",
+  "recipes": {
+    "vftv:wand_assembly": {"type": "vftv:wand_assembly", "category": "equipment"}
+  }
+}

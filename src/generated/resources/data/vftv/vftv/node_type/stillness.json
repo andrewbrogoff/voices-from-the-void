@@ -1,0 +1,29 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:ordo",
+      "range": [
+        16,
+        40
+      ]
+    },
+    {
+      "aspect": "vftv:aqua",
+      "range": [
+        8,
+        24
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:spawns_snow_foxes"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:ordo",
+  "natural": true,
+  "weight": 100
+}

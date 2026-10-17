@@ -1,0 +1,57 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:aer",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:aqua",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:ignis",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:ordo",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:perditio",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:terra",
+      "range": [
+        4,
+        12
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:is_overworld"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:aer",
+  "natural": true,
+  "weight": 10
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "vftv:node_types/1",
+  "types": {
+    "vftv:wellspring": {
+      "aspects": [
+        {"aspect": "vftv:aer", "range": [32, 32]},
+        {"aspect": "vftv:aqua", "range": [32, 32]},
+        {"aspect": "vftv:ignis", "range": [32, 32]},
+        {"aspect": "vftv:ordo", "range": [32, 32]},
+        {"aspect": "vftv:perditio", "range": [32, 32]},
+        {"aspect": "vftv:terra", "range": [32, 32]}
+      ],
+      "main_aspect": "vftv:aer",
+      "clarity": {"faint": 0, "steady": 0, "clear": 1},
+      "anchored": true
+    },
+    "vftv:windward": {
+      "aspects": [{"aspect": "vftv:aer", "range": [16, 40]}, {"aspect": "vftv:terra", "range": [8, 24]}],
+      "main_aspect": "vftv:aer",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:is_hill", "minecraft:is_mountain", "minecraft:has_structure/village_plains"],
+      "weight": 100
+    },
+    "vftv:hearth": {
+      "aspects": [{"aspect": "vftv:ignis", "range": [16, 40]}, {"aspect": "vftv:terra", "range": [8, 24]}],
+      "main_aspect": "vftv:ignis",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:is_badlands", "minecraft:is_savanna", "minecraft:has_structure/desert_pyramid"],
+      "weight": 100
+    },
+    "vftv:tidewater": {
+      "aspects": [{"aspect": "vftv:aqua", "range": [16, 40]}, {"aspect": "vftv:aer", "range": [8, 24]}],
+      "main_aspect": "vftv:aqua",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:is_ocean", "minecraft:is_river", "minecraft:is_beach"],
+      "weight": 100
+    },
+    "vftv:mire": {
+      "aspects": [{"aspect": "vftv:perditio", "range": [16, 40]}, {"aspect": "vftv:aqua", "range": [8, 24]}],
+      "main_aspect": "vftv:perditio",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:has_structure/swamp_hut", "minecraft:has_structure/woodland_mansion"],
+      "weight": 100
+    },
+    "vftv:greenwood": {
+      "aspects": [{"aspect": "vftv:terra", "range": [16, 40]}, {"aspect": "vftv:ordo", "range": [8, 24]}],
+      "main_aspect": "vftv:terra",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:is_forest", "minecraft:is_taiga", "minecraft:is_jungle"],
+      "weight": 100
+    },
+    "vftv:stillness": {
+      "aspects": [{"aspect": "vftv:ordo", "range": [16, 40]}, {"aspect": "vftv:aqua", "range": [8, 24]}],
+      "main_aspect": "vftv:ordo",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:spawns_snow_foxes"],
+      "weight": 100
+    },
+    "vftv:wild": {
+      "aspects": [
+        {"aspect": "vftv:aer", "range": [4, 12]},
+        {"aspect": "vftv:aqua", "range": [4, 12]},
+        {"aspect": "vftv:ignis", "range": [4, 12]},
+        {"aspect": "vftv:ordo", "range": [4, 12]},
+        {"aspect": "vftv:perditio", "range": [4, 12]},
+        {"aspect": "vftv:terra", "range": [4, 12]}
+      ],
+      "main_aspect": "vftv:aer",
+      "clarity": {"faint": 50, "steady": 35, "clear": 15},
+      "natural": true,
+      "biomes": ["minecraft:is_overworld"],
+      "weight": 10
+    }
+  }
+}

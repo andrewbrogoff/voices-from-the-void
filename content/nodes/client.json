@@ -1,0 +1,13 @@
+{
+  "schema": "vftv:node_client/1",
+  "core": {
+    "base_size": 0.30,
+    "size_per_root": 0.05,
+    "max_size": 1.00,
+    "frame_ticks": {"faint": 6, "steady": 4, "clear": 2},
+    "scale": {"faint": 0.80, "steady": 0.90, "clear": 1.00}
+  },
+  "motes": {"size": 0.25, "orbit_radius": 0.60, "orbit_ticks": 80, "bob": 0.05},
+  "glints": {"every_ticks": 10, "range": 16, "lifetime_ticks": 20},
+  "hum": {"min_interval_ticks": 160, "range": 8, "max_playing": 4}
+}

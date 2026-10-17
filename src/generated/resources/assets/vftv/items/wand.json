@@ -1,0 +1,57 @@
+{
+  "model": {
+    "type": "minecraft:composite",
+    "models": [
+      {
+        "type": "minecraft:select",
+        "cases": [
+          {
+            "model": {
+              "type": "minecraft:model",
+              "model": "vftv:item/wand/rod/chime"
+            },
+            "when": "vftv:chime"
+          },
+          {
+            "model": {
+              "type": "minecraft:model",
+              "model": "vftv:item/wand/rod/wooden"
+            },
+            "when": "vftv:wooden"
+          }
+        ],
+        "component": "vftv:wand_rod",
+        "fallback": {
+          "type": "minecraft:model",
+          "model": "vftv:item/wand/rod/unknown"
+        },
+        "property": "minecraft:component"
+      },
+      {
+        "type": "minecraft:select",
+        "cases": [
+          {
+            "model": {
+              "type": "minecraft:model",
+              "model": "vftv:item/wand/cap/copper"
+            },
+            "when": "vftv:copper"
+          },
+          {
+            "model": {
+              "type": "minecraft:model",
+              "model": "vftv:item/wand/cap/resonant_brass"
+            },
+            "when": "vftv:resonant_brass"
+          }
+        ],
+        "component": "vftv:wand_cap",
+        "fallback": {
+          "type": "minecraft:model",
+          "model": "vftv:item/wand/cap/unknown"
+        },
+        "property": "minecraft:component"
+      }
+    ]
+  }
+}

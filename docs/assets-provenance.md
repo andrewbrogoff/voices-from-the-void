@@ -36,6 +36,10 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/item/wand/rod/{wooden,chime,unknown}.png`, `…/wand/cap/{copper,resonant_brass,unknown}.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/wands.py` (shared rod and cap silhouettes, outline split by layer); deterministic, no seed | palette lock in `lib.save()`; every rod × cap composite on the contact sheet `build/previews/wands.png`, reviewed at GUI scale 2 and 3 with greyscale and CVD previews | 2026-10-17 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/item/chime_rod.png`, `resonant_brass_cap.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/wands.py` `chime_rod_icon()`, `resonant_brass_cap_icon()` | outline, palette lock; Stage 2 inlaid teal pip; contact sheet `build/previews/wands.png` | 2026-10-17 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/block/node_core.png` (16×128, 8 frames) | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/nodes.py` `core_strip()` | cutout, palette lock; flash test asserted in the generator (adjacent frames differ < 0.10 in mean luminance); contact sheet `build/previews/nodes.png` | 2026-10-17 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/particle/node_glint_{0..3}.png` (8×8) | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/nodes.py` `glint()` | palette lock; contact sheet `build/previews/nodes.png` | 2026-10-17 | none (agent-authored) |
 
 ## arcane
 

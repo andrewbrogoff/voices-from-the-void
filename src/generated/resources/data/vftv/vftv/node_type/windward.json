@@ -1,0 +1,31 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:aer",
+      "range": [
+        16,
+        40
+      ]
+    },
+    {
+      "aspect": "vftv:terra",
+      "range": [
+        8,
+        24
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:is_hill",
+    "minecraft:is_mountain",
+    "minecraft:has_structure/village_plains"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:aer",
+  "natural": true,
+  "weight": 100
+}

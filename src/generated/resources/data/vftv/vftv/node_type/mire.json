@@ -1,0 +1,30 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:perditio",
+      "range": [
+        16,
+        40
+      ]
+    },
+    {
+      "aspect": "vftv:aqua",
+      "range": [
+        8,
+        24
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:has_structure/swamp_hut",
+    "minecraft:has_structure/woodland_mansion"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:perditio",
+  "natural": true,
+  "weight": 100
+}

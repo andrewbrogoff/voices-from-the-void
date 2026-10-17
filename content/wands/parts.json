@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:wand_parts/1",
+  "rods": {
+    "vftv:wooden": {"item": "minecraft:stick", "capacity": 40},
+    "vftv:chime": {"item": "vftv:chime_rod", "capacity": 150}
+  },
+  "caps": {
+    "vftv:copper": {"item": "minecraft:copper_nugget", "cost_multiplier": 1.00},
+    "vftv:resonant_brass": {"item": "vftv:resonant_brass_cap", "cost_multiplier": 0.85}
+  }
+}

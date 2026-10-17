@@ -1,0 +1,22 @@
+{
+  "cultivate.clarity_cost": 48,
+  "cultivate.max_capacity": 250,
+  "cultivate.per_max": 4,
+  "cultivate.suction": 16,
+  "node.min_spacing": 3.0,
+  "quote.max_discount": 0.3,
+  "quote.max_multiplier": 4.0,
+  "quote.min_multiplier": 0.5,
+  "regen.divisor": 20,
+  "regen.interval.clear": 40,
+  "regen.interval.faint": 160,
+  "regen.interval.steady": 80,
+  "relay.pulse": 20,
+  "relay.range": 10.0,
+  "relay.rate": 4,
+  "starter.height": 3,
+  "starter.min_ring": 8,
+  "starter.ring": 24,
+  "tap.amount": 2,
+  "tap.interval": 4
+}
