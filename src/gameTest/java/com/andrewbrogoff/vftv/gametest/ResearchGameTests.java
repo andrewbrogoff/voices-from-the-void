@@ -204,7 +204,9 @@ final class ResearchGameTests {
                         + base
                         + "\"position\": [9, 9], \"kind\": \"find\", \"triggers\": ["
                         + "{\"type\": \"vftv:scanned\", \"key\": \"item:minecraft:torch\"},"
-                        + "{\"type\": \"vftv:scanned\", \"key\": \"entity:vftv:nothing\"}],"
+                        + "{\"type\": \"vftv:scanned\", \"key\": \"entity:vftv:nothing\"},"
+                        + "{\"type\": \"vftv:scanned\", \"key\": \"item:minecraft:air\"},"
+                        + "{\"type\": \"vftv:scanned\", \"key\": \"entity:minecraft:item\"}],"
                         + text
                         + "}";
         List<String> scanProblems =
@@ -215,8 +217,9 @@ final class ResearchGameTests {
                                         .parse(JsonOps.INSTANCE, JsonParser.parseString(scanned))
                                         .getOrThrow()));
         helper.assertTrue(
-                scanProblems.size() == 1 && scanProblems.getFirst().contains("entity:vftv:nothing"),
-                "a scan key naming nothing registered refuses: " + scanProblems);
+                scanProblems.size() == 3 && scanProblems.getFirst().contains("entity:vftv:nothing"),
+                "a scan key no strike can emit refuses (unregistered, air, a dropped item): "
+                        + scanProblems);
         helper.succeed();
     }
 

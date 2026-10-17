@@ -31,6 +31,8 @@ import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.player.Player;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -263,9 +265,14 @@ public final class ResearchService {
         int colon = key.indexOf(':');
         Identifier thing = Identifier.parse(key.substring(colon + 1));
         return switch (key.substring(0, colon)) {
-            case "item" -> BuiltInRegistries.ITEM.containsKey(thing);
+            // Air is never struck, and a dropped item is keyed as its item.
+            case "item" ->
+                    BuiltInRegistries.ITEM.containsKey(thing)
+                            && !thing.equals(BuiltInRegistries.ITEM.getDefaultKey());
             case "block" -> BuiltInRegistries.BLOCK.containsKey(thing);
-            case "entity" -> BuiltInRegistries.ENTITY_TYPE.containsKey(thing);
+            case "entity" ->
+                    BuiltInRegistries.ENTITY_TYPE.containsKey(thing)
+                            && !thing.equals(EntityType.getKey(EntityTypes.ITEM));
             default -> true; // a node key: nodes live in the world, not a registry
         };
     }
