@@ -66,6 +66,7 @@ final class AspectDerivationGameTests {
             new AspectValues(new TreeMap<>(Map.of(AspectKeys.ARBOR, 6)));
 
     private static final String PACK = "vftv_derived_vftv_gametest";
+    private static final String ABSENT = "vftv_derived_vftv_absent";
 
     private AspectDerivationGameTests() {}
 
@@ -194,6 +195,8 @@ final class AspectDerivationGameTests {
         Path derived = server.getWorldPath(LevelResource.ROOT).resolve("vftv/derived").normalize();
         Path installed = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve(PACK);
         String id = "file/" + PACK;
+        Path absent = server.getWorldPath(LevelResource.DATAPACK_DIR).resolve(ABSENT);
+        String absentId = "file/" + ABSENT;
         try {
             var first = DerivationExport.run(server);
             helper.assertTrue(first instanceof DerivationExport.Outcome.Done, "exported: " + first);
@@ -231,9 +234,17 @@ final class AspectDerivationGameTests {
             same(helper, read(derived), files, "byte-identical");
 
             copy(derived.resolve(PACK), installed);
+            // A derived pack for a mod that is gone: its conditioned entries are skipped whole.
+            write(absent.resolve("pack.mcmeta"), files.get(PACK + "/pack.mcmeta"));
+            write(
+                    absent.resolve("data/vftv/data_maps/item/aspects.json"),
+                    "{\"values\": {\"vftv_gametest:cycle_a\": {\"neoforge:conditions\":"
+                            + " [{\"type\": \"neoforge:mod_loaded\", \"modid\":"
+                            + " \"vftv_absent\"}], \"vftv:aer\": 1}}}\n");
             server.getPackRepository().reload();
             List<String> enabled = new ArrayList<>(server.getPackRepository().getSelectedIds());
             enabled.add(id);
+            enabled.add(absentId);
             server.reloadResources(enabled).join();
             same(
                     helper,
@@ -246,10 +257,16 @@ final class AspectDerivationGameTests {
             same(
                     helper,
                     DerivationExport.run(server),
-                    new DerivationExport.Outcome.Installed(List.of(id)),
+                    new DerivationExport.Outcome.Installed(List.of(absentId, id)),
                     "refused while installed");
+            same(
+                    helper,
+                    BuiltInRegistries.ITEM.wrapAsHolder(CYCLE_A.get()).getData(AspectDataMaps.ITEM),
+                    null,
+                    "an absent mod's entry is skipped");
 
             enabled.remove(id);
+            enabled.remove(absentId);
             server.reloadResources(enabled).join();
             same(
                     helper,
@@ -260,6 +277,7 @@ final class AspectDerivationGameTests {
             same(helper, read(derived), files, "a full rebuild gives the same files");
         } finally {
             delete(installed);
+            delete(absent);
         }
         helper.succeed();
     }
@@ -301,6 +319,14 @@ final class AspectDerivationGameTests {
             throw new UncheckedIOException(e);
         }
         return out;
+    }
+
+    private static void write(Path file, @Nullable String text) {
+        try {
+            DerivationExport.DISK.write(file, Objects.requireNonNull(text));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     private static void copy(Path from, Path to) {

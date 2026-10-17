@@ -73,7 +73,7 @@ class DerivationExportTest {
                 Objects.requireNonNull(
                         first.get("vftv_derived_beta/data/vftv/data_maps/item/aspects.json"));
         assertTrue(alpha.contains("\"modid\": \"alpha\""), alpha);
-        assertTrue(alpha.contains("\"alpha:widget\": {\n      \"vftv:arbor\": 3\n    }"), alpha);
+        assertTrue(alpha.contains("\"vftv:arbor\": 3\n    }"), alpha);
         assertFalse(beta.contains("neoforge:conditions"), beta);
         assertTrue(first.containsKey("vftv_derived_alpha/pack.mcmeta"));
         assertTrue(alpha.endsWith("}\n"));

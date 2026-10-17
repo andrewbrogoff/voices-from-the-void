@@ -255,19 +255,30 @@ public final class DerivationExport {
                 (ns, items) -> {
                     String pack = "vftv_derived_" + ns + "/";
                     out.put(pack + "pack.mcmeta", json(meta(ns)));
-                    JsonObject map = new JsonObject();
+                    // NeoForge evaluates conditions per data-map entry, not per file, so each
+                    // entry carries its mod_loaded; a removed mod's entries are skipped silently.
+                    JsonArray conditions = new JsonArray();
                     if (loaded.containsKey(ns)) {
                         JsonObject condition = new JsonObject();
                         condition.addProperty("type", "neoforge:mod_loaded");
                         condition.addProperty("modid", ns);
-                        JsonArray conditions = new JsonArray();
                         conditions.add(condition);
-                        map.add("neoforge:conditions", conditions);
                     } else {
                         unconditioned.add(ns);
                     }
                     JsonObject entries = new JsonObject();
-                    items.forEach((item, value) -> entries.add(item, value(value)));
+                    items.forEach(
+                            (item, value) -> {
+                                JsonObject entry = new JsonObject();
+                                if (!conditions.isEmpty()) {
+                                    entry.add("neoforge:conditions", conditions.deepCopy());
+                                }
+                                value(value)
+                                        .entrySet()
+                                        .forEach(e -> entry.add(e.getKey(), e.getValue()));
+                                entries.add(item, entry);
+                            });
+                    JsonObject map = new JsonObject();
                     map.add("values", entries);
                     out.put(pack + "data/vftv/data_maps/item/aspects.json", json(map));
                 });
