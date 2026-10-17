@@ -167,6 +167,14 @@ class ResearchCodecsTest {
         rejects(
                 entry(", \"triggers\": [{\"type\": \"vftv:scanned\", \"key\": \"gem\"}]"),
                 "not a scan key");
+        rejects(
+                entry(", \"triggers\": [{\"type\": \"vftv:scanned\", \"key\": \"node:0001\"}]"),
+                "not a node key");
+        rejects(
+                entry(
+                        ", \"triggers\": [{\"type\": \"vftv:scanned\","
+                                + " \"key\": \"node:9999999999999999999\"}]"),
+                "not a node key");
         assertTrue(
                 parse(
                                 ResearchCodecs.ENTRY,

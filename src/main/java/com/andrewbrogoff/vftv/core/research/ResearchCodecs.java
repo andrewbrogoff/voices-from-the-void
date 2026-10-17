@@ -38,9 +38,25 @@ public final class ResearchCodecs {
 
     private static final String ID_TEXT = "[a-z0-9_.-]+:[a-z0-9_./-]+";
 
-    /** A scan key: {@code item:}, {@code block:} or {@code entity:} and an id, or {@code node:}. */
+    /**
+     * A scan key: {@code item:}, {@code block:} or {@code entity:} and an id, or {@code node:} and
+     * a {@code long} in its canonical decimal form, exactly as {@code ScanKey} prints them.
+     */
     static final Codec<String> SCAN_KEY =
-            pattern("(item|block|entity):" + ID_TEXT + "|node:-?[0-9]{1,19}", "a scan key");
+            pattern("(item|block|entity):" + ID_TEXT + "|node:-?[0-9]{1,19}", "a scan key")
+                    .validate(
+                            s ->
+                                    !s.startsWith("node:") || canonicalLong(s.substring(5))
+                                            ? DataResult.success(s)
+                                            : DataResult.error(() -> s + " is not a node key"));
+
+    private static boolean canonicalLong(String digits) {
+        try {
+            return Long.toString(Long.parseLong(digits)).equals(digits);
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
 
     /** A scan key of a thing (never a node). */
     static final Codec<String> THING_KEY = pattern("(item|block|entity):" + ID_TEXT, "a scan key");
