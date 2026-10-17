@@ -3,6 +3,7 @@ package com.andrewbrogoff.vftv;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.andrewbrogoff.vftv.api.TestItems;
 import com.andrewbrogoff.vftv.core.Vftv;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -245,6 +246,7 @@ class ResourceReferencesTest {
 
     @Test
     void everyReferencedResourceExists() throws IOException {
+        TestItems.bindComponents();
         Set<String> visibleBlocks = new TreeSet<>();
         Set<String> nameKeys = new TreeSet<>();
         ours(BuiltInRegistries.BLOCK)

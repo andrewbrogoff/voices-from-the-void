@@ -1,0 +1,19 @@
+{
+  "model": {
+    "type": "minecraft:range_dispatch",
+    "entries": [
+      {
+        "model": {
+          "type": "minecraft:model",
+          "model": "vftv:item/tuning_fork_ringing"
+        },
+        "threshold": 0.01
+      }
+    ],
+    "fallback": {
+      "type": "minecraft:model",
+      "model": "vftv:item/tuning_fork"
+    },
+    "property": "minecraft:cooldown"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "category": "equipment",
+  "ingredients": [
+    "minecraft:copper_ingot",
+    "minecraft:amethyst_shard"
+  ],
+  "result": {
+    "id": "vftv:tuning_fork"
+  }
+}

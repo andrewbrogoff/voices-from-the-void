@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:aspects/1",
+  "items": {
+    "vftv:tuning_fork": {
+      "vftv:instrumentum": 1,
+      "vftv:metallum": 2,
+      "vftv:sonus": 2,
+      "vftv:vitreus": 1
+    }
+  }
+}

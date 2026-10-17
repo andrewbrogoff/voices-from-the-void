@@ -1,0 +1,11 @@
+{
+  "color": 3422281,
+  "hidden_primal": {
+    "revealed_by": "vftv:silence_beneath",
+    "taught_parents": [
+      "vftv:aer",
+      "vftv:perditio"
+    ]
+  },
+  "parents": []
+}
