@@ -7,11 +7,15 @@ import com.andrewbrogoff.vftv.core.essentia.client.EssentiaTooltips;
 import com.andrewbrogoff.vftv.core.essentia.client.FlowMotes;
 import com.andrewbrogoff.vftv.core.essentia.client.JarRenderer;
 import com.andrewbrogoff.vftv.core.essentia.client.TubeRenderer;
+import java.util.Map;
+import java.util.function.Function;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.InterModComms;
+import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientPlayerNetworkEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
@@ -68,5 +72,15 @@ public final class EssentiaNeoForgeClient {
         NeoForge.EVENT_BUS.addListener(ClientTickEvent.Post.class, event -> FlowMotes.tick());
         NeoForge.EVENT_BUS.addListener(
                 ClientPlayerNetworkEvent.LoggingOut.class, event -> ClientEssentia.clear());
+        // The harness's vftv:essentia dump; goes nowhere without the harness.
+        modBus.addListener(
+                InterModEnqueueEvent.class,
+                event ->
+                        InterModComms.sendTo(
+                                "mc_agent_harness",
+                                "dump_client",
+                                () ->
+                                        Map.<String, Function<String, String>>entry(
+                                                "vftv:essentia", ClientEssentia::dump)));
     }
 }

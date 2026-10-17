@@ -12,6 +12,7 @@ import com.andrewbrogoff.vftv.core.essentia.EssentiaRules;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaStatus;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.logging.LogUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -114,6 +115,48 @@ public final class ClientEssentia {
         }
         moteSpeed = speed;
         moteSize = size;
+    }
+
+    /**
+     * The harness's {@code vftv:essentia} dump: whether rules arrived, the capacity, the mote
+     * numbers and live motes, and with {@code args} "x y z" the client's view of a jar there.
+     */
+    public static String dump(String args) {
+        JsonObject data = new JsonObject();
+        data.addProperty("rules", rules != null);
+        data.addProperty("capacity", capacity());
+        data.addProperty("moteSpeed", moteSpeed);
+        data.addProperty("moteSize", moteSize);
+        data.addProperty("motes", FlowMotes.live());
+        var level = Minecraft.getInstance().level;
+        if (level != null) {
+            try {
+                var xyz = JsonParser.parseString(args).getAsJsonObject().getAsJsonArray("pos");
+                var pos =
+                        xyz == null
+                                ? null
+                                : new net.minecraft.core.BlockPos(
+                                        xyz.get(0).getAsInt(),
+                                        xyz.get(1).getAsInt(),
+                                        xyz.get(2).getAsInt());
+                if (pos != null
+                        && level.getBlockEntity(pos)
+                                instanceof
+                                com.andrewbrogoff.vftv.core.essentia.JarBlockEntity jar) {
+                    var c = jar.contents();
+                    data.addProperty("readable", jar.readable());
+                    data.addProperty(
+                            "aspect", c.aspect() == null ? "" : c.aspect().identifier().toString());
+                    data.addProperty("amount", c.amount());
+                    data.addProperty(
+                            "label",
+                            jar.label() == null ? "" : jar.label().identifier().toString());
+                }
+            } catch (RuntimeException e) {
+                data.addProperty("error", "pos is [x, y, z]");
+            }
+        }
+        return data.toString();
     }
 
     /** The aspect's holder in the client's registries, if it has one. */
