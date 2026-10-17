@@ -1,0 +1,7 @@
+# The essentia feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:essentia.jar_fill
+vftv:essentia.label_apply
+vftv:essentia.label_cut
+vftv:essentia.valve_open
+vftv:essentia.valve_close
+vftv:essentia.alembic_drip

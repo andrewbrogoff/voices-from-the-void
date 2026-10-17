@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vftv:block/alembic",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vftv:block/alembic"
+    },
+    "facing=south": {
+      "model": "vftv:block/alembic",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vftv:block/alembic",
+      "y": 270
+    }
+  }
+}
