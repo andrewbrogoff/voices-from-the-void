@@ -14,3 +14,8 @@ vftv:aspect_phantom_is_silent
 vftv:aspect_sounding_and_nodes
 vftv:aspect_credit_never_teaches
 vftv:aspect_unreadable_warns_per_session
+vftv:aspect_derived_at_load
+vftv:aspect_derive_modded_switch
+vftv:aspect_derived_sync
+vftv:aspect_derive_permission
+vftv:aspect_derive_round_trip

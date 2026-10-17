@@ -5,6 +5,9 @@
     "minecraft:obsidian": {"vftv:tenebrae": 3, "vftv:terra": 2},
     "minecraft:iron_ingot": {"vftv:metallum": 4},
     "minecraft:glass": {"vftv:vitreus": 1, "vftv:terra": 1},
-    "minecraft:paper": {"vftv:aer": 1}
-  }
+    "minecraft:paper": {"vftv:aer": 1},
+    "vftv_gametest:authored_widget": {"vftv:ordo": 2},
+    "vftv_gametest:suppressed_widget": {}
+  },
+  "remove": ["minecraft:gold_ingot"]
 }

@@ -106,6 +106,7 @@ final class AspectGameTests {
         tests.put("aspect_credit_never_teaches", AspectGameTests::creditNeverTeaches);
         tests.put(
                 "aspect_unreadable_warns_per_session", AspectGameTests::unreadableWarnsPerSession);
+        AspectDerivationGameTests.register(tests, modBus);
         // Record what each mock player would be sent, and which events name them.
         Strikes.swapSender(
                 (player, result) ->
