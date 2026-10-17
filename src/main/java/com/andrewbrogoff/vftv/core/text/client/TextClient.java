@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.core.text.model.CaptionBand;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import java.util.Objects;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import org.jspecify.annotations.Nullable;
@@ -86,13 +87,20 @@ public final class TextClient {
     }
 
     /**
-     * Changes whenever measured text widths may: a resource reload (packs, fonts, language) or the
-     * font options. Every cached layout compares it.
+     * Changes whenever measured text may: a resource reload (packs, fonts, language), the font
+     * options, or a rebinding of the keys the text names. Every cached layout compares it.
      */
     static int fontKey() {
         Minecraft minecraft = Minecraft.getInstance();
-        return reloads * 4
-                + (minecraft.options.forceUnicodeFont().get() ? 1 : 0)
-                + (minecraft.options.japaneseGlyphVariants().get() ? 2 : 0);
+        int key =
+                reloads * 4
+                        + (minecraft.options.forceUnicodeFont().get() ? 1 : 0)
+                        + (minecraft.options.japaneseGlyphVariants().get() ? 2 : 0);
+        // The hint and the sheet indicator name these keys: a rebinding relays them out.
+        for (int i = 0; i < TextKeys.ALL.size(); i++) { // indexed: no iterator per frame
+            KeyMapping mapping = TextKeys.ALL.get(i);
+            key = 31 * key + mapping.saveString().hashCode();
+        }
+        return key;
     }
 }
