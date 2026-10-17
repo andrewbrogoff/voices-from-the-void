@@ -43,7 +43,11 @@ public final class CrucibleNeoForgeClient {
                 RecipesReceivedEvent.class,
                 event -> CrucibleRecipes.onRecipesReceived(event.getRecipeMap()));
         gameBus.addListener(
-                ClientPlayerNetworkEvent.LoggingOut.class, event -> CrucibleRecipes.clearClient());
+                ClientPlayerNetworkEvent.LoggingOut.class,
+                event -> {
+                    CrucibleRecipes.clearClient();
+                    CrucibleHud.clear();
+                });
         modBus.addListener(
                 InterModEnqueueEvent.class,
                 event ->

@@ -77,6 +77,18 @@ public final class CrucibleHud {
 
     private CrucibleHud() {}
 
+    /** Drops the cached content at logout, so no closed level stays held. */
+    public static void clear() {
+        shown = null;
+        shownState = null;
+        shownKnowledge = null;
+        shownRules = null;
+        lines = List.of();
+        icons = new Identifier[0];
+        amounts = new FormattedCharSequence[0];
+        spoken = new Component[0];
+    }
+
     /** The crucible the HUD describes now, or null when it doesn't show. */
     public static @Nullable CrucibleBlockEntity target() {
         Minecraft mc = Minecraft.getInstance();

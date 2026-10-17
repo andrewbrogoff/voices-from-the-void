@@ -9,7 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
-import java.util.WeakHashMap;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.ResourceKey;
@@ -27,7 +26,6 @@ import org.jspecify.annotations.Nullable;
  * root transaction closes, either way.
  */
 final class CrucibleEssentia implements ResourceHandler<EssentiaResource> {
-    private static final Map<CrucibleBlockEntity, CrucibleEssentia> HANDLERS = new WeakHashMap<>();
     private static @Nullable Slots slots;
 
     private final CrucibleBlockEntity crucible;
@@ -39,7 +37,12 @@ final class CrucibleEssentia implements ResourceHandler<EssentiaResource> {
 
     /** The handler of one block entity, bound to that instance for its life. */
     static CrucibleEssentia of(CrucibleBlockEntity crucible) {
-        return HANDLERS.computeIfAbsent(crucible, CrucibleEssentia::new);
+        if (crucible.platformHandler instanceof CrucibleEssentia handler) {
+            return handler;
+        }
+        CrucibleEssentia handler = new CrucibleEssentia(crucible);
+        crucible.platformHandler = handler;
+        return handler;
     }
 
     /** The aspect slots of a registry, sorted by id. */

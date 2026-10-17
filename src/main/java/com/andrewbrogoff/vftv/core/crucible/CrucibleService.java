@@ -207,15 +207,21 @@ public final class CrucibleService {
         if (s == null) {
             return;
         }
+        List<Long> waiting = new ArrayList<>();
         for (int i = 0; i < CrucibleLimits.MAX_REFRESHES_PER_TICK && !s.queue.isEmpty(); i++) {
             long pos = s.queue.firstLong();
             s.queue.remove(pos);
             BlockPos at = BlockPos.of(pos);
             LevelChunk chunk = level.getChunkSource().getChunkNow(at.getX() >> 4, at.getZ() >> 4);
+            CrucibleBlockEntity loaded = s.loaded.get(pos);
             if (chunk != null && chunk.getBlockEntity(at) instanceof CrucibleBlockEntity be) {
                 refresh(level, be);
+            } else if (chunk == null && loaded != null && !loaded.isRemoved()) {
+                // Loaded but its chunk isn't full yet: it stays queued, so it waits, not stalls.
+                waiting.add(pos);
             }
         }
+        s.queue.addAll(waiting);
         flush(level, s);
     }
 

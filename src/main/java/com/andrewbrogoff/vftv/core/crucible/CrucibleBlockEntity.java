@@ -104,6 +104,12 @@ public final class CrucibleBlockEntity extends BlockEntity {
     /** A removal waits for the open transaction's root to close. */
     boolean pendingRemoval;
 
+    /**
+     * The platform adapter's per-instance state (its essentia handler and journal), which lives and
+     * dies with this block entity; {@code core} never reads it.
+     */
+    public @Nullable Object platformHandler;
+
     private boolean busy;
     private int tint;
     private int tintRevision;
