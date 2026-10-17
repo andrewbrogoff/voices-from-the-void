@@ -40,6 +40,7 @@ public final class VftvData {
     /** Every feature's data, leaves first. */
     static final List<FeatureData> FEATURES =
             List.of(
+                    new TextData(),
                     new FluxData(),
                     new AspectData(),
                     new WarpData(),

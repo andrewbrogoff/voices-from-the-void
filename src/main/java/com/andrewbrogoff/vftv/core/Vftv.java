@@ -31,6 +31,8 @@ import com.andrewbrogoff.vftv.core.research.client.ResearchClientFeature;
 import com.andrewbrogoff.vftv.core.road.RoadCommands;
 import com.andrewbrogoff.vftv.core.road.RoadFeature;
 import com.andrewbrogoff.vftv.core.road.client.RoadClientFeature;
+import com.andrewbrogoff.vftv.core.text.TextFeature;
+import com.andrewbrogoff.vftv.core.text.client.TextClientFeature;
 import com.andrewbrogoff.vftv.core.vis.VisCommands;
 import com.andrewbrogoff.vftv.core.vis.VisFeature;
 import com.andrewbrogoff.vftv.core.vis.client.VisClientFeature;
@@ -68,6 +70,7 @@ public final class Vftv {
 
     /** Wires every feature to the platform, leaves first. */
     public static void init(Platform platform) {
+        TextFeature.init(platform);
         FluxFeature.init(platform);
         AspectFeature.init(platform);
         WarpFeature.init(platform);
@@ -87,6 +90,7 @@ public final class Vftv {
 
     /** Wires every feature's client half. */
     public static void initClient(ClientNetwork network) {
+        TextClientFeature.init(network);
         FluxClientFeature.init(network);
         AspectClientFeature.init(network);
         WarpClientFeature.init(network);

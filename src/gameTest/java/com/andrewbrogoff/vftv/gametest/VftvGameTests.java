@@ -109,6 +109,7 @@ public final class VftvGameTests {
         tests.put("tick_budget_records", VftvGameTests::tickBudgetRecords);
         tests.put("server_config_publish", VftvGameTests::serverConfigPublish);
         tests.put("api_data_maps_registered", VftvGameTests::apiDataMapsRegistered);
+        TextGameTests.register(tests, modBus);
         FluxGameTests.register(tests, modBus);
         AspectGameTests.register(tests, modBus);
         WarpGameTests.register(tests, modBus);
