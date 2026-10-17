@@ -3,14 +3,19 @@ package com.andrewbrogoff.vftv.datagen;
 import com.andrewbrogoff.vftv.core.Vftv;
 import com.andrewbrogoff.vftv.datagen.client.LanguageCatalogue;
 import com.andrewbrogoff.vftv.datagen.client.VftvClientData;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
+import net.minecraft.data.CachedOutput;
+import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
 import net.minecraft.data.advancements.AdvancementProvider;
 import net.minecraft.data.advancements.AdvancementSubProvider;
@@ -25,7 +30,6 @@ import net.minecraft.tags.TagBuilder;
 import net.minecraft.tags.TagKey;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.data.DataMapProvider;
-import net.neoforged.neoforge.common.data.SoundDefinitionsProvider;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 /**
@@ -191,14 +195,43 @@ public final class VftvData {
         }
     }
 
-    private static final class Sounds extends SoundDefinitionsProvider {
-        Sounds(PackOutput output) {
-            super(output, Vftv.MOD_ID);
+    /**
+     * {@code sounds.json}: every feature's events with their subtitle and an empty sound list
+     * (build plan, "Audio": no sound files until the audio ticket). Written only when some feature
+     * has one.
+     */
+    private record Sounds(PackOutput output) implements DataProvider {
+        @Override
+        public CompletableFuture<?> run(CachedOutput cache) {
+            Map<String, JsonObject> entries = new TreeMap<>();
+            FEATURES.forEach(
+                    f ->
+                            f.sounds(
+                                    (id, subtitle) -> {
+                                        JsonObject entry = new JsonObject();
+                                        entry.addProperty("subtitle", subtitle);
+                                        entry.add("sounds", new JsonArray());
+                                        if (entries.put(id.getPath(), entry) != null) {
+                                            throw new IllegalStateException(
+                                                    "sound event " + id + " added twice");
+                                        }
+                                    }));
+            if (entries.isEmpty()) {
+                return CompletableFuture.completedFuture(null);
+            }
+            JsonObject json = new JsonObject();
+            entries.forEach(json::add);
+            return DataProvider.saveStable(
+                    cache,
+                    json,
+                    output.getOutputFolder(PackOutput.Target.RESOURCE_PACK)
+                            .resolve(Vftv.MOD_ID)
+                            .resolve("sounds.json"));
         }
 
         @Override
-        public void registerSounds() {
-            FEATURES.forEach(f -> f.sounds((id, definition) -> add(id, definition)));
+        public String getName() {
+            return "vftv sounds";
         }
     }
 }
