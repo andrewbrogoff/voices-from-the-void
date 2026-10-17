@@ -48,6 +48,12 @@ public final class CrosshairCard {
 
         /** The text of grid rows {@code [fromRow, toRow)}, narrated once on a sheet turn. */
         Component narrate(int fromRow, int toRow);
+
+        /**
+         * One cell's width measured with {@code font}: the 16-px icon, a 2-px gap and the widest
+         * amount ({@code 18 + T}). Asked at every relayout, so a font change remeasures it.
+         */
+        int cellWidth(Font font);
     }
 
     private final Body body;
@@ -56,7 +62,6 @@ public final class CrosshairCard {
     private List<Component> tail = List.of();
     private List<Component> foot = List.of();
     private int cells;
-    private int cellWidth;
     private int contentSerial;
 
     private @Nullable CardLayout layout;
@@ -85,8 +90,7 @@ public final class CrosshairCard {
      * @param target what the card describes (e.g. a block position); a different target resets the
      *     card to its first sheet
      * @param head lines repeated on every sheet, unwrapped
-     * @param cells the grid's cell count
-     * @param cellWidth one cell's width: 18 + the widest amount, measured with the active font
+     * @param cells the grid's cell count, each {@link Body#cellWidth} wide
      * @param tail body lines after the grid (e.g. a "more" line), unwrapped
      * @param foot lines repeated on every sheet (e.g. a spill line), unwrapped
      */
@@ -94,13 +98,11 @@ public final class CrosshairCard {
             @Nullable Object target,
             List<Component> head,
             int cells,
-            int cellWidth,
             List<Component> tail,
             List<Component> foot) {
         cursor.target(target);
         this.head = List.copyOf(head);
         this.cells = cells;
-        this.cellWidth = cellWidth;
         this.tail = List.copyOf(tail);
         tailText = new String[0];
         this.foot = List.copyOf(foot);
@@ -238,7 +240,7 @@ public final class CrosshairCard {
                         headLines.length,
                         widest(font, headLines),
                         cells,
-                        cellWidth,
+                        body.cellWidth(font),
                         tailLines.length,
                         widest(font, tailLines),
                         footLines.length,

@@ -38,13 +38,21 @@ public final class StatusDetailsScreen extends Screen {
     protected void init() {
         left = (width - WIDTH) / 2;
         top = (height - HEIGHT) / 2;
-        titleLine = TextFit.visual(TextFit.clip(font, title, WIDTH - 16));
         TextViewport body = new TextViewport(left + 8, top + 20, 220, 72, text, font, INK);
         addRenderableWidget(body);
         addRenderableWidget(
                 Button.builder(Component.translatable(AccessibilityKeys.CLOSE), button -> onClose())
                         .bounds(left + 93, top + 96, 54, 18)
                         .build());
+        if (TextFit.clipped(font, title, WIDTH - 16)) {
+            // R2: a clipped title shows its full text on hover and focus, after the frozen order.
+            ClippedLabel label = new ClippedLabel(left + 8, top + 6, WIDTH - 16, font, INK);
+            label.setMessage(title);
+            addRenderableWidget(label);
+            titleLine = FormattedCharSequence.EMPTY;
+        } else {
+            titleLine = TextFit.visual(title);
+        }
         setInitialFocus(body);
     }
 

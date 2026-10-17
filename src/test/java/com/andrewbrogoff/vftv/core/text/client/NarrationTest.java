@@ -8,6 +8,7 @@ import com.andrewbrogoff.vftv.core.text.model.CardLayout;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import org.junit.jupiter.api.AfterEach;
@@ -91,12 +92,16 @@ class NarrationTest {
                                 narrated.add(fromRow + "-" + toRow);
                                 return Component.literal("rows " + fromRow + "-" + toRow);
                             }
+
+                            @Override
+                            public int cellWidth(Font font) {
+                                return 42;
+                            }
                         });
         card.content(
                 "target",
                 List.of(Component.literal("head")),
                 40,
-                42,
                 List.of(Component.literal("more")),
                 List.of());
         // 40 cells in 6 columns under the band's maximum: 7 rows and the more line, 4 per sheet.
@@ -122,7 +127,7 @@ class NarrationTest {
         for (int i = 0; i < 10; i++) {
             tail.add(Component.literal("t" + i));
         }
-        card.content("long tail", List.of(), 40, 42, tail, List.of());
+        card.content("long tail", List.of(), 40, tail, List.of());
         assertFalse(card.turn(1), "the old content's layout neither turns nor narrates");
         assertTrue(said.isEmpty());
         CardLayout longTail =
@@ -138,7 +143,7 @@ class NarrationTest {
         assertFalse(
                 last.contains("t0"), "a later tail sheet doesn't repeat earlier lines: " + last);
         assertTrue(last.endsWith("t9"), last);
-        card.content("other", List.of(), 40, 42, List.of(), List.of());
+        card.content("other", List.of(), 40, List.of(), List.of());
         assertEquals(0, card.sheet(), "a new target starts on the first sheet");
     }
 }
