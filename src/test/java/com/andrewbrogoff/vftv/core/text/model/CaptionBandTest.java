@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.lang.management.ManagementFactory;
+import com.andrewbrogoff.vftv.core.common.model.Allocations;
 import org.junit.jupiter.api.Test;
 
 /** The caption band (accessibility, "The caption band"), its revision and the R5 timing rules. */
@@ -93,18 +93,14 @@ class CaptionBandTest {
     @Test
     void updatingAllocatesNothing() {
         CaptionBand band = new CaptionBand();
-        var threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
-        long thread = Thread.currentThread().threadId();
-        long allocated = Long.MAX_VALUE;
-        for (int round = 0; round < 5; round++) {
-            long before = threads.getThreadAllocatedBytes(thread);
-            for (int i = 0; i < 100_000; i++) {
-                band.update(H, 39 + (i & 7), 39, i & 3, i, i % 5, i);
-                band.update(H, 39 + (i & 7), 39, i & 3, i, i % 5, i);
-            }
-            allocated = threads.getThreadAllocatedBytes(thread) - before;
-        }
-        assertEquals(0, allocated, "bytes allocated by 200,000 frames");
+        Allocations.assertNone(
+                "200,000 frames",
+                () -> {
+                    for (int i = 0; i < 100_000; i++) {
+                        band.update(H, 39 + (i & 7), 39, i & 3, i, i % 5, i);
+                        band.update(H, 39 + (i & 7), 39, i & 3, i, i % 5, i);
+                    }
+                });
     }
 
     @Test

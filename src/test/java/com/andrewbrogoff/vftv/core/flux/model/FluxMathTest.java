@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.andrewbrogoff.vftv.api.essentia.SpillCause;
 import com.andrewbrogoff.vftv.api.flux.FluxRules;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
-import java.lang.management.ManagementFactory;
+import com.andrewbrogoff.vftv.core.common.model.Allocations;
 import org.junit.jupiter.api.Test;
 
 class FluxMathTest {
@@ -201,22 +201,18 @@ class FluxMathTest {
         int[] effective = times8(4000);
         int[] neutral = times8(2000);
         int[] essentia = a(100, 200, 300);
-        var threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
-        long thread = Thread.currentThread().threadId();
-        long allocated = Long.MAX_VALUE;
-        long sink = 0;
-        // Warm-up rounds first; one-off costs (class loading, compilation) land there.
-        for (int round = 0; round < 5; round++) {
-            long before = threads.getThreadAllocatedBytes(thread);
-            for (int i = 0; i < 100_000; i++) {
-                sink += FluxMath.visSpill(VisKind.ORDINARY, effective, neutral, DEFAULTS);
-                sink += FluxMath.visSpill(VisKind.VOID, effective, neutral, DEFAULTS);
-                sink += FluxMath.essentiaFlux(essentia, SpillCause.EMPTIED, DEFAULTS);
-                sink += FluxMath.essentiaFluxBound(i, SpillCause.UPSET, DEFAULTS);
-            }
-            allocated = threads.getThreadAllocatedBytes(thread) - before;
-        }
-        assertTrue(sink > 0);
-        assertEquals(0, allocated, "bytes allocated while pricing 400,000 spills");
+        long[] sink = new long[1];
+        Allocations.assertNone(
+                "pricing 400,000 spills",
+                () -> {
+                    for (int i = 0; i < 100_000; i++) {
+                        sink[0] +=
+                                FluxMath.visSpill(VisKind.ORDINARY, effective, neutral, DEFAULTS);
+                        sink[0] += FluxMath.visSpill(VisKind.VOID, effective, neutral, DEFAULTS);
+                        sink[0] += FluxMath.essentiaFlux(essentia, SpillCause.EMPTIED, DEFAULTS);
+                        sink[0] += FluxMath.essentiaFluxBound(i, SpillCause.UPSET, DEFAULTS);
+                    }
+                });
+        assertTrue(sink[0] > 0);
     }
 }
