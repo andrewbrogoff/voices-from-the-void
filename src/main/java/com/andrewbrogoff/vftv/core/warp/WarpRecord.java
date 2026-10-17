@@ -93,6 +93,25 @@ public record WarpRecord(
                 }
             };
 
+    /** A boolean stored as 0 or 1 (NBT's byte); any other value fails rather than coercing. */
+    private static final Codec<Boolean> EXACT_BOOL =
+            new PrimitiveCodec<>() {
+                @Override
+                public <T> DataResult<Boolean> read(DynamicOps<T> ops, T input) {
+                    return exact(ops, input)
+                            .flatMap(
+                                    v ->
+                                            v == 0 || v == 1
+                                                    ? DataResult.success(v == 1)
+                                                    : DataResult.error(() -> "not 0 or 1: " + v));
+                }
+
+                @Override
+                public <T> T write(DynamicOps<T> ops, Boolean value) {
+                    return ops.createBoolean(value);
+                }
+            };
+
     /** The bounded persisted form: every field required; the constructor checks the bounds. */
     public static final Codec<WarpRecord> CODEC =
             RecordCodecBuilder.create(
@@ -124,7 +143,7 @@ public record WarpRecord(
                                             EXACT_LONG
                                                     .fieldOf("last_listen")
                                                     .forGetter(WarpRecord::lastListen),
-                                            Codec.BOOL
+                                            EXACT_BOOL
                                                     .fieldOf("silenced")
                                                     .forGetter(WarpRecord::silenced),
                                             EXACT_LONG

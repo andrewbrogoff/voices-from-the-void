@@ -112,6 +112,9 @@ public final class WarpTuning {
      * @throws IllegalArgumentException naming every problem
      */
     public static WarpRules fromJson(JsonObject json, boolean record) {
+        if (json.has("schema")) {
+            throw new IllegalArgumentException("$.schema: unknown field");
+        }
         JsonObject copy = json.deepCopy();
         copy.addProperty("schema", SCHEMA);
         Schema schema = new Schema(SCHEMA, record ? RECORD_FIELDS : FILE_FIELDS, WarpTuning::rules);

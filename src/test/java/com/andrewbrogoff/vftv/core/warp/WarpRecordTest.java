@@ -98,6 +98,8 @@ class WarpRecordTest {
                         t -> t.putDouble("counter", 1.5),
                         t -> t.putDouble("checks", 1.5),
                         t -> t.putDouble("format", 1.25),
+                        t -> t.putDouble("silenced", 0.5),
+                        t -> t.putByte("silenced", (byte) 2),
                         t -> {
                             ListTag paid = new ListTag();
                             paid.add(StringTag.valueOf("vftv:joining"));

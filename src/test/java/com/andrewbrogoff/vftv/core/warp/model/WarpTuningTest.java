@@ -79,6 +79,7 @@ class WarpTuningTest {
     @Test
     void theCommonRejections() {
         assertTrue(rejected("{\"nope\": 1}").contains("unknown field"));
+        assertTrue(rejected("{\"schema\": 17, \"grace\": 1}").contains("unknown field"));
         assertTrue(rejected("{\"grace\": \"x\"}").contains("not an integer"));
         assertTrue(rejected("{\"grace\": 1.5}").contains("not an integer"));
         assertTrue(rejected("{\"grace\": 6001}").contains("outside"));
