@@ -552,16 +552,15 @@ final class AspectGameTests {
      * stops.
      */
     private static void unreadableWarnsPerSession(GameTestHelper helper) {
-        ServerPlayer source = player(helper);
-        KnowledgeService.set(source, Knowledge.EMPTY);
-        CompoundTag good = save(source);
+        ServerPlayer p = player(helper);
+        KnowledgeService.set(p, Knowledge.EMPTY);
+        CompoundTag good = save(p);
         CompoundTag bad = good.copy();
         bad.getCompoundOrEmpty("neoforge:attachments")
                 .getCompoundOrEmpty("vftv:knowledge")
                 .getCompoundOrEmpty("data")
                 .putInt("format", 9);
         // Each use loads the tag into the same player, then tries a write.
-        ServerPlayer p = player(helper);
         Consumer<CompoundTag> use =
                 tag -> {
                     p.load(
