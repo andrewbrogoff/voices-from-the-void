@@ -13,6 +13,7 @@ import com.andrewbrogoff.vftv.core.crucible.CrucibleBlock;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleBlockEntity;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleContent;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleHooks;
+import com.andrewbrogoff.vftv.core.crucible.CruciblePreview;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleRecipe;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleRecipes;
 import com.andrewbrogoff.vftv.core.crucible.CrucibleService;
@@ -123,6 +124,139 @@ final class CrucibleGameTests {
         tests.put("crucible_sync_sends_recipes", CrucibleGameTests::syncSendsRecipes);
         tests.put("crucible_flood_sixteen_per_step", CrucibleGameTests::flood);
         tests.put("crucible_refresh_queue", CrucibleGameTests::refreshQueue);
+        tests.put("crucible_preview_availability", CrucibleGameTests::preview);
+        tests.put("crucible_first_brass_reachable", CrucibleGameTests::firstBrass);
+    }
+
+    /** The preview: every availability, the shortfall, and the fact fields' forms. */
+    private static void preview(GameTestHelper helper) {
+        RecipeHolder<CrucibleRecipe> iron =
+                java.util.Objects.requireNonNull(
+                        CrucibleRecipes.server()
+                                .get(
+                                        Identifier.fromNamespaceAndPath(
+                                                "vftv_gametest", "crucible_iron")));
+        ServerPlayer player = ResearchTestSupport.player(helper);
+        CruciblePreview none = CruciblePreview.of(player, iron, null);
+        helper.assertValueEqual(
+                none.availability(), CruciblePreview.Availability.NO_CRUCIBLE, "no context");
+        helper.assertTrue(none.checkedAt() == null, "no context line");
+        helper.assertValueEqual(none.spill(), 0, "spill is a typed zero");
+        CrucibleBlockEntity be = boiling(helper);
+        setPool(be, "vftv:aer", 1);
+        CruciblePreview shortOne = CruciblePreview.of(player, iron, be);
+        helper.assertValueEqual(
+                shortOne.availability(), CruciblePreview.Availability.SHORT, "short");
+        helper.assertValueEqual(
+                shortOne.shortfall(), new TreeMap<>(Map.of("vftv:aer", 1)), "short by 1");
+        helper.assertTrue(shortOne.checkedAt() != null, "the context is named");
+        helper.assertTrue(!shortOne.aspects().getFirst().discovered(), "unheard for this player");
+        helper.assertValueEqual(
+                java.util.Objects.requireNonNull(shortOne.fact(player, "flux", List.of()))
+                        .getString(),
+                "0",
+                "flux");
+        helper.assertTrue(
+                java.util.Objects.requireNonNull(
+                                shortOne.fact(
+                                        player,
+                                        "inputs",
+                                        List.of(
+                                                BuiltInRegistries.ITEM.wrapAsHolder(
+                                                        Items.IRON_INGOT))))
+                        .getString()
+                        .startsWith("1 × "),
+                "inputs");
+        helper.assertTrue(shortOne.fact(player, "nonsense", List.of()) == null, "unknown field");
+        setPool(be, "vftv:aer", 2);
+        helper.assertValueEqual(
+                CruciblePreview.of(player, iron, be).availability(),
+                CruciblePreview.Availability.READY,
+                "ready");
+        helper.setBlock(HEAT, Blocks.STONE);
+        helper.assertValueEqual(
+                CruciblePreview.of(player, iron, be(helper)).availability(),
+                CruciblePreview.Availability.COLD,
+                "cold");
+        helper.setBlock(AT, state(false, false));
+        helper.assertValueEqual(
+                CruciblePreview.of(player, iron, be(helper)).availability(),
+                CruciblePreview.Availability.DRY,
+                "dry");
+        helper.succeed();
+    }
+
+    /**
+     * The first-Brass dose plan, replayed with the real fit rule and the loaded values, fills the
+     * Brass cost from an empty pool; and Resonant Brass is never amplified.
+     */
+    private static void firstBrass(GameTestHelper helper) {
+        java.nio.file.Path project =
+                java.util.Objects.requireNonNull(
+                        com.andrewbrogoff.vftv.core.common.model.PendingAudio.findProject(
+                                java.nio.file.Path.of("").toAbsolutePath()));
+        JsonObject plan;
+        try {
+            plan =
+                    JsonParser.parseString(
+                                    java.nio.file.Files.readString(
+                                            project.resolve("content/crucible/first_brass.json")))
+                            .getAsJsonObject();
+        } catch (java.io.IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
+        RecipeHolder<CrucibleRecipe> brass =
+                java.util.Objects.requireNonNull(
+                        CrucibleRecipes.server()
+                                .get(
+                                        Identifier.fromNamespaceAndPath(
+                                                "vftv", "resonant_brass_ingot")));
+        com.andrewbrogoff.vftv.core.crucible.model.Pool pool =
+                new com.andrewbrogoff.vftv.core.crucible.model.Pool();
+        int capacity =
+                com.andrewbrogoff.vftv.core.crucible.model.CrucibleTuning.DEFAULTS.capacity();
+        for (var dose : plan.getAsJsonArray("doses")) {
+            JsonObject d = dose.getAsJsonObject();
+            var item =
+                    BuiltInRegistries.ITEM.getValue(Identifier.parse(d.get("item").getAsString()));
+            int count = d.get("count").getAsInt();
+            var values = com.andrewbrogoff.vftv.core.aspect.AspectLookup.item(item);
+            helper.assertTrue(values != null && !values.aspects().isEmpty(), item + " has aspects");
+            helper.assertFalse(
+                    CrucibleService.isProtected(new ItemStack(item)), item + " is not protected");
+            Map<String, Integer> v = new TreeMap<>();
+            java.util.Objects.requireNonNull(values)
+                    .aspects()
+                    .forEach((k, a) -> v.put(k.identifier().toString(), a));
+            helper.assertValueEqual(pool.fit(v, count, capacity), count, item + " dissolves whole");
+            pool.credit(v, count);
+        }
+        helper.assertTrue(
+                pool.affordable(brass.value().cost()), "the pool holds the cost: " + pool);
+        var result = com.andrewbrogoff.vftv.core.aspect.AspectLookup.item(CrucibleContent.ingot());
+        int resultTotal =
+                java.util.Objects.requireNonNull(result).aspects().values().stream()
+                        .mapToInt(Integer::intValue)
+                        .sum();
+        brass.value()
+                .catalyst()
+                .getValues()
+                .forEach(
+                        alt -> {
+                            var av =
+                                    com.andrewbrogoff.vftv.core.aspect.AspectLookup.item(
+                                            alt.value());
+                            int altTotal =
+                                    av == null
+                                            ? 0
+                                            : av.aspects().values().stream()
+                                                    .mapToInt(Integer::intValue)
+                                                    .sum();
+                            helper.assertTrue(
+                                    resultTotal <= altTotal + brass.value().total(),
+                                    "non-amplification through " + alt.value());
+                        });
+        helper.succeed();
     }
 
     // --- Fixtures ------------------------------------------------------------------------

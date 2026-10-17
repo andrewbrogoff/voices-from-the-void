@@ -266,6 +266,10 @@ public final class CrucibleBlockEntity extends BlockEntity {
         super.onLoad();
         if (level instanceof ServerLevel server) {
             CrucibleService.onLoad(server, this);
+            if (unreadable()) {
+                // A cache from a readable predecessor at this position must read the inert handler.
+                CrucibleService.hooks().invalidate(server, worldPosition);
+            }
         }
     }
 
