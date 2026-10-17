@@ -1,5 +1,6 @@
 package com.andrewbrogoff.vftv.core.aspect.model;
 
+import com.andrewbrogoff.vftv.api.aspect.AspectLimits;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayDeque;
@@ -46,8 +47,8 @@ public final class Derivation {
     /** The most expanded alternative edges one derivation takes. */
     public static final long MAX_EDGES = 2_000_000L;
 
-    /** At most this many aspects per value (rule 6, the {@code AspectLimits} bound). */
-    public static final int MAX_ASPECTS = 5;
+    /** At most this many aspects per value (rule 6). */
+    public static final int MAX_ASPECTS = AspectLimits.MAX_ASPECTS_PER_ENTRY;
 
     private Derivation() {}
 

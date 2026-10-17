@@ -118,7 +118,7 @@ public final class DerivedAspects {
         } catch (RuntimeException e) {
             // Nothing refuses the world: modded items fall back to the defaults.
             LOGGER.error("Could not derive modded aspect values; the table is empty", e);
-            AspectLookup.installDerived(Map.of());
+            clear();
         }
     }
 
@@ -135,7 +135,7 @@ public final class DerivedAspects {
     private static void build(
             Collection<RecipeHolder<?>> recipes, HolderLookup.Provider registries) {
         if (!config.deriveModded()) {
-            AspectLookup.installDerived(Map.of());
+            clear();
             return;
         }
         Inputs inputs = inputs(recipes, registries);
@@ -147,7 +147,7 @@ public final class DerivedAspects {
                     inputs.edges(),
                     Derivation.MAX_RECIPES,
                     Derivation.MAX_EDGES);
-            AspectLookup.installDerived(Map.of());
+            clear();
             return;
         }
         Map<Item, AspectValues> table = table(inputs.derive().values());
