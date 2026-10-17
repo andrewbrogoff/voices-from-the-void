@@ -1,0 +1,20 @@
+{
+  "values": [
+    {
+      "id": "vftv:wand",
+      "required": false
+    },
+    {
+      "id": "vftv:bell_jar",
+      "required": false
+    },
+    {
+      "id": "vftv:commonplace_book",
+      "required": false
+    },
+    {
+      "id": "vftv:essentia_jar",
+      "required": false
+    }
+  ]
+}

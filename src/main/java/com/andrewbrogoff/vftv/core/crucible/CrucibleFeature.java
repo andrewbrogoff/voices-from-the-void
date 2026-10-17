@@ -11,6 +11,8 @@ import com.andrewbrogoff.vftv.core.common.Platform;
 public final class CrucibleFeature {
     private CrucibleFeature() {}
 
-    /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    /** Registers the crucible, Resonant Brass, the sounds and the recipe type. */
+    public static void init(Platform platform) {
+        CrucibleContent.register(platform.registrar());
+    }
 }

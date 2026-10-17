@@ -1,0 +1,7 @@
+{
+  "type": "vftv:crucible",
+  "research": "vftv:commonplace_book",
+  "catalyst": "minecraft:iron_ingot",
+  "aspects": {"vftv:aer": 2},
+  "result": {"id": "minecraft:gold_ingot"}
+}

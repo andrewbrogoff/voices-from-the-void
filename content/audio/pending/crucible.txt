@@ -1,0 +1,8 @@
+# The crucible feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:crucible.fill
+vftv:crucible.empty
+vftv:crucible.spill
+vftv:crucible.dissolve
+vftv:crucible.craft
+vftv:crucible.refuse
+vftv:crucible.boil

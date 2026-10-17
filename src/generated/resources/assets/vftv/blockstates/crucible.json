@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "boiling=false,water=false": {
+      "model": "vftv:block/crucible"
+    },
+    "boiling=false,water=true": {
+      "model": "vftv:block/crucible"
+    },
+    "boiling=true,water=false": {
+      "model": "vftv:block/crucible"
+    },
+    "boiling=true,water=true": {
+      "model": "vftv:block/crucible"
+    }
+  }
+}
