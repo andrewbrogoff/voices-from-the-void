@@ -26,4 +26,3 @@ vftv:crucible_sync_sends_recipes
 vftv:crucible_flood_sixteen_per_step
 vftv:crucible_refresh_queue
 vftv:crucible_preview_availability
-vftv:crucible_first_brass_reachable
