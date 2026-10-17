@@ -13,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -145,7 +146,11 @@ class ArcaneDataTest {
     }
 
     private static List<String> check(String body) {
-        return ArcaneBodies.check("vftv:x", json("{" + body + "}"), ArcaneTestData.registries());
+        return ArcaneBodies.check(
+                "vftv:x",
+                json("{" + body + "}"),
+                ArcaneTestData.registries(),
+                Set.of("vftv:test_entry"));
     }
 
     @Test
@@ -160,6 +165,8 @@ class ArcaneDataTest {
                 check(valid.replace("minecraft:copper_ingot", "minecraft:no_such_item"))
                         .getFirst()
                         .startsWith("recipe vftv:x: "));
+        assertEquals(
+                List.of("recipe vftv:x: unknown research entry vftv:arcane_crafting"), check(BELL));
         assertEquals(
                 List.of("recipe vftv:x: vftv:sonus is not a vis aspect"),
                 check(valid.replace("vftv:terra", "vftv:sonus")));

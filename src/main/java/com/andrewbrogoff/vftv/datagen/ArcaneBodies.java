@@ -110,12 +110,14 @@ public final class ArcaneBodies {
      * The rules a {@link #BODY}-valid body must also meet: exactly one of {@code pattern}+{@code
      * key} or {@code ingredients}, then the recipe type's load validation through its codec (the
      * pattern rules, known items and tags, the result) with each {@code vis} key a vis aspect of
-     * the generated aspect registry. The {@code research} entry is checked by the runtime decode,
-     * since research entries are generated, not bootstrapped.
+     * the generated aspect registry, and {@code research} one of the authored research entries
+     * (generated JSON, so not in the datagen lookup).
      *
+     * @param research every research entry id in {@code content/research}
      * @return the problems, each naming the recipe; empty when the body is valid
      */
-    public static List<String> check(String id, JsonObject body, HolderLookup.Provider registries) {
+    public static List<String> check(
+            String id, JsonObject body, HolderLookup.Provider registries, Set<String> research) {
         String where = "recipe " + id + ": ";
         boolean shaped = body.has("pattern") || body.has("key");
         if (shaped == body.has("ingredients")) {
@@ -137,6 +139,12 @@ public final class ArcaneBodies {
                 .ifError(e -> problems.add(where + e.message()))
                 .ifSuccess(
                         recipe -> {
+                            if (!research.contains(recipe.research().identifier().toString())) {
+                                problems.add(
+                                        where
+                                                + "unknown research entry "
+                                                + recipe.research().identifier());
+                            }
                             Optional<? extends HolderLookup.RegistryLookup<Aspect>> aspects =
                                     registries.lookup(AspectKeys.REGISTRY);
                             for (ResourceKey<Aspect> key : recipe.vis().keySet()) {

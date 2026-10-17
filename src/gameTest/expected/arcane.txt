@@ -5,3 +5,6 @@ vftv:arcane_sync_sends_recipes
 vftv:arcane_cap_on_reload
 vftv:arcane_cap_at_start
 vftv:arcane_vis_keys_checked
+vftv:arcane_research_checked
+vftv:arcane_loaded_from_data
+vftv:arcane_selects_by_research

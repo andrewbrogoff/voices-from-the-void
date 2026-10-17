@@ -1,9 +1,15 @@
 package com.andrewbrogoff.vftv.core.arcane;
 
 import com.andrewbrogoff.vftv.api.arcane.ArcaneLimits;
+import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.mojang.logging.LogUtils;
+import java.util.Optional;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.crafting.CraftingInput;
+import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeMap;
+import net.minecraft.world.level.Level;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
@@ -35,6 +41,20 @@ public final class ArcaneRecipes {
     /** The current snapshot of the logical side a level is on. */
     public static ArcaneRecipeSnapshot of(boolean clientSide) {
         return clientSide ? client : server;
+    }
+
+    /**
+     * The player's selected recipe for a grid (arcane spec, "Selection"), against the current
+     * snapshot of the player's side: the lowest id that matches and whose research the player has
+     * learned. Client and server run this same function on the same synced data.
+     *
+     * @param grid the grid as {@code CraftingInput.ofPositioned} builds it, trimmed to its occupied
+     *     area
+     */
+    public static Optional<RecipeHolder<ArcaneRecipe>> select(Player player, CraftingInput grid) {
+        Level level = player.level();
+        return of(level.isClientSide())
+                .select(grid, level, entry -> ResearchService.isLearned(player, entry));
     }
 
     /**

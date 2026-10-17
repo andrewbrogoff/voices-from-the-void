@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -182,6 +183,10 @@ final class ArcaneData implements FeatureData {
                     registries -> {
                         Map<String, JsonObject> recipes = new LinkedHashMap<>();
                         List<String> problems = new ArrayList<>();
+                        Set<String> research =
+                                envelopes.isEmpty()
+                                        ? Set.of()
+                                        : ResearchContent.read(contentRoot()).entries().keySet();
                         for (Envelope envelope : envelopes) {
                             envelope.json()
                                     .getAsJsonObject()
@@ -193,7 +198,8 @@ final class ArcaneData implements FeatureData {
                                                         ArcaneBodies.check(
                                                                 id,
                                                                 body.getAsJsonObject(),
-                                                                registries));
+                                                                registries,
+                                                                research));
                                                 recipes.put(id, body.getAsJsonObject());
                                             });
                         }

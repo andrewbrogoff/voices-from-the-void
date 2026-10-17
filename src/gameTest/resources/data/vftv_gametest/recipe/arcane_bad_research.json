@@ -1,0 +1,7 @@
+{
+  "type": "vftv:arcane",
+  "research": "vftv:no_such_entry",
+  "ingredients": ["minecraft:stick", "minecraft:feather"],
+  "result": {"id": "minecraft:arrow"},
+  "vis": {"vftv:aer": 1}
+}

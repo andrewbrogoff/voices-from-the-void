@@ -2,6 +2,7 @@ package com.andrewbrogoff.vftv.gametest;
 
 import com.andrewbrogoff.vftv.api.arcane.ArcaneLimits;
 import com.andrewbrogoff.vftv.api.aspect.AspectKeys;
+import com.andrewbrogoff.vftv.api.research.Research;
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
 import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipe;
@@ -23,9 +24,13 @@ import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemStackTemplate;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.Recipe;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.item.crafting.RecipeManager;
 import net.minecraft.world.item.crafting.RecipeMap;
@@ -50,7 +55,15 @@ final class ArcaneGameTests {
         tests.put("arcane_cap_on_reload", ArcaneGameTests::capOnReload);
         tests.put("arcane_cap_at_start", ArcaneGameTests::capAtStart);
         tests.put("arcane_vis_keys_checked", ArcaneGameTests::visKeysChecked);
+        tests.put("arcane_research_checked", ArcaneGameTests::researchChecked);
+        tests.put("arcane_loaded_from_data", ArcaneGameTests::loadedFromData);
+        tests.put("arcane_selects_by_research", ArcaneGameTests::selectsByResearch);
     }
+
+    private static final ResourceKey<Research> ARCANE_CRAFTING =
+            ResourceKey.create(
+                    ResearchKeys.REGISTRY,
+                    Identifier.fromNamespaceAndPath("vftv", "arcane_crafting"));
 
     private static DataResult<ArcaneRecipe> decode(GameTestHelper helper, String vis) {
         JsonObject body =
@@ -88,8 +101,85 @@ final class ArcaneGameTests {
         String primals =
                 "'vftv:aer': 1, 'vftv:aqua': 1, 'vftv:ignis': 1, 'vftv:ordo': 1,"
                         + " 'vftv:perditio': 1, 'vftv:terra': 1";
-        helper.assertFalse(
-                message(decode(helper, primals)).contains("vis aspect"), "the six primals pass");
+        helper.assertTrue(decode(helper, primals).isSuccess(), "the six primals pass");
+        helper.succeed();
+    }
+
+    /** {@code research} is checked against the loaded {@code vftv:research} registry. */
+    private static void researchChecked(GameTestHelper helper) {
+        helper.assertTrue(decode(helper, "'vftv:aer': 1").isSuccess(), "an existing entry");
+        DataResult<ArcaneRecipe> missing =
+                ArcaneRecipe.MAP_CODEC
+                        .codec()
+                        .parse(
+                                helper.getLevel()
+                                        .registryAccess()
+                                        .createSerializationContext(JsonOps.INSTANCE),
+                                JsonParser.parseString(
+                                        "{\"research\": \"vftv:no_such_entry\", \"ingredients\":"
+                                                + " [\"minecraft:stick\"], \"result\": {\"id\":"
+                                                + " \"minecraft:bell\"}, \"vis\": {\"vftv:aer\": 1}}"));
+        helper.assertValueEqual(
+                message(missing), "unknown research entry vftv:no_such_entry", "a missing entry");
+        helper.succeed();
+    }
+
+    private static ResourceKey<Recipe<?>> testRecipe(String path) {
+        return ResourceKey.create(
+                Registries.RECIPE, Identifier.fromNamespaceAndPath("vftv_gametest", path));
+    }
+
+    /**
+     * Datapack recipes load through the registry-aware codec: a valid one (with a tag ingredient)
+     * reaches the recipe manager and the snapshot; one naming a missing research entry and one
+     * costing a compound are skipped at load.
+     */
+    private static void loadedFromData(GameTestHelper helper) {
+        RecipeManager recipes = helper.getLevel().getServer().getRecipeManager();
+        helper.assertTrue(
+                recipes.byKey(testRecipe("arcane_test")).isPresent(), "the valid recipe loaded");
+        helper.assertTrue(
+                ArcaneRecipes.server().recipes().stream()
+                        .anyMatch(h -> h.id().equals(testRecipe("arcane_test"))),
+                "and is in the snapshot");
+        helper.assertTrue(
+                recipes.byKey(testRecipe("arcane_bad_research")).isEmpty(),
+                "a missing research entry is rejected at load");
+        helper.assertTrue(
+                recipes.byKey(testRecipe("arcane_compound_cost")).isEmpty(),
+                "a compound cost is rejected at load");
+        helper.succeed();
+    }
+
+    /**
+     * Selection for a real player: the loaded recipe is invisible until its research is learned,
+     * and the shapeless match takes the tag's item in any cell.
+     */
+    private static void selectsByResearch(GameTestHelper helper) {
+        ServerPlayer player = ResearchTestSupport.player(helper);
+        CraftingInput grid =
+                CraftingInput.ofPositioned(
+                                3,
+                                3,
+                                List.of(
+                                        ItemStack.EMPTY,
+                                        new ItemStack(Items.COPPER_INGOT),
+                                        ItemStack.EMPTY,
+                                        ItemStack.EMPTY,
+                                        ItemStack.EMPTY,
+                                        ItemStack.EMPTY,
+                                        new ItemStack(Items.STICK),
+                                        ItemStack.EMPTY,
+                                        ItemStack.EMPTY))
+                        .input();
+        helper.assertTrue(
+                ArcaneRecipes.select(player, grid).isEmpty(), "unlearned: nothing selected");
+        ResearchTestSupport.learn(player, ARCANE_CRAFTING);
+        helper.assertTrue(
+                ArcaneRecipes.select(player, grid)
+                        .map(h -> h.id().equals(testRecipe("arcane_test")))
+                        .orElse(false),
+                "learned: the recipe is selected");
         helper.succeed();
     }
 
