@@ -12,5 +12,12 @@ public final class EssentiaFeature {
     private EssentiaFeature() {}
 
     /** Registers the feature's content, registries, data slots and payloads. */
-    public static void init(Platform platform) {}
+    public static void init(Platform platform) {
+        EssentiaContent.register(platform.registrar());
+        platform.network()
+                .clientbound(EssentiaPayloads.Rules.TYPE, EssentiaPayloads.Rules.STREAM_CODEC);
+        platform.network()
+                .clientbound(EssentiaPayloads.Flow.TYPE, EssentiaPayloads.Flow.STREAM_CODEC);
+        EssentiaService.init(platform.network());
+    }
 }

@@ -392,37 +392,49 @@ public final class LineModel {
         port.beginRoot();
         for (int i = 0; i < count && need > 0; i++) {
             int a = order[i];
-            port.beginNested();
-            int extracted = port.extract(a, x, need);
-            int inserted = extracted == 0 ? 0 : port.insert(b, x, extracted);
-            if (inserted == extracted) {
-                port.endNested(true);
-                need -= inserted;
-                moved += inserted;
-                if (inserted > 0 && first < 0) {
-                    first = a;
-                    firstAmount = inserted;
-                }
-                continue;
+            int c = contribute(port, a, b, x, need);
+            int got = c < 0 ? -c - 1 : c;
+            moved += got;
+            need -= got;
+            if (got > 0 && first < 0) {
+                first = a;
+                firstAmount = got;
             }
-            port.endNested(false);
-            if (inserted > 0) {
-                port.beginNested();
-                int e2 = port.extract(a, x, inserted);
-                int i2 = e2 == 0 ? 0 : port.insert(b, x, e2);
-                boolean ok = e2 > 0 && i2 == e2;
-                port.endNested(ok);
-                if (ok) {
-                    moved += i2;
-                    if (first < 0) {
-                        first = a;
-                        firstAmount = i2;
-                    }
-                }
+            if (c < 0) {
+                break;
             }
-            break;
         }
         port.commitRoot();
         return new Outcome(moved, b, x, first, firstAmount, true);
+    }
+
+    /**
+     * One source's contribution inside an open root (essentia spec, "The pulse", step 6): a nested
+     * attempt {@code e = A.extract(X, need)}, {@code i = B.insert(X, e)}, committed if {@code i =
+     * e}; otherwise aborted, with one fresh retry of {@code i} when {@code i > 0}, committed only
+     * if it is exact. The Alembic's pour is exactly one such contribution.
+     *
+     * @return the units moved when the attempt was exact, so the move goes on; or {@code -(moved +
+     *     1)} when it wasn't, so the move stops
+     */
+    public static int contribute(Port port, int a, int b, int x, int need) {
+        port.beginNested();
+        int extracted = port.extract(a, x, need);
+        int inserted = extracted == 0 ? 0 : port.insert(b, x, extracted);
+        if (inserted == extracted) {
+            port.endNested(true);
+            return inserted;
+        }
+        port.endNested(false);
+        int moved = 0;
+        if (inserted > 0) {
+            port.beginNested();
+            int e2 = port.extract(a, x, inserted);
+            int i2 = e2 == 0 ? 0 : port.insert(b, x, e2);
+            boolean ok = e2 > 0 && i2 == e2;
+            port.endNested(ok);
+            moved = ok ? i2 : 0;
+        }
+        return -moved - 1;
     }
 }
