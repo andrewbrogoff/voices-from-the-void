@@ -64,7 +64,8 @@ public final class AspectNeoForge {
         gameBus.addListener(
                 PlayerInteractEvent.RightClickBlock.class,
                 event -> {
-                    if (Strikes.isFork(event.getItemStack())) {
+                    // A spectator neither strikes nor loses vanilla's spectating of containers.
+                    if (Strikes.isFork(event.getItemStack()) && !event.getEntity().isSpectator()) {
                         event.setCanceled(true);
                         event.setCancellationResult(InteractionResult.SUCCESS);
                         if (event.getEntity() instanceof ServerPlayer player) {

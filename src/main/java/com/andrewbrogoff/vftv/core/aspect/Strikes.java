@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.DustParticleOptions;
@@ -152,10 +153,11 @@ public final class Strikes {
      * checked the menu, the slot and the carried fork.
      *
      * @param target the struck stack's place
-     * @param modifiable whether the place may be changed (a conversion needs it)
+     * @param mayPlace whether the place may take a stack (a conversion needs it for the input, and
+     *     for the result to stay in place)
      */
     public static void strikeStack(
-            ServerPlayer player, ItemStack fork, SlotAccess target, boolean modifiable) {
+            ServerPlayer player, ItemStack fork, SlotAccess target, Predicate<ItemStack> mayPlace) {
         if (cooling(player, fork)) {
             return;
         }
@@ -165,7 +167,7 @@ public final class Strikes {
         }
         ring(player, fork);
         RecipeHolder<StrikeRecipe> recipe = recipe(player.level(), stack);
-        if (recipe != null && modifiable) {
+        if (recipe != null && mayPlace.test(stack)) {
             if (hasWriting(stack)) {
                 send(
                         player,
@@ -175,7 +177,11 @@ public final class Strikes {
                                 ScanningService.tuning().readoutHoldTicks()));
                 return;
             }
-            convert(player, target, recipe.value().assemble(new SingleRecipeInput(stack)));
+            convert(
+                    player,
+                    target,
+                    recipe.value().assemble(new SingleRecipeInput(stack)),
+                    mayPlace);
             return;
         }
         scan(
@@ -295,20 +301,28 @@ public final class Strikes {
             @Nullable AspectValues values,
             Component name) {
         int hold = ScanningService.tuning().readoutHoldTicks();
-        if (values == null || values.aspects().isEmpty()) {
+        AspectSet set = AspectSet.of(player.registryAccess());
+        // A value naming an aspect the registry lacks: that aspect is not there to hear.
+        Map<ResourceKey<Aspect>, Integer> present = new TreeMap<>();
+        if (values != null) {
+            values.aspects()
+                    .forEach(
+                            (a, n) -> {
+                                if (set.contains(a)) {
+                                    present.put(a, n);
+                                }
+                            });
+        }
+        if (present.isEmpty()) {
             send(player, ScanResult.plain(ScanResult.State.NOTHING, name, hold));
             return;
         }
-        KnowledgeService.Struck struck =
-                KnowledgeService.strike(player, key, kind, values.aspects());
+        KnowledgeService.Struck struck = KnowledgeService.strike(player, key, kind, present);
         if (struck == null) {
             return;
         }
         Map<String, Integer> shown =
-                struck.strike().values().isEmpty()
-                        ? textMap(values.aspects())
-                        : struck.strike().values();
-        AspectSet set = AspectSet.of(player.registryAccess());
+                struck.strike().values().isEmpty() ? textMap(present) : struck.strike().values();
         List<ScanResult.Entry> entries = new ArrayList<>();
         shown.forEach(
                 (aspect, amount) ->
@@ -417,11 +431,16 @@ public final class Strikes {
 
     /**
      * Converts one item: a single item's place takes the result; from a stack, the rest stays and
-     * the result goes to the inventory, or drops at the player's feet if it is full.
+     * the result goes to the inventory, or drops at the player's feet if it is full. A place that
+     * refuses the result empties, and the result goes the same way.
      */
-    private static void convert(ServerPlayer player, SlotAccess target, ItemStack result) {
+    private static void convert(
+            ServerPlayer player,
+            SlotAccess target,
+            ItemStack result,
+            Predicate<ItemStack> mayPlace) {
         ItemStack stack = target.get();
-        if (stack.getCount() == 1) {
+        if (stack.getCount() == 1 && mayPlace.test(result)) {
             target.set(result);
             return;
         }

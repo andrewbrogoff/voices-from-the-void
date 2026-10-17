@@ -49,7 +49,7 @@ public final class TuningForkItem extends Item {
                     server,
                     self,
                     SlotAccess.of(slot::getItem, slot::set),
-                    slot.mayPickup(player) && slot.mayPlace(slot.getItem()));
+                    stack -> slot.mayPickup(player) && slot.mayPlace(stack));
         }
         return true;
     }
@@ -70,7 +70,7 @@ public final class TuningForkItem extends Item {
                 && player.containerMenu.slots.contains(slot)
                 && slot.getItem() == self
                 && slot.isActive()) {
-            Strikes.strikeStack(server, self, carried, true);
+            Strikes.strikeStack(server, self, carried, stack -> true);
         }
         return true;
     }
