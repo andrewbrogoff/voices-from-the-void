@@ -1,4 +1,10 @@
 {
   "feature": "crucible",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "fill -6 119 6 -3 119 9 minecraft:magma_block"}},
+    {"op": "cmd", "args": {"command": "fill -6 120 6 -3 120 9 vftv:crucible[water=true,boiling=true]"}},
+    {"op": "cmd", "args": {"command": "execute positioned -5.5 120.5 6.5 run summon minecraft:item ~ ~ ~ {Item:{id:\"vftv:tuning_fork\",count:1},Motion:[0d,0d,0d]}"}},
+    {"op": "cmd", "args": {"command": "execute positioned -3.5 120.5 8.5 run summon minecraft:item ~ ~ ~ {Item:{id:\"vftv:resonant_brass_ingot\",count:16},Motion:[0d,0d,0d]}"}},
+    {"op": "wait_ticks", "args": {"ticks": 40}}
+  ]
 }
