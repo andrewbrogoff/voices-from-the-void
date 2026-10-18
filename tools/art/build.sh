@@ -18,6 +18,11 @@ python3 "$ART/sheet.py" "$PREVIEWS/wands.png" "$PREVIEWS"/wands/wand_*.png \
 python3 "$ART/nodes.py" "$ASSETS"
 python3 "$ART/sheet.py" "$PREVIEWS/nodes.png" "$ASSETS/vftv/textures/block/node_core.png" \
     "$ASSETS"/vftv/textures/particle/node_glint_*.png
+python3 "$ART/crucible.py" "$ASSETS"
+CRU="$ASSETS/vftv/textures"
+python3 "$ART/sheet.py" "$PREVIEWS/crucible.png" "$CRU/block/crucible_side.png" "$CRU/block/crucible_top.png" \
+    "$CRU/block/crucible_inner.png" "$CRU/block/crucible_bottom.png" "$CRU/block/crucible_liquid.png" \
+    "$CRU/item/resonant_brass_ingot.png" "$CRU/gui/sprites/hud/crucible_missing.png" "$CRU/gui/sprites/aspect/unheard.png"
 python3 "$ART/research_items.py" "$ART/../.."
 python3 "$ART/sheet.py" "$PREVIEWS/research.png" "$ASSETS/vftv/textures/item/commonplace_book.png" \
     "$ASSETS/vftv/textures/item/choir_page.png"

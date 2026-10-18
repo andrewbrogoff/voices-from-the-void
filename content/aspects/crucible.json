@@ -1,0 +1,14 @@
+{
+  "schema": "vftv:aspects/1",
+  "items": {
+    "vftv:crucible": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 2,
+      "vftv:metallum": 6
+    },
+    "vftv:resonant_brass_ingot": {
+      "vftv:metallum": 9,
+      "vftv:sonus": 3
+    }
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "schema": "vftv:crucible_dose_plan/1",
+  "recipe": "vftv:resonant_brass_ingot",
+  "doses": [
+    {"item": "minecraft:amethyst_shard", "count": 3, "why": "mined from the amethyst geode whose find opens Stage 1"},
+    {"item": "minecraft:raw_copper", "count": 2, "why": "copper ore is common at every Stage 1 depth"}
+  ]
+}

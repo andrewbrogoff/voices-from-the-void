@@ -1,0 +1,24 @@
+{
+  "schema": "vftv:crucible_recipes/1",
+  "recipes": {
+    "vftv:crucible": {
+      "type": "vftv:arcane",
+      "research": "vftv:crucible",
+      "kind": "ordinary",
+      "ingredients": [
+        "minecraft:cauldron",
+        "minecraft:amethyst_shard",
+        "minecraft:copper_ingot"
+      ],
+      "result": {"id": "vftv:crucible", "count": 1},
+      "vis": {"vftv:aqua": 12, "vftv:ignis": 12, "vftv:terra": 6}
+    },
+    "vftv:resonant_brass_ingot": {
+      "type": "vftv:crucible",
+      "research": "vftv:resonant_brass",
+      "catalyst": "minecraft:copper_ingot",
+      "aspects": {"vftv:metallum": 4, "vftv:sonus": 6},
+      "result": {"id": "vftv:resonant_brass_ingot", "count": 1}
+    }
+  }
+}

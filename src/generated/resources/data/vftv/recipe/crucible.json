@@ -1,0 +1,19 @@
+{
+  "type": "vftv:arcane",
+  "ingredients": [
+    "minecraft:cauldron",
+    "#c:gems/amethyst",
+    "#c:ingots/copper"
+  ],
+  "kind": "ordinary",
+  "research": "vftv:crucible",
+  "result": {
+    "count": 1,
+    "id": "vftv:crucible"
+  },
+  "vis": {
+    "vftv:aqua": 12,
+    "vftv:ignis": 12,
+    "vftv:terra": 6
+  }
+}

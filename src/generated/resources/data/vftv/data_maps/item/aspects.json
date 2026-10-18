@@ -5392,10 +5392,19 @@
       "vftv:herba": 1,
       "vftv:pannus": 1
     },
+    "vftv:crucible": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 2,
+      "vftv:metallum": 6
+    },
     "vftv:resonant_brass_cap": {
       "vftv:metallum": 2,
       "vftv:praecantatio": 1,
       "vftv:sonus": 1
+    },
+    "vftv:resonant_brass_ingot": {
+      "vftv:metallum": 9,
+      "vftv:sonus": 3
     },
     "vftv:tuning_fork": {
       "vftv:instrumentum": 1,

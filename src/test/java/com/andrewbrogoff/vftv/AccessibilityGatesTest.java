@@ -44,8 +44,16 @@ class AccessibilityGatesTest {
     /** A state-variant set: sprites under {@code assets/vftv/textures/}, compared pairwise. */
     record VariantSet(String owner, List<String> textures) {}
 
-    /** No set ships yet; the research, arcane, foci and golem asset tickets add theirs. */
-    private static final List<VariantSet> VARIANT_SETS = List.of();
+    /** Every state-variant set; the research, arcane, foci and golem asset tickets add theirs. */
+    private static final List<VariantSet> VARIANT_SETS =
+            List.of(
+                    // crucible: a HUD cell's undiscovered and missing-id states (crucible, The
+                    // HUD).
+                    new VariantSet(
+                            "crucible",
+                            List.of(
+                                    "gui/sprites/aspect/unheard",
+                                    "gui/sprites/hud/crucible_missing")));
 
     /**
      * A text region an owner declares: the sprite, the rectangle where its text draws, the text
