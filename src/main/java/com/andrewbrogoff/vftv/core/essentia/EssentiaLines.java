@@ -383,9 +383,19 @@ public final class EssentiaLines {
     }
 
     private void processRefresh() {
+        List<Long> waiting = new ArrayList<>();
         for (int n = 0; n < EssentiaLimits.MAX_FACE_REFRESHES_PER_TICK && !refresh.isEmpty(); n++) {
             long p = refresh.pollFirst();
             if (!loadedAt(p)) {
+                continue;
+            }
+            // A refresh reads every neighbour; one in an unloaded chunk waits for a later tick.
+            boolean neighbours = true;
+            for (Direction d : Direction.values()) {
+                neighbours &= loadedAt(BlockPos.offset(p, d));
+            }
+            if (!neighbours) {
+                waiting.add(p);
                 continue;
             }
             BlockPos pos = BlockPos.of(p);
@@ -399,6 +409,7 @@ public final class EssentiaLines {
             EssentiaTubeBlock.refresh(level, pos);
             rebuild.add(p);
         }
+        refresh.addAll(waiting);
     }
 
     private static boolean isTube(BlockState s) {
@@ -457,12 +468,21 @@ public final class EssentiaLines {
             BlockPos pos = BlockPos.of(next);
             BlockState s = level.getBlockState(pos);
             for (Direction d : Direction.values()) {
-                if (!connects(pos, s, d)) {
+                // The arm first, from this block's own state: no neighbour is read before its
+                // chunk is known to be loaded.
+                boolean arm =
+                        isTube(s)
+                                ? s.getValue(EssentiaTubeBlock.face(d)) == Face.CONNECTED
+                                : s.getValue(TubeValveBlock.AXIS) == d.getAxis();
+                if (!arm) {
                     continue;
                 }
                 BlockPos n = pos.relative(d);
                 if (!chunkReady(n.getX() >> 4, n.getZ() >> 4)) {
                     b.boundary.add(ChunkPos.pack(n.getX() >> 4, n.getZ() >> 4));
+                    continue;
+                }
+                if (!connects(pos, s, d)) {
                     continue;
                 }
                 BlockState ns = level.getBlockState(n);

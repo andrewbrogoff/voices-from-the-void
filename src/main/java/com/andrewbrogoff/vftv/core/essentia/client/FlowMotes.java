@@ -148,7 +148,8 @@ public final class FlowMotes {
     /** Drops finished motes; called each client tick. */
     public static void tick() {
         ClientLevel level = Minecraft.getInstance().level;
-        if (level == null) {
+        if (level == null
+                || Minecraft.getInstance().options.particles().get() == ParticleStatus.MINIMAL) {
             LIVE.clear();
             return;
         }
@@ -173,7 +174,8 @@ public final class FlowMotes {
             }
             int a = (int) Math.max(0, Math.min(path.size() - 1, Math.floor(t)));
             int b = Math.min(path.size() - 1, a + 1);
-            double f = Math.max(0, Math.min(1, t - Math.floor(t)));
+            // In the first half-cell (t < 0) the mote stays at path[0]'s centre.
+            double f = t < 0 ? 0 : Math.min(1, t - Math.floor(t));
             BlockPos pa = BlockPos.of(path.get(a));
             BlockPos pb = BlockPos.of(path.get(b));
             out.add(

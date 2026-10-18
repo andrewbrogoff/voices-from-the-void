@@ -171,6 +171,8 @@ final class EssentiaGameTests {
             @Nullable ResourceKey<Aspect> aspect,
             int amount,
             @Nullable ResourceKey<Aspect> label) {
+        // A rerun at the same position starts with no spill recorded there.
+        SPILLS.remove(helper.absolutePos(rel).asLong());
         helper.setBlock(rel, EssentiaContent.jar());
         JarBlockEntity jar =
                 Objects.requireNonNull(helper.getBlockEntity(rel, JarBlockEntity.class));
