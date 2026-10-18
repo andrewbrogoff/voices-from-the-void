@@ -12,7 +12,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -438,34 +437,12 @@ final class EssentiaData implements FeatureData {
             problems.add(at + ".kind: must be ordinary");
         }
         result(body, result, min, max, at, problems);
-        boolean shaped = body.has("pattern") || body.has("key");
-        if (shaped == body.has("ingredients")
-                || (shaped && !(body.has("pattern") && body.has("key")))) {
-            problems.add(at + ": exactly one of pattern+key or ingredients");
-        }
+        // The pattern and shape rules are the arcane body's, checked by ArcaneBodies.check.
         List<String> ingredients = new ArrayList<>();
         if (body.has("ingredients")) {
             body.getAsJsonArray("ingredients").forEach(i -> ingredients.add(i.getAsString()));
         }
-        if (shaped && body.has("pattern") && body.has("key")) {
-            Set<String> keys = new HashSet<>(body.getAsJsonObject("key").keySet());
-            Set<String> used = new HashSet<>();
-            int width = -1;
-            for (JsonElement row : body.getAsJsonArray("pattern")) {
-                String s = row.getAsString();
-                if (width >= 0 && s.length() != width) {
-                    problems.add(at + ".pattern: rows of unequal width");
-                }
-                width = s.length();
-                for (int k = 0; k < s.length(); k++) {
-                    if (s.charAt(k) != ' ') {
-                        used.add(String.valueOf(s.charAt(k)));
-                    }
-                }
-            }
-            if (!keys.equals(used)) {
-                problems.add(at + ".key: every symbol keyed and every key used");
-            }
+        if (body.has("key")) {
             body.getAsJsonObject("key")
                     .entrySet()
                     .forEach(k -> ingredients.add(k.getValue().getAsString()));

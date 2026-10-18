@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.andrewbrogoff.vftv.core.common.model.Schema;
 import com.andrewbrogoff.vftv.core.common.model.StrictJson;
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
@@ -115,16 +114,6 @@ class EssentiaContentTest {
                         recipe(r, "vftv:label_blank")
                                 .getAsJsonArray("ingredients")
                                 .add("minecraft:paper"));
-        rejects(
-                "both shapes",
-                r -> {
-                    JsonArray i = new JsonArray();
-                    i.add("minecraft:glass");
-                    recipe(r, "vftv:essentia_jar").add("ingredients", i);
-                });
-        rejects(
-                "an unkeyed symbol",
-                r -> recipe(r, "vftv:alembic").getAsJsonObject("key").remove("b"));
         rejects("a group field", r -> recipe(r, "vftv:alembic").addProperty("group", "x"));
         assertTrue(
                 check(
