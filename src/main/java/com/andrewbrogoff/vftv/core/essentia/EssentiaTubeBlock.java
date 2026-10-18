@@ -204,11 +204,21 @@ public final class EssentiaTubeBlock extends Block implements EntityBlock {
         return withFaces(state, EssentiaMath.normalise(f, labelled));
     }
 
-    /** A face refresh: recomputes and sets the state if it differs. */
+    /**
+     * A face refresh: recomputes every face whose neighbour's chunk is loaded (it never loads one;
+     * a face into an unloaded chunk keeps its state) and sets the state if it differs.
+     */
     static void refresh(ServerLevel level, BlockPos pos) {
         BlockState state = level.getBlockState(pos);
         if (state.getBlock() instanceof EssentiaTubeBlock) {
-            BlockState next = computed(level, pos, state, labelled(level, pos));
+            int[] f = faces(state);
+            for (Direction d : Direction.values()) {
+                int i = d.get3DDataValue();
+                if (f[i] != EssentiaMath.BLOCKED && level.isLoaded(pos.relative(d))) {
+                    f[i] = joins(level, pos, d) ? EssentiaMath.CONNECTED : EssentiaMath.NONE;
+                }
+            }
+            BlockState next = withFaces(state, EssentiaMath.normalise(f, labelled(level, pos)));
             if (!next.equals(state)) {
                 level.setBlock(pos, next, Block.UPDATE_CLIENTS);
             }
