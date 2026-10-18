@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaResource;
 import com.andrewbrogoff.vftv.core.essentia.JarBlockEntity;
 import com.andrewbrogoff.vftv.core.essentia.model.EssentiaMath;
 import com.andrewbrogoff.vftv.core.essentia.model.EssentiaMath.Contents;
+import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -17,6 +18,7 @@ import net.neoforged.neoforge.transfer.TransferPreconditions;
 import net.neoforged.neoforge.transfer.transaction.SnapshotJournal;
 import net.neoforged.neoforge.transfer.transaction.TransactionContext;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 /**
  * The jar's one explicit handler adapter (essentia spec, "Contents and the handler"): one slot,
@@ -24,6 +26,8 @@ import org.jspecify.annotations.Nullable;
  * and live snapshots. One instance per jar block entity.
  */
 final class JarHandler implements ResourceHandler<EssentiaResource>, JarBlockEntity.Journal {
+    private static final Logger LOGGER = LogUtils.getLogger();
+
     /** A snapshot with identity, so equal contents at two depths stay two snapshots. */
     private static final class Snap {
         final Contents<ResourceKey<Aspect>> contents;
@@ -59,7 +63,13 @@ final class JarHandler implements ResourceHandler<EssentiaResource>, JarBlockEnt
 
                 @Override
                 protected void onRootCommit(Snap original) {
-                    jar.publish(original.contents);
+                    try {
+                        jar.publish(original.contents);
+                    } catch (RuntimeException e) {
+                        // Publication is never part of correctness: the snapshot is still released.
+                        LOGGER.error(
+                                "An essentia jar's publication failed at {}", jar.getBlockPos(), e);
+                    }
                 }
             };
 

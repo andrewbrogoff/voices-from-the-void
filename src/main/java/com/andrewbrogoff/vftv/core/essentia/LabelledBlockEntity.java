@@ -109,9 +109,14 @@ public class LabelledBlockEntity extends net.minecraft.world.level.block.entity.
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
         clientUnreadable = input.getBooleanOr(UNREADABLE, false);
+        Retained<LabelRecord> before = record;
         record =
                 input.read(RECORD, LabelRecord.RETAINED)
                         .orElse(new Retained.Read<>(LabelRecord.EMPTY));
+        // A label replaced in place (/data merge) retires the line like a label applied by hand.
+        if (level instanceof ServerLevel server && !before.equals(record)) {
+            onLabelChanged(server);
+        }
         if (!warned && record instanceof Retained.Unreadable<LabelRecord> u) {
             warned = true;
             LOGGER.warn("Unreadable essentia label record at {}: {}", worldPosition, u.reason());

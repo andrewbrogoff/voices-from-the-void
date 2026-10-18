@@ -59,7 +59,8 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
     private boolean pendingSettle;
     private boolean clientUnreadable;
     private boolean warned;
-    private long lastFill = Long.MIN_VALUE;
+    private boolean settled;
+    private long lastFill = -40;
 
     /** A jar at {@code pos}. */
     public JarBlockEntity(BlockPos pos, BlockState state) {
@@ -125,6 +126,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
         return !isRemoved()
                 && readable()
                 && reserved == null
+                && !settled
                 && level != null
                 && level.getBlockEntity(worldPosition) == this;
     }
@@ -208,6 +210,8 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
     private void settle() {
         Contents<ResourceKey<Aspect>> carry = reserved == null ? Contents.empty() : reserved;
         reserved = null;
+        // Claimed before the post: a listener can't extract what is being spilled.
+        settled = true;
         if (!(level instanceof ServerLevel server)) {
             return;
         }
@@ -269,6 +273,14 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
         record =
                 input.read(RECORD, JarRecord.RETAINED).orElse(new Retained.Read<>(JarRecord.EMPTY));
         itemLabel = input.read(ITEM_LABEL, EssentiaRecords.ASPECT).orElse(null);
+        // A separate item label is kept only for a jar placed from an unreadable item: the raw
+        // item contents beside it stay unreadable even where they would parse as a jar record.
+        if (itemLabel != null && record instanceof Retained.Read<JarRecord> r) {
+            record =
+                    new Retained.Unreadable<>(
+                            JarRecord.BOUNDED.encodeStart(NbtOps.INSTANCE, r.value()).getOrThrow(),
+                            "placed from an unreadable item");
+        }
         warnIfUnreadable();
     }
 

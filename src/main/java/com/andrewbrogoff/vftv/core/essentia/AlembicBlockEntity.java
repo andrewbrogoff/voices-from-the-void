@@ -26,7 +26,8 @@ import org.jspecify.annotations.Nullable;
 public final class AlembicBlockEntity extends LabelledBlockEntity {
     private @Nullable Probe base;
     private @Nullable Probe target;
-    private long lastDrip = Long.MIN_VALUE;
+    private long lastDrip = -40;
+    private @Nullable Direction baseFacing;
 
     /** An Alembic at {@code pos}. */
     public AlembicBlockEntity(BlockPos pos, BlockState state) {
@@ -66,7 +67,8 @@ public final class AlembicBlockEntity extends LabelledBlockEntity {
             return null;
         }
         Probe b = base;
-        if (b == null) {
+        if (b == null || facing != baseFacing) {
+            baseFacing = facing;
             b =
                     EssentiaService.seam()
                             .probe(

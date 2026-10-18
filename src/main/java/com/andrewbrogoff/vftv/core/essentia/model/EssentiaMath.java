@@ -156,7 +156,10 @@ public final class EssentiaMath {
             }
             if (best < 0
                     || suctions[i] > suctions[best]
-                    || (suctions[i] == suctions[best] && amounts[i] > amounts[best])) {
+                    || (suctions[i] == suctions[best] && amounts[i] > amounts[best])
+                    || (suctions[i] == suctions[best]
+                            && amounts[i] == amounts[best]
+                            && aspects[i] < aspects[best])) {
                 best = i;
             }
         }

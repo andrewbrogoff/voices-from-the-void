@@ -155,6 +155,15 @@ class EssentiaMathTest {
                         new int[] {0, 0, 0},
                         new int[] {4, 4, 8},
                         none));
+        // A full tie goes to the lowest aspect, whatever the slot order.
+        assertEquals(
+                1,
+                EssentiaMath.alembicChoice(
+                        new int[] {2, 0},
+                        new int[] {5, 5},
+                        new int[] {0, 0},
+                        new int[] {4, 4},
+                        none));
         // A target without suction: nothing.
         assertEquals(
                 -1,
