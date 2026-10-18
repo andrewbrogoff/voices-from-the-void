@@ -140,17 +140,31 @@ public final class EssentiaStatus {
         }
         Direction.Axis axis = state.getValue(TubeValveBlock.AXIS);
         if (clicked.getAxis() == axis) {
-            return lines.of(pos.relative(clicked));
+            return end(level, pos, clicked);
         }
         for (Direction d : Direction.values()) {
             if (d.getAxis() == axis) {
-                View v = lines.of(pos.relative(d));
+                View v = end(level, pos, d);
                 if (!v.equals(View.NONE)) {
                     return v;
                 }
             }
         }
         return View.NONE;
+    }
+
+    /** The line at a valve's axis end {@code d}: only a member whose arm reaches back. */
+    private static View end(ServerLevel level, BlockPos valve, Direction d) {
+        BlockPos at = valve.relative(d);
+        BlockState n = level.getBlockState(at);
+        boolean back =
+                (n.getBlock() instanceof EssentiaTubeBlock
+                                && n.getValue(EssentiaTubeBlock.face(d.getOpposite()))
+                                        == EssentiaTubeBlock.Face.CONNECTED)
+                        || (n.getBlock() instanceof TubeValveBlock
+                                && TubeValveBlock.passes(n)
+                                && n.getValue(TubeValveBlock.AXIS) == d.getAxis());
+        return back ? EssentiaService.lines(level).of(at) : View.NONE;
     }
 
     private static Component[] jarPages(JarBlockEntity jar, ServerPlayer player) {
