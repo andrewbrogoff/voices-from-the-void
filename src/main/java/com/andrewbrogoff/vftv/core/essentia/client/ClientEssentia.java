@@ -14,6 +14,7 @@ import com.andrewbrogoff.vftv.core.essentia.EssentiaStatus;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import com.mojang.logging.LogUtils;
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,14 +94,11 @@ public final class ClientEssentia {
                 JsonElement root =
                         StrictJson.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8));
                 JsonObject mote = root.getAsJsonObject().getAsJsonObject("mote");
-                double s = mote.get("speed").getAsDouble();
-                double z = mote.get("size").getAsDouble();
+                double s = number(mote.get("speed"));
+                double z = number(mote.get("size"));
                 if (!"vftv:essentia_client/1"
                                 .equals(root.getAsJsonObject().get("schema").getAsString())
-                        || s < 0.05
-                        || s > 2.0
-                        || z < 0.0625
-                        || z > 1.0) {
+                        || !(s >= 0.05 && s <= 2.0 && z >= 0.0625 && z <= 1.0)) {
                     throw new IllegalArgumentException("out of range");
                 }
                 speed = s;
@@ -157,6 +155,13 @@ public final class ClientEssentia {
             }
         }
         return data.toString();
+    }
+
+    /** A finite JSON number, or NaN (which the range check then refuses). */
+    private static double number(JsonElement value) {
+        return value instanceof JsonPrimitive p && p.isNumber() && Double.isFinite(p.getAsDouble())
+                ? p.getAsDouble()
+                : Double.NaN;
     }
 
     /** The aspect's holder in the client's registries, if it has one. */

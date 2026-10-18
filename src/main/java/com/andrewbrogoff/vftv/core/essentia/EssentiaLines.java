@@ -209,6 +209,11 @@ public final class EssentiaLines {
             retireAround(p, false);
             restartIfTouched(p);
             rebuild.add(p);
+            // A non-member (a closed valve) is dropped by the queue: the retired neighbours must
+            // rebuild themselves.
+            for (Direction d : Direction.values()) {
+                rebuild.add(BlockPos.offset(p, d));
+            }
         }
     }
 

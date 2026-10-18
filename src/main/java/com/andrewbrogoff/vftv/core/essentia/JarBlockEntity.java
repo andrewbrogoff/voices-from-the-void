@@ -41,6 +41,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final String RECORD = "vftv";
     private static final String ITEM_LABEL = "vftv_label";
+    private static final String FROM_ITEM = "vftv_from_item";
     private static final String UNREADABLE = "unreadable";
 
     /** The handler adapter's journal, as the jar needs it: busy state and live snapshots. */
@@ -54,6 +55,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
 
     private Retained<JarRecord> record = new Retained.Read<>(JarRecord.EMPTY);
     private @Nullable ResourceKey<Aspect> itemLabel;
+    private boolean fromItem;
     private @Nullable Journal journal;
     private @Nullable Contents<ResourceKey<Aspect>> reserved;
     private boolean pendingSettle;
@@ -273,9 +275,10 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
         record =
                 input.read(RECORD, JarRecord.RETAINED).orElse(new Retained.Read<>(JarRecord.EMPTY));
         itemLabel = input.read(ITEM_LABEL, EssentiaRecords.ASPECT).orElse(null);
-        // A separate item label is kept only for a jar placed from an unreadable item: the raw
-        // item contents beside it stay unreadable even where they would parse as a jar record.
-        if (itemLabel != null && record instanceof Retained.Read<JarRecord> r) {
+        // A jar placed from an unreadable item keeps the item's raw contents: they stay unreadable
+        // even where they would parse as a jar record.
+        fromItem = input.getBooleanOr(FROM_ITEM, false);
+        if (fromItem && record instanceof Retained.Read<JarRecord> r) {
             record =
                     new Retained.Unreadable<>(
                             JarRecord.BOUNDED.encodeStart(NbtOps.INSTANCE, r.value()).getOrThrow(),
@@ -289,6 +292,9 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
         super.saveAdditional(output);
         output.store(RECORD, JarRecord.RETAINED, record);
         output.storeNullable(ITEM_LABEL, EssentiaRecords.ASPECT, itemLabel);
+        if (fromItem) {
+            output.putBoolean(FROM_ITEM, true);
+        }
     }
 
     @Override
@@ -315,6 +321,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
         if (stack instanceof Retained.Unreadable<JarStack> u) {
             record = new Retained.Unreadable<>(u.raw(), u.reason());
             itemLabel = label;
+            fromItem = true;
         } else {
             JarStack s = stack instanceof Retained.Read<JarStack> r ? r.value() : null;
             JarRecord candidate =
@@ -325,6 +332,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
             if (error == null) {
                 record = new Retained.Read<>(candidate);
                 itemLabel = null;
+                fromItem = false;
             } else {
                 Tag raw =
                         JarStack.RETAINED
@@ -334,6 +342,7 @@ public final class JarBlockEntity extends BlockEntity implements EssentiaSuction
                                 .orElse(new CompoundTag());
                 record = new Retained.Unreadable<>(raw, error);
                 itemLabel = label;
+                fromItem = true;
             }
         }
         warnIfUnreadable();
