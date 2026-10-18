@@ -68,6 +68,9 @@ class ArcaneDataTest {
         rejects(
                 "'vftv:bell': {" + BELL.replace("minecraft:bell", "minecraft:lantern") + "}",
                 "result.id: must be minecraft:bell");
+        rejects(
+                "'vftv:bell': {" + BELL.replace("'count': 1", "'count': 99") + "}",
+                "result.count: over minecraft:bell's maximum stack 64");
     }
 
     @Test

@@ -59,6 +59,8 @@ final class ArcaneData implements FeatureData {
         event.createProvider(Recipes::new);
     }
 
+    private static final int BELL_MAX_STACK = 64;
+
     /** The {@code vftv:arcane_recipes/1} schema, with its "Rejected:" rules for this bound. */
     static Schema schema(Map<String, Integer> wellspring) {
         return Schema.of(
@@ -90,6 +92,13 @@ final class ArcaneData implements FeatureData {
                 at + ".result.id",
                 bell.getAsJsonObject("result").get("id"),
                 "minecraft:bell");
+        // ponytail: datagen never binds item components, so ArcaneBodies.check can't read the
+        // result's maximum stack here; the result is pinned to minecraft:bell, which stacks to 64.
+        JsonElement count = bell.getAsJsonObject("result").get("count");
+        if (count != null && count.getAsInt() > BELL_MAX_STACK) {
+            problems.add(
+                    at + ".result.count: over minecraft:bell's maximum stack " + BELL_MAX_STACK);
+        }
         bell.getAsJsonObject("vis")
                 .entrySet()
                 .forEach(
