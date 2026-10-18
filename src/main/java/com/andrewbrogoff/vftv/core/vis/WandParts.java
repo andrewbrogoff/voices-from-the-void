@@ -17,7 +17,6 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.Item;
-import org.jspecify.annotations.Nullable;
 
 /**
  * One loaded set of the vis registries as the wand reads them: the parts by key and by item, the
@@ -44,7 +43,7 @@ public record WandParts(
             new WandParts(Map.of(), Map.of(), Map.of(), Map.of(), Map.of(), List.of());
 
     private static volatile WandParts last = EMPTY;
-    private static @Nullable Object lastSource;
+    private static final Map<HolderLookup.Provider, WandParts> SETS = new java.util.WeakHashMap<>();
 
     /** Copies the collections. */
     public WandParts {
@@ -63,17 +62,20 @@ public record WandParts(
 
     /** The set of a registry access, rebuilt only when the access instance changes. */
     public static synchronized WandParts of(HolderLookup.Provider access) {
-        if (!access.equals(lastSource)) {
-            last = build(access);
-            lastSource = access;
+        // One set per access: an integrated client and its server hold different instances.
+        WandParts parts = SETS.get(access);
+        if (parts == null) {
+            parts = build(access);
+            SETS.put(access, parts);
         }
-        return last;
+        last = parts;
+        return parts;
     }
 
-    /** Forgets the cached set, at disconnect or server stop. */
+    /** Forgets the cached sets, at disconnect or server stop. */
     public static synchronized void clear() {
         last = EMPTY;
-        lastSource = null;
+        SETS.clear();
     }
 
     private static WandParts build(HolderLookup.Provider access) {

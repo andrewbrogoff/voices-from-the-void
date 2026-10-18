@@ -182,7 +182,9 @@ public final class NodeService {
 
     /** Rebuilds the index and the chunk lookup from the registry, at server start. */
     public static void rebuild(MinecraftServer server) {
-        clear();
+        // Keep PENDING: the chunks loaded while the levels were prepared are queued already.
+        INDEX.clear();
+        CHUNK_IDS.clear();
         NodeLedger ledger = ledger(server);
         if (ledger == null) {
             return;

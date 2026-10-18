@@ -78,6 +78,15 @@ public final class VisNeoForgeClient {
                                 event.getItemStack(), event.getToolTip(), event.getEntity()));
         NeoForge.EVENT_BUS.addListener(
                 ClientPlayerNetworkEvent.LoggingOut.class, event -> VisClientFeature.onLogout());
+        // A level swap clears every particle without removing it: the glint count starts over.
+        NeoForge.EVENT_BUS.addListener(
+                net.neoforged.neoforge.event.level.LevelEvent.Unload.class,
+                event -> {
+                    if (event.getLevel().isClientSide()) {
+                        NodeGlintParticle.reset();
+                        NodeAmbience.clear();
+                    }
+                });
         modBus.addListener(
                 InterModEnqueueEvent.class,
                 event ->
