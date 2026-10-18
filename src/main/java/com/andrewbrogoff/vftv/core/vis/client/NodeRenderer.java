@@ -65,7 +65,9 @@ public final class NodeRenderer
         BlockEntityRenderState.extractBase(node, state, breakProgress);
         NodeClientNumbers n = NodeAmbience.numbers();
         long now = node.getLevel() == null ? 0 : node.getLevel().getGameTime();
-        state.time = now + partialTicks;
+        // Reduced by the orbit before the float conversion, so late game times keep sub-tick
+        // motion.
+        state.time = Math.floorMod(now, (long) n.orbitTicks()) + partialTicks;
         state.motes = 0;
         NodeState s = node.state();
         if (s == null) {
