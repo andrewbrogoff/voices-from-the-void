@@ -212,13 +212,16 @@ public final class CrucibleService {
             long pos = s.queue.firstLong();
             s.queue.remove(pos);
             BlockPos at = BlockPos.of(pos);
+            CrucibleBlockEntity be = s.loaded.get(pos);
+            if (be == null || be.isRemoved()) {
+                continue; // gone; a later load queues it again
+            }
             LevelChunk chunk = level.getChunkSource().getChunkNow(at.getX() >> 4, at.getZ() >> 4);
-            CrucibleBlockEntity loaded = s.loaded.get(pos);
-            if (chunk != null && chunk.getBlockEntity(at) instanceof CrucibleBlockEntity be) {
-                refresh(level, be);
-            } else if (chunk == null && loaded != null && !loaded.isRemoved()) {
+            if (chunk == null) {
                 // Loaded but its chunk isn't full yet: it stays queued, so it waits, not stalls.
                 waiting.add(pos);
+            } else {
+                refresh(level, be);
             }
         }
         s.queue.addAll(waiting);

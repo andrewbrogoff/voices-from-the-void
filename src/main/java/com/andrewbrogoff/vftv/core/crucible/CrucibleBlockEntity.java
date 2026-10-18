@@ -182,6 +182,25 @@ public final class CrucibleBlockEntity extends BlockEntity {
         return tint;
     }
 
+    @Override
+    public String toString() {
+        return "Crucible["
+                + worldPosition.toShortString()
+                + ", queued="
+                + queued
+                + ", stepping="
+                + stepping
+                + ", operation="
+                + operation
+                + ", busy="
+                + busy
+                + ", removed="
+                + isRemoved()
+                + ", "
+                + pool
+                + "]";
+    }
+
     /** This crucible's phase at an interval, cached. */
     long phase(int interval) {
         if (interval != phaseInterval) {
