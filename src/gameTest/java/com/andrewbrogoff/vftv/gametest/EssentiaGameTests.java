@@ -928,7 +928,8 @@ final class EssentiaGameTests {
                         .defaultBlockState()
                         .setValue(AlembicBlock.FACING, Direction.WEST));
         // A tube on the crucible's north side leads to an unlabelled jar; one on top is deaf.
-        jar(helper, new BlockPos(1, 2, -1), null, 0, null);
+        // Labelled Terra, so the tube and the Alembic never race for the same aspect.
+        jar(helper, new BlockPos(1, 2, -1), null, 0, AspectKeys.TERRA);
         tube(helper, new BlockPos(1, 2, 0));
         tube(helper, new BlockPos(1, 3, 1));
         helper.succeedWhen(
@@ -936,7 +937,7 @@ final class EssentiaGameTests {
                     Contents<ResourceKey<Aspect>> poured = contents(helper, new BlockPos(2, 1, 1));
                     Contents<ResourceKey<Aspect>> piped = contents(helper, new BlockPos(1, 2, -1));
                     eq(helper, poured.aspect(), AspectKeys.AER, "the Alembic pours Aer");
-                    helper.assertTrue(piped.amount() > 0, "the tube draws from the side");
+                    eq(helper, piped.aspect(), AspectKeys.TERRA, "the tube draws from the side");
                     int left = pool.pool().amount("vftv:aer") + pool.pool().amount("vftv:terra");
                     eq(helper, left + poured.amount() + piped.amount(), 21, "conserved");
                     eq(
