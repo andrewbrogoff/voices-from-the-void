@@ -136,6 +136,12 @@ public record WandAssemblyRecipe(CraftingBookCategory category)
                         .toList());
     }
 
+    /** Each ingredient slot gives up one item and leaves no remainder. */
+    @Override
+    public net.minecraft.core.NonNullList<ItemStack> getRemainingItems(CraftingInput input) {
+        return net.minecraft.core.NonNullList.withSize(input.size(), ItemStack.EMPTY);
+    }
+
     @Override
     public boolean isSpecial() {
         return true;

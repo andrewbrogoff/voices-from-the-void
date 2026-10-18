@@ -291,18 +291,21 @@ public final class NodeService {
         Block nodeBlock = VisContent.node();
         List<BlockPos> positions = new ArrayList<>(chunk.getBlockEntitiesPos());
         positions.sort((a, b) -> Long.compare(a.asLong(), b.asLong()));
-        Set<BlockPos> present = new HashSet<>();
+        // Each node block's id after this pass; -1 for an unreadable one, which is never a ghost.
+        Map<BlockPos, Long> present = new HashMap<>();
         boolean changed = false;
+        boolean starterChanged = false;
         for (BlockPos pos : positions) {
             if (!level.getBlockState(pos).is(nodeBlock)
                     || !(level.getBlockEntity(pos) instanceof NodeBlockEntity be)) {
                 continue;
             }
-            present.add(pos.immutable());
             NodeState state = be.state();
             if (state == null) {
+                present.put(pos.immutable(), -1L);
                 continue; // unreadable or empty: left alone, neither minted nor a ghost
             }
+            present.put(pos.immutable(), state.id());
             NodeLedger.Entry entry = state.id() == 0 ? null : ledger.get(state.id());
             Reconcile.Entry relation =
                     entry == null
@@ -331,6 +334,7 @@ public final class NodeService {
                                     .stamped(level.getGameTime(), VisRulesService.tuning()));
                     ledger.put(NodeLedger.Entry.placed(id, state.origin(), dim, pos));
                     indexAdd(dim, id, pos);
+                    present.put(pos.immutable(), id);
                     changed = true;
                     post(
                             NodeEventKind.CREATED,
@@ -374,8 +378,10 @@ public final class NodeService {
                     continue;
                 }
                 BlockPos at = e.pos().orElseThrow();
-                if (!present.contains(at)) {
+                Long held = present.get(at);
+                if (held == null || (held != -1L && held != id)) {
                     LOGGER.warn("Node {} at {} is a ghost: tombstoned", id, at);
+                    starterChanged |= isStarter(ledger, id);
                     ledger.put(e.removed());
                     indexRemove(dim, id, at);
                     changed = true;
@@ -385,6 +391,9 @@ public final class NodeService {
         }
         if (changed) {
             markDirty(level.getServer());
+        }
+        if (starterChanged) {
+            VisRulesService.sendToAll(level.getServer());
         }
     }
 
@@ -414,6 +423,12 @@ public final class NodeService {
         if (starter) {
             VisRulesService.sendToAll(level.getServer());
         }
+    }
+
+    /** Whether a node block holds this id; an unreadable one is taken to be the entry's own. */
+    private static boolean heldBy(NodeBlockEntity be, long id) {
+        NodeState held = be.state();
+        return held == null || held.id() == id;
     }
 
     private static boolean isStarter(NodeLedger ledger, long id) {
@@ -492,14 +507,17 @@ public final class NodeService {
         NodeState state = settle(level, be);
         NodeTypeEntry type = type(level, state.type());
         List<NodeSource.NodeAspect> aspects = new ArrayList<>();
+        var registry =
+                level.registryAccess()
+                        .lookupOrThrow(com.andrewbrogoff.vftv.api.aspect.AspectKeys.REGISTRY);
         for (NodeState.NodeAspect a : state.aspects()) {
-            aspects.add(
-                    new NodeSource.NodeAspect(
-                            ResourceKey.create(
-                                    com.andrewbrogoff.vftv.api.aspect.AspectKeys.REGISTRY,
-                                    a.aspect()),
-                            a.current(),
-                            a.max()));
+            var key =
+                    ResourceKey.create(
+                            com.andrewbrogoff.vftv.api.aspect.AspectKeys.REGISTRY, a.aspect());
+            // An aspect a pack removed is kept in the node's state but ignored (Pack changes).
+            if (registry.get(key).isPresent()) {
+                aspects.add(new NodeSource.NodeAspect(key, a.current(), a.max()));
+            }
         }
         return new NodeSource.Readout(
                 state.id(),
@@ -578,7 +596,8 @@ public final class NodeService {
             ServerLevel level = server.getLevel(dim);
             if (level != null
                     && level.isLoaded(pos)
-                    && level.getBlockState(pos).is(VisContent.node())) {
+                    && level.getBlockEntity(pos) instanceof NodeBlockEntity be
+                    && heldBy(be, id)) {
                 level.removeBlock(pos, false);
             }
         }

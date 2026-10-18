@@ -68,6 +68,8 @@ public final class VisNeoForgeClient {
                                 (ResourceManagerReloadListener)
                                         manager -> {
                                             VisHud.invalidate();
+                                            // A resource reload clears every particle too.
+                                            NodeGlintParticle.reset();
                                             NodeAmbience.installNumbers(
                                                     read(manager.getResource(CLIENT_NUMBERS)));
                                         }));
