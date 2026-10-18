@@ -1,0 +1,17 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The research feature's items. The Commonplace Book is a struck book: paper and leather, with the knowledge it gathers. A Choir page is the Choir's own writing, found in their ruins.",
+  "items": {
+    "vftv:choir_page": {
+      "vftv:alienis": 1,
+      "vftv:cognitio": 2,
+      "vftv:sonus": 1
+    },
+    "vftv:commonplace_book": {
+      "vftv:bestia": 1,
+      "vftv:cognitio": 2,
+      "vftv:herba": 1,
+      "vftv:pannus": 1
+    }
+  }
+}
