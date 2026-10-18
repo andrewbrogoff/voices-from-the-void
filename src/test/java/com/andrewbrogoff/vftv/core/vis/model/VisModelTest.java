@@ -248,6 +248,7 @@ class VisModelTest {
         assertEquals(8, StarterRing.firstRing(8, 0));
         assertEquals(17, StarterRing.firstRing(8, 16));
         assertEquals(121, StarterRing.firstRing(8, 120));
+        assertEquals(181, StarterRing.firstRing(8, Integer.MAX_VALUE), "no wrap below 180");
     }
 
     /** A flat world: ground top at y 63 (surface 64), air above, room everywhere. */

@@ -68,8 +68,6 @@ public final class VisNeoForgeClient {
                                 (ResourceManagerReloadListener)
                                         manager -> {
                                             VisHud.invalidate();
-                                            // A resource reload clears every particle too.
-                                            NodeGlintParticle.reset();
                                             NodeAmbience.installNumbers(
                                                     read(manager.getResource(CLIENT_NUMBERS)));
                                         }));
@@ -80,12 +78,11 @@ public final class VisNeoForgeClient {
                                 event.getItemStack(), event.getToolTip(), event.getEntity()));
         NeoForge.EVENT_BUS.addListener(
                 ClientPlayerNetworkEvent.LoggingOut.class, event -> VisClientFeature.onLogout());
-        // A level swap clears every particle without removing it: the glint count starts over.
+        // A level swap forgets the hums scheduled for the old level's nodes.
         NeoForge.EVENT_BUS.addListener(
                 net.neoforged.neoforge.event.level.LevelEvent.Unload.class,
                 event -> {
                     if (event.getLevel().isClientSide()) {
-                        NodeGlintParticle.reset();
                         NodeAmbience.clear();
                     }
                 });

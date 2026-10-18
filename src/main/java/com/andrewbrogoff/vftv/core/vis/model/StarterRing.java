@@ -30,7 +30,9 @@ public final class StarterRing {
 
     /** The first ring: {@code max(starter.min_ring, P + 1)}. */
     public static int firstRing(int minRing, int protection) {
-        return Math.max(minRing, protection + 1);
+        // Computed in long: a huge configured radius must not wrap below 180.
+        return (int)
+                Math.max(minRing, Math.min(protection + 1L, VisLimits.STARTER_MAX_DISTANCE + 1L));
     }
 
     /** Ring {@code k}'s walk start: {@code remainderUnsigned(fold([STAR, seed, k]), 8k)}. */

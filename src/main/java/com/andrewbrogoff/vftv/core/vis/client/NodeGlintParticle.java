@@ -1,27 +1,25 @@
 package com.andrewbrogoff.vftv.core.vis.client;
 
+import java.util.Optional;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.particle.Particle;
 import net.minecraft.client.particle.ParticleProvider;
 import net.minecraft.client.particle.SingleQuadParticle;
 import net.minecraft.client.particle.SpriteSet;
+import net.minecraft.core.particles.ParticleLimit;
 import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.util.RandomSource;
-import org.jspecify.annotations.Nullable;
 
 /**
- * {@code vftv:node_glint}: a four-frame cutout spark, full-bright. The client counts every live
- * glint, ambient and tapping alike, and drops any new one while 64 are alive (wands spec, "Global
- * glint cap").
+ * {@code vftv:node_glint}: a four-frame cutout spark, full-bright. Every glint, ambient and tapping
+ * alike, shares one vanilla particle limit of 64, so the engine drops any new one while 64 are
+ * alive (wands spec, "Global glint cap"), and its own accounting covers rejection and clearing.
  */
 public final class NodeGlintParticle extends SingleQuadParticle {
     /** The most glints alive at once (a fixed limit). */
-    public static final int CAP = 64;
-
-    private static int alive;
+    public static final ParticleLimit CAP = new ParticleLimit(64);
 
     private final SpriteSet sprites;
-    private boolean counted = true;
 
     private NodeGlintParticle(
             ClientLevel level,
@@ -43,17 +41,6 @@ public final class NodeGlintParticle extends SingleQuadParticle {
         this.quadSize = 0.06f;
         this.lifetime = NodeAmbience.numbers().glintLifetime();
         setSpriteFromAge(sprites);
-        alive++;
-    }
-
-    /** Forgets the count, when the level's particles are cleared (a disconnect or level change). */
-    public static void reset() {
-        alive = 0;
-    }
-
-    /** How many glints are alive. */
-    public static int alive() {
-        return alive;
     }
 
     @Override
@@ -63,12 +50,8 @@ public final class NodeGlintParticle extends SingleQuadParticle {
     }
 
     @Override
-    public void remove() {
-        super.remove();
-        if (counted) {
-            counted = false;
-            alive--;
-        }
+    public Optional<ParticleLimit> getParticleLimit() {
+        return Optional.of(CAP);
     }
 
     @Override
@@ -81,7 +64,7 @@ public final class NodeGlintParticle extends SingleQuadParticle {
         return 15728880;
     }
 
-    /** The provider: refuses a new glint while the cap is reached. */
+    /** The provider over the glint's frames. */
     public static final class Provider implements ParticleProvider<SimpleParticleType> {
         private final SpriteSet sprites;
 
@@ -91,7 +74,7 @@ public final class NodeGlintParticle extends SingleQuadParticle {
         }
 
         @Override
-        public @Nullable Particle createParticle(
+        public Particle createParticle(
                 SimpleParticleType options,
                 ClientLevel level,
                 double x,
@@ -101,7 +84,7 @@ public final class NodeGlintParticle extends SingleQuadParticle {
                 double dy,
                 double dz,
                 RandomSource random) {
-            return alive >= CAP ? null : new NodeGlintParticle(level, x, y, z, dx, dy, dz, sprites);
+            return new NodeGlintParticle(level, x, y, z, dx, dy, dz, sprites);
         }
     }
 }

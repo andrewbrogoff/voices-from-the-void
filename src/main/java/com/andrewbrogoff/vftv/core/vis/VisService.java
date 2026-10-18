@@ -306,8 +306,13 @@ public final class VisService {
             } else {
                 wand.set(VisContent.vis(), visBefore);
             }
+            // Each slot is restored on its own: one throwing restore must not skip the rest.
             for (int i = 0; i < effect.size(); i++) {
-                effect.get(i).container().setItem(effect.get(i).slot(), slotsBefore.get(i));
+                try {
+                    effect.get(i).container().setItem(effect.get(i).slot(), slotsBefore.get(i));
+                } catch (RuntimeException suppressed) {
+                    e.addSuppressed(suppressed);
+                }
             }
             LOGGER.error("A vis spend failed mid-commit; every change was rolled back", e);
             if (boundary != null) {

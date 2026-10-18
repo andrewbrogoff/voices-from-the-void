@@ -34,7 +34,6 @@ public final class VisClientFeature {
         VisRulesService.clearClient();
         VisHud.invalidate();
         NodeAmbience.clear();
-        NodeGlintParticle.reset();
         WandParts.clear();
     }
 }
