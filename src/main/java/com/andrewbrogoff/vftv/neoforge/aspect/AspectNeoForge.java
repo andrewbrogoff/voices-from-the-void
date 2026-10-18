@@ -8,6 +8,8 @@ import com.andrewbrogoff.vftv.api.neoforge.aspect.ThingScannedEvent;
 import com.andrewbrogoff.vftv.core.aspect.AspectEntry;
 import com.andrewbrogoff.vftv.core.aspect.AspectEvents;
 import com.andrewbrogoff.vftv.core.aspect.AspectLookup;
+import com.andrewbrogoff.vftv.core.aspect.DerivationExport;
+import com.andrewbrogoff.vftv.core.aspect.DerivedAspects;
 import com.andrewbrogoff.vftv.core.aspect.KnowledgeService;
 import com.andrewbrogoff.vftv.core.aspect.ScanningService;
 import com.andrewbrogoff.vftv.core.aspect.Strikes;
@@ -20,8 +22,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
@@ -33,11 +40,16 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.level.block.Block;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModList;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
+import net.neoforged.neoforge.event.DefaultDataComponentsBoundEvent;
+import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.registries.datamaps.DataMapsUpdatedEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
@@ -50,6 +62,12 @@ public final class AspectNeoForge {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static final Identifier TUNING =
             Identifier.fromNamespaceAndPath("vftv", ScanningService.TUNING_PATH);
+
+    /** The data load in progress, whose recipes the derivation reads. */
+    private static volatile @Nullable ReloadableServerResources loading;
+
+    /** That load's registries, once its item data maps are in. */
+    private static volatile @Nullable RegistryAccess mapsLoaded;
 
     private AspectNeoForge() {}
 
@@ -97,12 +115,44 @@ public final class AspectNeoForge {
                 });
         gameBus.addListener(
                 AddServerReloadListenersEvent.class,
-                event ->
-                        event.addListener(
-                                Identifier.fromNamespaceAndPath("vftv", "scanning_tuning"),
-                                new TuningListener(
-                                        ServerLifecycleHooks.getCurrentServer() == null)));
+                event -> {
+                    loading = event.getServerResources();
+                    event.addListener(
+                            Identifier.fromNamespaceAndPath("vftv", "scanning_tuning"),
+                            new TuningListener(ServerLifecycleHooks.getCurrentServer() == null));
+                });
+        // DerivedAspects: a data load's item data maps arrive after its recipes and tags, and its
+        // default components are bound just after them (some custom ingredients read stacks), so
+        // the table is rebuilt then; it is sent with the other aspect maps on join and /reload.
+        gameBus.addListener(
+                DataMapsUpdatedEvent.class,
+                event -> {
+                    if (event.getCause() == DataMapsUpdatedEvent.UpdateCause.SERVER_RELOAD
+                            && event.getRegistryKey().equals(Registries.ITEM)) {
+                        mapsLoaded = event.getRegistries();
+                    }
+                });
+        gameBus.addListener(
+                DefaultDataComponentsBoundEvent.class,
+                event -> {
+                    ReloadableServerResources resources = loading;
+                    RegistryAccess registries = mapsLoaded;
+                    if (event.getUpdateCause()
+                                    == DefaultDataComponentsBoundEvent.UpdateCause.SERVER_DATA_LOAD
+                            && resources != null
+                            && registries != null) {
+                        loading = null;
+                        mapsLoaded = null;
+                        DerivedAspects.rebuild(
+                                resources.getRecipeManager().getRecipes(), registries);
+                    }
+                });
         gameBus.addListener(ServerStoppedEvent.class, event -> KnowledgeService.onServerStopped());
+        gameBus.addListener(ServerStartedEvent.class, event -> DerivedAspects.serverStarted());
+        gameBus.addListener(
+                OnDatapackSyncEvent.class,
+                event -> event.getRelevantPlayers().forEach(DerivedAspects::sendTo));
+        DerivationExport.installMods(AspectNeoForge::mods);
         gameBus.addListener(
                 TagsUpdatedEvent.class,
                 event ->
@@ -115,6 +165,13 @@ public final class AspectNeoForge {
                                                 entry.bind(h.key());
                                             }
                                         }));
+    }
+
+    /** The loaded mods' ids and versions, for the export's report and conditions. */
+    private static SortedMap<String, String> mods() {
+        SortedMap<String, String> mods = new TreeMap<>();
+        ModList.get().getMods().forEach(m -> mods.put(m.getModId(), m.getVersion().toString()));
+        return mods;
     }
 
     /** Posts an event; a throwing listener is logged and the committed state stands. */

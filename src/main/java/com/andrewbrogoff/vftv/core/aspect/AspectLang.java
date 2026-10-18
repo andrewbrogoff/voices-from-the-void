@@ -56,6 +56,22 @@ public final class AspectLang {
     /** "An answer: %s, %s, %s." */
     public static final String NARRATE_SOUNDING = "narration.vftv.sounding";
 
+    /** The export's success: values, packs, path (compatibility, "Lang keys"). */
+    public static final String DERIVE_SUCCESS = "commands.vftv.aspects.derive.success";
+
+    /** The export's refusal while derived packs are enabled: their ids. */
+    public static final String DERIVE_INSTALLED = "commands.vftv.aspects.derive.installed";
+
+    /** The export's refusal over a bound: recipes, links, and both limits. */
+    public static final String DERIVE_TOO_LARGE = "commands.vftv.aspects.derive.too_large";
+
+    /** The export's failure: the message, and where the previous export is. */
+    public static final String DERIVE_FAILED = "commands.vftv.aspects.derive.failed";
+
+    /** The export's cleanup failure: values, packs, and the leftover. */
+    public static final String DERIVE_CLEANUP_FAILED =
+            "commands.vftv.aspects.derive.cleanup_failed";
+
     /** The bands' words, near to far. */
     public static final List<String> BANDS =
             List.of("hud.vftv.sounding.near", "hud.vftv.sounding.mid", "hud.vftv.sounding.far");
@@ -194,6 +210,35 @@ public final class AspectLang {
         t.add(code("subtitles.vftv.fork.strike", 0, "Tuning fork rings"));
         t.add(code("subtitles.vftv.fork.answer", 0, "A node answers"));
         t.add(code("subtitles.vftv.fork.discover", 0, "Something is understood"));
+        t.add(
+                code(
+                        DERIVE_SUCCESS,
+                        3,
+                        "Derived %1$s values into %2$s packs at %3$s. report.txt explains them;"
+                                + " installing a pack pins its values."));
+        t.add(
+                code(
+                        DERIVE_INSTALLED,
+                        1,
+                        "Derived packs are enabled: %1$s. Disable them and run /reload, then derive"
+                                + " again."));
+        t.add(
+                code(
+                        DERIVE_TOO_LARGE,
+                        4,
+                        "Too much to derive: %1$s recipes and %2$s ingredient links, where the"
+                                + " limits are %3$s and %4$s."));
+        t.add(
+                code(
+                        DERIVE_FAILED,
+                        2,
+                        "The export could not be written (%1$s). The previous export is at %2$s."));
+        t.add(
+                code(
+                        DERIVE_CLEANUP_FAILED,
+                        3,
+                        "Derived %1$s values into %2$s packs, but %3$s could not be removed. The"
+                                + " next run removes it."));
         return List.copyOf(t);
     }
 

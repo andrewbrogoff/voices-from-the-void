@@ -168,6 +168,7 @@ class BuiltinAspectsTest {
                             assertTrue(keys.contains(base), base);
                             assertTrue(keys.contains(base + ".gloss"), base + ".gloss");
                         });
-        assertEquals(37 * 2 + 31, AspectLang.TABLE.size());
+        // 31 of the aspects spec's keys, and the compatibility spec's five export keys.
+        assertEquals(37 * 2 + 31 + 5, AspectLang.TABLE.size());
     }
 }

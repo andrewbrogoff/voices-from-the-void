@@ -20,5 +20,6 @@ public final class AspectFeature {
         AspectContent.register(platform.registrar());
         KnowledgeService.init(platform.dataSlots());
         Strikes.init(platform.network());
+        DerivedAspects.init(platform.network());
     }
 }

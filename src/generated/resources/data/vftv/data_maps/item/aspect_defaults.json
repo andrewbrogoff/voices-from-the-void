@@ -1,0 +1,32 @@
+{
+  "values": {
+    "#c:crops": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "#c:dusts": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "#c:gems": {
+      "vftv:vitreus": 3
+    },
+    "#c:ingots": {
+      "vftv:metallum": 3
+    },
+    "#c:nuggets": {
+      "vftv:metallum": 1
+    },
+    "#c:ores": {
+      "vftv:metallum": 1,
+      "vftv:terra": 2
+    },
+    "#c:raw_materials": {
+      "vftv:metallum": 2,
+      "vftv:terra": 1
+    },
+    "#c:seeds": {
+      "vftv:herba": 1
+    }
+  }
+}

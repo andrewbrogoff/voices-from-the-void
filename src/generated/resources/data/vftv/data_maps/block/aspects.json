@@ -1,0 +1,311 @@
+{
+  "values": {
+    "minecraft:attached_melon_stem": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:attached_pumpkin_stem": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bamboo_sapling": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:black_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:blue_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:brown_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bubble_column": {
+      "vftv:aer": 1,
+      "vftv:aqua": 2,
+      "vftv:motus": 2
+    },
+    "minecraft:candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:cave_vines_plant": {
+      "vftv:herba": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:cyan_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:end_gateway": {
+      "vftv:alienis": 1,
+      "vftv:motus": 3,
+      "vftv:vacuos": 3
+    },
+    "minecraft:end_portal": {
+      "vftv:alienis": 2,
+      "vftv:motus": 2,
+      "vftv:vacuos": 3
+    },
+    "minecraft:fire": {
+      "vftv:ignis": 2
+    },
+    "minecraft:frosted_ice": {
+      "vftv:aqua": 1,
+      "vftv:gelum": 2
+    },
+    "minecraft:gray_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:green_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:kelp_plant": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:lava": {
+      "vftv:ignis": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:light_blue_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:lime_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:magenta_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:nether_portal": {
+      "vftv:ignis": 1,
+      "vftv:motus": 2,
+      "vftv:permutatio": 3
+    },
+    "minecraft:orange_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:pink_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:potted_acacia_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_allium": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_azalea_bush": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_azure_bluet": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_bamboo": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_birch_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_blue_orchid": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_brown_mushroom": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_cactus": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_cherry_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_closed_eyeblossom": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_cornflower": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_crimson_fungus": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_crimson_roots": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_dandelion": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_dark_oak_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_dead_bush": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_fern": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_flowering_azalea_bush": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_golden_dandelion": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_jungle_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_lily_of_the_valley": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_mangrove_propagule": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_oak_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_open_eyeblossom": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_orange_tulip": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_oxeye_daisy": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_pale_oak_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_pink_tulip": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_poppy": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_red_mushroom": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_red_tulip": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_spruce_sapling": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_torchflower": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_warped_fungus": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_warped_roots": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_white_tulip": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:potted_wither_rose": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:purple_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:red_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:soul_fire": {
+      "vftv:ignis": 2,
+      "vftv:spiritus": 1
+    },
+    "minecraft:tall_seagrass": {
+      "vftv:aqua": 1,
+      "vftv:herba": 2
+    },
+    "minecraft:twisting_vines_plant": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:water": {
+      "vftv:aqua": 3
+    },
+    "minecraft:weeping_vines_plant": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:white_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:yellow_candle_cake": {
+      "vftv:fames": 3,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    }
+  }
+}

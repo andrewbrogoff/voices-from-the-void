@@ -1,5 +1,5392 @@
 {
   "values": {
+    "#minecraft:acacia_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:beds": {
+      "vftv:arbor": 1,
+      "vftv:pannus": 3,
+      "vftv:sano": 1
+    },
+    "#minecraft:birch_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:bundles": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 2,
+      "vftv:vacuos": 1
+    },
+    "#minecraft:cherry_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:coal_ores": {
+      "vftv:ignis": 2,
+      "vftv:potentia": 1,
+      "vftv:terra": 2
+    },
+    "#minecraft:concrete": {
+      "vftv:aqua": 1,
+      "vftv:ordo": 1,
+      "vftv:terra": 2
+    },
+    "#minecraft:copper": {
+      "vftv:metallum": 81
+    },
+    "#minecraft:copper_chests": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 20,
+      "vftv:vacuos": 1
+    },
+    "#minecraft:copper_golem_statues": {
+      "vftv:machina": 2,
+      "vftv:metallum": 40,
+      "vftv:spiritus": 1
+    },
+    "#minecraft:copper_ores": {
+      "vftv:metallum": 2,
+      "vftv:permutatio": 1,
+      "vftv:terra": 2
+    },
+    "#minecraft:crimson_stems": {
+      "vftv:arbor": 3,
+      "vftv:ignis": 1
+    },
+    "#minecraft:dark_oak_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:decorated_pot_sherds": {
+      "vftv:cognitio": 1,
+      "vftv:humanus": 1,
+      "vftv:terra": 1
+    },
+    "#minecraft:diamond_ores": {
+      "vftv:ordo": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 6
+    },
+    "#minecraft:emerald_ores": {
+      "vftv:permutatio": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 4
+    },
+    "#minecraft:gold_ores": {
+      "vftv:lux": 1,
+      "vftv:metallum": 3,
+      "vftv:terra": 2
+    },
+    "#minecraft:harnesses": {
+      "vftv:bestia": 1,
+      "vftv:motus": 1,
+      "vftv:pannus": 2
+    },
+    "#minecraft:iron_ores": {
+      "vftv:metallum": 3,
+      "vftv:terra": 2
+    },
+    "#minecraft:jungle_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:lapis_ores": {
+      "vftv:cognitio": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 1
+    },
+    "#minecraft:leaves": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "#minecraft:lightning_rods": {
+      "vftv:metallum": 20,
+      "vftv:potentia": 2
+    },
+    "#minecraft:mangrove_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:oak_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:pale_oak_logs": {
+      "vftv:arbor": 4,
+      "vftv:tenebrae": 1
+    },
+    "#minecraft:redstone_ores": {
+      "vftv:potentia": 3,
+      "vftv:terra": 2
+    },
+    "#minecraft:saplings": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "#minecraft:shulker_boxes": {
+      "vftv:alienis": 3,
+      "vftv:arbor": 1,
+      "vftv:vacuos": 2
+    },
+    "#minecraft:small_flowers": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "#minecraft:spruce_logs": {
+      "vftv:arbor": 4
+    },
+    "#minecraft:warped_stems": {
+      "vftv:arbor": 3,
+      "vftv:ignis": 1
+    },
+    "#minecraft:wool": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 2,
+      "vftv:silentium": 1
+    },
+    "#minecraft:wool_carpets": {
+      "vftv:pannus": 1,
+      "vftv:silentium": 1
+    },
+    "minecraft:acacia_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:acacia_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:acacia_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:acacia_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:acacia_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:acacia_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:acacia_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:activator_rail": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1
+    },
+    "minecraft:amethyst_block": {
+      "vftv:sonus": 6,
+      "vftv:vitreus": 6
+    },
+    "minecraft:amethyst_cluster": {
+      "vftv:sonus": 2,
+      "vftv:vitreus": 3
+    },
+    "minecraft:amethyst_shard": {
+      "vftv:sonus": 2,
+      "vftv:vitreus": 2
+    },
+    "minecraft:ancient_debris": {
+      "vftv:ignis": 2,
+      "vftv:metallum": 4,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:andesite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:andesite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:andesite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:andesite_wall": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:anvil": {
+      "vftv:metallum": 209
+    },
+    "minecraft:apple": {
+      "vftv:fames": 2,
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:armadillo_scute": {
+      "vftv:bestia": 1,
+      "vftv:tutamen": 2
+    },
+    "minecraft:armor_stand": {
+      "vftv:arbor": 4,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:arrow": {
+      "vftv:aer": 1,
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:axolotl_bucket": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 2,
+      "vftv:metallum": 20,
+      "vftv:victus": 1
+    },
+    "minecraft:baked_potato": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:bamboo": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_block": {
+      "vftv:arbor": 6,
+      "vftv:herba": 6
+    },
+    "minecraft:bamboo_button": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_chest_raft": {
+      "vftv:arbor": 6,
+      "vftv:herba": 2
+    },
+    "minecraft:bamboo_door": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_fence": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_fence_gate": {
+      "vftv:arbor": 4,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_hanging_sign": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1,
+      "vftv:metallum": 2
+    },
+    "minecraft:bamboo_mosaic": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_mosaic_slab": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_mosaic_stairs": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_planks": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_pressure_plate": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_raft": {
+      "vftv:arbor": 3,
+      "vftv:herba": 3
+    },
+    "minecraft:bamboo_shelf": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_sign": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_slab": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_stairs": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bamboo_trapdoor": {
+      "vftv:arbor": 2,
+      "vftv:herba": 2
+    },
+    "minecraft:barrel": {
+      "vftv:arbor": 6
+    },
+    "minecraft:basalt": {
+      "vftv:ignis": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:beacon": {
+      "vftv:ignis": 8,
+      "vftv:lux": 3,
+      "vftv:praecantatio": 4,
+      "vftv:tenebrae": 4,
+      "vftv:terra": 10
+    },
+    "minecraft:bee_nest": {
+      "vftv:arbor": 2,
+      "vftv:bestia": 2,
+      "vftv:fames": 1
+    },
+    "minecraft:beef": {
+      "vftv:corpus": 2,
+      "vftv:fames": 1
+    },
+    "minecraft:beehive": {
+      "vftv:arbor": 4,
+      "vftv:bestia": 2,
+      "vftv:fames": 2,
+      "vftv:ordo": 2
+    },
+    "minecraft:beetroot": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:beetroot_seeds": {
+      "vftv:herba": 1
+    },
+    "minecraft:beetroot_soup": {
+      "vftv:arbor": 1,
+      "vftv:fames": 4,
+      "vftv:herba": 4
+    },
+    "minecraft:bell": {
+      "vftv:metallum": 6,
+      "vftv:sonus": 4
+    },
+    "minecraft:big_dripleaf": {
+      "vftv:aqua": 1,
+      "vftv:herba": 2
+    },
+    "minecraft:birch_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:birch_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:birch_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:birch_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:birch_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:birch_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:birch_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:black_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:black_candle": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:black_concrete_powder": {
+      "vftv:aqua": 1,
+      "vftv:perditio": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:black_dye": {
+      "vftv:aqua": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:black_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 2,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:black_stained_glass": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:black_stained_glass_pane": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:black_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:blackstone": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:blackstone_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:blackstone_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:blackstone_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:blast_furnace": {
+      "vftv:ignis": 2,
+      "vftv:metallum": 33,
+      "vftv:terra": 11
+    },
+    "minecraft:blaze_powder": {
+      "vftv:ignis": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:blaze_rod": {
+      "vftv:ignis": 4,
+      "vftv:potentia": 2
+    },
+    "minecraft:blue_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:blue_candle": {
+      "vftv:bestia": 1,
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:blue_concrete_powder": {
+      "vftv:cognitio": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:blue_dye": {
+      "vftv:cognitio": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:blue_egg": {
+      "vftv:bestia": 1,
+      "vftv:gelum": 1,
+      "vftv:victus": 2
+    },
+    "minecraft:blue_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:cognitio": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:blue_ice": {
+      "vftv:aqua": 40,
+      "vftv:gelum": 87
+    },
+    "minecraft:blue_stained_glass": {
+      "vftv:cognitio": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:blue_stained_glass_pane": {
+      "vftv:cognitio": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:blue_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:cognitio": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:bolt_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:bone": {
+      "vftv:corpus": 1,
+      "vftv:mortuus": 2
+    },
+    "minecraft:bone_block": {
+      "vftv:mortuus": 9
+    },
+    "minecraft:bone_meal": {
+      "vftv:mortuus": 1
+    },
+    "minecraft:book": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 1,
+      "vftv:herba": 2,
+      "vftv:pannus": 1
+    },
+    "minecraft:bookshelf": {
+      "vftv:aqua": 4,
+      "vftv:arbor": 4,
+      "vftv:bestia": 2,
+      "vftv:herba": 4,
+      "vftv:pannus": 2
+    },
+    "minecraft:bordure_indented_banner_pattern": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:bow": {
+      "vftv:arbor": 2,
+      "vftv:bestia": 2,
+      "vftv:pannus": 2,
+      "vftv:telum": 2
+    },
+    "minecraft:bowl": {
+      "vftv:arbor": 1
+    },
+    "minecraft:brain_coral": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:brain_coral_block": {
+      "vftv:aqua": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:brain_coral_fan": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bread": {
+      "vftv:fames": 2,
+      "vftv:herba": 2
+    },
+    "minecraft:breeze_rod": {
+      "vftv:aer": 4,
+      "vftv:motus": 2
+    },
+    "minecraft:brewing_stand": {
+      "vftv:ignis": 3,
+      "vftv:potentia": 1,
+      "vftv:terra": 4
+    },
+    "minecraft:brick": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brick_slab": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brick_stairs": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:brick_wall": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:bricks": {
+      "vftv:aqua": 3,
+      "vftv:ignis": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:brown_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:brown_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:brown_concrete_powder": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brown_dye": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:brown_egg": {
+      "vftv:bestia": 1,
+      "vftv:ignis": 1,
+      "vftv:victus": 2
+    },
+    "minecraft:brown_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:brown_mushroom": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:brown_mushroom_block": {
+      "vftv:herba": 2,
+      "vftv:perditio": 1
+    },
+    "minecraft:brown_stained_glass": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brown_stained_glass_pane": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brown_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:brush": {
+      "vftv:aer": 1,
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:instrumentum": 1,
+      "vftv:metallum": 6
+    },
+    "minecraft:bubble_coral": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bubble_coral_block": {
+      "vftv:aqua": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bubble_coral_fan": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:bucket": {
+      "vftv:metallum": 20
+    },
+    "minecraft:bush": {
+      "vftv:herba": 1
+    },
+    "minecraft:cactus": {
+      "vftv:aqua": 1,
+      "vftv:herba": 2,
+      "vftv:telum": 1
+    },
+    "minecraft:cactus_flower": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:cake": {
+      "vftv:aqua": 2,
+      "vftv:fames": 3,
+      "vftv:herba": 2,
+      "vftv:sano": 2,
+      "vftv:victus": 7
+    },
+    "minecraft:calcite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:calibrated_sculk_sensor": {
+      "vftv:sonus": 6,
+      "vftv:spiritus": 1,
+      "vftv:tenebrae": 1,
+      "vftv:vitreus": 4
+    },
+    "minecraft:campfire": {
+      "vftv:arbor": 11,
+      "vftv:ignis": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:carrot": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:carrot_on_a_stick": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:instrumentum": 1
+    },
+    "minecraft:cartography_table": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 3,
+      "vftv:herba": 1
+    },
+    "minecraft:carved_pumpkin": {
+      "vftv:herba": 3,
+      "vftv:humanus": 1
+    },
+    "minecraft:cauldron": {
+      "vftv:metallum": 47
+    },
+    "minecraft:chainmail_boots": {
+      "vftv:metallum": 6,
+      "vftv:ordo": 1,
+      "vftv:tutamen": 3
+    },
+    "minecraft:chainmail_chestplate": {
+      "vftv:metallum": 12,
+      "vftv:ordo": 1,
+      "vftv:tutamen": 5
+    },
+    "minecraft:chainmail_helmet": {
+      "vftv:metallum": 7,
+      "vftv:ordo": 1,
+      "vftv:tutamen": 3
+    },
+    "minecraft:chainmail_leggings": {
+      "vftv:metallum": 10,
+      "vftv:ordo": 1,
+      "vftv:tutamen": 4
+    },
+    "minecraft:charcoal": {
+      "vftv:arbor": 3,
+      "vftv:ignis": 1
+    },
+    "minecraft:cherry_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:cherry_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:cherry_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:cherry_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:cherry_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:cherry_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:cherry_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:chest": {
+      "vftv:arbor": 6
+    },
+    "minecraft:chest_minecart": {
+      "vftv:arbor": 4,
+      "vftv:metallum": 24
+    },
+    "minecraft:chicken": {
+      "vftv:bestia": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:chipped_anvil": {
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 90
+    },
+    "minecraft:chiseled_bookshelf": {
+      "vftv:arbor": 6
+    },
+    "minecraft:chiseled_cinnabar": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:chiseled_deepslate": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:chiseled_nether_bricks": {
+      "vftv:ignis": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:chiseled_polished_blackstone": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:chiseled_quartz_block": {
+      "vftv:ordo": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:chiseled_red_sandstone": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:chiseled_resin_bricks": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:chiseled_sandstone": {
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:chiseled_stone_bricks": {
+      "vftv:terra": 1
+    },
+    "minecraft:chiseled_sulfur": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:chiseled_tuff": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:chiseled_tuff_bricks": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:chorus_flower": {
+      "vftv:alienis": 2,
+      "vftv:herba": 1
+    },
+    "minecraft:chorus_fruit": {
+      "vftv:alienis": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:chorus_plant": {
+      "vftv:alienis": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:cinnabar": {
+      "vftv:metallum": 1,
+      "vftv:terra": 2,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_brick_slab": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_brick_stairs": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_brick_wall": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_bricks": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_slab": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_stairs": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:cinnabar_wall": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:clay": {
+      "vftv:aqua": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:clay_ball": {
+      "vftv:aqua": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:clock": {
+      "vftv:lux": 27,
+      "vftv:metallum": 27,
+      "vftv:potentia": 1
+    },
+    "minecraft:coal": {
+      "vftv:ignis": 2,
+      "vftv:potentia": 1
+    },
+    "minecraft:coal_block": {
+      "vftv:ignis": 18,
+      "vftv:potentia": 9
+    },
+    "minecraft:coarse_dirt": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:coast_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:cobbled_deepslate": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:cobbled_deepslate_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cobbled_deepslate_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cobbled_deepslate_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cobblestone": {
+      "vftv:terra": 2
+    },
+    "minecraft:cobblestone_slab": {
+      "vftv:terra": 1
+    },
+    "minecraft:cobblestone_stairs": {
+      "vftv:terra": 1
+    },
+    "minecraft:cobblestone_wall": {
+      "vftv:terra": 1
+    },
+    "minecraft:cobweb": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:cocoa_beans": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:cod": {
+      "vftv:aqua": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:cod_bucket": {
+      "vftv:aqua": 2,
+      "vftv:corpus": 1,
+      "vftv:metallum": 20
+    },
+    "minecraft:comparator": {
+      "vftv:arbor": 2,
+      "vftv:ordo": 1,
+      "vftv:potentia": 2,
+      "vftv:terra": 4,
+      "vftv:vitreus": 1
+    },
+    "minecraft:compass": {
+      "vftv:metallum": 27,
+      "vftv:potentia": 1
+    },
+    "minecraft:composter": {
+      "vftv:arbor": 5
+    },
+    "minecraft:conduit": {
+      "vftv:aqua": 15,
+      "vftv:ordo": 6,
+      "vftv:potentia": 2,
+      "vftv:praecantatio": 2,
+      "vftv:tutamen": 6
+    },
+    "minecraft:cooked_beef": {
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_chicken": {
+      "vftv:bestia": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_cod": {
+      "vftv:aqua": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_mutton": {
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_porkchop": {
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_rabbit": {
+      "vftv:bestia": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cooked_salmon": {
+      "vftv:aqua": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:cookie": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:copper_axe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 20
+    },
+    "minecraft:copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:copper_boots": {
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:copper_chain": {
+      "vftv:metallum": 8
+    },
+    "minecraft:copper_chestplate": {
+      "vftv:metallum": 54,
+      "vftv:tutamen": 5
+    },
+    "minecraft:copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:copper_helmet": {
+      "vftv:metallum": 33,
+      "vftv:tutamen": 3
+    },
+    "minecraft:copper_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 13
+    },
+    "minecraft:copper_horse_armor": {
+      "vftv:bestia": 1,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:copper_ingot": {
+      "vftv:metallum": 9
+    },
+    "minecraft:copper_lantern": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1
+    },
+    "minecraft:copper_leggings": {
+      "vftv:metallum": 47,
+      "vftv:tutamen": 4
+    },
+    "minecraft:copper_nautilus_armor": {
+      "vftv:aqua": 1,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:copper_nugget": {
+      "vftv:metallum": 1
+    },
+    "minecraft:copper_pickaxe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 20
+    },
+    "minecraft:copper_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:copper_spear": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 6,
+      "vftv:telum": 2
+    },
+    "minecraft:copper_sword": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 13,
+      "vftv:telum": 2
+    },
+    "minecraft:copper_torch": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:metallum": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:copper_trapdoor": {
+      "vftv:metallum": 27
+    },
+    "minecraft:cracked_deepslate_bricks": {
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cracked_deepslate_tiles": {
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cracked_nether_bricks": {
+      "vftv:ignis": 5,
+      "vftv:terra": 2
+    },
+    "minecraft:cracked_polished_blackstone_bricks": {
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cracked_stone_bricks": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:crafter": {
+      "vftv:arbor": 2,
+      "vftv:metallum": 33,
+      "vftv:potentia": 3,
+      "vftv:terra": 7
+    },
+    "minecraft:crafting_table": {
+      "vftv:arbor": 3
+    },
+    "minecraft:creaking_heart": {
+      "vftv:arbor": 12,
+      "vftv:tenebrae": 8
+    },
+    "minecraft:creeper_banner_pattern": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:herba": 1,
+      "vftv:humanus": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:creeper_head": {
+      "vftv:bestia": 2,
+      "vftv:humanus": 1,
+      "vftv:perditio": 2
+    },
+    "minecraft:crimson_button": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_door": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_fence": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_fence_gate": {
+      "vftv:arbor": 4,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_fungus": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:crimson_hanging_sign": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 1,
+      "vftv:metallum": 2
+    },
+    "minecraft:crimson_nylium": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:crimson_planks": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_pressure_plate": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_roots": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_shelf": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_sign": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_slab": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_stairs": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:crimson_trapdoor": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 2
+    },
+    "minecraft:crossbow": {
+      "vftv:arbor": 3,
+      "vftv:bestia": 1,
+      "vftv:metallum": 9,
+      "vftv:pannus": 1,
+      "vftv:telum": 2
+    },
+    "minecraft:crying_obsidian": {
+      "vftv:lux": 1,
+      "vftv:spiritus": 2,
+      "vftv:tenebrae": 2,
+      "vftv:terra": 3
+    },
+    "minecraft:cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:cut_red_sandstone": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:cut_red_sandstone_slab": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cut_sandstone": {
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:cut_sandstone_slab": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cyan_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:cyan_candle": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1
+    },
+    "minecraft:cyan_concrete_powder": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cyan_dye": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:cyan_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:cyan_stained_glass": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cyan_stained_glass_pane": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:cyan_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:damaged_anvil": {
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 60
+    },
+    "minecraft:dark_oak_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:dark_oak_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:dark_oak_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:dark_oak_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:dark_oak_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:dark_oak_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:dark_oak_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:dark_prismarine": {
+      "vftv:aqua": 6,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 6,
+      "vftv:vitreus": 6
+    },
+    "minecraft:dark_prismarine_slab": {
+      "vftv:aqua": 2,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2,
+      "vftv:vitreus": 2
+    },
+    "minecraft:dark_prismarine_stairs": {
+      "vftv:aqua": 4,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 4,
+      "vftv:vitreus": 4
+    },
+    "minecraft:daylight_detector": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 2,
+      "vftv:ordo": 2,
+      "vftv:perditio": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:dead_brain_coral": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_brain_coral_block": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:dead_brain_coral_fan": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_bubble_coral": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_bubble_coral_block": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:dead_bubble_coral_fan": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_bush": {
+      "vftv:herba": 1,
+      "vftv:mortuus": 1
+    },
+    "minecraft:dead_fire_coral": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_fire_coral_block": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:dead_fire_coral_fan": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_horn_coral": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_horn_coral_block": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:dead_horn_coral_fan": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_tube_coral": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:dead_tube_coral_block": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:dead_tube_coral_fan": {
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:decorated_pot": {
+      "vftv:aqua": 3,
+      "vftv:ignis": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:deepslate": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:deepslate_brick_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_brick_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_brick_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_bricks": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_tile_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_tile_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_tile_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:deepslate_tiles": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:detector_rail": {
+      "vftv:metallum": 6,
+      "vftv:potentia": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:diamond": {
+      "vftv:ordo": 2,
+      "vftv:vitreus": 6
+    },
+    "minecraft:diamond_axe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:ordo": 4,
+      "vftv:vitreus": 13
+    },
+    "minecraft:diamond_block": {
+      "vftv:ordo": 18,
+      "vftv:vitreus": 54
+    },
+    "minecraft:diamond_boots": {
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:diamond_chestplate": {
+      "vftv:ordo": 12,
+      "vftv:tutamen": 5,
+      "vftv:vitreus": 36
+    },
+    "minecraft:diamond_helmet": {
+      "vftv:ordo": 7,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 22
+    },
+    "minecraft:diamond_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:ordo": 3,
+      "vftv:vitreus": 9
+    },
+    "minecraft:diamond_horse_armor": {
+      "vftv:bestia": 1,
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:diamond_leggings": {
+      "vftv:ordo": 10,
+      "vftv:tutamen": 4,
+      "vftv:vitreus": 31
+    },
+    "minecraft:diamond_nautilus_armor": {
+      "vftv:aqua": 1,
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:diamond_pickaxe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:ordo": 4,
+      "vftv:vitreus": 13
+    },
+    "minecraft:diamond_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:ordo": 1,
+      "vftv:vitreus": 4
+    },
+    "minecraft:diamond_spear": {
+      "vftv:arbor": 1,
+      "vftv:ordo": 1,
+      "vftv:telum": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:diamond_sword": {
+      "vftv:arbor": 1,
+      "vftv:ordo": 3,
+      "vftv:telum": 2,
+      "vftv:vitreus": 9
+    },
+    "minecraft:diorite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:diorite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:diorite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:diorite_wall": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:dirt": {
+      "vftv:terra": 2
+    },
+    "minecraft:disc_fragment_5": {
+      "vftv:sonus": 2,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:dispenser": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:pannus": 1,
+      "vftv:potentia": 1,
+      "vftv:terra": 10
+    },
+    "minecraft:dragon_breath": {
+      "vftv:alienis": 3,
+      "vftv:ignis": 2,
+      "vftv:praecantatio": 2,
+      "vftv:vitreus": 1
+    },
+    "minecraft:dragon_egg": {
+      "vftv:alienis": 6,
+      "vftv:praecantatio": 2,
+      "vftv:vacuos": 4,
+      "vftv:victus": 4
+    },
+    "minecraft:dragon_head": {
+      "vftv:alienis": 3,
+      "vftv:bestia": 3,
+      "vftv:humanus": 1
+    },
+    "minecraft:dried_ghast": {
+      "vftv:aqua": 6,
+      "vftv:perditio": 1,
+      "vftv:sano": 12,
+      "vftv:spiritus": 12,
+      "vftv:terra": 1
+    },
+    "minecraft:dried_kelp": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:dried_kelp_block": {
+      "vftv:fames": 9,
+      "vftv:herba": 9
+    },
+    "minecraft:dripstone_block": {
+      "vftv:aqua": 3,
+      "vftv:telum": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:dropper": {
+      "vftv:potentia": 1,
+      "vftv:terra": 10
+    },
+    "minecraft:dune_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:echo_shard": {
+      "vftv:sonus": 3,
+      "vftv:spiritus": 2,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:egg": {
+      "vftv:bestia": 1,
+      "vftv:victus": 2
+    },
+    "minecraft:elytra": {
+      "vftv:aer": 6,
+      "vftv:alienis": 2,
+      "vftv:motus": 4,
+      "vftv:pannus": 2
+    },
+    "minecraft:emerald": {
+      "vftv:permutatio": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:emerald_block": {
+      "vftv:permutatio": 18,
+      "vftv:vitreus": 36
+    },
+    "minecraft:enchanted_book": {
+      "vftv:cognitio": 2,
+      "vftv:pannus": 1,
+      "vftv:praecantatio": 3
+    },
+    "minecraft:enchanted_golden_apple": {
+      "vftv:lux": 8,
+      "vftv:metallum": 8,
+      "vftv:praecantatio": 4,
+      "vftv:sano": 6,
+      "vftv:victus": 4
+    },
+    "minecraft:enchanting_table": {
+      "vftv:ignis": 6,
+      "vftv:ordo": 3,
+      "vftv:tenebrae": 6,
+      "vftv:terra": 9,
+      "vftv:vitreus": 9
+    },
+    "minecraft:end_crystal": {
+      "vftv:alienis": 1,
+      "vftv:aqua": 1,
+      "vftv:ignis": 6,
+      "vftv:perditio": 5,
+      "vftv:terra": 5
+    },
+    "minecraft:end_rod": {
+      "vftv:alienis": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:end_stone": {
+      "vftv:terra": 2,
+      "vftv:vacuos": 1
+    },
+    "minecraft:end_stone_brick_slab": {
+      "vftv:terra": 1,
+      "vftv:vacuos": 1
+    },
+    "minecraft:end_stone_brick_stairs": {
+      "vftv:terra": 1,
+      "vftv:vacuos": 1
+    },
+    "minecraft:end_stone_brick_wall": {
+      "vftv:terra": 1,
+      "vftv:vacuos": 1
+    },
+    "minecraft:end_stone_bricks": {
+      "vftv:terra": 1,
+      "vftv:vacuos": 1
+    },
+    "minecraft:ender_chest": {
+      "vftv:alienis": 1,
+      "vftv:ignis": 12,
+      "vftv:motus": 1,
+      "vftv:tenebrae": 12,
+      "vftv:terra": 18
+    },
+    "minecraft:ender_eye": {
+      "vftv:alienis": 1,
+      "vftv:ignis": 1,
+      "vftv:motus": 1,
+      "vftv:potentia": 1,
+      "vftv:vacuos": 1
+    },
+    "minecraft:ender_pearl": {
+      "vftv:alienis": 2,
+      "vftv:motus": 2,
+      "vftv:vacuos": 1
+    },
+    "minecraft:experience_bottle": {
+      "vftv:cognitio": 2,
+      "vftv:potentia": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:exposed_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:exposed_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:exposed_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:exposed_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:exposed_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:exposed_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:exposed_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:exposed_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:exposed_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:exposed_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:exposed_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:eye_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:feather": {
+      "vftv:aer": 2,
+      "vftv:bestia": 1
+    },
+    "minecraft:fermented_spider_eye": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:fern": {
+      "vftv:herba": 1
+    },
+    "minecraft:field_masoned_banner_pattern": {
+      "vftv:aqua": 3,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:filled_map": {
+      "vftv:cognitio": 2,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:fire_charge": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:fire_coral": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:fire_coral_block": {
+      "vftv:aqua": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:fire_coral_fan": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:firefly_bush": {
+      "vftv:bestia": 1,
+      "vftv:herba": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:firework_rocket": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:firework_star": {
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:fishing_rod": {
+      "vftv:arbor": 2,
+      "vftv:bestia": 1,
+      "vftv:instrumentum": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:fletching_table": {
+      "vftv:arbor": 3,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:flint": {
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:flint_and_steel": {
+      "vftv:ignis": 1,
+      "vftv:instrumentum": 1,
+      "vftv:metallum": 6,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:flow_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:flow_banner_pattern": {
+      "vftv:cognitio": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:flower_banner_pattern": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:flower_pot": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:furnace": {
+      "vftv:terra": 12
+    },
+    "minecraft:furnace_minecart": {
+      "vftv:metallum": 24,
+      "vftv:terra": 9
+    },
+    "minecraft:ghast_tear": {
+      "vftv:aqua": 1,
+      "vftv:sano": 2,
+      "vftv:spiritus": 2
+    },
+    "minecraft:gilded_blackstone": {
+      "vftv:lux": 1,
+      "vftv:metallum": 2,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:glass": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:glass_bottle": {
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:glass_pane": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:glistering_melon_slice": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:lux": 6,
+      "vftv:metallum": 6
+    },
+    "minecraft:globe_banner_pattern": {
+      "vftv:cognitio": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:glow_berries": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:glow_ink_sac": {
+      "vftv:aqua": 1,
+      "vftv:lux": 2
+    },
+    "minecraft:glow_item_frame": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 4,
+      "vftv:bestia": 1,
+      "vftv:lux": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:glow_lichen": {
+      "vftv:herba": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:glowstone": {
+      "vftv:ignis": 3,
+      "vftv:lux": 6
+    },
+    "minecraft:glowstone_dust": {
+      "vftv:ignis": 1,
+      "vftv:lux": 2
+    },
+    "minecraft:goat_horn": {
+      "vftv:bestia": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:gold_block": {
+      "vftv:lux": 81,
+      "vftv:metallum": 81
+    },
+    "minecraft:gold_ingot": {
+      "vftv:lux": 9,
+      "vftv:metallum": 9
+    },
+    "minecraft:gold_nugget": {
+      "vftv:lux": 1,
+      "vftv:metallum": 1
+    },
+    "minecraft:golden_apple": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:lux": 54,
+      "vftv:metallum": 54,
+      "vftv:victus": 1
+    },
+    "minecraft:golden_axe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:lux": 20,
+      "vftv:metallum": 20
+    },
+    "minecraft:golden_boots": {
+      "vftv:lux": 27,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:golden_carrot": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:lux": 6,
+      "vftv:metallum": 6
+    },
+    "minecraft:golden_chestplate": {
+      "vftv:lux": 54,
+      "vftv:metallum": 54,
+      "vftv:tutamen": 5
+    },
+    "minecraft:golden_helmet": {
+      "vftv:lux": 33,
+      "vftv:metallum": 33,
+      "vftv:tutamen": 3
+    },
+    "minecraft:golden_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:lux": 13,
+      "vftv:metallum": 13
+    },
+    "minecraft:golden_horse_armor": {
+      "vftv:bestia": 1,
+      "vftv:lux": 27,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:golden_leggings": {
+      "vftv:lux": 47,
+      "vftv:metallum": 47,
+      "vftv:tutamen": 4
+    },
+    "minecraft:golden_nautilus_armor": {
+      "vftv:aqua": 1,
+      "vftv:lux": 27,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:golden_pickaxe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:lux": 20,
+      "vftv:metallum": 20
+    },
+    "minecraft:golden_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:lux": 6,
+      "vftv:metallum": 6
+    },
+    "minecraft:golden_spear": {
+      "vftv:arbor": 1,
+      "vftv:lux": 6,
+      "vftv:metallum": 6,
+      "vftv:telum": 2
+    },
+    "minecraft:golden_sword": {
+      "vftv:arbor": 1,
+      "vftv:lux": 13,
+      "vftv:metallum": 13,
+      "vftv:telum": 2
+    },
+    "minecraft:granite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 2
+    },
+    "minecraft:granite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:granite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:granite_wall": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:grass_block": {
+      "vftv:herba": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:gravel": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:gray_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:gray_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:gray_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:gray_dye": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:gray_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:gray_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:gray_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:gray_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:green_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:green_candle": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:green_concrete_powder": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:green_dye": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:green_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:green_stained_glass": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:green_stained_glass_pane": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:green_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:grindstone": {
+      "vftv:arbor": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:gunpowder": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 2
+    },
+    "minecraft:guster_banner_pattern": {
+      "vftv:cognitio": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:hanging_roots": {
+      "vftv:arbor": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:hay_block": {
+      "vftv:fames": 9,
+      "vftv:herba": 9
+    },
+    "minecraft:heart_of_the_sea": {
+      "vftv:aqua": 4,
+      "vftv:potentia": 3,
+      "vftv:praecantatio": 3
+    },
+    "minecraft:heavy_core": {
+      "vftv:aer": 2,
+      "vftv:metallum": 8,
+      "vftv:ordo": 1,
+      "vftv:potentia": 2
+    },
+    "minecraft:heavy_weighted_pressure_plate": {
+      "vftv:metallum": 13
+    },
+    "minecraft:honey_block": {
+      "vftv:fames": 8,
+      "vftv:victus": 4
+    },
+    "minecraft:honey_bottle": {
+      "vftv:fames": 2,
+      "vftv:victus": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:honeycomb": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:ordo": 1
+    },
+    "minecraft:honeycomb_block": {
+      "vftv:bestia": 3,
+      "vftv:fames": 3,
+      "vftv:ordo": 3
+    },
+    "minecraft:hopper": {
+      "vftv:arbor": 4,
+      "vftv:metallum": 33
+    },
+    "minecraft:hopper_minecart": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 49
+    },
+    "minecraft:horn_coral": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:horn_coral_block": {
+      "vftv:aqua": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:horn_coral_fan": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:host_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:ice": {
+      "vftv:aqua": 1,
+      "vftv:gelum": 2
+    },
+    "minecraft:ink_sac": {
+      "vftv:aqua": 1,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:iron_axe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 20
+    },
+    "minecraft:iron_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:iron_block": {
+      "vftv:metallum": 81
+    },
+    "minecraft:iron_boots": {
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:iron_chain": {
+      "vftv:metallum": 8
+    },
+    "minecraft:iron_chestplate": {
+      "vftv:metallum": 54,
+      "vftv:tutamen": 5
+    },
+    "minecraft:iron_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:iron_helmet": {
+      "vftv:metallum": 33,
+      "vftv:tutamen": 3
+    },
+    "minecraft:iron_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 13
+    },
+    "minecraft:iron_horse_armor": {
+      "vftv:bestia": 1,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:iron_ingot": {
+      "vftv:metallum": 9
+    },
+    "minecraft:iron_leggings": {
+      "vftv:metallum": 47,
+      "vftv:tutamen": 4
+    },
+    "minecraft:iron_nautilus_armor": {
+      "vftv:aqua": 1,
+      "vftv:metallum": 27,
+      "vftv:tutamen": 3
+    },
+    "minecraft:iron_nugget": {
+      "vftv:metallum": 1
+    },
+    "minecraft:iron_pickaxe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 20
+    },
+    "minecraft:iron_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:iron_spear": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 6,
+      "vftv:telum": 2
+    },
+    "minecraft:iron_sword": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 13,
+      "vftv:telum": 2
+    },
+    "minecraft:iron_trapdoor": {
+      "vftv:metallum": 27
+    },
+    "minecraft:item_frame": {
+      "vftv:arbor": 6,
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:jack_o_lantern": {
+      "vftv:arbor": 1,
+      "vftv:herba": 2,
+      "vftv:humanus": 1,
+      "vftv:ignis": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:jukebox": {
+      "vftv:arbor": 6,
+      "vftv:ordo": 1,
+      "vftv:vitreus": 4
+    },
+    "minecraft:jungle_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:jungle_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:jungle_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:jungle_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:jungle_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:jungle_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:jungle_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:kelp": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:ladder": {
+      "vftv:arbor": 1
+    },
+    "minecraft:lantern": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1
+    },
+    "minecraft:lapis_block": {
+      "vftv:cognitio": 9,
+      "vftv:vitreus": 9
+    },
+    "minecraft:lapis_lazuli": {
+      "vftv:cognitio": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:large_amethyst_bud": {
+      "vftv:sonus": 1,
+      "vftv:vitreus": 2
+    },
+    "minecraft:large_fern": {
+      "vftv:herba": 2
+    },
+    "minecraft:lava_bucket": {
+      "vftv:ignis": 4,
+      "vftv:metallum": 20,
+      "vftv:terra": 1
+    },
+    "minecraft:lead": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:leaf_litter": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:leather": {
+      "vftv:bestia": 2,
+      "vftv:pannus": 1
+    },
+    "minecraft:leather_boots": {
+      "vftv:bestia": 6,
+      "vftv:pannus": 3,
+      "vftv:tutamen": 2
+    },
+    "minecraft:leather_chestplate": {
+      "vftv:bestia": 12,
+      "vftv:pannus": 6,
+      "vftv:tutamen": 4
+    },
+    "minecraft:leather_helmet": {
+      "vftv:bestia": 7,
+      "vftv:pannus": 3,
+      "vftv:tutamen": 2
+    },
+    "minecraft:leather_horse_armor": {
+      "vftv:bestia": 10,
+      "vftv:pannus": 5
+    },
+    "minecraft:leather_leggings": {
+      "vftv:bestia": 10,
+      "vftv:pannus": 5,
+      "vftv:tutamen": 3
+    },
+    "minecraft:lectern": {
+      "vftv:aqua": 3,
+      "vftv:arbor": 6,
+      "vftv:bestia": 1,
+      "vftv:herba": 3,
+      "vftv:pannus": 1
+    },
+    "minecraft:lever": {
+      "vftv:arbor": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:light_blue_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:light_blue_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:light_blue_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_blue_dye": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_blue_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_blue_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_blue_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_blue_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:light_gray_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:light_gray_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_dye": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_gray_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:light_weighted_pressure_plate": {
+      "vftv:lux": 13,
+      "vftv:metallum": 13
+    },
+    "minecraft:lilac": {
+      "vftv:herba": 2
+    },
+    "minecraft:lily_pad": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:lime_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:lime_candle": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:lime_concrete_powder": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:lime_dye": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:lime_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 2,
+      "vftv:lux": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:lime_stained_glass": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:lime_stained_glass_pane": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:lime_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:lingering_potion": {
+      "vftv:aer": 1,
+      "vftv:aqua": 2,
+      "vftv:praecantatio": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:lodestone": {
+      "vftv:metallum": 6,
+      "vftv:terra": 6
+    },
+    "minecraft:loom": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:mace": {
+      "vftv:aer": 4,
+      "vftv:metallum": 6,
+      "vftv:motus": 1,
+      "vftv:ordo": 1,
+      "vftv:telum": 3
+    },
+    "minecraft:magenta_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:magenta_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:magenta_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:magenta_dye": {
+      "vftv:herba": 1
+    },
+    "minecraft:magenta_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:magenta_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:magenta_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:magenta_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:magma_block": {
+      "vftv:aqua": 3,
+      "vftv:ignis": 3,
+      "vftv:motus": 3,
+      "vftv:potentia": 3,
+      "vftv:victus": 3
+    },
+    "minecraft:magma_cream": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:motus": 1,
+      "vftv:potentia": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:mangrove_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:mangrove_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:mangrove_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:mangrove_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:mangrove_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_roots": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 2
+    },
+    "minecraft:mangrove_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:mangrove_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:mangrove_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:map": {
+      "vftv:aqua": 6,
+      "vftv:herba": 6,
+      "vftv:metallum": 20,
+      "vftv:potentia": 1
+    },
+    "minecraft:medium_amethyst_bud": {
+      "vftv:sonus": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:melon_slice": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:milk_bucket": {
+      "vftv:aqua": 1,
+      "vftv:metallum": 20,
+      "vftv:sano": 1,
+      "vftv:victus": 2
+    },
+    "minecraft:minecart": {
+      "vftv:metallum": 33
+    },
+    "minecraft:mojang_banner_pattern": {
+      "vftv:lux": 6,
+      "vftv:metallum": 6,
+      "vftv:praecantatio": 3,
+      "vftv:sano": 4,
+      "vftv:victus": 3
+    },
+    "minecraft:moss_block": {
+      "vftv:herba": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:moss_carpet": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_cobblestone": {
+      "vftv:herba": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:mossy_cobblestone_slab": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_cobblestone_stairs": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_cobblestone_wall": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_stone_brick_slab": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_stone_brick_stairs": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_stone_brick_wall": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mossy_stone_bricks": {
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mud": {
+      "vftv:aqua": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mud_brick_slab": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mud_brick_stairs": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mud_brick_wall": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mud_bricks": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:muddy_mangrove_roots": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:mushroom_stem": {
+      "vftv:arbor": 1,
+      "vftv:herba": 2
+    },
+    "minecraft:mushroom_stew": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:music_disc_11": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_13": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_5": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:music_disc_blocks": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_bounce": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_cat": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_chirp": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_creator": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_creator_music_box": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_far": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_lava_chicken": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_mall": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_mellohi": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_otherside": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_pigstep": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_precipice": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_relic": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_stal": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_strad": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_tears": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_wait": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:music_disc_ward": {
+      "vftv:ordo": 1,
+      "vftv:sonus": 4
+    },
+    "minecraft:mutton": {
+      "vftv:corpus": 2,
+      "vftv:fames": 1
+    },
+    "minecraft:mycelium": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:name_tag": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:metallum": 1
+    },
+    "minecraft:nautilus_shell": {
+      "vftv:aqua": 2,
+      "vftv:ordo": 1,
+      "vftv:tutamen": 1
+    },
+    "minecraft:nether_brick": {
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:nether_brick_fence": {
+      "vftv:ignis": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:nether_brick_slab": {
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:nether_brick_stairs": {
+      "vftv:ignis": 4,
+      "vftv:terra": 2
+    },
+    "minecraft:nether_brick_wall": {
+      "vftv:ignis": 4,
+      "vftv:terra": 2
+    },
+    "minecraft:nether_bricks": {
+      "vftv:ignis": 6,
+      "vftv:terra": 3
+    },
+    "minecraft:nether_quartz_ore": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 2
+    },
+    "minecraft:nether_sprouts": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:nether_star": {
+      "vftv:exanimis": 2,
+      "vftv:lux": 4,
+      "vftv:potentia": 4,
+      "vftv:praecantatio": 6
+    },
+    "minecraft:nether_wart": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:praecantatio": 1
+    },
+    "minecraft:nether_wart_block": {
+      "vftv:herba": 6,
+      "vftv:ignis": 6,
+      "vftv:praecantatio": 6
+    },
+    "minecraft:netherite_axe": {
+      "vftv:ignis": 3,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 18,
+      "vftv:ordo": 4,
+      "vftv:vitreus": 13
+    },
+    "minecraft:netherite_block": {
+      "vftv:ignis": 36,
+      "vftv:metallum": 216,
+      "vftv:tenebrae": 18
+    },
+    "minecraft:netherite_boots": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:netherite_chestplate": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 12,
+      "vftv:tutamen": 5,
+      "vftv:vitreus": 36
+    },
+    "minecraft:netherite_helmet": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 7,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 22
+    },
+    "minecraft:netherite_hoe": {
+      "vftv:ignis": 3,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 18,
+      "vftv:ordo": 3,
+      "vftv:vitreus": 9
+    },
+    "minecraft:netherite_horse_armor": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:netherite_ingot": {
+      "vftv:ignis": 4,
+      "vftv:metallum": 24,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:netherite_leggings": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 10,
+      "vftv:tutamen": 4,
+      "vftv:vitreus": 31
+    },
+    "minecraft:netherite_nautilus_armor": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 6,
+      "vftv:tutamen": 3,
+      "vftv:vitreus": 18
+    },
+    "minecraft:netherite_pickaxe": {
+      "vftv:ignis": 3,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 18,
+      "vftv:ordo": 4,
+      "vftv:vitreus": 13
+    },
+    "minecraft:netherite_scrap": {
+      "vftv:ignis": 2,
+      "vftv:metallum": 3,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:netherite_shovel": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 3,
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 18,
+      "vftv:vitreus": 4
+    },
+    "minecraft:netherite_spear": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:telum": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:netherite_sword": {
+      "vftv:ignis": 3,
+      "vftv:metallum": 18,
+      "vftv:ordo": 3,
+      "vftv:telum": 2,
+      "vftv:vitreus": 9
+    },
+    "minecraft:netherite_upgrade_smithing_template": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 2,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:netherrack": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:note_block": {
+      "vftv:arbor": 6,
+      "vftv:potentia": 1
+    },
+    "minecraft:oak_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:oak_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:oak_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:oak_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:oak_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:oak_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:oak_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:observer": {
+      "vftv:ordo": 1,
+      "vftv:potentia": 3,
+      "vftv:terra": 9,
+      "vftv:vitreus": 1
+    },
+    "minecraft:obsidian": {
+      "vftv:ignis": 2,
+      "vftv:tenebrae": 2,
+      "vftv:terra": 3
+    },
+    "minecraft:ochre_froglight": {
+      "vftv:bestia": 1,
+      "vftv:lux": 3
+    },
+    "minecraft:ominous_bottle": {
+      "vftv:humanus": 1,
+      "vftv:praecantatio": 2,
+      "vftv:tenebrae": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:ominous_trial_key": {
+      "vftv:metallum": 2,
+      "vftv:ordo": 2,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:orange_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:orange_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:orange_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:orange_dye": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:orange_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:orange_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:orange_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:orange_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:oxidized_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:oxidized_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:oxidized_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:oxidized_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:oxidized_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:oxidized_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:oxidized_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:oxidized_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:oxidized_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:oxidized_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:oxidized_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:packed_ice": {
+      "vftv:aqua": 6,
+      "vftv:gelum": 13
+    },
+    "minecraft:packed_mud": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:painting": {
+      "vftv:arbor": 6,
+      "vftv:bestia": 1,
+      "vftv:pannus": 1,
+      "vftv:silentium": 1
+    },
+    "minecraft:pale_hanging_moss": {
+      "vftv:herba": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_moss_block": {
+      "vftv:herba": 2,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:pale_moss_carpet": {
+      "vftv:herba": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:pale_oak_boat": {
+      "vftv:arbor": 3,
+      "vftv:tenebrae": 3
+    },
+    "minecraft:pale_oak_button": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_chest_boat": {
+      "vftv:arbor": 6,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:pale_oak_door": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_fence": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_fence_gate": {
+      "vftv:arbor": 4,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_planks": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_pressure_plate": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_shelf": {
+      "vftv:arbor": 3,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_sign": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_slab": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_stairs": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:pale_oak_trapdoor": {
+      "vftv:arbor": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:paper": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:pearlescent_froglight": {
+      "vftv:bestia": 1,
+      "vftv:lux": 3
+    },
+    "minecraft:peony": {
+      "vftv:herba": 2
+    },
+    "minecraft:phantom_membrane": {
+      "vftv:aer": 2,
+      "vftv:exanimis": 1,
+      "vftv:spiritus": 1
+    },
+    "minecraft:piglin_banner_pattern": {
+      "vftv:cognitio": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:piglin_head": {
+      "vftv:bestia": 2,
+      "vftv:humanus": 2,
+      "vftv:metallum": 1
+    },
+    "minecraft:pink_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:pink_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:pink_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:pink_dye": {
+      "vftv:herba": 1
+    },
+    "minecraft:pink_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:pink_petals": {
+      "vftv:herba": 1
+    },
+    "minecraft:pink_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:pink_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:pink_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:piston": {
+      "vftv:arbor": 2,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1,
+      "vftv:terra": 6
+    },
+    "minecraft:pitcher_plant": {
+      "vftv:aqua": 1,
+      "vftv:herba": 2
+    },
+    "minecraft:pitcher_pod": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:podzol": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:pointed_dripstone": {
+      "vftv:aqua": 1,
+      "vftv:telum": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:poisonous_potato": {
+      "vftv:herba": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_andesite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_andesite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_andesite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_basalt": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_brick_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_brick_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_brick_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_bricks": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_button": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_pressure_plate": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_blackstone_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_cinnabar": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_cinnabar_slab": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_cinnabar_stairs": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_cinnabar_wall": {
+      "vftv:metallum": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_deepslate": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_deepslate_slab": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_deepslate_stairs": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_deepslate_wall": {
+      "vftv:tenebrae": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_diorite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_diorite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_diorite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_granite": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_granite_slab": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_granite_stairs": {
+      "vftv:ordo": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:polished_sulfur": {
+      "vftv:ignis": 2,
+      "vftv:terra": 2,
+      "vftv:venenum": 2
+    },
+    "minecraft:polished_sulfur_slab": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_sulfur_stairs": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_sulfur_wall": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:polished_tuff": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_tuff_slab": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_tuff_stairs": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:polished_tuff_wall": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:popped_chorus_fruit": {
+      "vftv:alienis": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:porkchop": {
+      "vftv:corpus": 2,
+      "vftv:fames": 1
+    },
+    "minecraft:potato": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:potent_sulfur": {
+      "vftv:ignis": 20,
+      "vftv:terra": 20,
+      "vftv:venenum": 20
+    },
+    "minecraft:potion": {
+      "vftv:aqua": 2,
+      "vftv:praecantatio": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:powder_snow_bucket": {
+      "vftv:gelum": 3,
+      "vftv:metallum": 20
+    },
+    "minecraft:powered_rail": {
+      "vftv:arbor": 1,
+      "vftv:lux": 6,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1
+    },
+    "minecraft:prismarine": {
+      "vftv:aqua": 3,
+      "vftv:terra": 3,
+      "vftv:vitreus": 3
+    },
+    "minecraft:prismarine_brick_slab": {
+      "vftv:aqua": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 2
+    },
+    "minecraft:prismarine_brick_stairs": {
+      "vftv:aqua": 4,
+      "vftv:terra": 4,
+      "vftv:vitreus": 4
+    },
+    "minecraft:prismarine_bricks": {
+      "vftv:aqua": 6,
+      "vftv:terra": 6,
+      "vftv:vitreus": 6
+    },
+    "minecraft:prismarine_crystals": {
+      "vftv:aqua": 1,
+      "vftv:lux": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:prismarine_shard": {
+      "vftv:aqua": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:prismarine_slab": {
+      "vftv:aqua": 1,
+      "vftv:terra": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:prismarine_stairs": {
+      "vftv:aqua": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 2
+    },
+    "minecraft:prismarine_wall": {
+      "vftv:aqua": 2,
+      "vftv:terra": 2,
+      "vftv:vitreus": 2
+    },
+    "minecraft:pufferfish": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:venenum": 2
+    },
+    "minecraft:pufferfish_bucket": {
+      "vftv:aqua": 2,
+      "vftv:metallum": 20,
+      "vftv:venenum": 2
+    },
+    "minecraft:pumpkin": {
+      "vftv:fames": 1,
+      "vftv:herba": 3
+    },
+    "minecraft:pumpkin_pie": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 2,
+      "vftv:victus": 2
+    },
+    "minecraft:purple_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:purple_candle": {
+      "vftv:bestia": 1,
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1
+    },
+    "minecraft:purple_concrete_powder": {
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:purple_dye": {
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:purple_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2
+    },
+    "minecraft:purple_stained_glass": {
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:purple_stained_glass_pane": {
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:purple_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:cognitio": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:purpur_block": {
+      "vftv:alienis": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:purpur_pillar": {
+      "vftv:alienis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:purpur_slab": {
+      "vftv:alienis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:purpur_stairs": {
+      "vftv:alienis": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:quartz": {
+      "vftv:ordo": 1,
+      "vftv:vitreus": 2
+    },
+    "minecraft:quartz_block": {
+      "vftv:ordo": 3,
+      "vftv:vitreus": 6
+    },
+    "minecraft:quartz_bricks": {
+      "vftv:ordo": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:quartz_pillar": {
+      "vftv:ordo": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:quartz_slab": {
+      "vftv:ordo": 1,
+      "vftv:vitreus": 2
+    },
+    "minecraft:quartz_stairs": {
+      "vftv:ordo": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:rabbit": {
+      "vftv:bestia": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:rabbit_foot": {
+      "vftv:bestia": 1,
+      "vftv:motus": 2,
+      "vftv:praecantatio": 1
+    },
+    "minecraft:rabbit_hide": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:rabbit_stew": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 2,
+      "vftv:herba": 2
+    },
+    "minecraft:rail": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 2
+    },
+    "minecraft:raiser_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:raw_copper": {
+      "vftv:metallum": 2,
+      "vftv:permutatio": 1
+    },
+    "minecraft:raw_copper_block": {
+      "vftv:metallum": 18,
+      "vftv:permutatio": 9
+    },
+    "minecraft:raw_gold": {
+      "vftv:lux": 1,
+      "vftv:metallum": 3
+    },
+    "minecraft:raw_gold_block": {
+      "vftv:lux": 9,
+      "vftv:metallum": 27
+    },
+    "minecraft:raw_iron": {
+      "vftv:metallum": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:raw_iron_block": {
+      "vftv:metallum": 27,
+      "vftv:terra": 9
+    },
+    "minecraft:recovery_compass": {
+      "vftv:metallum": 20,
+      "vftv:potentia": 1,
+      "vftv:sonus": 18,
+      "vftv:spiritus": 12,
+      "vftv:tenebrae": 6
+    },
+    "minecraft:red_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:red_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:red_concrete_powder": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_dye": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:red_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:red_mushroom": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:red_mushroom_block": {
+      "vftv:herba": 2,
+      "vftv:perditio": 1
+    },
+    "minecraft:red_nether_brick_slab": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:praecantatio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_nether_brick_stairs": {
+      "vftv:herba": 1,
+      "vftv:ignis": 3,
+      "vftv:praecantatio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_nether_brick_wall": {
+      "vftv:herba": 1,
+      "vftv:ignis": 3,
+      "vftv:praecantatio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_nether_bricks": {
+      "vftv:herba": 1,
+      "vftv:ignis": 4,
+      "vftv:praecantatio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_sand": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_sandstone": {
+      "vftv:ignis": 3,
+      "vftv:perditio": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:red_sandstone_slab": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_sandstone_stairs": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:red_sandstone_wall": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:red_stained_glass": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_stained_glass_pane": {
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:red_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:redstone": {
+      "vftv:potentia": 2
+    },
+    "minecraft:redstone_block": {
+      "vftv:potentia": 18
+    },
+    "minecraft:redstone_lamp": {
+      "vftv:ignis": 2,
+      "vftv:lux": 4,
+      "vftv:potentia": 6
+    },
+    "minecraft:redstone_torch": {
+      "vftv:arbor": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:repeater": {
+      "vftv:arbor": 1,
+      "vftv:potentia": 3,
+      "vftv:terra": 4
+    },
+    "minecraft:resin_block": {
+      "vftv:arbor": 9,
+      "vftv:tenebrae": 9
+    },
+    "minecraft:resin_brick": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:resin_brick_slab": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:resin_brick_stairs": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:resin_brick_wall": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:resin_bricks": {
+      "vftv:arbor": 3,
+      "vftv:ignis": 3,
+      "vftv:tenebrae": 3
+    },
+    "minecraft:resin_clump": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:respawn_anchor": {
+      "vftv:ignis": 6,
+      "vftv:lux": 18,
+      "vftv:spiritus": 9,
+      "vftv:tenebrae": 9,
+      "vftv:terra": 13
+    },
+    "minecraft:rib_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:rooted_dirt": {
+      "vftv:arbor": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:rose_bush": {
+      "vftv:herba": 2,
+      "vftv:telum": 1
+    },
+    "minecraft:rotten_flesh": {
+      "vftv:corpus": 1,
+      "vftv:exanimis": 1,
+      "vftv:mortuus": 1
+    },
+    "minecraft:saddle": {
+      "vftv:bestia": 4,
+      "vftv:metallum": 6,
+      "vftv:pannus": 2
+    },
+    "minecraft:salmon": {
+      "vftv:aqua": 1,
+      "vftv:corpus": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:salmon_bucket": {
+      "vftv:aqua": 2,
+      "vftv:corpus": 1,
+      "vftv:metallum": 20
+    },
+    "minecraft:sand": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:sandstone": {
+      "vftv:perditio": 3,
+      "vftv:terra": 3
+    },
+    "minecraft:sandstone_slab": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:sandstone_stairs": {
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:sandstone_wall": {
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:scaffolding": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:herba": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:sculk": {
+      "vftv:sonus": 1,
+      "vftv:spiritus": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:sculk_catalyst": {
+      "vftv:mortuus": 2,
+      "vftv:sonus": 2,
+      "vftv:spiritus": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:sculk_sensor": {
+      "vftv:sonus": 3,
+      "vftv:spiritus": 1,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:sculk_shrieker": {
+      "vftv:sonus": 4,
+      "vftv:spiritus": 2,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:sculk_vein": {
+      "vftv:sonus": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:sea_lantern": {
+      "vftv:aqua": 6,
+      "vftv:lux": 3,
+      "vftv:terra": 3,
+      "vftv:vitreus": 6
+    },
+    "minecraft:sea_pickle": {
+      "vftv:aqua": 1,
+      "vftv:lux": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:seagrass": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:sentry_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:shaper_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:shears": {
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 13
+    },
+    "minecraft:shield": {
+      "vftv:arbor": 4,
+      "vftv:metallum": 6,
+      "vftv:tutamen": 3
+    },
+    "minecraft:short_dry_grass": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:short_grass": {
+      "vftv:herba": 1
+    },
+    "minecraft:shroomlight": {
+      "vftv:herba": 1,
+      "vftv:lux": 3
+    },
+    "minecraft:shulker_shell": {
+      "vftv:alienis": 2,
+      "vftv:tutamen": 2
+    },
+    "minecraft:silence_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:skeleton_skull": {
+      "vftv:exanimis": 1,
+      "vftv:humanus": 1,
+      "vftv:mortuus": 2
+    },
+    "minecraft:skull_banner_pattern": {
+      "vftv:aqua": 1,
+      "vftv:exanimis": 1,
+      "vftv:herba": 1,
+      "vftv:humanus": 1,
+      "vftv:mortuus": 2
+    },
+    "minecraft:slime_ball": {
+      "vftv:aqua": 1,
+      "vftv:motus": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:slime_block": {
+      "vftv:aqua": 9,
+      "vftv:motus": 9,
+      "vftv:victus": 9
+    },
+    "minecraft:small_amethyst_bud": {
+      "vftv:vitreus": 1
+    },
+    "minecraft:small_dripleaf": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:smithing_table": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 13
+    },
+    "minecraft:smoker": {
+      "vftv:arbor": 12,
+      "vftv:terra": 9
+    },
+    "minecraft:smooth_basalt": {
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_quartz": {
+      "vftv:ignis": 1,
+      "vftv:ordo": 2,
+      "vftv:vitreus": 4
+    },
+    "minecraft:smooth_quartz_slab": {
+      "vftv:ignis": 1,
+      "vftv:ordo": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:smooth_quartz_stairs": {
+      "vftv:ignis": 1,
+      "vftv:ordo": 1,
+      "vftv:vitreus": 3
+    },
+    "minecraft:smooth_red_sandstone": {
+      "vftv:ignis": 3,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:smooth_red_sandstone_slab": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_red_sandstone_stairs": {
+      "vftv:ignis": 2,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_sandstone": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:smooth_sandstone_slab": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_sandstone_stairs": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_stone": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:smooth_stone_slab": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:sniffer_egg": {
+      "vftv:bestia": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 3
+    },
+    "minecraft:snout_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:snow": {
+      "vftv:aer": 1,
+      "vftv:gelum": 1
+    },
+    "minecraft:snow_block": {
+      "vftv:aer": 3,
+      "vftv:gelum": 3
+    },
+    "minecraft:snowball": {
+      "vftv:aer": 1,
+      "vftv:gelum": 1
+    },
+    "minecraft:soul_campfire": {
+      "vftv:arbor": 11,
+      "vftv:spiritus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:soul_lantern": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:metallum": 6,
+      "vftv:potentia": 1,
+      "vftv:spiritus": 1
+    },
+    "minecraft:soul_sand": {
+      "vftv:perditio": 1,
+      "vftv:spiritus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:soul_soil": {
+      "vftv:spiritus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:soul_torch": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:potentia": 1,
+      "vftv:spiritus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:spectral_arrow": {
+      "vftv:aer": 1,
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:ignis": 1,
+      "vftv:lux": 3
+    },
+    "minecraft:spider_eye": {
+      "vftv:bestia": 1,
+      "vftv:venenum": 2
+    },
+    "minecraft:spire_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:splash_potion": {
+      "vftv:aqua": 2,
+      "vftv:motus": 1,
+      "vftv:praecantatio": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:sponge": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:spore_blossom": {
+      "vftv:aer": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:spruce_boat": {
+      "vftv:arbor": 3
+    },
+    "minecraft:spruce_button": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_chest_boat": {
+      "vftv:arbor": 6
+    },
+    "minecraft:spruce_door": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_fence": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_fence_gate": {
+      "vftv:arbor": 4
+    },
+    "minecraft:spruce_hanging_sign": {
+      "vftv:arbor": 3,
+      "vftv:metallum": 2
+    },
+    "minecraft:spruce_planks": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_pressure_plate": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_shelf": {
+      "vftv:arbor": 3
+    },
+    "minecraft:spruce_sign": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_slab": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_stairs": {
+      "vftv:arbor": 1
+    },
+    "minecraft:spruce_trapdoor": {
+      "vftv:arbor": 2
+    },
+    "minecraft:spyglass": {
+      "vftv:metallum": 13,
+      "vftv:sonus": 1,
+      "vftv:vitreus": 1
+    },
+    "minecraft:stick": {
+      "vftv:arbor": 1
+    },
+    "minecraft:sticky_piston": {
+      "vftv:aqua": 1,
+      "vftv:arbor": 1,
+      "vftv:metallum": 4,
+      "vftv:motus": 1,
+      "vftv:terra": 4
+    },
+    "minecraft:stone": {
+      "vftv:terra": 2
+    },
+    "minecraft:stone_axe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:terra": 4
+    },
+    "minecraft:stone_brick_slab": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_brick_stairs": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_brick_wall": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_bricks": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_button": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:terra": 3
+    },
+    "minecraft:stone_pickaxe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:terra": 4
+    },
+    "minecraft:stone_pressure_plate": {
+      "vftv:terra": 3
+    },
+    "minecraft:stone_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:stone_slab": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_spear": {
+      "vftv:arbor": 1,
+      "vftv:telum": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:stone_stairs": {
+      "vftv:terra": 1
+    },
+    "minecraft:stone_sword": {
+      "vftv:arbor": 1,
+      "vftv:telum": 2,
+      "vftv:terra": 3
+    },
+    "minecraft:stonecutter": {
+      "vftv:metallum": 6,
+      "vftv:terra": 4
+    },
+    "minecraft:string": {
+      "vftv:bestia": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:stripped_bamboo_block": {
+      "vftv:arbor": 2,
+      "vftv:herba": 2
+    },
+    "minecraft:sugar": {
+      "vftv:fames": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:sugar_cane": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:sulfur": {
+      "vftv:ignis": 3,
+      "vftv:terra": 3,
+      "vftv:venenum": 3
+    },
+    "minecraft:sulfur_brick_slab": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_brick_stairs": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_brick_wall": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_bricks": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_cube_bucket": {
+      "vftv:bestia": 2,
+      "vftv:metallum": 20,
+      "vftv:venenum": 2
+    },
+    "minecraft:sulfur_slab": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_spike": {
+      "vftv:ignis": 1,
+      "vftv:terra": 1,
+      "vftv:venenum": 1
+    },
+    "minecraft:sulfur_stairs": {
+      "vftv:ignis": 2,
+      "vftv:terra": 2,
+      "vftv:venenum": 2
+    },
+    "minecraft:sulfur_wall": {
+      "vftv:ignis": 2,
+      "vftv:terra": 2,
+      "vftv:venenum": 2
+    },
+    "minecraft:sunflower": {
+      "vftv:herba": 2,
+      "vftv:lux": 1
+    },
+    "minecraft:suspicious_stew": {
+      "vftv:arbor": 1,
+      "vftv:herba": 2,
+      "vftv:perditio": 1,
+      "vftv:venenum": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:sweet_berries": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:tadpole_bucket": {
+      "vftv:aqua": 2,
+      "vftv:metallum": 20,
+      "vftv:victus": 1
+    },
+    "minecraft:tall_dry_grass": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:tall_grass": {
+      "vftv:herba": 2
+    },
+    "minecraft:target": {
+      "vftv:fames": 6,
+      "vftv:herba": 6,
+      "vftv:potentia": 6
+    },
+    "minecraft:terracotta": {
+      "vftv:aqua": 2,
+      "vftv:ignis": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:tide_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:tinted_glass": {
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:sonus": 3,
+      "vftv:terra": 1,
+      "vftv:vitreus": 3
+    },
+    "minecraft:tipped_arrow": {
+      "vftv:aer": 1,
+      "vftv:praecantatio": 1,
+      "vftv:telum": 1
+    },
+    "minecraft:tnt": {
+      "vftv:ignis": 7,
+      "vftv:perditio": 10,
+      "vftv:terra": 3
+    },
+    "minecraft:tnt_minecart": {
+      "vftv:ignis": 5,
+      "vftv:metallum": 24,
+      "vftv:perditio": 7,
+      "vftv:terra": 2
+    },
+    "minecraft:torch": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1,
+      "vftv:potentia": 1
+    },
+    "minecraft:torchflower_seeds": {
+      "vftv:herba": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:totem_of_undying": {
+      "vftv:praecantatio": 3,
+      "vftv:sano": 3,
+      "vftv:spiritus": 3,
+      "vftv:victus": 4
+    },
+    "minecraft:trapped_chest": {
+      "vftv:arbor": 5,
+      "vftv:metallum": 2
+    },
+    "minecraft:trial_key": {
+      "vftv:metallum": 2,
+      "vftv:ordo": 2
+    },
+    "minecraft:trident": {
+      "vftv:aqua": 4,
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:telum": 4
+    },
+    "minecraft:tripwire_hook": {
+      "vftv:arbor": 1,
+      "vftv:metallum": 3
+    },
+    "minecraft:tropical_fish": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:corpus": 1
+    },
+    "minecraft:tropical_fish_bucket": {
+      "vftv:aqua": 2,
+      "vftv:bestia": 1,
+      "vftv:metallum": 20
+    },
+    "minecraft:tube_coral": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:tube_coral_block": {
+      "vftv:aqua": 2,
+      "vftv:terra": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:tube_coral_fan": {
+      "vftv:aqua": 1,
+      "vftv:victus": 1
+    },
+    "minecraft:tuff": {
+      "vftv:perditio": 1,
+      "vftv:terra": 2
+    },
+    "minecraft:tuff_brick_slab": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_brick_stairs": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_brick_wall": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_bricks": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_slab": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_stairs": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:tuff_wall": {
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:turtle_egg": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:victus": 2
+    },
+    "minecraft:turtle_helmet": {
+      "vftv:aqua": 3,
+      "vftv:bestia": 3,
+      "vftv:tutamen": 8
+    },
+    "minecraft:turtle_scute": {
+      "vftv:aqua": 1,
+      "vftv:bestia": 1,
+      "vftv:tutamen": 2
+    },
+    "minecraft:twisting_vines": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:verdant_froglight": {
+      "vftv:bestia": 1,
+      "vftv:lux": 3
+    },
+    "minecraft:vex_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:vine": {
+      "vftv:arbor": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:ward_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:warped_button": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_door": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_fence": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_fence_gate": {
+      "vftv:arbor": 4,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_fungus": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:warped_fungus_on_a_stick": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:instrumentum": 1
+    },
+    "minecraft:warped_hanging_sign": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 1,
+      "vftv:metallum": 2
+    },
+    "minecraft:warped_nylium": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:warped_planks": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_pressure_plate": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_roots": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_shelf": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_sign": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_slab": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_stairs": {
+      "vftv:arbor": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:warped_trapdoor": {
+      "vftv:arbor": 2,
+      "vftv:ignis": 2
+    },
+    "minecraft:warped_wart_block": {
+      "vftv:herba": 3,
+      "vftv:ignis": 1
+    },
+    "minecraft:water_bucket": {
+      "vftv:aqua": 4,
+      "vftv:metallum": 20
+    },
+    "minecraft:waxed_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:waxed_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:waxed_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:waxed_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:waxed_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:waxed_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:waxed_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:waxed_exposed_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:waxed_exposed_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:waxed_exposed_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:waxed_exposed_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_exposed_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:waxed_exposed_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_exposed_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_exposed_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:waxed_exposed_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_exposed_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:waxed_exposed_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:waxed_oxidized_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:waxed_oxidized_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:waxed_oxidized_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:waxed_oxidized_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_oxidized_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:waxed_oxidized_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_oxidized_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_oxidized_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:waxed_oxidized_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_oxidized_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:waxed_oxidized_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:waxed_weathered_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:waxed_weathered_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:waxed_weathered_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:waxed_weathered_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_weathered_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:waxed_weathered_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_weathered_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:waxed_weathered_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:waxed_weathered_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:waxed_weathered_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:waxed_weathered_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:wayfinder_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:weathered_chiseled_copper": {
+      "vftv:metallum": 7
+    },
+    "minecraft:weathered_copper_bars": {
+      "vftv:metallum": 2
+    },
+    "minecraft:weathered_copper_bulb": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 45,
+      "vftv:potentia": 1
+    },
+    "minecraft:weathered_copper_chain": {
+      "vftv:metallum": 6
+    },
+    "minecraft:weathered_copper_door": {
+      "vftv:metallum": 13
+    },
+    "minecraft:weathered_copper_grate": {
+      "vftv:metallum": 15
+    },
+    "minecraft:weathered_copper_lantern": {
+      "vftv:lux": 2,
+      "vftv:metallum": 6
+    },
+    "minecraft:weathered_copper_trapdoor": {
+      "vftv:metallum": 18
+    },
+    "minecraft:weathered_cut_copper": {
+      "vftv:metallum": 15
+    },
+    "minecraft:weathered_cut_copper_slab": {
+      "vftv:metallum": 5
+    },
+    "minecraft:weathered_cut_copper_stairs": {
+      "vftv:metallum": 11
+    },
+    "minecraft:weeping_vines": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:wet_sponge": {
+      "vftv:aqua": 3,
+      "vftv:bestia": 1
+    },
+    "minecraft:wheat": {
+      "vftv:fames": 1,
+      "vftv:herba": 1
+    },
+    "minecraft:wheat_seeds": {
+      "vftv:herba": 1
+    },
+    "minecraft:white_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:white_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:mortuus": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:white_concrete_powder": {
+      "vftv:mortuus": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:white_dye": {
+      "vftv:mortuus": 1
+    },
+    "minecraft:white_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 2,
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:white_stained_glass": {
+      "vftv:ignis": 1,
+      "vftv:mortuus": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:white_stained_glass_pane": {
+      "vftv:ignis": 1,
+      "vftv:mortuus": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:white_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:ignis": 1,
+      "vftv:mortuus": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:wild_armor_trim_smithing_template": {
+      "vftv:humanus": 1,
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2
+    },
+    "minecraft:wildflowers": {
+      "vftv:herba": 1
+    },
+    "minecraft:wind_charge": {
+      "vftv:aer": 1,
+      "vftv:motus": 1
+    },
+    "minecraft:wither_skeleton_skull": {
+      "vftv:exanimis": 2,
+      "vftv:humanus": 1,
+      "vftv:mortuus": 3,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:wolf_armor": {
+      "vftv:bestia": 4,
+      "vftv:tutamen": 9
+    },
+    "minecraft:wooden_axe": {
+      "vftv:arbor": 2,
+      "vftv:instrumentum": 2
+    },
+    "minecraft:wooden_hoe": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2
+    },
+    "minecraft:wooden_pickaxe": {
+      "vftv:arbor": 2,
+      "vftv:instrumentum": 2
+    },
+    "minecraft:wooden_shovel": {
+      "vftv:arbor": 1,
+      "vftv:instrumentum": 2
+    },
+    "minecraft:wooden_spear": {
+      "vftv:arbor": 1,
+      "vftv:telum": 2
+    },
+    "minecraft:wooden_sword": {
+      "vftv:arbor": 1,
+      "vftv:telum": 2
+    },
+    "minecraft:writable_book": {
+      "vftv:aer": 1,
+      "vftv:aqua": 2,
+      "vftv:bestia": 1,
+      "vftv:herba": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:written_book": {
+      "vftv:cognitio": 3,
+      "vftv:humanus": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:yellow_banner": {
+      "vftv:arbor": 1,
+      "vftv:bestia": 4,
+      "vftv:pannus": 9,
+      "vftv:silentium": 4
+    },
+    "minecraft:yellow_candle": {
+      "vftv:bestia": 1,
+      "vftv:fames": 1,
+      "vftv:herba": 1,
+      "vftv:ordo": 1,
+      "vftv:pannus": 1
+    },
+    "minecraft:yellow_concrete_powder": {
+      "vftv:herba": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:yellow_dye": {
+      "vftv:herba": 1
+    },
+    "minecraft:yellow_glazed_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 2,
+      "vftv:terra": 1
+    },
+    "minecraft:yellow_stained_glass": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:yellow_stained_glass_pane": {
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:perditio": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:yellow_terracotta": {
+      "vftv:aqua": 1,
+      "vftv:herba": 1,
+      "vftv:ignis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:zombie_head": {
+      "vftv:corpus": 1,
+      "vftv:exanimis": 2,
+      "vftv:humanus": 2
+    },
+    "vftv:choir_page": {
+      "vftv:alienis": 1,
+      "vftv:cognitio": 2,
+      "vftv:sonus": 1
+    },
+    "vftv:commonplace_book": {
+      "vftv:bestia": 1,
+      "vftv:cognitio": 2,
+      "vftv:herba": 1,
+      "vftv:pannus": 1
+    },
     "vftv:tuning_fork": {
       "vftv:instrumentum": 1,
       "vftv:metallum": 2,

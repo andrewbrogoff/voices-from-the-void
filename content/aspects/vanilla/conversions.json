@@ -1,0 +1,331 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "Reversible conversions (aspects spec, \"Vanilla values\"): items on a conversion cycle of vanilla recipes, hand-entered as exact multiples of each other, since derivation never applies to them. A storage block is nine of its unit; a slab is half its block; a dyed family shares one value.",
+  "items": {
+    "#minecraft:beds": {
+      "vftv:pannus": 3,
+      "vftv:arbor": 1,
+      "vftv:sano": 1
+    },
+    "#minecraft:bundles": {
+      "vftv:pannus": 2,
+      "vftv:bestia": 1,
+      "vftv:vacuos": 1
+    },
+    "#minecraft:concrete": {
+      "vftv:terra": 2,
+      "vftv:aqua": 1,
+      "vftv:ordo": 1
+    },
+    "#minecraft:harnesses": {
+      "vftv:pannus": 2,
+      "vftv:bestia": 1,
+      "vftv:motus": 1
+    },
+    "#minecraft:shulker_boxes": {
+      "vftv:alienis": 3,
+      "vftv:vacuos": 2,
+      "vftv:arbor": 1
+    },
+    "#minecraft:wool": {
+      "vftv:pannus": 2,
+      "vftv:bestia": 1,
+      "vftv:silentium": 1
+    },
+    "#minecraft:wool_carpets": {
+      "vftv:pannus": 1,
+      "vftv:silentium": 1
+    },
+    "minecraft:bolt_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:bone_block": {
+      "vftv:mortuus": 9
+    },
+    "minecraft:bone_meal": {
+      "vftv:mortuus": 1
+    },
+    "minecraft:chiseled_quartz_block": {
+      "vftv:vitreus": 4,
+      "vftv:ordo": 2
+    },
+    "minecraft:chiseled_red_sandstone": {
+      "vftv:terra": 2,
+      "vftv:perditio": 2,
+      "vftv:ignis": 2
+    },
+    "minecraft:chiseled_sandstone": {
+      "vftv:terra": 2,
+      "vftv:perditio": 2
+    },
+    "minecraft:coal": {
+      "vftv:ignis": 2,
+      "vftv:potentia": 1
+    },
+    "minecraft:coal_block": {
+      "vftv:ignis": 18,
+      "vftv:potentia": 9
+    },
+    "minecraft:coast_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:copper_ingot": {
+      "vftv:metallum": 9
+    },
+    "minecraft:copper_nugget": {
+      "vftv:metallum": 1
+    },
+    "minecraft:diamond": {
+      "vftv:vitreus": 6,
+      "vftv:ordo": 2
+    },
+    "minecraft:diamond_block": {
+      "vftv:vitreus": 54,
+      "vftv:ordo": 18
+    },
+    "minecraft:dried_kelp": {
+      "vftv:herba": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:dried_kelp_block": {
+      "vftv:herba": 9,
+      "vftv:fames": 9
+    },
+    "minecraft:dune_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:emerald": {
+      "vftv:vitreus": 4,
+      "vftv:permutatio": 2
+    },
+    "minecraft:emerald_block": {
+      "vftv:vitreus": 36,
+      "vftv:permutatio": 18
+    },
+    "minecraft:eye_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:flow_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:gold_block": {
+      "vftv:metallum": 81,
+      "vftv:lux": 81
+    },
+    "minecraft:gold_ingot": {
+      "vftv:metallum": 9,
+      "vftv:lux": 9
+    },
+    "minecraft:gold_nugget": {
+      "vftv:metallum": 1,
+      "vftv:lux": 1
+    },
+    "minecraft:hay_block": {
+      "vftv:herba": 9,
+      "vftv:fames": 9
+    },
+    "minecraft:honey_block": {
+      "vftv:fames": 8,
+      "vftv:victus": 4
+    },
+    "minecraft:host_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:iron_block": {
+      "vftv:metallum": 81
+    },
+    "minecraft:iron_ingot": {
+      "vftv:metallum": 9
+    },
+    "minecraft:iron_nugget": {
+      "vftv:metallum": 1
+    },
+    "minecraft:lapis_block": {
+      "vftv:vitreus": 9,
+      "vftv:cognitio": 9
+    },
+    "minecraft:lapis_lazuli": {
+      "vftv:vitreus": 1,
+      "vftv:cognitio": 1
+    },
+    "minecraft:netherite_block": {
+      "vftv:metallum": 216,
+      "vftv:ignis": 36,
+      "vftv:tenebrae": 18
+    },
+    "minecraft:netherite_ingot": {
+      "vftv:metallum": 24,
+      "vftv:ignis": 4,
+      "vftv:tenebrae": 2
+    },
+    "minecraft:netherite_upgrade_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 2,
+      "vftv:ignis": 1
+    },
+    "minecraft:purpur_pillar": {
+      "vftv:alienis": 2,
+      "vftv:terra": 2
+    },
+    "minecraft:purpur_slab": {
+      "vftv:alienis": 1,
+      "vftv:terra": 1
+    },
+    "minecraft:quartz_slab": {
+      "vftv:vitreus": 2,
+      "vftv:ordo": 1
+    },
+    "minecraft:raiser_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:raw_copper": {
+      "vftv:metallum": 2,
+      "vftv:permutatio": 1
+    },
+    "minecraft:raw_copper_block": {
+      "vftv:metallum": 18,
+      "vftv:permutatio": 9
+    },
+    "minecraft:raw_gold": {
+      "vftv:metallum": 3,
+      "vftv:lux": 1
+    },
+    "minecraft:raw_gold_block": {
+      "vftv:metallum": 27,
+      "vftv:lux": 9
+    },
+    "minecraft:raw_iron": {
+      "vftv:metallum": 3,
+      "vftv:terra": 1
+    },
+    "minecraft:raw_iron_block": {
+      "vftv:metallum": 27,
+      "vftv:terra": 9
+    },
+    "minecraft:red_sandstone_slab": {
+      "vftv:terra": 1,
+      "vftv:perditio": 1,
+      "vftv:ignis": 1
+    },
+    "minecraft:redstone": {
+      "vftv:potentia": 2
+    },
+    "minecraft:redstone_block": {
+      "vftv:potentia": 18
+    },
+    "minecraft:resin_block": {
+      "vftv:arbor": 9,
+      "vftv:tenebrae": 9
+    },
+    "minecraft:resin_clump": {
+      "vftv:arbor": 1,
+      "vftv:tenebrae": 1
+    },
+    "minecraft:rib_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:sandstone_slab": {
+      "vftv:terra": 1,
+      "vftv:perditio": 1
+    },
+    "minecraft:sentry_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:shaper_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:silence_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:slime_ball": {
+      "vftv:victus": 1,
+      "vftv:aqua": 1,
+      "vftv:motus": 1
+    },
+    "minecraft:slime_block": {
+      "vftv:victus": 9,
+      "vftv:aqua": 9,
+      "vftv:motus": 9
+    },
+    "minecraft:snout_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:spire_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:tide_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:vex_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:ward_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:wayfinder_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    },
+    "minecraft:wheat": {
+      "vftv:herba": 1,
+      "vftv:fames": 1
+    },
+    "minecraft:wild_armor_trim_smithing_template": {
+      "vftv:ordo": 2,
+      "vftv:praecantatio": 2,
+      "vftv:metallum": 1,
+      "vftv:humanus": 1
+    }
+  }
+}

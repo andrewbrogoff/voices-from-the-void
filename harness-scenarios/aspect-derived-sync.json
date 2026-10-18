@@ -1,0 +1,26 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "world": "aspect_derived_sync",
+  "freshWorld": true,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:derived", "item": "minecraft:torch"},
+     "expect": {"arrivals": {"gte": 1}, "size": 0}},
+    {"op": "cmd", "args": {"command": "reload"}},
+    {"op": "wait_ticks", "args": {"ticks": 60}},
+    {"op": "dump", "args": {"kind": "vftv:derived"}, "expect": {"arrivals": {"gte": 2}, "size": 0}},
+    {"op": "cmd", "args": {"command": "vftv aspects derive"}},
+    {"op": "wait_ticks", "args": {"ticks": 5}},
+    {"op": "dump", "args": {"kind": "chat"},
+     "expect": {"messages[*].text": {"contains": "Derived 0 values into 0 packs"}}},
+    {"op": "screenshot", "args": {"name": "aspect-derive-command.png"}},
+    {"op": "disconnect", "args": {}},
+    {"op": "join", "args": {}},
+    {"op": "wait_ticks", "args": {"ticks": 40}},
+    {"op": "dump", "args": {"kind": "vftv:derived"}, "expect": {"arrivals": {"gte": 3}, "size": 0}},
+    {"op": "dump", "args": {"kind": "resources", "namespace": "vftv"}, "expect": {"missing.lang": {"len": 0}}},
+    {"op": "quit", "args": {}}
+  ]
+}
