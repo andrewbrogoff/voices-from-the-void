@@ -1,0 +1,7 @@
+{
+  "type": "vftv:arcane",
+  "research": "vftv:arcane_crafting",
+  "ingredients": ["minecraft:stick", "minecraft:string"],
+  "result": {"id": "minecraft:bow"},
+  "vis": {"vftv:sonus": 1}
+}
