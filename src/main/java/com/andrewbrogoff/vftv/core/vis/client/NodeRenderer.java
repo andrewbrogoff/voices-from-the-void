@@ -6,10 +6,13 @@ import com.andrewbrogoff.vftv.core.aspect.AspectIcons;
 import com.andrewbrogoff.vftv.core.vis.NodeBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.NodeService;
 import com.andrewbrogoff.vftv.core.vis.NodeState;
-import com.andrewbrogoff.vftv.core.vis.VisRulesService;
 import com.andrewbrogoff.vftv.core.vis.model.NodeClientNumbers;
+import com.andrewbrogoff.vftv.core.vis.model.Regen;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.Map;
+import java.util.Objects;
+import java.util.WeakHashMap;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -76,33 +79,67 @@ public final class NodeRenderer
             return;
         }
         int clarity = s.clarity().index();
-        NodeState settled =
-                node.getLevel() == null
-                        ? s
-                        : s.settle(now, VisRulesService.tuning(node.getLevel()));
         int sum = 0;
-        for (NodeState.NodeAspect a : settled.aspects()) {
-            sum += a.current();
+        // Settled arithmetic only: no settled copy of the state is built per frame.
+        for (int i = 0; i < s.aspects().size(); i++) {
+            NodeState.NodeAspect a = s.aspects().get(i);
+            sum +=
+                    Regen.settledCurrent(
+                            a.max(),
+                            a.current(),
+                            s.regen().tick(),
+                            now,
+                            s.regen().interval(),
+                            s.regen().divisor());
         }
         state.coreSize = (float) n.coreSize(sum, clarity);
         state.frame = n.frame(now, clarity);
-        if (node.getLevel() == null || NodeService.type(node.getLevel(), s.type()) == null) {
-            return;
+        Motes motes = node.getLevel() == null ? null : motes(node, s);
+        if (motes != null) {
+            state.motes = motes.count;
+            System.arraycopy(motes.sprites, 0, state.moteSprites, 0, motes.count);
         }
-        var registry = node.getLevel().registryAccess().lookup(AspectKeys.REGISTRY).orElse(null);
+    }
+
+    /** A node's mote sprites, rebuilt only when its state (or the atlas) changes. */
+    private static final class Motes {
+        final NodeState source;
+        final Object atlas;
+        final TextureAtlasSprite[] sprites = new TextureAtlasSprite[VisLimits.MAX_NODE_ASPECTS];
+        int count;
+
+        Motes(NodeState source, Object atlas) {
+            this.source = source;
+            this.atlas = atlas;
+        }
+    }
+
+    private static final Map<NodeBlockEntity, Motes> MOTES = new WeakHashMap<>();
+
+    // Identity is the change check: a node's state is replaced, never mutated.
+    @SuppressWarnings("ReferenceEquality")
+    private static @Nullable Motes motes(NodeBlockEntity node, NodeState s) {
+        var level = Objects.requireNonNull(node.getLevel());
         var gui = Minecraft.getInstance().getAtlasManager().getAtlasOrThrow(AtlasIds.GUI);
-        for (NodeState.NodeAspect a : settled.aspects()) {
-            if (registry == null || state.motes >= VisLimits.MAX_NODE_ASPECTS) {
-                break;
-            }
-            var holder =
-                    registry.get(
-                            net.minecraft.resources.ResourceKey.create(
-                                    AspectKeys.REGISTRY, a.aspect()));
-            if (holder.isPresent()) {
-                state.moteSprites[state.motes++] = gui.getSprite(AspectIcons.of(holder.get()));
+        Motes cached = MOTES.get(node);
+        if (cached != null && cached.source == s && cached.atlas == gui) {
+            return cached;
+        }
+        Motes built = new Motes(s, gui);
+        var registry = level.registryAccess().lookup(AspectKeys.REGISTRY).orElse(null);
+        if (registry != null && NodeService.type(level, s.type()) != null) {
+            for (NodeState.NodeAspect a : s.aspects()) {
+                var holder =
+                        registry.get(
+                                net.minecraft.resources.ResourceKey.create(
+                                        AspectKeys.REGISTRY, a.aspect()));
+                if (holder.isPresent() && built.count < VisLimits.MAX_NODE_ASPECTS) {
+                    built.sprites[built.count++] = gui.getSprite(AspectIcons.of(holder.get()));
+                }
             }
         }
+        MOTES.put(node, built);
+        return built;
     }
 
     @Override

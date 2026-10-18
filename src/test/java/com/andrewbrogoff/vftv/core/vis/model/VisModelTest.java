@@ -159,6 +159,10 @@ class VisModelTest {
         // two whole intervals: 40/20 = 2 per step → 4; 8/20 → step 1 → 2; 1000/20 = 50 → capped
         assertArrayEquals(new int[] {4, 2, 1000}, cur);
         assertEquals(80, tick, "the 39-tick remainder is kept");
+        assertEquals(4, Regen.settledCurrent(40, 0, 0, 119, 40, 20), "one aspect, the same value");
+        assertEquals(1000, Regen.settledCurrent(1000, 990, 0, 119, 40, 20), "capped");
+        assertEquals(7, Regen.settledCurrent(40, 7, 500, 100, 40, 20), "a clock going back");
+        assertEquals(40, Regen.settledCurrent(40, 40, 0, 1000, 40, 20), "already full");
         tick = Regen.settle(max, cur, tick, 79, 40, 20);
         assertEquals(79, tick, "a clock going backwards counts as zero elapsed");
         assertArrayEquals(new int[] {4, 2, 1000}, cur);

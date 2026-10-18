@@ -8,9 +8,24 @@ public final class Regen {
     private Regen() {}
 
     /**
-     * Settles a node at {@code now}: each aspect below its max gains {@code n × step}, where {@code
-     * n} whole intervals have passed, capped at its max; the remainder is kept. A clock that went
-     * backwards counts as zero elapsed and moves the tick back to {@code now}.
+     * One aspect's current after settling at {@code now}: below its max it gains {@code n × step},
+     * where {@code n} whole intervals have passed, capped at its max. A clock that went backwards
+     * counts as zero elapsed.
+     *
+     * @return the settled current
+     */
+    public static int settledCurrent(
+            int max, int current, long tick, long now, int interval, int divisor) {
+        if (now < tick || current >= max) {
+            return current;
+        }
+        long n = (now - tick) / interval;
+        int step = Math.max(1, max / divisor);
+        return n >= Math.ceilDiv(max - current, step) ? max : current + (int) n * step;
+    }
+
+    /**
+     * Settles a node at {@code now} in place (see {@link #settledCurrent} for one aspect's value).
      *
      * @param max each aspect's max
      * @param current each aspect's current, updated in place
