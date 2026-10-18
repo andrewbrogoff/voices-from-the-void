@@ -1,4 +1,9 @@
 {
   "feature": "vis",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "give @s vftv:wand[vftv:wand_rod=\"vftv:wooden\",vftv:wand_cap=\"vftv:copper\",vftv:vis={format:1,pools:{}}]"}},
+    {"op": "cmd", "args": {"command": "setblock -3 121 -2 vftv:node{node:{format:1,id:0L,origin:\"starter\",type:\"vftv:wellspring\",clarity:\"clear\",aspects:[{aspect:\"vftv:aer\",max:32,current:32},{aspect:\"vftv:aqua\",max:32,current:32},{aspect:\"vftv:ignis\",max:32,current:32},{aspect:\"vftv:ordo\",max:32,current:32},{aspect:\"vftv:perditio\",max:32,current:32},{aspect:\"vftv:terra\",max:32,current:32}],regen:{tick:0L,interval:40,divisor:20},cultivation:{counters:{},sonus:0}}}"}},
+    {"op": "cmd", "args": {"command": "setblock -3 121 2 vftv:node{node:{format:1,id:0L,origin:\"starter\",type:\"vftv:windward\",clarity:\"steady\",aspects:[{aspect:\"vftv:aer\",max:30,current:30},{aspect:\"vftv:terra\",max:12,current:12}],regen:{tick:0L,interval:80,divisor:20},cultivation:{counters:{},sonus:0}}}"}},
+    {"op": "wait_ticks", "args": {"ticks": 20}}
+  ]
 }

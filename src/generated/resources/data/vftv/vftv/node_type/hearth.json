@@ -1,0 +1,31 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:ignis",
+      "range": [
+        16,
+        40
+      ]
+    },
+    {
+      "aspect": "vftv:terra",
+      "range": [
+        8,
+        24
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:is_badlands",
+    "minecraft:is_savanna",
+    "minecraft:has_structure/desert_pyramid"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:ignis",
+  "natural": true,
+  "weight": 100
+}

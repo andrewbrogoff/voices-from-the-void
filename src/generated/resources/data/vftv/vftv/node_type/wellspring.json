@@ -1,0 +1,53 @@
+{
+  "anchored": true,
+  "aspects": [
+    {
+      "aspect": "vftv:aer",
+      "range": [
+        32,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:aqua",
+      "range": [
+        32,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:ignis",
+      "range": [
+        32,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:ordo",
+      "range": [
+        32,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:perditio",
+      "range": [
+        32,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:terra",
+      "range": [
+        32,
+        32
+      ]
+    }
+  ],
+  "clarity": {
+    "clear": 1,
+    "faint": 0,
+    "steady": 0
+  },
+  "main_aspect": "vftv:aer"
+}

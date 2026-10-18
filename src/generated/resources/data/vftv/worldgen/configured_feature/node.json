@@ -1,0 +1,11 @@
+{
+  "type": "vftv:node",
+  "config": {
+    "chance": 0.35,
+    "height": [
+      4,
+      12
+    ],
+    "retries": 8
+  }
+}

@@ -1,1 +1,18 @@
 # The discovery guard's ids for the vis feature: one vftv:vis_<what> id per line.
+vftv:vis_registries_and_tuning_load
+vftv:vis_wand_assembly
+vftv:vis_wand_assembly_crafter
+vftv:vis_tap_refusals
+vftv:vis_tap_pulses
+vftv:vis_tap_stops
+vftv:vis_tap_two_players
+vftv:vis_spend_refusals
+vftv:vis_spend_commit_and_rollback
+vftv:vis_starter_modes
+vftv:vis_starter_command
+vftv:vis_node_remove
+vftv:vis_reconciliation
+vftv:vis_update_boundary
+vftv:vis_node_strike_and_sounding
+vftv:vis_persistence
+vftv:vis_natural_types_cover_biomes

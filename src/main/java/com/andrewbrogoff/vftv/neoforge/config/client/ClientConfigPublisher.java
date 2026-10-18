@@ -41,7 +41,19 @@ public final class ClientConfigPublisher {
             return;
         }
         List<Runnable> snapshot = records.stream().map(r -> snapshot(r)).toList();
-        Minecraft.getInstance().execute(() -> snapshot.forEach(Runnable::run));
+        Minecraft minecraft = Minecraft.getInstance();
+        // The first load fires during mod loading, before the client exists: install it there.
+        if (castToNullable(minecraft) == null) {
+            snapshot.forEach(Runnable::run);
+        } else {
+            minecraft.execute(() -> snapshot.forEach(Runnable::run));
+        }
+    }
+
+    // Minecraft.getInstance() is null until the client is constructed, despite its annotation.
+    private static @org.jspecify.annotations.Nullable Minecraft castToNullable(
+            Minecraft minecraft) {
+        return minecraft;
     }
 
     private static <R> Runnable snapshot(ClientRecord<R> record) {

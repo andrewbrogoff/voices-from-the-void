@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:node_guarantees/1",
+  "guarantees": {
+    "vftv:starter": {
+      "stage": 1,
+      "count": 1,
+      "type": "vftv:wellspring",
+      "why": "placed at server start near spawn, outside spawn protection, within reach"
+    }
+  }
+}

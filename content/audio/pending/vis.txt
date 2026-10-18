@@ -1,0 +1,6 @@
+# The vis feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:wand.tap_start
+vftv:wand.tap_stop
+vftv:wand.full
+vftv:wand.tap_drone
+vftv:node.hum

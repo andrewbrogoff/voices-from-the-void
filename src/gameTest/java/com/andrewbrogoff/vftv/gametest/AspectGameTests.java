@@ -653,6 +653,7 @@ final class AspectGameTests {
                         return false;
                     }
                 };
+        NodeSource real = Strikes.nodes();
         Strikes.registerNodeSource(test);
         try {
             player.gameMode.useItem(player, level, fork(player), InteractionHand.MAIN_HAND);
@@ -690,7 +691,7 @@ final class AspectGameTests {
             helper.assertValueEqual(
                     scans(player).getLast().outcome(), ScanOutcome.REPEAT, "a moved node repeats");
         } finally {
-            Strikes.registerNodeSource(NodeSource.NONE);
+            Strikes.registerNodeSource(real);
         }
         helper.succeed();
     }

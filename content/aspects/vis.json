@@ -1,0 +1,26 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The vis feature's items. A wand is a tool of magic made of a rod and two caps; the chime rod and the Resonant Brass cap are tuned metal parts. The node block is exempt: a node's aspects are its own state, read through the node source, never a block value.",
+  "items": {
+    "vftv:wand": {
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 1,
+      "vftv:praecantatio": 2
+    },
+    "vftv:chime_rod": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 2
+    },
+    "vftv:resonant_brass_cap": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 1
+    }
+  },
+  "exempt": {
+    "blocks": {
+      "vftv:node": "a node's aspects are its own state, read through the node source; never obtainable as an item"
+    }
+  }
+}

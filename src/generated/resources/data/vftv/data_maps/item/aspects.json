@@ -5376,6 +5376,11 @@
       "vftv:exanimis": 2,
       "vftv:humanus": 2
     },
+    "vftv:chime_rod": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 2
+    },
     "vftv:choir_page": {
       "vftv:alienis": 1,
       "vftv:cognitio": 2,
@@ -5387,11 +5392,21 @@
       "vftv:herba": 1,
       "vftv:pannus": 1
     },
+    "vftv:resonant_brass_cap": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 1
+    },
     "vftv:tuning_fork": {
       "vftv:instrumentum": 1,
       "vftv:metallum": 2,
       "vftv:sonus": 2,
       "vftv:vitreus": 1
+    },
+    "vftv:wand": {
+      "vftv:instrumentum": 2,
+      "vftv:metallum": 1,
+      "vftv:praecantatio": 2
     }
   }
 }

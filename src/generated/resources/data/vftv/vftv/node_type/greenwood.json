@@ -1,0 +1,31 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:terra",
+      "range": [
+        16,
+        40
+      ]
+    },
+    {
+      "aspect": "vftv:ordo",
+      "range": [
+        8,
+        24
+      ]
+    }
+  ],
+  "biomes": [
+    "minecraft:is_forest",
+    "minecraft:is_taiga",
+    "minecraft:is_jungle"
+  ],
+  "clarity": {
+    "clear": 15,
+    "faint": 50,
+    "steady": 35
+  },
+  "main_aspect": "vftv:terra",
+  "natural": true,
+  "weight": 100
+}
