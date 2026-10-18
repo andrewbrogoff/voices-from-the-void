@@ -75,7 +75,8 @@ public final class TubeRenderer<T extends BlockEntity>
         int light = state.lightCoords;
         Identifier glyph = state.glyph;
         if (glyph != null) {
-            Face[] faces = state.faces.clone();
+            // The state is this frame's and is drawn within it: no copy needed.
+            Face[] faces = state.faces;
             out.submitCustomGeometry(
                     pose,
                     EssentiaQuads.BLOCK,

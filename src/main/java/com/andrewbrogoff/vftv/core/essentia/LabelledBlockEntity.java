@@ -97,6 +97,14 @@ public class LabelledBlockEntity extends net.minecraft.world.level.block.entity.
         }
     }
 
+    /** A real removal (not an unload) loses an unreadable record: logged with its raw tag. */
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (record instanceof Retained.Unreadable<LabelRecord> u) {
+            LOGGER.warn("An unreadable essentia label record at {} was removed: {}", pos, u.raw());
+        }
+    }
+
     @Override
     public void setRemoved() {
         super.setRemoved();
