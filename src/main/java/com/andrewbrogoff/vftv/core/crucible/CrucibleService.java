@@ -131,8 +131,9 @@ public final class CrucibleService {
                         t -> {
                             tuning = t;
                             if (reloading) {
+                                // The reload's new recipe snapshot isn't built yet; beforeSync
+                                // logs unpayable recipes against it.
                                 LEVELS.keySet().forEach(CrucibleService::queueAll);
-                                logUnpayable();
                             }
                         })
                 .ifError(

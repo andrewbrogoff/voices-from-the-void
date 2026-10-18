@@ -63,14 +63,16 @@ public final class CrucibleClientFeature {
         }
 
         @Override
+        // items() is the one loader-free path to a custom ingredient's alternatives; a fact is
+        // rendered once per tooltip, not per tick.
+        @SuppressWarnings("deprecation")
         public @Nullable Component fact(Player reader, Identifier recipe, String field) {
             RecipeHolder<CrucibleRecipe> holder = CrucibleRecipes.client().get(recipe);
             if (holder == null) {
                 return null;
             }
             Ingredient catalyst = holder.value().catalyst();
-            List<Holder<Item>> items =
-                    catalyst.isCustom() ? List.of() : catalyst.getValues().stream().toList();
+            List<Holder<Item>> items = catalyst.items().toList();
             return CruciblePreview.of(reader, holder, context()).fact(reader, field, items);
         }
     }
