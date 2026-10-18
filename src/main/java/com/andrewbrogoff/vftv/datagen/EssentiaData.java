@@ -10,6 +10,7 @@ import com.andrewbrogoff.vftv.core.essentia.model.EssentiaTuning;
 import com.andrewbrogoff.vftv.core.text.model.LangEntry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -50,53 +51,8 @@ import net.neoforged.neoforge.data.event.GatherDataEvent;
 final class EssentiaData implements FeatureData {
     private static final String FILE = "essentia.json";
     private static final String DIR = "essentia";
-    private static final Pattern ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
-    private static final Pattern INGREDIENT = Pattern.compile("#?[a-z0-9_.-]+:[a-z0-9_./-]+");
-    private static final Set<String> PRIMALS =
-            Set.of(
-                    "vftv:aer",
-                    "vftv:terra",
-                    "vftv:ignis",
-                    "vftv:aqua",
-                    "vftv:ordo",
-                    "vftv:perditio");
-
-    /** The Wellspring's per-aspect amount, the arcane bodies' vis bound (wands content). */
-    static final int WELLSPRING = 32;
-
+    private static final Pattern INGREDIENT = Pattern.compile("#?" + ArcaneBodies.ID.pattern());
     private static final Schema.Type ING = new Schema.Str(3, 257, INGREDIENT);
-    private static final Schema.Type RESULT =
-            new Schema.Obj(
-                    List.of(
-                            Schema.required("id", new Schema.Id()),
-                            Schema.optional("count", new Schema.Int(1, 99))));
-
-    /** The arcane recipe type's body (arcane spec, "The recipe type"). */
-    private static final Schema.Type ARCANE =
-            new Schema.Obj(
-                    List.of(
-                            Schema.required("type", new Schema.OneOf(Set.of("vftv:arcane"))),
-                            Schema.required("research", new Schema.Id()),
-                            Schema.optional("kind", new Schema.OneOf(Set.of("ordinary"))),
-                            Schema.optional(
-                                    "pattern",
-                                    new Schema.ListOf(new Schema.Str(1, 3, null), 1, 3, false)),
-                            Schema.optional(
-                                    "key",
-                                    new Schema.MapOf(
-                                            new Schema.Str(1, 1, Pattern.compile("[^ ]")),
-                                            ING,
-                                            1,
-                                            9)),
-                            Schema.optional("ingredients", new Schema.ListOf(ING, 1, 9, false)),
-                            Schema.required("result", RESULT),
-                            Schema.required(
-                                    "vis",
-                                    new Schema.MapOf(
-                                            new Schema.Str(3, 256, ID),
-                                            new Schema.Int(1, WELLSPRING),
-                                            1,
-                                            8))));
 
     /** Vanilla's shapeless body. */
     private static final Schema.Type SHAPELESS =
@@ -110,29 +66,39 @@ final class EssentiaData implements FeatureData {
                                     new Schema.OneOf(
                                             Set.of("misc", "building", "redstone", "equipment"))),
                             Schema.required("ingredients", new Schema.ListOf(ING, 1, 9, false)),
-                            Schema.required("result", RESULT)));
-
-    /**
-     * {@code vftv:essentia_recipes/1}: exactly the six recipes. Rejected: a research, kind or
-     * result outside its row; a vis key that isn't a built-in primal; a jar or Alembic ingredient
-     * outside {@code minecraft:}; label ingredients other than paper and an ink sac; a blanking
-     * recipe with any ingredient but one label; a malformed pattern.
-     */
-    static final Schema RECIPES =
-            Schema.of(
-                            "vftv:essentia_recipes/1",
                             Schema.required(
-                                    "recipes",
+                                    "result",
                                     new Schema.Obj(
                                             List.of(
-                                                    Schema.required("vftv:essentia_jar", ARCANE),
-                                                    Schema.required("vftv:alembic", ARCANE),
-                                                    Schema.required("vftv:essentia_tube", ARCANE),
-                                                    Schema.required("vftv:tube_valve", ARCANE),
-                                                    Schema.required("vftv:label", SHAPELESS),
-                                                    Schema.required(
-                                                            "vftv:label_blank", SHAPELESS)))))
-                    .withExtra(EssentiaData::recipeRules);
+                                                    Schema.required("id", new Schema.Id()),
+                                                    Schema.optional(
+                                                            "count", new Schema.Int(1, 99)))))));
+
+    private static final List<String> ARCANE =
+            List.of("vftv:essentia_jar", "vftv:alembic", "vftv:essentia_tube", "vftv:tube_valve");
+
+    /**
+     * {@code vftv:essentia_recipes/1}: exactly the six recipes, the four arcane ones in the arcane
+     * recipe type's body. Rejected: a research, kind or result outside its row; a vis key that
+     * isn't a built-in primal or a value over the Wellspring bound; a jar or Alembic ingredient
+     * outside {@code minecraft:}; label ingredients other than paper and an ink sac; a blanking
+     * recipe with any ingredient but one label.
+     */
+    static Schema recipesSchema(Map<String, Integer> wellspring) {
+        return Schema.of(
+                        "vftv:essentia_recipes/1",
+                        Schema.required(
+                                "recipes",
+                                new Schema.Obj(
+                                        List.of(
+                                                Schema.required(ARCANE.get(0), ArcaneBodies.BODY),
+                                                Schema.required(ARCANE.get(1), ArcaneBodies.BODY),
+                                                Schema.required(ARCANE.get(2), ArcaneBodies.BODY),
+                                                Schema.required(ARCANE.get(3), ArcaneBodies.BODY),
+                                                Schema.required("vftv:label", SHAPELESS),
+                                                Schema.required("vftv:label_blank", SHAPELESS)))))
+                .withExtra(root -> recipeRules(root, wellspring));
+    }
 
     /** {@code vftv:essentia_client/1}: the mote numbers, both required. */
     static final Schema CLIENT =
@@ -206,9 +172,8 @@ final class EssentiaData implements FeatureData {
     public void tags(Tags tags) {
         tags.tag(EssentiaKeys.ESSENTIA_ENDPOINTS)
                 .add(key(EssentiaContent.jar()))
-                .addOptional(blockKey("crucible"))
+                // The crucible adds itself to both tags (crucible spec, "The block").
                 .addOptional(blockKey("node_tap"));
-        tags.tag(EssentiaKeys.ALEMBIC_BASES).addOptional(blockKey("crucible"));
         tags.tag(BlockTags.MINEABLE_WITH_PICKAXE)
                 .add(key(EssentiaContent.tube()))
                 .add(key(EssentiaContent.valve()));
@@ -309,49 +274,80 @@ final class EssentiaData implements FeatureData {
     }
 
     /**
-     * {@code content/essentia/}: the vanilla recipe bodies unchanged, and the client numbers. The
-     * four arcane bodies are validated here and written once the arcane recipe type exists.
+     * {@code content/essentia/}: the arcane bodies through the arcane recipe type's helper (checked
+     * against the registries and the authored research, then widened), the vanilla bodies
+     * unchanged, and the client numbers.
      */
     private static final class Content extends ContentProvider {
-        Content(PackOutput output) {
-            super(output, DIR, List.of(RECIPES, CLIENT));
+        private final CompletableFuture<HolderLookup.Provider> lookup;
+
+        Content(PackOutput output, CompletableFuture<HolderLookup.Provider> lookup) {
+            super(
+                    output,
+                    DIR,
+                    List.of(recipesSchema(ArcaneData.wellspring(contentRoot())), CLIENT));
+            this.lookup = lookup;
+        }
+
+        private static Path contentRoot() {
+            String root = System.getProperty(CONTENT_DIR);
+            if (root == null) {
+                throw new IllegalStateException(
+                        "the system property " + CONTENT_DIR + " is not set");
+            }
+            return Path.of(root);
         }
 
         @Override
         protected CompletableFuture<?> generate(List<Envelope> envelopes, CachedOutput cache) {
-            List<CompletableFuture<?>> writes = new ArrayList<>();
-            Set<String> seen = new HashSet<>();
-            for (Envelope e : envelopes) {
-                JsonObject root = e.json().getAsJsonObject();
-                seen.add(e.schema().id());
-                if (e.schema().equals(CLIENT)) {
-                    JsonObject copy = root.deepCopy();
-                    writes.add(
-                            DataProvider.saveStable(
-                                    cache,
-                                    copy,
-                                    output.getOutputFolder(PackOutput.Target.RESOURCE_PACK)
-                                            .resolve(Vftv.MOD_ID)
-                                            .resolve("essentia/client.json")));
-                    continue;
-                }
-                PackOutput.PathProvider recipes =
-                        output.createPathProvider(PackOutput.Target.DATA_PACK, "recipe");
-                for (Map.Entry<String, JsonElement> r :
-                        root.getAsJsonObject("recipes").entrySet()) {
-                    JsonObject body = r.getValue().getAsJsonObject();
-                    if (!"vftv:arcane".equals(body.get("type").getAsString())) {
-                        writes.add(
-                                DataProvider.saveStable(
-                                        cache, body, recipes.json(Identifier.parse(r.getKey()))));
-                    }
-                }
-            }
-            if (seen.size() != 2) {
+            if (envelopes.size() != 2) {
                 throw new IllegalStateException(
                         "content/essentia needs recipes.json and client.json");
             }
-            return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
+            return lookup.thenCompose(
+                    registries -> {
+                        Set<String> research =
+                                ResearchContent.read(contentRoot()).entries().keySet();
+                        List<String> problems = new ArrayList<>();
+                        List<CompletableFuture<?>> writes = new ArrayList<>();
+                        PackOutput.PathProvider recipes =
+                                output.createRegistryElementsPathProvider(Registries.RECIPE);
+                        for (Envelope e : envelopes) {
+                            JsonObject root = e.json().getAsJsonObject();
+                            if (e.schema().equals(CLIENT)) {
+                                writes.add(
+                                        DataProvider.saveStable(
+                                                cache,
+                                                root.deepCopy(),
+                                                output.getOutputFolder(
+                                                                PackOutput.Target.RESOURCE_PACK)
+                                                        .resolve(Vftv.MOD_ID)
+                                                        .resolve("essentia/client.json")));
+                                continue;
+                            }
+                            for (Map.Entry<String, JsonElement> r :
+                                    root.getAsJsonObject("recipes").entrySet()) {
+                                JsonObject body = r.getValue().getAsJsonObject();
+                                if (ARCANE.contains(r.getKey())) {
+                                    problems.addAll(
+                                            ArcaneBodies.check(
+                                                    r.getKey(), body, registries, research));
+                                    writes.add(ArcaneBodies.write(cache, output, r.getKey(), body));
+                                } else {
+                                    writes.add(
+                                            DataProvider.saveStable(
+                                                    cache,
+                                                    body,
+                                                    recipes.json(Identifier.parse(r.getKey()))));
+                                }
+                            }
+                        }
+                        if (!problems.isEmpty()) {
+                            throw new IllegalStateException(
+                                    "Rejected essentia content:\n" + String.join("\n", problems));
+                        }
+                        return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
+                    });
         }
 
         @Override
@@ -362,7 +358,7 @@ final class EssentiaData implements FeatureData {
 
     // --- the recipe rules beyond the schema --------------------------------------------------
 
-    private static List<String> recipeRules(JsonObject root) {
+    private static List<String> recipeRules(JsonObject root, Map<String, Integer> wellspring) {
         List<String> problems = new ArrayList<>();
         JsonObject recipes = root.getAsJsonObject("recipes");
         row(
@@ -373,8 +369,18 @@ final class EssentiaData implements FeatureData {
                 1,
                 4,
                 true,
+                wellspring,
                 problems);
-        row(recipes, "vftv:alembic", "vftv:essentia_jars", "vftv:alembic", 1, 1, true, problems);
+        row(
+                recipes,
+                "vftv:alembic",
+                "vftv:essentia_jars",
+                "vftv:alembic",
+                1,
+                1,
+                true,
+                wellspring,
+                problems);
         row(
                 recipes,
                 "vftv:essentia_tube",
@@ -383,6 +389,7 @@ final class EssentiaData implements FeatureData {
                 4,
                 16,
                 false,
+                wellspring,
                 problems);
         row(
                 recipes,
@@ -392,6 +399,7 @@ final class EssentiaData implements FeatureData {
                 1,
                 4,
                 false,
+                wellspring,
                 problems);
         JsonObject label = recipes.getAsJsonObject("vftv:label");
         result(label, "vftv:label", 1, 8, "$.recipes.vftv:label", problems);
@@ -419,11 +427,15 @@ final class EssentiaData implements FeatureData {
             int min,
             int max,
             boolean vanillaOnly,
+            Map<String, Integer> wellspring,
             List<String> problems) {
         String at = "$.recipes." + id;
         JsonObject body = recipes.getAsJsonObject(id);
         if (!research.equals(body.get("research").getAsString())) {
             problems.add(at + ".research: must be " + research);
+        }
+        if (body.has("kind") && !"ordinary".equals(body.get("kind").getAsString())) {
+            problems.add(at + ".kind: must be ordinary");
         }
         result(body, result, min, max, at, problems);
         boolean shaped = body.has("pattern") || body.has("key");
@@ -465,9 +477,12 @@ final class EssentiaData implements FeatureData {
                 }
             }
         }
-        for (String aspect : body.getAsJsonObject("vis").keySet()) {
-            if (!PRIMALS.contains(aspect)) {
-                problems.add(at + ".vis." + aspect + ": not a built-in primal");
+        for (Map.Entry<String, JsonElement> vis : body.getAsJsonObject("vis").entrySet()) {
+            Integer bound = wellspring.get(vis.getKey());
+            if (!ArcaneData.PRIMALS.contains(vis.getKey()) || bound == null) {
+                problems.add(at + ".vis." + vis.getKey() + ": not a built-in primal");
+            } else if (vis.getValue().getAsInt() > bound) {
+                problems.add(at + ".vis." + vis.getKey() + ": over the Wellspring's " + bound);
             }
         }
     }

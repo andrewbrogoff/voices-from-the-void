@@ -1,0 +1,16 @@
+{
+  "type": "vftv:arcane",
+  "ingredients": [
+    "vftv:essentia_tube",
+    "minecraft:lever"
+  ],
+  "kind": "ordinary",
+  "research": "vftv:essentia_tubes",
+  "result": {
+    "count": 1,
+    "id": "vftv:tube_valve"
+  },
+  "vis": {
+    "vftv:ordo": 4
+  }
+}

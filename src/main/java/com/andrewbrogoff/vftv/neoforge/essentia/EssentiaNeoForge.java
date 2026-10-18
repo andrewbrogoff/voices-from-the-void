@@ -1,5 +1,7 @@
 package com.andrewbrogoff.vftv.neoforge.essentia;
 
+import com.andrewbrogoff.vftv.api.crucible.CruciblePayload;
+import com.andrewbrogoff.vftv.api.neoforge.crucible.CrucibleEvent;
 import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaCapabilities;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaContent;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaService;
@@ -64,6 +66,18 @@ public final class EssentiaNeoForge {
                 event -> {
                     if (event.getLevel() instanceof ServerLevel level) {
                         EssentiaService.onLevelUnload(level);
+                    }
+                });
+        // A crucible that dissolved or crafted at an endpoint wakes the lines touching it.
+        gameBus.addListener(
+                CrucibleEvent.class,
+                event -> {
+                    switch (event.payload()) {
+                        case CruciblePayload.Dissolved d ->
+                                EssentiaService.wakeAt(d.level(), d.pos());
+                        case CruciblePayload.Crafted c ->
+                                EssentiaService.wakeAt(c.level(), c.pos());
+                        default -> {}
                     }
                 });
         gameBus.addListener(

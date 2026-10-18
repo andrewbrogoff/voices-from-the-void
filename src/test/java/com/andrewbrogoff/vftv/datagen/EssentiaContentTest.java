@@ -22,6 +22,11 @@ class EssentiaContentTest {
     private static final Path CONTENT =
             Path.of(System.getProperty("vftv.projectDir"), "content", "essentia");
 
+    private static final Schema RECIPES =
+            EssentiaData.recipesSchema(
+                    ArcaneData.wellspring(
+                            Path.of(System.getProperty("vftv.projectDir"), "content")));
+
     private static JsonObject recipes() throws Exception {
         return StrictJson.parse(Files.readString(CONTENT.resolve("recipes.json")))
                 .getAsJsonObject();
@@ -29,12 +34,7 @@ class EssentiaContentTest {
 
     private static List<String> check(JsonElement root) {
         return Schema.check(
-                root,
-                Map.of(
-                        EssentiaData.RECIPES.id(),
-                        EssentiaData.RECIPES,
-                        EssentiaData.CLIENT.id(),
-                        EssentiaData.CLIENT));
+                root, Map.of(RECIPES.id(), RECIPES, EssentiaData.CLIENT.id(), EssentiaData.CLIENT));
     }
 
     @Test

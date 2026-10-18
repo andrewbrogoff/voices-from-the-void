@@ -11,6 +11,9 @@ import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaCapabilities;
 import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaEvent;
 import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaResource;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
+import com.andrewbrogoff.vftv.core.crucible.CrucibleBlock;
+import com.andrewbrogoff.vftv.core.crucible.CrucibleBlockEntity;
+import com.andrewbrogoff.vftv.core.crucible.CrucibleContent;
 import com.andrewbrogoff.vftv.core.essentia.AlembicBlock;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaContent;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaLines;
@@ -108,6 +111,7 @@ final class EssentiaGameTests {
         tests.put(
                 "essentia_persistence_and_unreadable", EssentiaGameTests::persistenceAndUnreadable);
         tests.put("essentia_status_pages", EssentiaGameTests::statusPages);
+        tests.put("essentia_crucible_cross", EssentiaGameTests::crucibleCross);
         NeoForge.EVENT_BUS.addListener(
                 EssentiaEvent.class,
                 e -> {
@@ -896,6 +900,65 @@ final class EssentiaGameTests {
                 Objects.requireNonNull(suction(helper, other)).suction(AspectKeys.AER) == 0,
                 "no suction");
         helper.succeed();
+    }
+
+    /**
+     * The T10 × T11 cross-test: a cold crucible's extract-only handler feeds an Alembic hung on its
+     * side and a tube on its side; a tube on its top is a deaf arm (only {@code UP} is withheld);
+     * nothing is created or lost.
+     */
+    private static void crucibleCross(GameTestHelper helper) {
+        BlockPos crucible = new BlockPos(1, 2, 1);
+        helper.setBlock(
+                crucible,
+                CrucibleContent.crucible().defaultBlockState().setValue(CrucibleBlock.WATER, true));
+        CrucibleBlockEntity pool =
+                Objects.requireNonNull(helper.getBlockEntity(crucible, CrucibleBlockEntity.class));
+        pool.pool().restore(Map.of("vftv:aer", 12, "vftv:terra", 9));
+        EssentiaSuction none = suction(helper, crucible);
+        helper.assertTrue(
+                none == null
+                        || (none.suction(AspectKeys.AER) == 0 && none.hold(AspectKeys.AER) == 0),
+                "the crucible pulls nothing and holds at 0");
+        // The Alembic on the crucible's east side pours Aer into a labelled jar below it.
+        jar(helper, new BlockPos(2, 1, 1), null, 0, AspectKeys.AER);
+        helper.setBlock(
+                new BlockPos(2, 2, 1),
+                EssentiaContent.alembic()
+                        .defaultBlockState()
+                        .setValue(AlembicBlock.FACING, Direction.WEST));
+        // A tube on the crucible's north side leads to an unlabelled jar; one on top is deaf.
+        jar(helper, new BlockPos(1, 2, -1), null, 0, null);
+        tube(helper, new BlockPos(1, 2, 0));
+        tube(helper, new BlockPos(1, 3, 1));
+        helper.succeedWhen(
+                () -> {
+                    Contents<ResourceKey<Aspect>> poured = contents(helper, new BlockPos(2, 1, 1));
+                    Contents<ResourceKey<Aspect>> piped = contents(helper, new BlockPos(1, 2, -1));
+                    eq(helper, poured.aspect(), AspectKeys.AER, "the Alembic pours Aer");
+                    helper.assertTrue(piped.amount() > 0, "the tube draws from the side");
+                    int left = pool.pool().amount("vftv:aer") + pool.pool().amount("vftv:terra");
+                    eq(helper, left + poured.amount() + piped.amount(), 21, "conserved");
+                    eq(
+                            helper,
+                            EssentiaService.lines(helper.getLevel())
+                                    .of(helper.absolutePos(new BlockPos(1, 3, 1)))
+                                    .endpoints(),
+                            1,
+                            "the top tube touches the crucible");
+                    eq(
+                            helper,
+                            EssentiaService.lines(helper.getLevel())
+                                    .of(helper.absolutePos(new BlockPos(1, 3, 1)))
+                                    .deafArms(),
+                            1,
+                            "UP is withheld: a deaf arm");
+                    eq(
+                            helper,
+                            contents(helper, new BlockPos(2, 1, 1)).amount() <= 12,
+                            true,
+                            "never more than the pool held");
+                });
     }
 
     /** Sneaking with both hands empty pages through a jar's status. */

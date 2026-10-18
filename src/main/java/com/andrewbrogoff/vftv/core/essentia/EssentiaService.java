@@ -52,6 +52,7 @@ public final class EssentiaService {
     private static @Nullable Network network;
     private static volatile EssentiaRules rules = EssentiaRules.DEFAULTS;
     private static volatile boolean tuningReloaded;
+    private static volatile @Nullable EssentiaRules clientRules;
     private static @Nullable AspectIndex index;
     private static final IdentityHashMap<ServerLevel, EssentiaLines> LINES =
             new IdentityHashMap<>();
@@ -94,6 +95,16 @@ public final class EssentiaService {
     /** The rules in force. */
     public static EssentiaRules rules() {
         return rules;
+    }
+
+    /** The client's last received rules, or null before the first and after disconnect. */
+    public static @Nullable EssentiaRules clientRules() {
+        return clientRules;
+    }
+
+    /** Sets or drops the client's rules (the client feature, on arrival and at disconnect). */
+    public static void setClientRules(@Nullable EssentiaRules received) {
+        clientRules = received;
     }
 
     /** Reads a tuning file's text. */
@@ -184,6 +195,11 @@ public final class EssentiaService {
     /** A level's lines. */
     public static EssentiaLines lines(ServerLevel level) {
         return LINES.computeIfAbsent(level, EssentiaLines::new);
+    }
+
+    /** Something at an endpoint changed (a crucible dissolved or crafted): wakes its lines. */
+    public static void wakeAt(ServerLevel level, BlockPos pos) {
+        lines(level).wakeAt(pos);
     }
 
     /** Marks a block entity for the coalesced update after this tick. */

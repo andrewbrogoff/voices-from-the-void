@@ -9,6 +9,7 @@ import com.andrewbrogoff.vftv.core.aspect.KnowledgeService;
 import com.andrewbrogoff.vftv.core.aspect.model.Knowledge;
 import com.andrewbrogoff.vftv.core.common.model.StrictJson;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaRules;
+import com.andrewbrogoff.vftv.core.essentia.EssentiaService;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaStatus;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -44,7 +45,6 @@ public final class ClientEssentia {
             Identifier.fromNamespaceAndPath("vftv", "hud/crucible_missing");
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static @Nullable EssentiaRules rules;
     private static double moteSpeed = 0.25;
     private static double moteSize = 0.25;
 
@@ -52,22 +52,22 @@ public final class ClientEssentia {
 
     /** The last rules received, or null before the first and after disconnect. */
     public static @Nullable EssentiaRules rules() {
-        return rules;
+        return EssentiaService.clientRules();
     }
 
     static void setRules(EssentiaRules received) {
-        rules = received;
+        EssentiaService.setClientRules(received);
     }
 
     /** Drops the rules and motes, at disconnect. */
     public static void clear() {
-        rules = null;
+        EssentiaService.setClientRules(null);
         FlowMotes.clear();
     }
 
     /** The jar capacity the renderers draw against: the received rules', or the shipped default. */
     public static int capacity() {
-        EssentiaRules r = rules;
+        EssentiaRules r = EssentiaService.clientRules();
         return (r == null ? EssentiaRules.DEFAULTS : r).tuning().jarCapacity();
     }
 
@@ -123,7 +123,7 @@ public final class ClientEssentia {
      */
     public static String dump(String args) {
         JsonObject data = new JsonObject();
-        data.addProperty("rules", rules != null);
+        data.addProperty("rules", EssentiaService.clientRules() != null);
         data.addProperty("capacity", capacity());
         data.addProperty("moteSpeed", moteSpeed);
         data.addProperty("moteSize", moteSize);
