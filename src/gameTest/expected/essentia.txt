@@ -18,3 +18,4 @@ vftv:essentia_alembic_pours
 vftv:essentia_persistence_and_unreadable
 vftv:essentia_status_pages
 vftv:essentia_crucible_cross
+vftv:essentia_valve_end_non_ticking

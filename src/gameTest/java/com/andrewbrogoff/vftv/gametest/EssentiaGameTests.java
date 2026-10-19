@@ -58,6 +58,7 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
@@ -112,6 +113,7 @@ final class EssentiaGameTests {
                 "essentia_persistence_and_unreadable", EssentiaGameTests::persistenceAndUnreadable);
         tests.put("essentia_status_pages", EssentiaGameTests::statusPages);
         tests.put("essentia_crucible_cross", EssentiaGameTests::crucibleCross);
+        tests.put("essentia_valve_end_non_ticking", EssentiaGameTests::valveEndAtNonTickingChunk);
         NeoForge.EVENT_BUS.addListener(
                 EssentiaEvent.class,
                 e -> {
@@ -961,6 +963,74 @@ final class EssentiaGameTests {
                             contents(helper, new BlockPos(2, 1, 1)).amount() <= 12,
                             true,
                             "never more than the pool held");
+                });
+    }
+
+    /**
+     * A passing valve whose axis end faces a loaded but non-block-ticking chunk with nothing to
+     * join there builds {@code ready}, as a tube there would: only a face that would connect
+     * records a boundary. A forced chunk's neighbour is block-ticking; the next one out is loaded
+     * but not ticking.
+     */
+    private static void valveEndAtNonTickingChunk(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        int cz = helper.absolutePos(BlockPos.ZERO).getZ() >> 4;
+        int start = helper.absolutePos(BlockPos.ZERO).getX() >> 4;
+        // Any loaded region ends in a block-ticking chunk beside a loaded, non-ticking one: use
+        // the first such edge east of the test; force a far chunk only if none is loaded yet.
+        for (int cx = start; cx < start + 48; cx++) {
+            if (edge(level, cx - 1, cz)) {
+                awaitFixture(helper, level, cx - 1, cz, 0, false);
+                return;
+            }
+        }
+        int far = start + 64;
+        level.setChunkForced(far, cz, true);
+        awaitFixture(helper, level, far, cz, 90, true);
+    }
+
+    /** Whether chunk {@code cx + 1} block-ticks and {@code cx + 2} is loaded but doesn't. */
+    private static boolean edge(ServerLevel level, int cx, int cz) {
+        return level.getChunkSource().getChunkNow(cx + 1, cz) != null
+                && level.shouldTickBlocksAt(ChunkPos.pack(cx + 1, cz))
+                && level.getChunkSource().getChunkNow(cx + 2, cz) != null
+                && !level.shouldTickBlocksAt(ChunkPos.pack(cx + 2, cz));
+    }
+
+    /** Waits for the forced chunk's tickets to settle, then builds the valve's line. */
+    private static void awaitFixture(
+            GameTestHelper helper, ServerLevel level, int cx, int cz, int left, boolean forced) {
+        if (!edge(level, cx, cz)) {
+            if (left == 0) {
+                if (forced) {
+                    level.setChunkForced(cx, cz, false);
+                }
+                throw helper.assertionException(
+                        "the fixture: a block-ticking chunk beside a loaded, non-ticking one");
+            }
+            helper.runAfterDelay(1, () -> awaitFixture(helper, level, cx, cz, left - 1, forced));
+            return;
+        }
+        BlockPos valve = new BlockPos(((cx + 1) << 4) + 15, 100, (cz << 4) + 8);
+        level.setBlock(valve.west(), EssentiaContent.jar().defaultBlockState(), Block.UPDATE_ALL);
+        level.setBlock(
+                valve,
+                EssentiaContent.valve()
+                        .defaultBlockState()
+                        .setValue(TubeValveBlock.AXIS, Direction.Axis.X),
+                Block.UPDATE_ALL);
+        helper.runAfterDelay(
+                3,
+                () -> {
+                    EssentiaLines.View v = EssentiaService.lines(level).of(valve);
+                    level.setBlock(valve, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                    level.setBlock(valve.west(), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+                    if (forced) {
+                        level.setChunkForced(cx, cz, false);
+                    }
+                    eq(helper, v.state(), EssentiaLines.State.READY, "the valve's line runs");
+                    eq(helper, v.endpoints(), 1, "the jar at its west end");
+                    helper.succeed();
                 });
     }
 

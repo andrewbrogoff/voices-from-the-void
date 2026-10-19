@@ -81,12 +81,7 @@ public final class EssentiaNeoForge {
                     }
                 });
         gameBus.addListener(
-                TagsUpdatedEvent.class,
-                event -> {
-                    if (event.shouldUpdateStaticData()) {
-                        EssentiaService.onTagsReloaded();
-                    }
-                });
+                TagsUpdatedEvent.ServerDataLoad.class, event -> EssentiaService.onTagsReloaded());
     }
 
     /** The jar's handler and suction on every face and the null side. */

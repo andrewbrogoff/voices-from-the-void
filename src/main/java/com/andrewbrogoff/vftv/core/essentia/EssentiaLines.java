@@ -469,11 +469,15 @@ public final class EssentiaLines {
                     continue;
                 }
                 BlockPos n = pos.relative(d);
-                if (!chunkReady(n.getX() >> 4, n.getZ() >> 4)) {
-                    b.boundary.add(ChunkPos.pack(n.getX() >> 4, n.getZ() >> 4));
+                // A valve's end joins on a tube face's terms, which read the neighbour: in a
+                // loaded chunk, decide that first, so only a face that would connect records a
+                // boundary. A truly unloaded chunk stays a conservative boundary.
+                boolean loadedNeighbour = loadedAt(n.asLong());
+                if (loadedNeighbour && !connects(pos, s, d)) {
                     continue;
                 }
-                if (!connects(pos, s, d)) {
+                if (!loadedNeighbour || !chunkReady(n.getX() >> 4, n.getZ() >> 4)) {
+                    b.boundary.add(ChunkPos.pack(n.getX() >> 4, n.getZ() >> 4));
                     continue;
                 }
                 BlockState ns = level.getBlockState(n);
