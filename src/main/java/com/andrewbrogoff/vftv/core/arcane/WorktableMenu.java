@@ -1,6 +1,5 @@
 package com.andrewbrogoff.vftv.core.arcane;
 
-import com.andrewbrogoff.vftv.api.arcane.ArcaneLimits;
 import com.andrewbrogoff.vftv.api.vis.VisContext;
 import com.andrewbrogoff.vftv.api.vis.VisKeys;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
@@ -82,7 +81,6 @@ public final class WorktableMenu extends AbstractContainerMenu {
     private boolean dirty;
     private boolean acknowledged;
     private int clientVersion;
-    private long lastActivation = Long.MIN_VALUE;
 
     // The change check's last-seen inputs (server only).
     private long seenResearch = Long.MIN_VALUE;
@@ -183,19 +181,6 @@ public final class WorktableMenu extends AbstractContainerMenu {
     /** Counts the client's slot changes, so its preview recomputes only on a change. */
     public int clientVersion() {
         return clientVersion;
-    }
-
-    /**
-     * The rate check: at most {@value ArcaneLimits#MAX_CRAFTS_PER_TICK} payload per tick.
-     *
-     * @return false for a second payload in the same server tick
-     */
-    boolean tryActivate(long tick) {
-        if (tick == lastActivation) {
-            return false;
-        }
-        lastActivation = tick;
-        return true;
     }
 
     /** Clears the refusal, as the start of every activation does. */

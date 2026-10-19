@@ -17,8 +17,8 @@ import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.TreeMap;
+import java.util.WeakHashMap;
 import net.minecraft.advancements.triggers.CriteriaTriggers;
 import net.minecraft.core.BlockPos;
 import net.minecraft.network.chat.Component;
@@ -41,6 +41,9 @@ import org.slf4j.Logger;
 public final class Worktables {
     private static final Logger LOGGER = LogUtils.getLogger();
     private static volatile ArcaneHooks hooks = ArcaneHooks.NONE;
+
+    /** Check 1: each player's last craft-payload tick (server thread only; weak, so no cleanup). */
+    private static final Map<ServerPlayer, Long> LAST_CRAFT = new WeakHashMap<>();
 
     private Worktables() {}
 
@@ -178,18 +181,12 @@ public final class Worktables {
         boolean empty = menu.grid().isEmpty();
         // Selection has no side effects, so it runs first: a disabled preview still shows what it
         // would make. The statuses below keep the spec's precedence.
-        RecipeHolder<ArcaneRecipe> holder =
-                (pinned == null
-                                ? ArcaneRecipes.select(player, menu.input())
-                                : Optional.of(pinned)
-                                        .filter(
-                                                h ->
-                                                        !empty
-                                                                && h.value()
-                                                                        .matches(
-                                                                                menu.input(),
-                                                                                player.level())))
-                        .orElse(null);
+        RecipeHolder<ArcaneRecipe> holder;
+        if (pinned == null) {
+            holder = ArcaneRecipes.select(player, menu.input()).orElse(null);
+        } else {
+            holder = !empty && pinned.value().matches(menu.input(), player.level()) ? pinned : null;
+        }
         ItemStack result =
                 holder == null
                         ? ItemStack.EMPTY
@@ -244,13 +241,13 @@ public final class Worktables {
     }
 
     private static void craft(WorktableCraft payload, ServerPlayer player) {
-        // Check 2 first, then check 1 against the open menu: a payload with no matching menu is
-        // dropped either way. ponytail: the rate counter lives on the menu, not a global map.
-        if (player.isSpectator()
+        long tick = player.level().getServer().getTickCount();
+        Long last = LAST_CRAFT.put(player, tick);
+        if ((last != null && last == tick)
+                || player.isSpectator()
                 || !(player.containerMenu instanceof WorktableMenu menu)
                 || menu.containerId != payload.containerId()
-                || !menu.stillValid(player)
-                || !menu.tryActivate(player.level().getServer().getTickCount())) {
+                || !menu.stillValid(player)) {
             return;
         }
         menu.clearRefusal();
