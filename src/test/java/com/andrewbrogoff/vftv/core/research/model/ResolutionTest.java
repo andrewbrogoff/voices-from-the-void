@@ -16,7 +16,9 @@ import org.junit.jupiter.api.Test;
 class ResolutionTest {
     private static final String PAGE = "vftv:choir/beneath_the_notes";
 
-    /** The fixture world plus a warp-gated secret, a scan find, a discovery find and free chains. */
+    /**
+     * The fixture world plus a warp-gated secret, a scan find, a discovery find and free chains.
+     */
     private static Map<String, ResearchEntry> world() {
         Map<String, Fixtures.B> w = Fixtures.world();
         Fixtures.B gated = b(3, "vftv:ruins", 2, 0, EntryKind.FREE).parents("vftv:ruins");
@@ -60,16 +62,15 @@ class ResolutionTest {
                 List.of(
                         new Resolution.Staged(0, 1, ResearchSource.FOUND),
                         new Resolution.Learned("vftv:resonance", ResearchSource.FOUND),
-                        new Resolution.Learned("vftv:a_second", ResearchSource.FREE),
-                        new Resolution.Learned("vftv:commonplace_book", ResearchSource.FREE)),
+                        new Resolution.Learned("vftv:commonplace_book", ResearchSource.FREE),
+                        new Resolution.Learned("vftv:a_second", ResearchSource.FREE)),
                 o.steps());
     }
 
     @Test
     void aFreeEntryWaitsForItsParentWithinTheStep() {
         // a_second sorts before commonplace_book but needs it: it is learned in the next round.
-        ResearchRecord r =
-                ResearchRecord.EMPTY.withStage(1).learn("vftv:resonance");
+        ResearchRecord r = ResearchRecord.EMPTY.withStage(1).learn("vftv:resonance");
         List<Resolution.Step> steps = Resolution.resolve(entries, r).steps();
         assertEquals(
                 List.of(
@@ -123,7 +124,8 @@ class ResolutionTest {
 
     @Test
     void warpGatesCountTheirKind() {
-        Trigger.WarpAtLeast lpp = new Trigger.WarpAtLeast(Trigger.WarpKind.LASTING_PLUS_PERMANENT, 4);
+        Trigger.WarpAtLeast lpp =
+                new Trigger.WarpAtLeast(Trigger.WarpKind.LASTING_PLUS_PERMANENT, 4);
         Trigger.WarpAtLeast total = new Trigger.WarpAtLeast(Trigger.WarpKind.TOTAL, 4);
         assertTrue(new Evidence.Warp(4, 4).matches(lpp));
         assertFalse(new Evidence.Warp(9, 3).matches(lpp));
@@ -140,17 +142,21 @@ class ResolutionTest {
     void scansMatchAKeyATagOrAnyNode() {
         Evidence.Scanned node = new Evidence.Scanned("node:7", tag -> true);
         Evidence.Scanned torch = new Evidence.Scanned("item:minecraft:torch", tag -> false);
-        Evidence.Scanned gem = new Evidence.Scanned("item:minecraft:emerald", "item:#c:gems"::equals);
+        Evidence.Scanned gem =
+                new Evidence.Scanned("item:minecraft:emerald", "item:#c:gems"::equals);
         Evidence.Scanned block = new Evidence.Scanned("block:minecraft:emerald_ore", tag -> true);
         assertTrue(node.node());
         assertEquals("item", torch.kind());
         for (Evidence.Scanned e : List.of(node, torch, gem)) {
             assertEquals(Set.of("vftv:knots"), latch(ResearchRecord.EMPTY, e).latched(), e.key());
         }
-        assertSame(ResearchRecord.EMPTY, latch(ResearchRecord.EMPTY, block), "a tag of another kind");
+        assertSame(
+                ResearchRecord.EMPTY, latch(ResearchRecord.EMPTY, block), "a tag of another kind");
         assertSame(
                 ResearchRecord.EMPTY,
-                latch(ResearchRecord.EMPTY, new Evidence.Scanned("item:minecraft:dirt", t -> false)));
+                latch(
+                        ResearchRecord.EMPTY,
+                        new Evidence.Scanned("item:minecraft:dirt", t -> false)));
         assertFalse(node.matches(new Trigger.Advancement("vftv:find/resonance")));
     }
 
@@ -165,7 +171,8 @@ class ResolutionTest {
         assertFalse(new Evidence.Discovered("vftv:lux").matches(new Trigger.ChoirPage(PAGE)));
         assertFalse(new Evidence.ChoirPage(PAGE).matches(new Trigger.Discovered("vftv:lux")));
         assertFalse(
-                new Evidence.Advancement("x:y").matches(new Trigger.Advancement("vftv:find/ruins")));
+                new Evidence.Advancement("x:y")
+                        .matches(new Trigger.Advancement("vftv:find/ruins")));
     }
 
     @Test

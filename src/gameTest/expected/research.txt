@@ -9,3 +9,13 @@ vftv:research_advancements
 vftv:research_items
 vftv:research_config_mode
 vftv:research_strike_makes_the_book
+vftv:research_stage1_from_a_shard
+vftv:research_stage1_from_a_fork
+vftv:research_opener_bootstrap
+vftv:research_trigger_types
+vftv:research_choir_page_cases
+vftv:research_rewards_never_twice
+vftv:research_grant_revoke_stage_reset
+vftv:research_vacuos_listen
+vftv:research_login_catch_up
+vftv:research_cross_registry_rules

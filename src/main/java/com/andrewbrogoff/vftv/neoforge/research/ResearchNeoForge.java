@@ -76,10 +76,15 @@ public final class ResearchNeoForge {
                     }
                 });
         // The triggers (research spec, "Triggers"): each sibling event is evidence.
+        // NeoForge posts AdvancementEarnEvent only for advancements with a display, and the finds
+        // are hidden: a granted criterion that completes the advancement is the earn.
         gameBus.addListener(
-                AdvancementEvent.AdvancementEarnEvent.class,
+                AdvancementEvent.AdvancementProgressEvent.class,
                 event -> {
-                    if (event.getEntity() instanceof ServerPlayer player) {
+                    if (event.getEntity() instanceof ServerPlayer player
+                            && event.getProgressType()
+                                    == AdvancementEvent.AdvancementProgressEvent.ProgressType.GRANT
+                            && event.getAdvancementProgress().isDone()) {
                         evidence(
                                 player,
                                 new Evidence.Advancement(event.getAdvancement().id().toString()));

@@ -290,7 +290,8 @@ class EntryRulesTest {
         get(world, "vftv:silence_beneath").warp = new ResearchEntry.Warp(0, 4, 1);
         List<String> warnings = Fixtures.validate(world).warnings();
         assertTrue(
-                warnings.stream().anyMatch(w -> w.contains("revealed_by") && w.contains("permanent")),
+                warnings.stream()
+                        .anyMatch(w -> w.contains("revealed_by") && w.contains("permanent")),
                 warnings::toString);
     }
 
@@ -301,8 +302,7 @@ class EntryRulesTest {
                 b(3, "vftv:ruins", 2, 2, EntryKind.LISTEN).parents("vftv:silence_beneath");
         under.warp = new ResearchEntry.Warp(0, 0, 2);
         world.put("vftv:under_the_silence", under);
-        Map<String, Integer> milestones =
-                Map.of("vftv:under_the_silence", 2, "vftv:joining", 5);
+        Map<String, Integer> milestones = Map.of("vftv:under_the_silence", 2, "vftv:joining", 5);
         assertEquals(
                 List.of(),
                 EntryRules.milestoneProblems(Fixtures.build(world), milestones, "vftv:joining"));

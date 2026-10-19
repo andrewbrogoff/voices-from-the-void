@@ -44,6 +44,59 @@ class ResearchRecordTest {
     }
 
     @Test
+    void learningDropsTheNoteAndRevokingRemovesOnlyTheFlag() {
+        ResearchRecord r =
+                ResearchRecord.EMPTY
+                        .withNotes(Map.of("vftv:n", note("vftv:n", 1), "vftv:m", note("vftv:m", 1)))
+                        .latch("vftv:n");
+        ResearchRecord learned = r.learn("vftv:n");
+        assertEquals(List.of("vftv:m"), List.copyOf(learned.notes().keySet()));
+        ResearchRecord revoked = learned.unlearn(List.of("vftv:n", "vftv:x"));
+        assertFalse(revoked.isLearned("vftv:n"));
+        assertTrue(revoked.latched().contains("vftv:n"));
+        assertEquals(learned.revision() + 1, revoked.revision());
+    }
+
+    @Test
+    void revealsRewardsAndBookmarks() {
+        ResearchRecord r =
+                ResearchRecord.EMPTY
+                        .latchReveal("vftv:s")
+                        .reveal("vftv:s")
+                        .reward("vftv:a")
+                        .withBookmarks(List.of("vftv:a", "vftv:b"));
+        assertEquals(List.of("vftv:s"), List.copyOf(r.revealLatched()));
+        assertEquals(List.of("vftv:s"), List.copyOf(r.revealed()));
+        assertEquals(List.of("vftv:a"), List.copyOf(r.rewarded()));
+        assertEquals(List.of("vftv:a", "vftv:b"), r.bookmarks());
+        assertEquals(4, r.revision());
+    }
+
+    @Test
+    void resetKeepsRewardedAndNeverReusesARevision() {
+        ResearchRecord r =
+                with(Map.of("vftv:n", 3), List.of("vftv:a"))
+                        .withStage(3)
+                        .learn("vftv:a")
+                        .latch("vftv:b")
+                        .latchReveal("vftv:s")
+                        .reveal("vftv:s")
+                        .reward("vftv:a")
+                        .withNotes(Map.of("vftv:n", note("vftv:n", 1)));
+        ResearchRecord reset = r.reset();
+        assertEquals(0, reset.stage());
+        assertTrue(reset.learned().isEmpty());
+        assertTrue(reset.latched().isEmpty());
+        assertTrue(reset.revealed().isEmpty());
+        assertTrue(reset.revealLatched().isEmpty());
+        assertTrue(reset.notes().isEmpty());
+        assertTrue(reset.bookmarks().isEmpty());
+        assertTrue(reset.attempts().isEmpty());
+        assertEquals(List.of("vftv:a"), List.copyOf(reset.rewarded()));
+        assertEquals(r.revision() + 1, reset.revision());
+    }
+
+    @Test
     void everyChangeTakesTheNextRevision() {
         ResearchRecord r = ResearchRecord.EMPTY.learn("vftv:a").latch("vftv:b").withStage(2);
         assertEquals(3, r.revision());
