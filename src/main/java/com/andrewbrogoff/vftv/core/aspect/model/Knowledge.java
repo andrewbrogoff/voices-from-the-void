@@ -188,6 +188,39 @@ public record Knowledge(
     }
 
     /**
+     * What a research reward did.
+     *
+     * @param next the knowledge after it
+     * @param discovered the aspects it discovered, in dependency order
+     */
+    public record Rewarded(Knowledge next, List<Discovery> discovered) {}
+
+    /**
+     * Pays a research reward (research spec, "Rewards"): each named aspect the player doesn't know
+     * is first discovered together with its missing prerequisites (a hidden primal's taught ones),
+     * lowest order first, then by id, each paying its discovery bonus; then every named amount is
+     * credited.
+     *
+     * @param points the reward's points per aspect, each above 0
+     * @param rules the aspect set's rules
+     */
+    public Rewarded reward(Map<String, Integer> points, Rules rules) {
+        Set<String> missing = new HashSet<>();
+        List<String> queue = new ArrayList<>(points.keySet());
+        while (!queue.isEmpty()) {
+            String aspect = queue.removeLast();
+            if (!known.contains(aspect) && missing.add(aspect)) {
+                queue.addAll(rules.prerequisites(aspect));
+            }
+        }
+        Set<String> nowKnown = new HashSet<>(known);
+        List<Discovery> discovered = discover(missing, nowKnown, rules);
+        Map<String, Integer> gains = new HashMap<>(points);
+        discovered.forEach(d -> gains.merge(d.aspect(), d.bonus(), Integer::sum));
+        return new Rewarded(change(discoveredIds(discovered), null, null, gains), discovered);
+    }
+
+    /**
      * Credits points of an aspect already known, as a Voice insight does; never discovers.
      *
      * @return the knowledge after it, or null if the aspect is unknown or {@code points} is below 1

@@ -49,6 +49,35 @@ class KnowledgeTest {
             };
 
     @Test
+    void aRewardTeachesItsAspectWithEveryMissingPrerequisiteLowestOrderFirst() {
+        Knowledge known = Knowledge.EMPTY.discover("ignis", 0);
+        Knowledge.Rewarded r = nonNull(known).reward(Map.of("tenebrae", 6, "ignis", 2), RULES);
+        assertEquals(
+                List.of(
+                        new Knowledge.Discovery("aer", 4),
+                        new Knowledge.Discovery("perditio", 4),
+                        new Knowledge.Discovery("lux", 9),
+                        new Knowledge.Discovery("vacuos", 4),
+                        new Knowledge.Discovery("tenebrae", 4)),
+                r.discovered());
+        assertEquals(
+                Set.of("aer", "ignis", "perditio", "lux", "vacuos", "tenebrae"), r.next().known());
+        assertEquals(
+                Map.of("aer", 4, "perditio", 4, "lux", 9, "vacuos", 4, "tenebrae", 10, "ignis", 2),
+                r.next().pool());
+        assertEquals(Map.of(), r.next().scans());
+    }
+
+    @Test
+    void aRewardOfKnownAspectsOnlyCredits() {
+        Knowledge known = nonNull(Knowledge.EMPTY.discover("aer", 0));
+        Knowledge.Rewarded r = known.reward(Map.of("aer", 3), RULES);
+        assertEquals(List.of(), r.discovered());
+        assertEquals(Map.of("aer", 3), r.next().pool());
+        assertEquals(Map.of("aer", 3), nonNull(r.next().delta()).pool());
+    }
+
+    @Test
     void aFirstScanOfPrimalsAndTheirCompoundDiscoversAllAtOnce() {
         Knowledge.Strike s =
                 Knowledge.EMPTY.strike("item:x", Map.of("lux", 2, "aer", 3, "ignis", 1), RULES);

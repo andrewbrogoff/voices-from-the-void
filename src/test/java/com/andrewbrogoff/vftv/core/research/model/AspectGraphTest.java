@@ -58,6 +58,53 @@ class AspectGraphTest {
     }
 
     @Test
+    void theTaughtViewIsTheTaughtGraph() {
+        AspectGraph.LinkView taught = graph.view(id -> false);
+        assertTrue(taught.taught());
+        assertFalse(taught.revealed("vftv:vacuos"));
+        assertEquals(graph.taughtLinks("vftv:vacuos"), taught.links("vftv:vacuos"));
+        assertEquals(graph.taughtLinks("vftv:terra"), taught.links("vftv:terra"));
+        assertTrue(taught.linked("vftv:vacuos", "vftv:aer"));
+        assertFalse(taught.linked("vftv:vacuos", "vftv:terra"));
+        assertFalse(taught.linked("vftv:aer", "vftv:aer"));
+    }
+
+    @Test
+    void theRevealLinksTheHiddenPrimalToEveryExposedPrimalAndKeepsTheTaughtLinks() {
+        assertEquals(
+                List.of(
+                        "vftv:aer",
+                        "vftv:aqua",
+                        "vftv:ignis",
+                        "vftv:ordo",
+                        "vftv:perditio",
+                        "vftv:terra"),
+                graph.exposedPrimals());
+        assertEquals(Map.of("vftv:vacuos", "vftv:silence_beneath"), graph.revealedBy());
+        AspectGraph.LinkView revealed = graph.view("vftv:silence_beneath"::equals);
+        assertFalse(revealed.taught());
+        assertTrue(revealed.revealed("vftv:vacuos"));
+        assertEquals(
+                List.of(
+                        "vftv:aer",
+                        "vftv:alienis",
+                        "vftv:aqua",
+                        "vftv:ignis",
+                        "vftv:ordo",
+                        "vftv:perditio",
+                        "vftv:silentium",
+                        "vftv:terra"),
+                revealed.links("vftv:vacuos"));
+        assertEquals(List.of("vftv:vacuos"), revealed.links("vftv:terra"));
+        assertTrue(revealed.linked("vftv:terra", "vftv:vacuos"));
+        // Links only grow: every taught link stays.
+        for (String a : List.of("vftv:aer", "vftv:lux", "vftv:silentium", "vftv:vacuos")) {
+            assertTrue(revealed.links(a).containsAll(graph.taughtLinks(a)), a);
+        }
+        assertEquals(graph.taughtLinks("vftv:lux"), revealed.links("vftv:lux"));
+    }
+
+    @Test
     void aSelfParentAndAnUnknownParentAddNoLink() {
         AspectGraph odd = new AspectGraph(Map.of("x:a", List.of("x:a", "x:missing")));
         assertEquals(List.of(), odd.taughtLinks("x:a"));

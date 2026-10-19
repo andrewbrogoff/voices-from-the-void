@@ -17,8 +17,8 @@ import org.jspecify.annotations.Nullable;
 /**
  * The load validation of the research registries (research spec, "Registry format"), run on the
  * full registry when a world opens and by datagen. Errors refuse the world; warnings are logged.
- * The rules that need the warp tuning or the aspects' {@code revealed_by} are the full research
- * ticket's.
+ * The aspects' {@code revealed_by} rules run with the rest; the rules that need the warp tuning are
+ * {@link #milestoneProblems}, also run when that tuning reloads.
  */
 public final class EntryRules {
     /** The entry that teaches stilling, which lasting and permanent warp must descend from. */
@@ -117,6 +117,19 @@ public final class EntryRules {
                 .sorted()
                 .filter(id -> !categories.containsKey(id))
                 .forEach(id -> errors.add("the required built-in category " + id + " is missing"));
+        aspects.revealedBy()
+                .forEach(
+                        (aspect, by) -> {
+                            ResearchEntry e = entries.get(by);
+                            String name = "aspect " + aspect + ": its revealed_by " + by;
+                            if (e == null) {
+                                errors.add(name + " does not exist");
+                            } else if (e.kind() != EntryKind.LISTEN || e.warp().lasting() <= 0) {
+                                errors.add(name + " is not a listen entry with lasting warp");
+                            } else if (e.warp().permanent() != 0) {
+                                warnings.add(name + " carries permanent warp");
+                            }
+                        });
         new TreeMap<>(categories)
                 .forEach(
                         (id, c) -> {
@@ -130,6 +143,59 @@ public final class EntryRules {
                             }
                         });
         return new Report(errors, warnings);
+    }
+
+    /**
+     * The milestone rules that join the research registry to the warp tuning (warp spec, "Permanent
+     * warp"), checked when the world opens and when the warp tuning reloads: every entry with
+     * permanent warp is a listed milestone with exactly that amount, carries no temporary or
+     * lasting warp and is nobody's parent; every listed milestone but {@code joining} names an
+     * existing {@code listen} entry.
+     *
+     * @param entries every research entry by id
+     * @param milestones the tuning's {@code permanent.milestones}
+     * @param joining the milestone that names no entry, {@code vftv:joining}
+     * @return the problems, one line each; empty when the rules hold
+     */
+    public static List<String> milestoneProblems(
+            Map<String, ResearchEntry> entries, Map<String, Integer> milestones, String joining) {
+        List<String> problems = new ArrayList<>();
+        Map<String, ResearchEntry> sorted = new TreeMap<>(entries);
+        sorted.forEach(
+                (id, e) -> {
+                    int permanent = e.warp().permanent();
+                    if (permanent == 0) {
+                        return;
+                    }
+                    if (!Integer.valueOf(permanent).equals(milestones.get(id))) {
+                        problems.add(
+                                name(id)
+                                        + ": its permanent "
+                                        + permanent
+                                        + " is not a listed milestone of that amount");
+                    }
+                    if (e.warp().temporary() > 0 || e.warp().lasting() > 0) {
+                        problems.add(name(id) + ": a milestone carries temporary or lasting warp");
+                    }
+                    sorted.forEach(
+                            (child, c) -> {
+                                if (c.allParents().contains(id)) {
+                                    problems.add(
+                                            name(id) + ": a milestone is a parent of " + child);
+                                }
+                            });
+                });
+        new TreeMap<>(milestones)
+                .keySet()
+                .forEach(
+                        id -> {
+                            ResearchEntry e = entries.get(id);
+                            if (!id.equals(joining)
+                                    && (e == null || e.kind() != EntryKind.LISTEN)) {
+                                problems.add("the warp milestone " + id + " names no listen entry");
+                            }
+                        });
+        return problems;
     }
 
     private static void entry(

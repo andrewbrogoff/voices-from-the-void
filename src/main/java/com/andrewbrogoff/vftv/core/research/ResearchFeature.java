@@ -2,6 +2,7 @@ package com.andrewbrogoff.vftv.core.research;
 
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.core.common.Platform;
+import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 
 /**
  * The research feature's entry into {@code core}: {@code Vftv.init} calls {@link #init} once,
@@ -24,6 +25,8 @@ public final class ResearchFeature {
                         ResearchCodecs.RESEARCH_CATEGORY,
                         ResearchCodecs.RESEARCH_CATEGORY);
         ResearchItems.register(platform.registrar());
+        // The milestone rules join this registry to the warp tuning (warp spec, "Permanent warp").
+        WarpRulesService.registerTuningCheck(ResearchService::milestoneProblems);
         ResearchService.init(
                 platform.dataSlots()
                         .playerWithDeltas(
