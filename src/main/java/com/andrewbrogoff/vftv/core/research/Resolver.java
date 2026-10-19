@@ -360,14 +360,14 @@ public final class Resolver {
         Resolution.Outcome outcome = Resolution.resolve(data.entries(), changed);
         List<Resolution.Step> steps = new ArrayList<>(changes.steps);
         steps.addAll(outcome.steps());
-        ResearchRecord after = outcome.record();
+        // The learning is written before a reward's discoveries post their events, then the
+        // rewarded ledger records what was paid.
+        ResearchService.update(player, r -> outcome.record());
         for (Resolution.Step step : steps) {
             if (step instanceof Resolution.Learned l && l.source() != ResearchSource.COMMAND) {
-                after = reward(player, data, after, l.entry());
+                ResearchService.update(player, r -> reward(player, data, r, l.entry()));
             }
         }
-        ResearchRecord done = after;
-        ResearchService.update(player, r -> done);
         for (Resolution.Step step : steps) {
             switch (step) {
                 case Resolution.Learned l -> {
