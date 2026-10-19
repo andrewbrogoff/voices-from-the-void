@@ -57,6 +57,20 @@ class AccessibilityGatesTest {
                     // essentia: a written label carries an ink mark; the open wheel's spokes are
                     // upright, the closed wheel's diagonal.
                     new VariantSet("essentia", List.of("item/label", "item/label_written")),
+                    // arcane: the short cell's notch; the preview frames' ring, brightness and
+                    // hatch.
+                    new VariantSet(
+                            "arcane",
+                            List.of(
+                                    "gui/sprites/worktable/cost_cell",
+                                    "gui/sprites/worktable/cost_cell_short")),
+                    new VariantSet(
+                            "arcane",
+                            List.of(
+                                    "gui/sprites/worktable/preview_idle",
+                                    "gui/sprites/worktable/preview_disabled",
+                                    "gui/sprites/worktable/preview_hover",
+                                    "gui/sprites/worktable/preview_ready")),
                     new VariantSet(
                             "essentia",
                             List.of(
@@ -74,7 +88,44 @@ class AccessibilityGatesTest {
     private static final List<Region> REGIONS =
             List.of(
                     // aspect: the crosshair cards' nine-slice frame, its interior opaque ink1.
-                    new Region("gui/sprites/hud/vis_frame", 4, 4, 8, 8, Palette.HUSH3, "ink1"));
+                    new Region("gui/sprites/hud/vis_frame", 4, 4, 8, 8, Palette.HUSH3, "ink1"),
+                    // arcane: the cost number field in both cells, the preview's count corner,
+                    // and the Worktable's title, status and inventory label strips.
+                    new Region(
+                            "gui/sprites/worktable/cost_cell",
+                            18,
+                            4,
+                            21,
+                            10,
+                            Palette.INK1,
+                            "brass5"),
+                    new Region(
+                            "gui/sprites/worktable/cost_cell_short",
+                            18,
+                            4,
+                            21,
+                            10,
+                            Palette.INK1,
+                            "brass5"),
+                    new Region(
+                            "gui/sprites/worktable/preview_ready",
+                            12,
+                            12,
+                            11,
+                            11,
+                            0xffffff,
+                            "ink1"),
+                    new Region(
+                            "gui/sprites/worktable/preview_hover",
+                            12,
+                            12,
+                            11,
+                            11,
+                            0xffffff,
+                            "ink1"),
+                    new Region("gui/container/worktable", 7, 6, 160, 8, Palette.INK1, "brass4"),
+                    new Region("gui/container/worktable", 8, 112, 160, 9, Palette.INK1, "brass5"),
+                    new Region("gui/container/worktable", 7, 125, 160, 8, Palette.INK1, "brass4"));
 
     // --- the palette -----------------------------------------------------------------------
 
