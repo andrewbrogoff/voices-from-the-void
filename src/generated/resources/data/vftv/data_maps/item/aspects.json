@@ -5435,6 +5435,11 @@
       "vftv:instrumentum": 2,
       "vftv:metallum": 1,
       "vftv:praecantatio": 2
+    },
+    "vftv:worktable": {
+      "vftv:arbor": 4,
+      "vftv:instrumentum": 1,
+      "vftv:praecantatio": 1
     }
   }
 }

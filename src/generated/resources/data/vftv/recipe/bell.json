@@ -1,0 +1,24 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "a": "#c:gems/amethyst",
+    "c": "#c:ingots/copper",
+    "s": "#minecraft:wooden_slabs"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "sss",
+    "cac",
+    "c c"
+  ],
+  "research": "vftv:arcane_crafting",
+  "result": {
+    "count": 1,
+    "id": "minecraft:bell"
+  },
+  "vis": {
+    "vftv:aer": 8,
+    "vftv:ordo": 6,
+    "vftv:terra": 4
+  }
+}

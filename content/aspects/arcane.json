@@ -1,0 +1,11 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The arcane feature's items. The Worktable is a crafting table turned with a wand: the table's wood and tools, with a touch of the magic that tuned it.",
+  "items": {
+    "vftv:worktable": {
+      "vftv:arbor": 4,
+      "vftv:instrumentum": 1,
+      "vftv:praecantatio": 1
+    }
+  }
+}

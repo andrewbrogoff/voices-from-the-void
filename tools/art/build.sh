@@ -36,3 +36,10 @@ python3 "$ART/sheet.py" "$PREVIEWS/essentia.png" "$ASSETS/vftv/textures/block/es
     "$ASSETS/vftv/textures/block/tube_valve_wheel_closed.png" "$ASSETS/vftv/textures/block/alembic_glass.png" \
     "$ASSETS/vftv/textures/block/alembic_brass.png" "$ASSETS/vftv/textures/item/label.png" \
     "$ASSETS/vftv/textures/item/label_written.png"
+python3 "$ART/worktable.py" "$ASSETS"
+WT="$ASSETS/vftv/textures/gui/sprites"
+python3 "$ART/sheet.py" "$PREVIEWS/worktable.png" "$ASSETS/vftv/textures/block/worktable_top.png" \
+    "$ASSETS/vftv/textures/block/worktable_side.png" "$ASSETS/vftv/textures/block/worktable_bottom.png" \
+    "$WT/worktable/preview_idle.png" "$WT/worktable/preview_ready.png" "$WT/worktable/preview_hover.png" \
+    "$WT/worktable/preview_disabled.png" "$WT/worktable/cost_cell.png" "$WT/worktable/cost_cell_short.png" \
+    "$WT/worktable/beyond.png" "$WT/container/slot/wand.png"
