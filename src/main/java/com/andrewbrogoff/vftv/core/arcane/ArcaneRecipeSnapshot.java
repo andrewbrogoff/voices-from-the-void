@@ -10,10 +10,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.item.crafting.CraftingInput;
 import net.minecraft.world.item.crafting.RecipeHolder;
 import net.minecraft.world.level.Level;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -68,6 +70,16 @@ public record ArcaneRecipeSnapshot(List<RecipeHolder<ArcaneRecipe>> recipes) {
         }
         valid.sort(BY_ID);
         return DataResult.success(new ArcaneRecipeSnapshot(valid));
+    }
+
+    /** The recipe with this id, or null. ponytail: a linear scan; facts resolve rarely. */
+    public @Nullable RecipeHolder<ArcaneRecipe> get(Identifier id) {
+        for (RecipeHolder<ArcaneRecipe> holder : recipes) {
+            if (holder.id().identifier().equals(id)) {
+                return holder;
+            }
+        }
+        return null;
     }
 
     /**
