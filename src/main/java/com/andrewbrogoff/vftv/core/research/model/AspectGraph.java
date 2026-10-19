@@ -115,11 +115,6 @@ public final class AspectGraph {
             return revealed.contains(aspect);
         }
 
-        /** Whether this view is the taught one: no hidden primal revealed. */
-        public boolean taught() {
-            return revealed.isEmpty();
-        }
-
         /** The aspects {@code aspect} links to in this view, ascending; empty if unknown. */
         public List<String> links(String aspect) {
             List<String> base = taughtLinks(aspect);

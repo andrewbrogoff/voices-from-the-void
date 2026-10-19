@@ -31,9 +31,6 @@ public sealed interface Evidence {
      *     tags are now
      */
     record Scanned(String key, Predicate<String> tagged) implements Evidence {
-        /** The node key prefix. */
-        public static final String NODE = "node:";
-
         @Override
         public boolean matches(Trigger trigger) {
             if (!(trigger instanceof Trigger.Scanned s)) {
@@ -52,7 +49,7 @@ public sealed interface Evidence {
 
         /** Whether this is a node key. */
         public boolean node() {
-            return key.startsWith(NODE);
+            return key.startsWith("node:");
         }
     }
 

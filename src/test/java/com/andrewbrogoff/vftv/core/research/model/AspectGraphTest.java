@@ -60,7 +60,6 @@ class AspectGraphTest {
     @Test
     void theTaughtViewIsTheTaughtGraph() {
         AspectGraph.LinkView taught = graph.view(id -> false);
-        assertTrue(taught.taught());
         assertFalse(taught.revealed("vftv:vacuos"));
         assertEquals(graph.taughtLinks("vftv:vacuos"), taught.links("vftv:vacuos"));
         assertEquals(graph.taughtLinks("vftv:terra"), taught.links("vftv:terra"));
@@ -82,7 +81,6 @@ class AspectGraphTest {
                 graph.exposedPrimals());
         assertEquals(Map.of("vftv:vacuos", "vftv:silence_beneath"), graph.revealedBy());
         AspectGraph.LinkView revealed = graph.view("vftv:silence_beneath"::equals);
-        assertFalse(revealed.taught());
         assertTrue(revealed.revealed("vftv:vacuos"));
         assertEquals(
                 List.of(
