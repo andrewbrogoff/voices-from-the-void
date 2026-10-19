@@ -296,8 +296,11 @@ final class WarpGameTests {
         try {
             WarpRulesService.applyTuning(
                     WarpRulesService.parse(
+                            // The research milestones stay listed: the research registry's
+                            // milestone rule refuses a tuning that drops them.
                             "{\"permanent.cap\": 6, \"permanent.milestones\":"
-                                    + " {\"vftv:joining\": 5}}"),
+                                    + " {\"vftv:under_the_silence\": 2,"
+                                    + " \"vftv:learning_the_tongue\": 3, \"vftv:joining\": 1}}"),
                     true);
             helper.assertValueEqual(record(helper, player).permanent(), 9, "kept above the cap");
             CommitResult blocked =

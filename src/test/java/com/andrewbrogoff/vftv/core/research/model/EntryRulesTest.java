@@ -276,6 +276,59 @@ class EntryRulesTest {
     }
 
     @Test
+    void aRevealedByMustBeAListenWithLastingWarp() {
+        refuses(
+                w -> w.remove("vftv:silence_beneath"),
+                "aspect vftv:vacuos: its revealed_by vftv:silence_beneath does not exist");
+        refuses(
+                w -> get(w, "vftv:silence_beneath").warp = new ResearchEntry.Warp(4, 0, 0),
+                "is not a listen entry with lasting warp");
+        refuses(
+                w -> get(w, "vftv:silence_beneath").kind = EntryKind.NOTE,
+                "is not a listen entry with lasting warp");
+        Map<String, Fixtures.B> world = Fixtures.world();
+        get(world, "vftv:silence_beneath").warp = new ResearchEntry.Warp(0, 4, 1);
+        List<String> warnings = Fixtures.validate(world).warnings();
+        assertTrue(
+                warnings.stream()
+                        .anyMatch(w -> w.contains("revealed_by") && w.contains("permanent")),
+                warnings::toString);
+    }
+
+    @Test
+    void milestoneRules() {
+        Map<String, Fixtures.B> world = Fixtures.world();
+        Fixtures.B under =
+                b(3, "vftv:ruins", 2, 2, EntryKind.LISTEN).parents("vftv:silence_beneath");
+        under.warp = new ResearchEntry.Warp(0, 0, 2);
+        world.put("vftv:under_the_silence", under);
+        Map<String, Integer> milestones = Map.of("vftv:under_the_silence", 2, "vftv:joining", 5);
+        assertEquals(
+                List.of(),
+                EntryRules.milestoneProblems(Fixtures.build(world), milestones, "vftv:joining"));
+
+        under.warp = new ResearchEntry.Warp(1, 1, 3);
+        world.put(
+                "vftv:after",
+                b(3, "vftv:ruins", 3, 3, EntryKind.FREE).parents("vftv:under_the_silence"));
+        List<String> problems =
+                EntryRules.milestoneProblems(
+                        Fixtures.build(world),
+                        Map.of("vftv:under_the_silence", 2, "vftv:ruins", 1, "vftv:joining", 5),
+                        "vftv:joining");
+        assertEquals(
+                List.of(
+                        "research entry vftv:under_the_silence: its permanent 3 is not a listed"
+                                + " milestone of that amount",
+                        "research entry vftv:under_the_silence: a milestone carries temporary or"
+                                + " lasting warp",
+                        "research entry vftv:under_the_silence: a milestone is a parent of"
+                                + " vftv:after",
+                        "the warp milestone vftv:ruins names no listen entry"),
+                problems);
+    }
+
+    @Test
     void cycleFindsNothingInADag() {
         assertNull(EntryRules.cycle(Map.of("a", List.of("b"), "b", List.of())));
         assertEquals(

@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.core.research.model;
 
 import com.andrewbrogoff.vftv.api.research.ResearchLimits;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -116,24 +117,142 @@ public record ResearchRecord(
         return latched.contains(id) || learned.contains(id);
     }
 
-    /** This record with {@code ids} learned, at the next revision. */
+    /**
+     * This record with {@code ids} learned and their open notes dropped (a note never outlives its
+     * entry's learning, by any path), at the next revision.
+     */
     public ResearchRecord learn(String... ids) {
-        return with(stage, add(learned, ids), latched, notes, revision + 1);
+        NavigableMap<String, Note> kept = new TreeMap<>(notes);
+        for (String id : ids) {
+            kept.remove(id);
+        }
+        return copy(
+                stage,
+                add(learned, ids),
+                revealed,
+                latched,
+                revealLatched,
+                kept,
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /** This record with {@code ids} no longer learned, at the next revision. */
+    public ResearchRecord unlearn(Collection<String> ids) {
+        NavigableSet<String> out = new TreeSet<>(learned);
+        out.removeAll(ids);
+        return copy(
+                stage, out, revealed, latched, revealLatched, notes, bookmarks, rewarded, attempts);
     }
 
     /** This record with {@code ids} latched, at the next revision. */
     public ResearchRecord latch(String... ids) {
-        return with(stage, learned, add(latched, ids), notes, revision + 1);
+        return copy(
+                stage,
+                learned,
+                revealed,
+                add(latched, ids),
+                revealLatched,
+                notes,
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /** This record with {@code ids}' reveals latched, at the next revision. */
+    public ResearchRecord latchReveal(String... ids) {
+        return copy(
+                stage,
+                learned,
+                revealed,
+                latched,
+                add(revealLatched, ids),
+                notes,
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /** This record with {@code ids} revealed, at the next revision. */
+    public ResearchRecord reveal(String... ids) {
+        return copy(
+                stage,
+                learned,
+                add(revealed, ids),
+                latched,
+                revealLatched,
+                notes,
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /** This record with {@code ids} in the server-only rewarded ledger, at the next revision. */
+    public ResearchRecord reward(String... ids) {
+        return copy(
+                stage,
+                learned,
+                revealed,
+                latched,
+                revealLatched,
+                notes,
+                bookmarks,
+                add(rewarded, ids),
+                attempts);
     }
 
     /** This record at Stage {@code stage}, at the next revision. */
     public ResearchRecord withStage(int stage) {
-        return with(stage, learned, latched, notes, revision + 1);
+        return copy(
+                stage,
+                learned,
+                revealed,
+                latched,
+                revealLatched,
+                notes,
+                bookmarks,
+                rewarded,
+                attempts);
     }
 
     /** This record with the given open notes, at the next revision. */
     public ResearchRecord withNotes(Map<String, Note> notes) {
-        return with(stage, learned, latched, new TreeMap<>(notes), revision + 1);
+        return copy(
+                stage,
+                learned,
+                revealed,
+                latched,
+                revealLatched,
+                new TreeMap<>(notes),
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /** This record with the given bookmarks, at the next revision. */
+    public ResearchRecord withBookmarks(List<String> bookmarks) {
+        return copy(
+                stage,
+                learned,
+                revealed,
+                latched,
+                revealLatched,
+                notes,
+                bookmarks,
+                rewarded,
+                attempts);
+    }
+
+    /**
+     * The admin reset (research spec, "Admin commands"): every note dropped, then the Stage,
+     * learned, revealed, latches, attempts and bookmarks cleared, at the next revision. {@code
+     * rewarded} is kept, so no reward is paid twice.
+     */
+    public ResearchRecord reset() {
+        TreeSet<String> none = new TreeSet<>();
+        return copy(
+                0, none, none, none, none, new TreeMap<>(), List.of(), rewarded, new TreeMap<>());
     }
 
     /** What the owner's client holds: this record without the server-only fields. */
@@ -152,12 +271,16 @@ public record ResearchRecord(
                 new TreeMap<>());
     }
 
-    private ResearchRecord with(
+    private ResearchRecord copy(
             int stage,
             NavigableSet<String> learned,
+            NavigableSet<String> revealed,
             NavigableSet<String> latched,
+            NavigableSet<String> revealLatched,
             NavigableMap<String, Note> notes,
-            long revision) {
+            List<String> bookmarks,
+            NavigableSet<String> rewarded,
+            NavigableMap<String, Integer> attempts) {
         return new ResearchRecord(
                 format,
                 stage,
@@ -167,7 +290,7 @@ public record ResearchRecord(
                 revealLatched,
                 notes,
                 bookmarks,
-                revision,
+                revision + 1,
                 rewarded,
                 attempts);
     }

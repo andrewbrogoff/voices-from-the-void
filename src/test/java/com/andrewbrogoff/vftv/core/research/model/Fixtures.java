@@ -11,8 +11,15 @@ import org.jspecify.annotations.Nullable;
 final class Fixtures {
     private Fixtures() {}
 
-    /** A slice of the built-in graph: the six exposed primals, hidden Vacuos and some compounds. */
+    /**
+     * A slice of the built-in graph: the six exposed primals, hidden Vacuos (revealed by {@code
+     * vftv:silence_beneath}) and some compounds.
+     */
     static AspectGraph aspects() {
+        return new AspectGraph(taught(), Map.of("vftv:vacuos", "vftv:silence_beneath"));
+    }
+
+    static Map<String, List<String>> taught() {
         Map<String, List<String>> taught = new TreeMap<>();
         for (String primal : List.of("aer", "terra", "ignis", "aqua", "ordo", "perditio")) {
             taught.put("vftv:" + primal, List.of());
@@ -23,7 +30,7 @@ final class Fixtures {
         taught.put("vftv:sonus", List.of("vftv:aer", "vftv:motus"));
         taught.put("vftv:silentium", List.of("vftv:sonus", "vftv:vacuos"));
         taught.put("vftv:alienis", List.of("vftv:vacuos", "vftv:aqua"));
-        return new AspectGraph(taught);
+        return taught;
     }
 
     static Map<String, CategoryEntry> categories() {

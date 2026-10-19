@@ -158,6 +158,48 @@ public final class KnowledgeService {
     }
 
     /**
+     * Pays a research reward (research spec, "Rewards"): discovers each named aspect the player
+     * doesn't know with its missing prerequisites, lowest tier first then by id, paying the usual
+     * bonuses and posting {@code AspectDiscoveredEvent} for each, then credits every amount.
+     *
+     * @param points the reward's points per aspect, each above 0
+     * @return whether it was paid; false when refused (the guard held, unreadable knowledge)
+     */
+    public static boolean reward(ServerPlayer player, Map<ResourceKey<Aspect>, Integer> points) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope == null) {
+                busy(player);
+                return false;
+            }
+            Knowledge before = readable(player);
+            if (before == null) {
+                return false;
+            }
+            AspectSet set = AspectSet.of(player.registryAccess());
+            Map<String, Integer> amounts = new TreeMap<>();
+            points.forEach(
+                    (aspect, n) -> {
+                        if (set.contains(aspect) && n > 0) {
+                            amounts.put(AspectSet.text(aspect), n);
+                        }
+                    });
+            Knowledge.Rewarded paid =
+                    before.reward(amounts, set.rules(ScanningService.tuning().discoveryBonus()));
+            slot().set(player, new Retained.Read<>(paid.next()));
+            for (Knowledge.Discovery d : paid.discovered()) {
+                AspectEvents.discovered(
+                        new AspectDiscoveredPayload(player, AspectSet.key(d.aspect()), d.bonus()));
+            }
+            return true;
+        }
+    }
+
+    /** Whether a knowledge write is under way for the player, so a write now would be refused. */
+    public static boolean isBusy(Player player) {
+        return GUARD.isHeld(player.getUUID());
+    }
+
+    /**
      * Credits points of an aspect the player already knows, as a Voice insight does. It never
      * discovers and posts no event, so it can never name an unheard aspect.
      *

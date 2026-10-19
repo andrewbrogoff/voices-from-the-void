@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.aspect.HiddenPrimal;
 import com.andrewbrogoff.vftv.api.research.Research;
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.api.research.ResearchView;
+import com.andrewbrogoff.vftv.api.warp.WarpRules;
 import com.andrewbrogoff.vftv.core.common.DataSlot;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.research.model.AspectGraph;
@@ -15,6 +16,9 @@ import com.andrewbrogoff.vftv.core.research.model.ResearchDelta;
 import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
+import com.andrewbrogoff.vftv.core.research.model.TriggerIndex;
+import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
+import com.andrewbrogoff.vftv.core.warp.WarpService;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +72,7 @@ public final class ResearchService {
 
     private static @Nullable DataSlot<Player, ResearchAttachment> slot;
     private static volatile ResearchConfig config = ResearchConfig.DEFAULT;
+    private static volatile @Nullable Data data;
 
     private ResearchService() {}
 
@@ -201,9 +206,13 @@ public final class ResearchService {
         return out;
     }
 
-    /** The aspect set as the notebook teaches it, from the world's {@code vftv:aspect} registry. */
+    /**
+     * The aspect set as the notebook teaches it, with each hidden primal's {@code revealed_by},
+     * from the world's {@code vftv:aspect} registry.
+     */
     public static AspectGraph aspects(HolderLookup.Provider access) {
         Map<String, List<String>> taught = new TreeMap<>();
+        Map<String, String> revealedBy = new TreeMap<>();
         access.lookupOrThrow(AspectKeys.REGISTRY)
                 .listElements()
                 .forEach(
@@ -212,11 +221,70 @@ public final class ResearchService {
                             HiddenPrimal hidden = aspect.hiddenPrimal();
                             List<ResourceKey<Aspect>> parents =
                                     hidden != null ? hidden.taughtParents() : aspect.parents();
+                            String id = h.key().identifier().toString();
                             taught.put(
-                                    h.key().identifier().toString(),
+                                    id,
                                     parents.stream().map(k -> k.identifier().toString()).toList());
+                            if (hidden != null) {
+                                revealedBy.put(id, hidden.revealedBy().toString());
+                            }
                         });
-        return new AspectGraph(taught);
+        return new AspectGraph(taught, revealedBy);
+    }
+
+    /**
+     * The world's research data, fixed while it is open: every entry, the aspect graph and the
+     * trigger index.
+     *
+     * @param entries every entry by id
+     * @param aspects the aspect graph, with its reveals
+     * @param triggers every trigger and reveal, indexed
+     */
+    public record Data(
+            Map<String, ResearchEntry> entries, AspectGraph aspects, TriggerIndex triggers) {
+        /** Reads it from the world's registries. */
+        public static Data of(HolderLookup.Provider access) {
+            Map<String, ResearchEntry> entries = Map.copyOf(ResearchService.entries(access));
+            return new Data(entries, ResearchService.aspects(access), new TriggerIndex(entries));
+        }
+
+        /** A player's view of the links (taught, or true after their reveal). */
+        public AspectGraph.LinkView view(ResearchRecord record) {
+            return aspects.view(record::isLearned);
+        }
+    }
+
+    /**
+     * The open world's research data: indexed once when the world opens (the registries are fixed
+     * until it reopens), or on first use.
+     */
+    public static Data data(HolderLookup.Provider access) {
+        Data d = data;
+        if (d == null) {
+            d = Data.of(access);
+            data = d;
+        }
+        return d;
+    }
+
+    /** The server stopped: the next world indexes its own data. */
+    public static void onServerStopped() {
+        data = null;
+    }
+
+    /**
+     * The milestone rules against {@code rules}, as the warp tuning's reload check: empty before a
+     * world has indexed its data, since the world-open validation checks them itself.
+     */
+    public static List<String> milestoneProblems(WarpRules rules) {
+        Data d = data;
+        return d == null ? List.of() : milestoneProblems(d.entries(), rules);
+    }
+
+    private static List<String> milestoneProblems(
+            Map<String, ResearchEntry> entries, WarpRules rules) {
+        return EntryRules.milestoneProblems(
+                entries, rules.permanentMilestones(), WarpService.JOINING.toString());
     }
 
     /** Runs the load validation over the world's registries. */
@@ -231,6 +299,7 @@ public final class ResearchService {
                         REQUIRED_CATEGORIES);
         List<String> errors = new ArrayList<>(report.errors());
         errors.addAll(scanKeyProblems(entries));
+        errors.addAll(milestoneProblems(entries, WarpRulesService.current()));
         return new EntryRules.Report(errors, report.warnings());
     }
 
@@ -319,6 +388,7 @@ public final class ResearchService {
             throw new IllegalStateException(
                     "Invalid vftv research data:\n" + String.join("\n", report.errors()));
         }
+        data = Data.of(access);
     }
 
     private static Set<String> ids(ResourceKey<?>... keys) {

@@ -2,6 +2,7 @@ package com.andrewbrogoff.vftv.core.research.model;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
@@ -11,21 +12,42 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 /**
  * The aspect set as the notebook teaches it (research spec, "Links"): in the taught view every
- * compound links to its two parents, and a hidden primal to its taught parents. Neighbours are kept
- * in ascending id order, the order every scan uses.
+ * compound links to its two parents, and a hidden primal to its taught parents. After a player's
+ * reveal ({@link #view}), each hidden primal whose {@code revealed_by} entry they have learned also
+ * links to every exposed primal. Neighbours are kept in ascending id order, the order every scan
+ * uses.
  */
 public final class AspectGraph {
     private final Map<String, List<String>> taught;
+    private final Map<String, String> revealedBy;
+    private final List<String> exposed;
 
     /**
-     * A graph over {@code taughtParents}: every aspect id, mapped to its parents in the taught view
-     * (none for an exposed primal).
+     * A graph over {@code taughtParents} with no hidden primal: every aspect id, mapped to its
+     * parents in the taught view (none for an exposed primal).
      */
     public AspectGraph(Map<String, List<String>> taughtParents) {
+        this(taughtParents, Map.of());
+    }
+
+    /**
+     * A graph over {@code taughtParents}, where each hidden primal in {@code revealedBy} maps to
+     * the research entry that reveals it. An exposed primal is an aspect with no parents that isn't
+     * hidden.
+     */
+    public AspectGraph(Map<String, List<String>> taughtParents, Map<String, String> revealedBy) {
+        this.revealedBy = Collections.unmodifiableMap(new TreeMap<>(revealedBy));
+        this.exposed =
+                taughtParents.entrySet().stream()
+                        .filter(e -> e.getValue().isEmpty() && !revealedBy.containsKey(e.getKey()))
+                        .map(Map.Entry::getKey)
+                        .sorted()
+                        .toList();
         Map<String, Set<String>> links = new TreeMap<>();
         taughtParents.keySet().forEach(a -> links.put(a, new TreeSet<>()));
         taughtParents.forEach(
@@ -52,6 +74,67 @@ public final class AspectGraph {
     /** The aspects {@code aspect} links to in the taught view, ascending; empty if unknown. */
     public List<String> taughtLinks(String aspect) {
         return taught.getOrDefault(aspect, List.of());
+    }
+
+    /** Each hidden primal, mapped to the research entry that reveals it. */
+    public Map<String, String> revealedBy() {
+        return revealedBy;
+    }
+
+    /** The exposed primals, ascending: no parents, not hidden. */
+    public List<String> exposedPrimals() {
+        return exposed;
+    }
+
+    /**
+     * A player's view of the links (research spec, "Links"): the taught links, plus, for each
+     * hidden primal whose {@code revealed_by} entry {@code learned} holds, a link to every exposed
+     * primal. Links only grow with learning, so a note begun before the reveal stays valid.
+     */
+    public LinkView view(Predicate<String> learned) {
+        Set<String> revealed = new TreeSet<>();
+        revealedBy.forEach(
+                (aspect, entry) -> {
+                    if (learned.test(entry)) {
+                        revealed.add(aspect);
+                    }
+                });
+        return new LinkView(revealed);
+    }
+
+    /** One player's links: taught, or true for each revealed hidden primal. */
+    public final class LinkView {
+        private final Set<String> revealed;
+
+        private LinkView(Set<String> revealed) {
+            this.revealed = Collections.unmodifiableSet(revealed);
+        }
+
+        /** Whether {@code aspect} is a hidden primal this view has revealed. */
+        public boolean revealed(String aspect) {
+            return revealed.contains(aspect);
+        }
+
+        /** The aspects {@code aspect} links to in this view, ascending; empty if unknown. */
+        public List<String> links(String aspect) {
+            List<String> base = taughtLinks(aspect);
+            Collection<String> extra =
+                    revealed.contains(aspect)
+                            ? exposed
+                            : exposed.contains(aspect) ? revealed : List.of();
+            if (extra.isEmpty()) {
+                return base;
+            }
+            Set<String> all = new TreeSet<>(base);
+            all.addAll(extra);
+            all.remove(aspect);
+            return List.copyOf(all);
+        }
+
+        /** Whether two aspects link in this view: one is a parent of the other, never itself. */
+        public boolean linked(String a, String b) {
+            return !a.equals(b) && links(a).contains(b);
+        }
     }
 
     /**

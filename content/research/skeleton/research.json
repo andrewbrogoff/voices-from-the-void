@@ -213,6 +213,12 @@
           "page": "vftv:choir/beneath_the_notes"
         }
       ],
+      "rewards": {
+        "points": {
+          "vftv:silentium": 4,
+          "vftv:spiritus": 2
+        }
+      },
       "pages": [
         {
           "type": "vftv:choir"

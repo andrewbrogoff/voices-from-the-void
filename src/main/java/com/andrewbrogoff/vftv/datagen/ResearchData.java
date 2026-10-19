@@ -12,6 +12,7 @@ import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.model.EntryRules;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
 import com.andrewbrogoff.vftv.core.text.model.LangEntry;
+import com.andrewbrogoff.vftv.core.warp.model.WarpTuning;
 import com.google.gson.JsonElement;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
@@ -169,6 +170,11 @@ final class ResearchData implements FeatureData {
             {"subtitles.vftv.book.stage_4", 0, "A new chapter opens"},
             {"subtitles.vftv.book.tip_in", 0, "Page tipped in"},
             {"subtitles.vftv.book.listen", 0, "The silence answers"},
+            {"commands.vftv.research.granted", 2, "%s: learned %s."},
+            {"commands.vftv.research.revoked", 2, "%s: forgot %s."},
+            {"commands.vftv.research.stage", 2, "%s: Stage %s."},
+            {"commands.vftv.research.reset", 1, "%s: research reset."},
+            {"commands.vftv.research.unknown", 1, "No research entry %s."},
         };
         for (Object[] row : table) {
             rows.add(LangEntry.codeDefined((String) row[0], (Integer) row[1], UI, (String) row[2]));
@@ -293,6 +299,11 @@ final class ResearchData implements FeatureData {
                         List<String> problems = new ArrayList<>(report.errors());
                         problems.addAll(report.warnings());
                         problems.addAll(ResearchService.scanKeyProblems(content.plainEntries()));
+                        problems.addAll(
+                                EntryRules.milestoneProblems(
+                                        content.plainEntries(),
+                                        WarpTuning.DEFAULTS.permanentMilestones(),
+                                        WarpTuning.JOINING));
                         content.plainEntries()
                                 .forEach(
                                         (id, e) -> {

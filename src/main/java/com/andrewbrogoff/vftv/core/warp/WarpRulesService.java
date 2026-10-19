@@ -5,6 +5,9 @@ import com.andrewbrogoff.vftv.core.common.Network;
 import com.andrewbrogoff.vftv.core.warp.model.WarpTuning;
 import com.mojang.logging.LogUtils;
 import com.mojang.serialization.DataResult;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
@@ -23,6 +26,8 @@ public final class WarpRulesService {
     public static final String TUNING_PATH = "tuning/warp.json";
 
     private static final Logger LOGGER = LogUtils.getLogger();
+    private static final List<Function<WarpRules, List<String>>> CHECKS =
+            new CopyOnWriteArrayList<>();
 
     private static volatile WarpRules tuning = WarpTuning.DEFAULTS;
     private static volatile WarpConfig config = WarpConfig.DEFAULT;
@@ -84,7 +89,8 @@ public final class WarpRulesService {
      * @throws IllegalStateException for an invalid read while the world opens
      */
     public static synchronized void applyTuning(DataResult<WarpRules> read, boolean reloading) {
-        read.ifSuccess(
+        read.flatMap(WarpRulesService::checked)
+                .ifSuccess(
                         rules -> {
                             tuning = rules;
                             current = build();
@@ -98,6 +104,22 @@ public final class WarpRulesService {
                             }
                             LOGGER.error("{}; keeping the previous warp tuning", message);
                         });
+    }
+
+    /**
+     * Adds a check a new tuning must pass beyond its own file: the research feature's milestone
+     * rules (warp spec, "Permanent warp"), registered at init so warp imports no research. Each
+     * returns its problems, empty when the tuning is acceptable.
+     */
+    public static void registerTuningCheck(Function<WarpRules, List<String>> check) {
+        CHECKS.add(check);
+    }
+
+    private static DataResult<WarpRules> checked(WarpRules rules) {
+        List<String> problems = CHECKS.stream().flatMap(c -> c.apply(rules).stream()).toList();
+        return problems.isEmpty()
+                ? DataResult.success(rules)
+                : DataResult.error(() -> String.join("; ", problems));
     }
 
     /** The client's copy, or null before the first arrives and after disconnect. */

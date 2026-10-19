@@ -13,6 +13,12 @@
     0,
     0
   ],
+  "rewards": {
+    "points": {
+      "vftv:silentium": 4,
+      "vftv:spiritus": 2
+    }
+  },
   "stage": 3,
   "triggers": [
     {

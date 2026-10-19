@@ -87,7 +87,7 @@ public final class ResearchItems {
                 registrar.register(
                         Registries.ITEM,
                         CHOIR_PAGE_NAME,
-                        () -> new Item(properties(CHOIR_PAGE_NAME)));
+                        () -> new ChoirPageItem(properties(CHOIR_PAGE_NAME)));
     }
 
     /** The Commonplace Book. */
