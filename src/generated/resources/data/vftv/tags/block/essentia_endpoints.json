@@ -1,5 +1,10 @@
 {
   "values": [
-    "vftv:crucible"
+    "vftv:crucible",
+    "vftv:essentia_jar",
+    {
+      "id": "vftv:node_tap",
+      "required": false
+    }
   ]
 }

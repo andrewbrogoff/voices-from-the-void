@@ -1,0 +1,25 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "functions": [
+            {
+              "function": "minecraft:copy_components",
+              "include": [
+                "vftv:jar_contents",
+                "vftv:label"
+              ],
+              "source": "block_entity"
+            }
+          ],
+          "name": "vftv:essentia_jar"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "vftv:blocks/essentia_jar"
+}

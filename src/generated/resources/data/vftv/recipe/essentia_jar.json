@@ -1,0 +1,22 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "c": "#c:ingots/copper",
+    "g": "minecraft:glass"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "gcg",
+    "g g",
+    "ggg"
+  ],
+  "research": "vftv:essentia_jars",
+  "result": {
+    "count": 2,
+    "id": "vftv:essentia_jar"
+  },
+  "vis": {
+    "vftv:aqua": 8,
+    "vftv:terra": 6
+  }
+}

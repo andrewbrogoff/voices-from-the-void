@@ -1,0 +1,23 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "b": "minecraft:glass_bottle",
+    "c": "#c:ingots/copper",
+    "g": "minecraft:glass"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "cc ",
+    "cbg",
+    " g "
+  ],
+  "research": "vftv:essentia_jars",
+  "result": {
+    "count": 1,
+    "id": "vftv:alembic"
+  },
+  "vis": {
+    "vftv:aqua": 6,
+    "vftv:ignis": 6
+  }
+}

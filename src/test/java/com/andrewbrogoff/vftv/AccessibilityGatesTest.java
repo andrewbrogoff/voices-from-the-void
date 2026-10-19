@@ -53,7 +53,15 @@ class AccessibilityGatesTest {
                             "crucible",
                             List.of(
                                     "gui/sprites/aspect/unheard",
-                                    "gui/sprites/hud/crucible_missing")));
+                                    "gui/sprites/hud/crucible_missing")),
+                    // essentia: a written label carries an ink mark; the open wheel's spokes are
+                    // upright, the closed wheel's diagonal.
+                    new VariantSet("essentia", List.of("item/label", "item/label_written")),
+                    new VariantSet(
+                            "essentia",
+                            List.of(
+                                    "block/tube_valve_wheel_open",
+                                    "block/tube_valve_wheel_closed")));
 
     /**
      * A text region an owner declares: the sprite, the rectangle where its text draws, the text

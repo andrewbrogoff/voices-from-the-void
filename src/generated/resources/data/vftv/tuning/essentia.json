@@ -1,0 +1,10 @@
+{
+  "alembic.interval": 20,
+  "alembic.rate": 4,
+  "jar.capacity": 100,
+  "suction.jar": 4,
+  "suction.jar_labelled": 8,
+  "tube.idle_every": 10,
+  "tube.pulse": 10,
+  "tube.rate": 8
+}

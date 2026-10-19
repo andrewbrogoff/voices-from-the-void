@@ -1,1 +1,21 @@
 # The discovery guard's ids for the essentia feature: one vftv:essentia_<what> id per line.
+vftv:essentia_tuning_and_tags
+vftv:essentia_handler_rules
+vftv:essentia_handler_transactions
+vftv:essentia_label_rows
+vftv:essentia_shears_and_copy
+vftv:essentia_jar_break_keeps_contents
+vftv:essentia_jar_replaced_spills
+vftv:essentia_removal_mid_transaction
+vftv:essentia_reserved_extracts_nothing
+vftv:essentia_item_destroyed_spills_once
+vftv:essentia_line_moves
+vftv:essentia_gate_blocks
+vftv:essentia_valve
+vftv:essentia_faces_and_glyph_face
+vftv:essentia_admission_and_overgrown
+vftv:essentia_alembic_pours
+vftv:essentia_persistence_and_unreadable
+vftv:essentia_status_pages
+vftv:essentia_crucible_cross
+vftv:essentia_valve_end_non_ticking

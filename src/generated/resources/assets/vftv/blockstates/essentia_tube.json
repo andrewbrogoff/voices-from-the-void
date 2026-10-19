@@ -1,0 +1,123 @@
+{
+  "multipart": [
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_core"
+      },
+      "when": {
+        "down": "none",
+        "east": "none",
+        "north": "none",
+        "south": "none",
+        "up": "none",
+        "west": "none"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm",
+        "x": 90
+      },
+      "when": {
+        "down": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap",
+        "x": 90
+      },
+      "when": {
+        "down": "blocked"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm",
+        "x": 270
+      },
+      "when": {
+        "up": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap",
+        "x": 270
+      },
+      "when": {
+        "up": "blocked"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm"
+      },
+      "when": {
+        "north": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap"
+      },
+      "when": {
+        "north": "blocked"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm",
+        "y": 180
+      },
+      "when": {
+        "south": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap",
+        "y": 180
+      },
+      "when": {
+        "south": "blocked"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm",
+        "y": 270
+      },
+      "when": {
+        "west": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap",
+        "y": 270
+      },
+      "when": {
+        "west": "blocked"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_arm",
+        "y": 90
+      },
+      "when": {
+        "east": "connected"
+      }
+    },
+    {
+      "apply": {
+        "model": "vftv:block/essentia_tube_cap",
+        "y": 90
+      },
+      "when": {
+        "east": "blocked"
+      }
+    }
+  ]
+}

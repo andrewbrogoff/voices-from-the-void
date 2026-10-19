@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vftv:block/essentia_jar",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vftv:block/essentia_jar"
+    },
+    "facing=south": {
+      "model": "vftv:block/essentia_jar",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vftv:block/essentia_jar",
+      "y": 270
+    }
+  }
+}

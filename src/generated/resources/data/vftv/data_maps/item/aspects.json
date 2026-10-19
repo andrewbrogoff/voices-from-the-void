@@ -5376,6 +5376,11 @@
       "vftv:exanimis": 2,
       "vftv:humanus": 2
     },
+    "vftv:alembic": {
+      "vftv:ignis": 1,
+      "vftv:metallum": 2,
+      "vftv:vitreus": 2
+    },
     "vftv:chime_rod": {
       "vftv:metallum": 2,
       "vftv:praecantatio": 1,
@@ -5397,6 +5402,16 @@
       "vftv:ignis": 2,
       "vftv:metallum": 6
     },
+    "vftv:essentia_jar": {
+      "vftv:metallum": 1,
+      "vftv:vitreus": 2
+    },
+    "vftv:essentia_tube": {
+      "vftv:metallum": 1
+    },
+    "vftv:label": {
+      "vftv:cognitio": 1
+    },
     "vftv:resonant_brass_cap": {
       "vftv:metallum": 2,
       "vftv:praecantatio": 1,
@@ -5405,6 +5420,10 @@
     "vftv:resonant_brass_ingot": {
       "vftv:metallum": 9,
       "vftv:sonus": 3
+    },
+    "vftv:tube_valve": {
+      "vftv:machina": 1,
+      "vftv:metallum": 1
     },
     "vftv:tuning_fork": {
       "vftv:instrumentum": 1,

@@ -59,6 +59,9 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/block/essentia_jar_glass.png`, `essentia_jar_lid.png`, `essentia_jar_liquid.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/essentia.py`, from the chosen prototype `prototype/art-pipeline:prototype/art/B-ink-and-brass/gen/textures.py` `jar()`; deterministic, no seed | palette lock in `lib.save()`; §6 glass recipe; contact sheet `build/previews/essentia.png` beside the vanilla-style slot | 2026-10-17 | owner chose the prototype direction (art style §1) |
+| `src/main/resources/assets/vftv/textures/block/essentia_label.png`, `essentia_tube_arm.png`, `essentia_tube_core.png`, `essentia_tube_cap.png`, `essentia_tube_band.png`, `essentia_tube_band_ring.png`, `tube_valve.png`, `tube_valve_wheel_open.png`, `tube_valve_wheel_closed.png`, `alembic_glass.png`, `alembic_brass.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/essentia.py`; deterministic, no seed | palette lock in `lib.save()`; contact sheet `build/previews/essentia.png` reviewed at GUI scale 2, with greyscale and CVD previews (the valve wheels differ by spoke orientation and hub) | 2026-10-17 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/item/label.png`, `label_written.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/essentia.py` `label_item()`; deterministic, no seed | `lib.outline()`, palette lock, no partial alpha; contact sheet `build/previews/essentia.png` | 2026-10-17 | none (agent-authored) |
 
 ## infusion
 

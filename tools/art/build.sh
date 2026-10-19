@@ -26,3 +26,13 @@ python3 "$ART/sheet.py" "$PREVIEWS/crucible.png" "$CRU/block/crucible_side.png" 
 python3 "$ART/research_items.py" "$ART/../.."
 python3 "$ART/sheet.py" "$PREVIEWS/research.png" "$ASSETS/vftv/textures/item/commonplace_book.png" \
     "$ASSETS/vftv/textures/item/choir_page.png"
+python3 "$ART/essentia.py" "$ASSETS"
+python3 "$ART/sheet.py" "$PREVIEWS/essentia.png" "$ASSETS/vftv/textures/block/essentia_jar_glass.png" \
+    "$ASSETS/vftv/textures/block/essentia_jar_lid.png" "$ASSETS/vftv/textures/block/essentia_jar_liquid.png" \
+    "$ASSETS/vftv/textures/block/essentia_label.png" "$ASSETS/vftv/textures/block/essentia_tube_arm.png" \
+    "$ASSETS/vftv/textures/block/essentia_tube_core.png" "$ASSETS/vftv/textures/block/essentia_tube_cap.png" \
+    "$ASSETS/vftv/textures/block/essentia_tube_band.png" "$ASSETS/vftv/textures/block/essentia_tube_band_ring.png" \
+    "$ASSETS/vftv/textures/block/tube_valve.png" "$ASSETS/vftv/textures/block/tube_valve_wheel_open.png" \
+    "$ASSETS/vftv/textures/block/tube_valve_wheel_closed.png" "$ASSETS/vftv/textures/block/alembic_glass.png" \
+    "$ASSETS/vftv/textures/block/alembic_brass.png" "$ASSETS/vftv/textures/item/label.png" \
+    "$ASSETS/vftv/textures/item/label_written.png"

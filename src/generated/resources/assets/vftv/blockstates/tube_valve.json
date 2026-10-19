@@ -1,0 +1,48 @@
+{
+  "variants": {
+    "axis=x,open=false,powered=false": {
+      "model": "vftv:block/tube_valve_closed",
+      "y": 90
+    },
+    "axis=x,open=false,powered=true": {
+      "model": "vftv:block/tube_valve_closed",
+      "y": 90
+    },
+    "axis=x,open=true,powered=false": {
+      "model": "vftv:block/tube_valve_open",
+      "y": 90
+    },
+    "axis=x,open=true,powered=true": {
+      "model": "vftv:block/tube_valve_closed",
+      "y": 90
+    },
+    "axis=y,open=false,powered=false": {
+      "model": "vftv:block/tube_valve_closed",
+      "x": 90
+    },
+    "axis=y,open=false,powered=true": {
+      "model": "vftv:block/tube_valve_closed",
+      "x": 90
+    },
+    "axis=y,open=true,powered=false": {
+      "model": "vftv:block/tube_valve_open",
+      "x": 90
+    },
+    "axis=y,open=true,powered=true": {
+      "model": "vftv:block/tube_valve_closed",
+      "x": 90
+    },
+    "axis=z,open=false,powered=false": {
+      "model": "vftv:block/tube_valve_closed"
+    },
+    "axis=z,open=false,powered=true": {
+      "model": "vftv:block/tube_valve_closed"
+    },
+    "axis=z,open=true,powered=false": {
+      "model": "vftv:block/tube_valve_open"
+    },
+    "axis=z,open=true,powered=true": {
+      "model": "vftv:block/tube_valve_closed"
+    }
+  }
+}

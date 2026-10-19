@@ -1,0 +1,52 @@
+{
+  "schema": "vftv:essentia_recipes/1",
+  "recipes": {
+    "vftv:essentia_jar": {
+      "type": "vftv:arcane",
+      "research": "vftv:essentia_jars",
+      "kind": "ordinary",
+      "pattern": ["gcg", "g g", "ggg"],
+      "key": {"g": "minecraft:glass", "c": "minecraft:copper_ingot"},
+      "result": {"id": "vftv:essentia_jar", "count": 2},
+      "vis": {"vftv:aqua": 8, "vftv:terra": 6}
+    },
+    "vftv:alembic": {
+      "type": "vftv:arcane",
+      "research": "vftv:essentia_jars",
+      "kind": "ordinary",
+      "pattern": ["cc ", "cbg", " g "],
+      "key": {"c": "minecraft:copper_ingot", "b": "minecraft:glass_bottle", "g": "minecraft:glass"},
+      "result": {"id": "vftv:alembic", "count": 1},
+      "vis": {"vftv:aqua": 6, "vftv:ignis": 6}
+    },
+    "vftv:essentia_tube": {
+      "type": "vftv:arcane",
+      "research": "vftv:essentia_tubes",
+      "kind": "ordinary",
+      "pattern": ["cpc"],
+      "key": {"c": "minecraft:copper_ingot", "p": "minecraft:glass_pane"},
+      "result": {"id": "vftv:essentia_tube", "count": 8},
+      "vis": {"vftv:aqua": 4, "vftv:ordo": 4}
+    },
+    "vftv:tube_valve": {
+      "type": "vftv:arcane",
+      "research": "vftv:essentia_tubes",
+      "kind": "ordinary",
+      "ingredients": ["vftv:essentia_tube", "minecraft:lever"],
+      "result": {"id": "vftv:tube_valve", "count": 1},
+      "vis": {"vftv:ordo": 4}
+    },
+    "vftv:label": {
+      "type": "minecraft:crafting_shapeless",
+      "category": "misc",
+      "ingredients": ["minecraft:paper", "minecraft:ink_sac"],
+      "result": {"id": "vftv:label", "count": 4}
+    },
+    "vftv:label_blank": {
+      "type": "minecraft:crafting_shapeless",
+      "category": "misc",
+      "ingredients": ["vftv:label"],
+      "result": {"id": "vftv:label", "count": 1}
+    }
+  }
+}

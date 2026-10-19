@@ -1,0 +1,20 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "component": "vftv:jar_contents",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "vftv:block/essentia_jar"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "vftv:item/essentia_jar_filled",
+      "tints": [
+        {
+          "type": "vftv:essentia"
+        }
+      ]
+    },
+    "property": "minecraft:has_component"
+  }
+}

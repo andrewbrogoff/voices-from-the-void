@@ -1,0 +1,143 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#liquid",
+          "tintindex": 0
+        },
+        "east": {
+          "texture": "#liquid",
+          "tintindex": 0
+        },
+        "north": {
+          "texture": "#liquid",
+          "tintindex": 0
+        },
+        "south": {
+          "texture": "#liquid",
+          "tintindex": 0
+        },
+        "up": {
+          "texture": "#liquid",
+          "tintindex": 0
+        },
+        "west": {
+          "texture": "#liquid",
+          "tintindex": 0
+        }
+      },
+      "from": [
+        4,
+        1,
+        4
+      ],
+      "to": [
+        12,
+        6,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#lid"
+        },
+        "east": {
+          "texture": "#glass"
+        },
+        "north": {
+          "texture": "#glass"
+        },
+        "south": {
+          "texture": "#glass"
+        },
+        "up": {
+          "texture": "#lid"
+        },
+        "west": {
+          "texture": "#glass"
+        }
+      },
+      "from": [
+        3,
+        0,
+        3
+      ],
+      "to": [
+        13,
+        9,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "east": {
+          "texture": "#glass"
+        },
+        "north": {
+          "texture": "#glass"
+        },
+        "south": {
+          "texture": "#glass"
+        },
+        "up": {
+          "texture": "#lid"
+        },
+        "west": {
+          "texture": "#glass"
+        }
+      },
+      "from": [
+        4,
+        9,
+        4
+      ],
+      "to": [
+        12,
+        10,
+        12
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#lid"
+        },
+        "east": {
+          "texture": "#glass"
+        },
+        "north": {
+          "texture": "#glass"
+        },
+        "south": {
+          "texture": "#glass"
+        },
+        "up": {
+          "texture": "#lid"
+        },
+        "west": {
+          "texture": "#glass"
+        }
+      },
+      "from": [
+        3,
+        10,
+        3
+      ],
+      "to": [
+        13,
+        12,
+        13
+      ]
+    }
+  ],
+  "render_type": "minecraft:translucent",
+  "textures": {
+    "glass": "vftv:block/essentia_jar_glass",
+    "lid": "vftv:block/essentia_jar_lid",
+    "liquid": "vftv:block/essentia_jar_liquid",
+    "particle": "vftv:block/essentia_jar_glass"
+  }
+}

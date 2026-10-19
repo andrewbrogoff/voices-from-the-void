@@ -1,0 +1,20 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "c": "#c:ingots/copper",
+    "p": "minecraft:glass_pane"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "cpc"
+  ],
+  "research": "vftv:essentia_tubes",
+  "result": {
+    "count": 8,
+    "id": "vftv:essentia_tube"
+  },
+  "vis": {
+    "vftv:aqua": 4,
+    "vftv:ordo": 4
+  }
+}
