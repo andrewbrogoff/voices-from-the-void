@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.core.research;
 
 import com.andrewbrogoff.vftv.api.research.Research;
+import com.andrewbrogoff.vftv.api.research.ResearchKeys;
 import com.andrewbrogoff.vftv.core.research.model.Evidence;
 import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
@@ -24,7 +25,10 @@ import net.minecraft.world.level.Level;
  * line; a page that isn't tipped in is kept, so it can be handed on.
  */
 public final class ChoirPageItem extends Item {
-    /** "The page is blank to me.": no component, or it names no entry. */
+    private static final String CHOIR_PAGES =
+            ResearchKeys.CATEGORY_CHOIR_PAGES.identifier().toString();
+
+    /** "The page is blank to me.": no component, or it names no Choir page entry. */
     public static final String BLANK = "message.vftv.choir_page.blank";
 
     /** "The hand is too old for me yet.": the page's Stage is above the player's. */
@@ -65,7 +69,7 @@ public final class ChoirPageItem extends Item {
                                 .get(id);
         ResearchRecord record = ResearchService.record(player);
         String answer;
-        if (id == null || entry == null) {
+        if (id == null || entry == null || !entry.category().equals(CHOIR_PAGES)) {
             answer = BLANK;
         } else if (record == null) {
             answer = SharedMessages.UNREADABLE;

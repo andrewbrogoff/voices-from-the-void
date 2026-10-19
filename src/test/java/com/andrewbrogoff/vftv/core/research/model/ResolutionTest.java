@@ -102,6 +102,21 @@ class ResolutionTest {
     }
 
     @Test
+    void aLoweredStageStaysLowered() {
+        ResearchRecord found =
+                resolve(
+                        latch(
+                                latch(
+                                        latch(
+                                                ResearchRecord.EMPTY,
+                                                new Evidence.Advancement("vftv:find/resonance")),
+                                        new Evidence.Advancement("vftv:find/distillation")),
+                                new Evidence.Advancement("vftv:find/ruins")));
+        assertEquals(3, found.stage());
+        assertEquals(1, resolve(found.withStage(1)).stage());
+    }
+
+    @Test
     void anOpenerWaitsForItsParents() {
         ResearchRecord r =
                 ResearchRecord.EMPTY.withStage(1).latch("vftv:distillation", "vftv:ruins");

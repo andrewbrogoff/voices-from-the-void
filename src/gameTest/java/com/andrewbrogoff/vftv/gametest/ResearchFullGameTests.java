@@ -221,6 +221,10 @@ final class ResearchFullGameTests {
             ItemStack nowhere = page("vftv:choir/nowhere", 1);
             helper.assertValueEqual(
                     ChoirPageItem.tipIn(player, nowhere), ChoirPageItem.BLANK, "no entry");
+            ItemStack notAPage = page("vftv:resonance", 1);
+            helper.assertValueEqual(
+                    ChoirPageItem.tipIn(player, notAPage), ChoirPageItem.BLANK, "not a page entry");
+            helper.assertValueEqual(notAPage.getCount(), 1, "a blank page is kept");
             ItemStack pages = page(PAGE, 2);
             helper.assertValueEqual(
                     ChoirPageItem.tipIn(player, pages), ChoirPageItem.TOO_OLD, "Stage 0");
@@ -238,6 +242,7 @@ final class ResearchFullGameTests {
             helper.assertValueEqual(
                     lines,
                     List.of(
+                            ChoirPageItem.BLANK,
                             ChoirPageItem.BLANK,
                             ChoirPageItem.BLANK,
                             ChoirPageItem.TOO_OLD,

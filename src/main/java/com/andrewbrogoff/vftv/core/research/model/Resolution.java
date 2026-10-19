@@ -12,8 +12,9 @@ import java.util.TreeMap;
  * within a step entries go in ascending id order, each seeing what the step has done so far:
  *
  * <ol>
- *   <li><b>Stage:</b> if the opener of Stage {@code stage + 1} is latched and its parents are
- *       learned, the Stage advances and the opener is learned;
+ *   <li><b>Stage:</b> if the opener of Stage {@code stage + 1} is latched, not yet learned, and its
+ *       parents are learned, the Stage advances and the opener is learned. An opener already
+ *       learned has opened its Stage once, so a Stage an admin lowered stays lowered;
  *   <li><b>Reveals:</b> a secret with a latched reveal becomes revealed;
  *   <li><b>Free:</b> each OPEN {@code free} entry is learned;
  *   <li><b>Finds:</b> each OPEN {@code find} (its trigger has latched) is learned.
@@ -79,14 +80,12 @@ public final class Resolution {
             if (opener != null
                     && next != null
                     && r.latched().contains(opener)
+                    && !r.isLearned(opener)
                     && next.allParents().stream().allMatch(r::isLearned)) {
                 int previous = r.stage();
-                r = r.withStage(previous + 1);
+                r = r.withStage(previous + 1).learn(opener);
                 steps.add(new Staged(previous, previous + 1, ResearchSource.FOUND));
-                if (!r.isLearned(opener)) {
-                    r = r.learn(opener);
-                    steps.add(new Learned(opener, ResearchSource.FOUND));
-                }
+                steps.add(new Learned(opener, ResearchSource.FOUND));
                 changed = true;
             }
             for (Map.Entry<String, ResearchEntry> e : sorted.entrySet()) {
