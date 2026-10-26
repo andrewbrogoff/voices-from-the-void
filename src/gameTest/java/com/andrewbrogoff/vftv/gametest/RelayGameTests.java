@@ -1121,23 +1121,33 @@ final class RelayGameTests {
                 (WandCradleBlockEntity) Objects.requireNonNull(level.getBlockEntity(pos));
         c.setWand(VisGameTests.wand());
         CompoundTag saved = c.saveWithFullMetadata(level.registryAccess());
-        helper.assertValueEqual(saved.getIntOr("format", 0), 1, "format 1");
+        helper.assertValueEqual(
+                saved.getCompoundOrEmpty("cradle").getIntOr("format", 0), 1, "format 1");
         WandCradleBlockEntity loaded =
                 new WandCradleBlockEntity(pos, VisContent.wandCradle().defaultBlockState());
         loaded.loadWithComponents(
                 TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), saved));
         helper.assertTrue(ItemStack.matches(loaded.wand(), c.wand()), "the wand reloads");
         CompoundTag future = saved.copy();
-        future.putInt("format", 7);
+        future.getCompoundOrEmpty("cradle").putInt("format", 7);
+        future.getCompoundOrEmpty("cradle").putString("from_the_future", "kept");
         WandCradleBlockEntity unreadable =
                 new WandCradleBlockEntity(pos, VisContent.wandCradle().defaultBlockState());
         unreadable.loadWithComponents(
                 TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), future));
         helper.assertTrue(unreadable.unreadable(), "a future format is unreadable");
         CompoundTag resaved = unreadable.saveWithFullMetadata(level.registryAccess());
-        helper.assertValueEqual(resaved.getIntOr("format", 0), 7, "the format kept");
         helper.assertValueEqual(
-                resaved.getCompoundOrEmpty("wand"), future.getCompoundOrEmpty("wand"), "kept raw");
+                resaved.getCompoundOrEmpty("cradle"),
+                future.getCompoundOrEmpty("cradle"),
+                "the whole record kept raw");
+        CompoundTag badType = saved.copy();
+        badType.getCompoundOrEmpty("cradle").putString("format", "future");
+        WandCradleBlockEntity typed =
+                new WandCradleBlockEntity(pos, VisContent.wandCradle().defaultBlockState());
+        typed.loadWithComponents(
+                TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), badType));
+        helper.assertTrue(typed.unreadable(), "a malformed format is unreadable");
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(1))
                 .forEach(ItemEntity::discard);

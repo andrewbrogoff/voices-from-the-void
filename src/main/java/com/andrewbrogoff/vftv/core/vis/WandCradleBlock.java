@@ -1,7 +1,11 @@
 package com.andrewbrogoff.vftv.core.vis;
 
+import com.andrewbrogoff.vftv.core.text.StatusLines;
+import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
 import com.andrewbrogoff.vftv.core.vis.model.RelayNetwork;
 import net.minecraft.core.BlockPos;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -40,9 +44,11 @@ public final class WandCradleBlock extends RelayBlock {
         if (stack.isEmpty()) {
             return InteractionResult.TRY_WITH_EMPTY_HAND;
         }
+        if (stack.is(VisContent.wand()) && refusedUnreadable(level, pos, player)) {
+            return InteractionResult.CONSUME;
+        }
         if (!stack.is(VisContent.wand())
                 || !(level.getBlockEntity(pos) instanceof WandCradleBlockEntity cradle)
-                || cradle.unreadable()
                 || !cradle.wand().isEmpty()) {
             return InteractionResult.PASS;
         }
@@ -58,6 +64,9 @@ public final class WandCradleBlock extends RelayBlock {
         if (player.isSecondaryUseActive()) {
             return super.useWithoutItem(state, level, pos, player, hit);
         }
+        if (refusedUnreadable(level, pos, player)) {
+            return InteractionResult.CONSUME;
+        }
         if (!(level.getBlockEntity(pos) instanceof WandCradleBlockEntity cradle)
                 || cradle.wand().isEmpty()) {
             return InteractionResult.PASS;
@@ -67,5 +76,16 @@ public final class WandCradleBlock extends RelayBlock {
             cradle.setWand(ItemStack.EMPTY);
         }
         return InteractionResult.SUCCESS;
+    }
+
+    /** An unreadable cradle refuses every use that would read or write it (conventions). */
+    private static boolean refusedUnreadable(Level level, BlockPos pos, Player player) {
+        if (!(level.getBlockEntity(pos) instanceof WandCradleBlockEntity c) || !c.unreadable()) {
+            return false;
+        }
+        if (player instanceof ServerPlayer p) {
+            StatusLines.send(p, Component.translatable(SharedMessages.UNREADABLE));
+        }
+        return true;
     }
 }

@@ -201,6 +201,13 @@ public final class RelayService {
 
     /** A range rebuild if the tuning changed, the queue, and the SavedData written if changed. */
     private static void settle(ServerLevel level, Net n) {
+        if (!n.writable) {
+            // An unreadable store drives nothing: no membership, no pulse (conventions).
+            n.chunks.clear();
+            n.positions.clear();
+            n.placers.clear();
+            return;
+        }
         double range = VisRulesService.tuning().decimal("relay.range");
         if (n.net.range() != range) {
             logOversized(level, n.net.rebuild(range), range);
@@ -453,7 +460,7 @@ public final class RelayService {
 
     /** The pulse (wands spec, "Flow"): every component with an active sink, at {@code now}. */
     private static void pulse(ServerLevel level, Net n, VisTuning t, long now) {
-        if (n.sinks.isEmpty()) {
+        if (n.sinks.isEmpty() || !n.writable) {
             return;
         }
         WandParts parts = WandParts.of(level.registryAccess());
