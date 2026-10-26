@@ -90,6 +90,19 @@ final class HushGameTests {
     /** Flux events seen, for tests that listen. */
     private static final List<FluxPayload> FLUX = new ArrayList<>();
 
+    /** Cells whose break events a test cancels (a claim refusing the Clearing Bell). */
+    private static final Set<BlockPos> NO_BREAK = new HashSet<>();
+
+    /** Bells a restore listener tries to feed mid-peal, and what each insertion took. */
+    private static final Map<BlockPos, BlockPos> FEED_DURING = new java.util.HashMap<>();
+
+    private static final List<Integer> FED = new ArrayList<>();
+
+    /**
+     * Bells whose peals a test confines to its own few cells, so neighbours' Hush is left alone.
+     */
+    private static final Set<BlockPos> CONFINED = new HashSet<>();
+
     /** Positions whose sibling events a later listener throws on (once-only delivery). */
     private static final Set<BlockPos> THROW_AT = new HashSet<>();
 
@@ -105,11 +118,47 @@ final class HushGameTests {
         NeoForge.EVENT_BUS.addListener(
                 HushSpreadEvent.class,
                 e -> {
-                    if (CANCEL_AT.contains(e.payload().pos())) {
+                    if (CANCEL_AT.contains(e.payload().pos())
+                            || (e.payload().origin()
+                                            instanceof
+                                            com.andrewbrogoff.vftv.api.hush.HushOrigin.Bell b
+                                    && CONFINED.contains(b.bell())
+                                    && b.bell().distManhattan(e.payload().pos()) > 4)) {
                         e.setCanceled(true);
                     }
                 });
         NeoForge.EVENT_BUS.addListener(FluxEvent.class, e -> FLUX.add(e.payload()));
+        NeoForge.EVENT_BUS.addListener(
+                net.neoforged.neoforge.event.level.block.BreakBlockEvent.class,
+                e -> {
+                    if (NO_BREAK.contains(e.getPos())) {
+                        e.setCanceled(true);
+                    }
+                });
+        NeoForge.EVENT_BUS.addListener(
+                HushSpreadEvent.class,
+                e -> {
+                    BlockPos bell = FEED_DURING.get(e.payload().pos());
+                    if (bell != null) {
+                        ResourceHandler<EssentiaResource> handler =
+                                Objects.requireNonNull(
+                                        e.payload()
+                                                .level()
+                                                .getCapability(
+                                                        EssentiaCapabilities.HANDLER, bell, null));
+                        EssentiaResource sonus =
+                                new EssentiaResource(
+                                        e.payload()
+                                                .level()
+                                                .registryAccess()
+                                                .lookupOrThrow(AspectKeys.REGISTRY)
+                                                .getOrThrow(AspectKeys.SONUS));
+                        try (Transaction tx = Transaction.openRoot()) {
+                            FED.add(handler.insert(sonus, 5, tx));
+                            tx.commit();
+                        }
+                    }
+                });
         NeoForge.EVENT_BUS.addListener(
                 EventPriority.LOWEST,
                 CrucibleEvent.class,
@@ -146,6 +195,10 @@ final class HushGameTests {
         tests.put("hush_commands", HushGameTests::commands);
         tests.put("hush_recipes_loaded", HushGameTests::recipes);
         tests.put("hush_switches_and_silence", HushGameTests::switches);
+        tests.put("hush_clearing_bell_claims", HushGameTests::clearingBellClaims);
+        tests.put("hush_restore_command_continues", HushGameTests::restoreContinues);
+        tests.put("hush_node_beside_a_pool", HushGameTests::nodeBesidePool);
+        tests.put("hush_pealing_bell_scopes", HushGameTests::pealingScopes);
     }
 
     // --- helpers ------------------------------------------------------------------------------
@@ -835,6 +888,7 @@ final class HushGameTests {
         BlockState hushed =
                 Objects.requireNonNull(HushedForms.hushed(Blocks.DIRT.defaultBlockState()));
         helper.setBlock(1, 1, 1, hushed);
+        CONFINED.add(helper.absolutePos(rel));
         HushBells.peal(helper.getLevel(), be, FluxRulesService.current());
         helper.assertValueEqual(aura(helper, rel).flux(), 30, "cleared peal.flux");
         helper.assertValueEqual(
@@ -845,6 +899,7 @@ final class HushGameTests {
                 i++) {
             HushBells.peal(helper.getLevel(), be, FluxRulesService.current());
         }
+        CONFINED.remove(helper.absolutePos(rel));
         helper.assertBlockPresent(Blocks.DIRT, new BlockPos(1, 1, 1));
         clearAura(helper, rel);
         helper.succeed();
@@ -1044,6 +1099,198 @@ final class HushGameTests {
             }
             clearAura(helper, rel);
         }
+        helper.succeed();
+    }
+
+    /**
+     * A claim's cancelled break event keeps that cell hushed; spawn protection's check runs too.
+     */
+    private static void clearingBellClaims(GameTestHelper helper) {
+        BlockPos rel = new BlockPos(2, 2, 2);
+        clearAura(helper, rel);
+        BlockState hushed =
+                Objects.requireNonNull(HushedForms.hushed(Blocks.STONE.defaultBlockState()));
+        helper.setBlock(1, 1, 2, hushed);
+        helper.setBlock(3, 1, 2, hushed);
+        BlockPos claimed = helper.absolutePos(new BlockPos(1, 1, 2));
+        NO_BREAK.add(claimed);
+        try {
+            ServerPlayer player = ResearchTestSupport.player(helper);
+            player.snapTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(helper.absolutePos(rel)));
+            player.setItemInHand(
+                    InteractionHand.MAIN_HAND, new ItemStack(HushContent.clearingBell()));
+            HushBells.ring(player, InteractionHand.MAIN_HAND);
+        } finally {
+            NO_BREAK.remove(claimed);
+        }
+        helper.assertTrue(
+                helper.getBlockState(new BlockPos(1, 1, 2)).is(HushKeys.HUSHED), "the claim held");
+        helper.assertBlockPresent(Blocks.STONE, new BlockPos(3, 1, 2));
+        helper.succeed();
+    }
+
+    /** {@code hush restore} reports its next index until the radius-16 ball is done. */
+    private static void restoreContinues(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos at = helper.absolutePos(new BlockPos(1, 2, 1));
+        List<Component> said = new ArrayList<>();
+        net.minecraft.commands.CommandSource capture =
+                new net.minecraft.commands.CommandSource() {
+                    @Override
+                    public void sendSystemMessage(Component message) {
+                        said.add(message);
+                    }
+
+                    @Override
+                    public boolean acceptsSuccess() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean acceptsFailure() {
+                        return true;
+                    }
+
+                    @Override
+                    public boolean shouldInformAdmins() {
+                        return false;
+                    }
+                };
+        var source =
+                level.getServer().createCommandSourceStack().withLevel(level).withSource(capture);
+        int from = 0;
+        int calls = 0;
+        String xyz = at.getX() + " " + at.getY() + " " + at.getZ();
+        while (calls < 10) {
+            calls++;
+            said.clear();
+            level.getServer()
+                    .getCommands()
+                    .performPrefixedCommand(source, "vftv hush restore " + xyz + " 16 " + from);
+            Component last = said.getLast();
+            TranslatableContents t = (TranslatableContents) last.getContents();
+            if (t.getKey().equals("commands.vftv.hush.restored_done")) {
+                break;
+            }
+            helper.assertValueEqual(t.getKey(), "commands.vftv.hush.restored", "continue");
+            from = Integer.parseInt(String.valueOf(t.getArgs()[1]));
+        }
+        int size = com.andrewbrogoff.vftv.core.hush.model.BallTables.size(16);
+        helper.assertValueEqual(
+                calls,
+                (size + HushLimits.MAX_COMMAND_CELLS - 1) / HushLimits.MAX_COMMAND_CELLS,
+                "calls to finish");
+        helper.succeed();
+    }
+
+    /**
+     * A node takes a whole ring: rings that clear flux leave it; the first that clears none
+     * restores it.
+     */
+    private static void nodeBesidePool(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos rel = new BlockPos(2, 2, 2);
+        BlockPos nodeRel = new BlockPos(3, 2, 2);
+        BlockPos at = helper.absolutePos(nodeRel);
+        VisGameTests.node(
+                level,
+                at,
+                Identifier.fromNamespaceAndPath("vftv", "windward"),
+                new TreeMap<>(Map.of("vftv:aer", 10)));
+        deposit(helper, rel, 150);
+        helper.assertValueEqual(HushService.spreadTo(level, chunk(helper, rel), at), 1, "hushed");
+        helper.assertValueEqual(aura(helper, rel).flux(), 100, "node cost");
+        ServerPlayer player = ResearchTestSupport.player(helper);
+        player.snapTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(helper.absolutePos(rel)));
+        ItemStack bell = new ItemStack(HushContent.clearingBell());
+        player.setItemInHand(InteractionHand.MAIN_HAND, bell);
+        Runnable ring =
+                () -> {
+                    player.getCooldowns()
+                            .removeCooldown(BuiltInRegistries.ITEM.getKey(bell.getItem()));
+                    HushBells.ring(player, InteractionHand.MAIN_HAND);
+                };
+        ring.run();
+        helper.runAfterDelay(
+                1,
+                () -> {
+                    helper.assertValueEqual(
+                            Objects.requireNonNull(VisGameTests.be(level, at).state()).type(),
+                            HushKeys.HUSHED_NODE.identifier(),
+                            "a clearing ring leaves the node");
+                    ring.run();
+                    helper.runAfterDelay(
+                            1,
+                            () -> {
+                                helper.assertValueEqual(
+                                        aura(helper, rel).flux(), 0, "the pool cleared first");
+                                ring.run();
+                                helper.runAfterDelay(
+                                        1,
+                                        () -> {
+                                            helper.assertValueEqual(
+                                                    Objects.requireNonNull(
+                                                                    VisGameTests.be(level, at)
+                                                                            .state())
+                                                            .type(),
+                                                    Identifier.fromNamespaceAndPath(
+                                                            "vftv", "windward"),
+                                                    "the first ring that clears nothing restores it");
+                                            helper.succeed();
+                                        });
+                            });
+                });
+    }
+
+    /**
+     * While a peal owns the bell its handler takes nothing, and a removal inside an open
+     * transaction spills the final balance once the transaction closes.
+     */
+    private static void pealingScopes(GameTestHelper helper) {
+        BlockPos rel = new BlockPos(2, 2, 2);
+        PealingBellBlockEntity be = bell(helper, rel);
+        feed(helper, rel, 10, true);
+        clearAura(helper, rel);
+        BlockPos hushedRel = new BlockPos(1, 1, 1);
+        helper.setBlock(
+                hushedRel,
+                Objects.requireNonNull(HushedForms.hushed(Blocks.DIRT.defaultBlockState())));
+        FEED_DURING.put(helper.absolutePos(hushedRel), helper.absolutePos(rel));
+        CONFINED.add(helper.absolutePos(rel));
+        FED.clear();
+        try {
+            for (int i = 0; i < 16 && FED.isEmpty(); i++) {
+                HushBells.peal(helper.getLevel(), be, FluxRulesService.current());
+            }
+        } finally {
+            FEED_DURING.clear();
+            CONFINED.remove(helper.absolutePos(rel));
+        }
+        helper.assertValueEqual(FED, List.of(0), "the handler is unavailable during a peal");
+        helper.assertValueEqual(be.sonus(), 9, "the reservation committed once");
+        ResourceHandler<EssentiaResource> handler =
+                Objects.requireNonNull(
+                        helper.getLevel()
+                                .getCapability(
+                                        EssentiaCapabilities.HANDLER,
+                                        helper.absolutePos(rel),
+                                        null));
+        EssentiaResource sonus =
+                new EssentiaResource(
+                        helper.getLevel()
+                                .registryAccess()
+                                .lookupOrThrow(AspectKeys.REGISTRY)
+                                .getOrThrow(AspectKeys.SONUS));
+        try (Transaction tx = Transaction.openRoot()) {
+            handler.insert(sonus, 5, tx);
+            helper.setBlock(rel, Blocks.AIR);
+            Aura during = FluxService.aura(levelChunk(helper, rel));
+            helper.assertValueEqual(
+                    during == null ? 0 : during.flux(), 0, "removal waits for the transaction");
+            tx.commit();
+        }
+        helper.assertValueEqual(aura(helper, rel).flux(), 14, "one spill of the final balance");
+        clearAura(helper, rel);
         helper.succeed();
     }
 

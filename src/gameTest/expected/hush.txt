@@ -26,3 +26,7 @@ vftv:hush_stores_retain_unreadable
 vftv:hush_commands
 vftv:hush_recipes_loaded
 vftv:hush_switches_and_silence
+vftv:hush_clearing_bell_claims
+vftv:hush_restore_command_continues
+vftv:hush_node_beside_a_pool
+vftv:hush_pealing_bell_scopes
