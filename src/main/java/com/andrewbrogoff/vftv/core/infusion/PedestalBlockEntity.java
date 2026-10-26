@@ -110,6 +110,12 @@ public final class PedestalBlockEntity extends AltarBlockEntity {
         return claim;
     }
 
+    /** The raw record, for the removal's WARN; null when readable. */
+    net.minecraft.nbt.@Nullable Tag raw() {
+        Retained.@Nullable Unreadable<Saved> u = unreadable;
+        return u == null ? null : u.raw();
+    }
+
     /** Whether it holds a claim (on a client: the synced flag). */
     public boolean claimed() {
         return claim != null || syncedClaimed;

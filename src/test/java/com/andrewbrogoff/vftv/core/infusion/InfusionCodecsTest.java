@@ -101,11 +101,18 @@ class InfusionCodecsTest {
                         run(new int[] {0, 0}, 85, 0, new int[][] {{2, 0}}),
                         run(new int[] {0, 0}, 86, 7, new int[][] {{2, 0}}),
                         run(new int[] {0, 0}, 86, 0, new int[][] {{0, 0}}),
-                        run(new int[] {0, 0}, 86, 0, new int[][] {{2, 0}, {2, 0}}),
-                        run(new int[] {0, 0}, 86, 0, new int[][] {{5, 0}}))) {
+                        run(new int[] {0, 0}, 86, 0, new int[][] {{2, 0}, {2, 0}}))) {
             JsonElement j = InfusionRun.CODEC.encodeStart(JsonOps.INSTANCE, bad).getOrThrow();
             assertTrue(InfusionRun.CODEC.parse(JsonOps.INSTANCE, j).isError(), j.toString());
         }
+        JsonObject far = json.deepCopy().getAsJsonObject();
+        far.getAsJsonArray("components")
+                .get(0)
+                .getAsJsonObject()
+                .getAsJsonArray("at")
+                .set(0, new com.google.gson.JsonPrimitive(Integer.MIN_VALUE));
+        assertTrue(
+                InfusionRun.CODEC.parse(JsonOps.INSTANCE, far).isError(), "an overflowing offset");
         JsonObject stray = json.deepCopy().getAsJsonObject();
         stray.getAsJsonObject("drawn").addProperty("vftv:terra", 1);
         assertTrue(
@@ -259,6 +266,7 @@ class InfusionCodecsTest {
                         ResourceKey.create(
                                 Registries.RECIPE, Identifier.fromNamespaceAndPath("vftv", "test")),
                         new ItemStack(Items.BLAZE_ROD),
+                        20,
                         86,
                         21,
                         2,
@@ -299,6 +307,7 @@ class InfusionCodecsTest {
         assertEquals(new BlockPos(1, 2, 3), java.util.Objects.requireNonNull(rr).missing());
         assertEquals(8, rr.cells().getFirst().cost());
         assertTrue(rr.abandonArmed());
+        assertEquals(20, rr.instability());
         RegistryFriendlyByteBuf over = buffer();
         InfusionPayloads.Readout.STREAM_CODEC.encode(
                 over,

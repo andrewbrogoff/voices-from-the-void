@@ -259,7 +259,9 @@ public final class InfusionRun {
             RecordCodecBuilder.create(
                     i ->
                             i.group(
-                                            Codec.INT
+                                            Codec.intRange(
+                                                            -InfusionMath.RADIUS,
+                                                            InfusionMath.RADIUS)
                                                     .listOf(2, 2)
                                                     .fieldOf("at")
                                                     .forGetter(PartState::at),

@@ -70,6 +70,7 @@ public record InfusionReadout(
      *
      * @param recipe the run's recipe
      * @param output the frozen output
+     * @param instability the frozen {@code R}
      * @param stability the frozen {@code S}
      * @param chance the frozen {@code p}
      * @param drawn units drawn in all
@@ -89,6 +90,7 @@ public record InfusionReadout(
     public record Run(
             ResourceKey<Recipe<?>> recipe,
             ItemStack output,
+            int instability,
             int stability,
             int chance,
             int drawn,
@@ -193,6 +195,7 @@ public record InfusionReadout(
             ItemStack.OPTIONAL_STREAM_CODEC.encode(buf, run.output());
             for (int v :
                     new int[] {
+                        run.instability(),
                         run.stability(),
                         run.chance(),
                         run.drawn(),
@@ -272,7 +275,7 @@ public record InfusionReadout(
         if (buf.readBoolean()) {
             ResourceKey<Recipe<?>> recipe = ResourceKey.create(Registries.RECIPE, readId(buf));
             ItemStack output = ItemStack.OPTIONAL_STREAM_CODEC.decode(buf);
-            int[] v = new int[9];
+            int[] v = new int[10];
             for (int i = 0; i < v.length; i++) {
                 v[i] = bounded(buf.readVarInt(), 0, 1_000_000, "figure");
             }
@@ -289,16 +292,17 @@ public record InfusionReadout(
                             v[1],
                             v[2],
                             v[3],
+                            v[4],
                             costs,
                             cells,
-                            v[4],
                             v[5],
                             v[6],
                             v[7],
+                            v[8],
                             stall,
                             missing,
                             flux,
-                            v[8],
+                            v[9],
                             buf.readBoolean());
         }
         return new InfusionReadout(status, reason, args, dimension, pos, plan, run, changed);

@@ -600,8 +600,14 @@ public final class InfusionAltars {
             }
         }
         // 9: the live fingerprint, callback-free
-        Inputs live = new Inputs(level, bowl, player, a.inputs().warp);
-        if (!live.same(a.inputs())) {
+        Inputs live =
+                new Inputs(
+                        level, bowl, player, WarpDials.infusionPenalty(player, VisKind.ORDINARY));
+        boolean moved = bowl.isRemoved() || level.getBlockEntity(pos) != bowl;
+        for (Cell c : live.cells) {
+            moved |= c.be() != null && level.getBlockEntity(c.pos()) != c.be();
+        }
+        if (moved || !live.same(a.inputs())) {
             stale(player, arm, true, a);
             return;
         }
@@ -868,6 +874,7 @@ public final class InfusionAltars {
                         ResourceKey.create(
                                 net.minecraft.core.registries.Registries.RECIPE, run.recipe),
                         run.output,
+                        run.stability.r(),
                         run.stability.s(),
                         run.stability.chance(),
                         run.drawnTotal(),
@@ -1202,6 +1209,11 @@ public final class InfusionAltars {
             } else if (bowl.run != null) {
                 InfusionRunner.removeRun(level, bowl);
             }
+        } else if (be.unreadable()) {
+            LOGGER.warn(
+                    "Pedestal at {} removed with an unreadable record, which is lost: {}",
+                    be.getBlockPos(),
+                    ((PedestalBlockEntity) be).raw());
         }
         return false;
     }

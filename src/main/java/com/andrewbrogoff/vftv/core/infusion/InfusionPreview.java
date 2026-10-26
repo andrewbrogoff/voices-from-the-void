@@ -159,7 +159,9 @@ public record InfusionPreview(
                 List.copyOf(parts),
                 List.copyOf(costs),
                 ctx == null && recipe.result() instanceof InfusionRecipe.Result.Enchant,
-                plan != null ? plan.instability() : recipe.instability(),
+                plan != null
+                        ? plan.instability()
+                        : run != null ? run.instability() : recipe.instability(),
                 ctx,
                 availability);
     }
