@@ -16,3 +16,15 @@ vftv:vis_update_boundary
 vftv:vis_node_strike_and_sounding
 vftv:vis_persistence
 vftv:vis_natural_types_cover_biomes
+vftv:vis_jar_capture_release
+vftv:vis_jar_refusals
+vftv:vis_jar_cancellation
+vftv:vis_tap_placement_and_status
+vftv:vis_cultivation_transactions
+vftv:vis_cultivation_line
+vftv:vis_relay_pulse
+vftv:vis_relay_unloaded
+vftv:vis_relay_membership
+vftv:vis_relay_range_reload
+vftv:vis_cradle_use
+vftv:vis_relay_persistence

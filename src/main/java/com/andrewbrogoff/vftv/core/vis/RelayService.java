@@ -177,29 +177,46 @@ public final class RelayService {
             return;
         }
         VisTuning t = VisRulesService.tuning();
-        double range = t.decimal("relay.range");
         for (ServerLevel level : server.getAllLevels()) {
             Net n = LEVELS.get(level.dimension());
             if (n == null) {
                 continue;
             }
-            if (n.net.range() != range) {
-                logOversized(level, n.net.rebuild(range), range);
-                n.dirty = true;
-                refreshAllSinks(level, n);
+            settle(level, n);
+            if (level.getGameTime() % t.integer("relay.pulse") == 0) {
+                pulse(level, n, t, level.getGameTime());
             }
-            process(level, n);
-            pulse(level, n, t);
-            if (n.dirty && n.writable) {
-                List<RelayLedger.Member> members = new ArrayList<>();
-                for (long key : n.net.keys()) {
-                    RelayNetwork.Kind kind = java.util.Objects.requireNonNull(n.net.kind(key));
-                    members.add(new RelayLedger.Member(BlockPos.of(key), kind));
-                }
-                SLOT.set(level, new Retained.Read<>(new RelayLedger(members)));
-            }
-            n.dirty = false;
         }
+    }
+
+    /** Processes one level's membership queue now (and a range rebuild); GameTests call it. */
+    public static void processQueue(ServerLevel level) {
+        settle(level, state(level));
+    }
+
+    /** Runs one level's pulse now as if at {@code gameTime}; GameTests call it. */
+    public static void pulse(ServerLevel level, long gameTime) {
+        pulse(level, state(level), VisRulesService.tuning(), gameTime);
+    }
+
+    /** A range rebuild if the tuning changed, the queue, and the SavedData written if changed. */
+    private static void settle(ServerLevel level, Net n) {
+        double range = VisRulesService.tuning().decimal("relay.range");
+        if (n.net.range() != range) {
+            logOversized(level, n.net.rebuild(range), range);
+            n.dirty = true;
+            refreshAllSinks(level, n);
+        }
+        process(level, n);
+        if (n.dirty && n.writable) {
+            List<RelayLedger.Member> members = new ArrayList<>();
+            for (long key : n.net.keys()) {
+                RelayNetwork.Kind kind = java.util.Objects.requireNonNull(n.net.kind(key));
+                members.add(new RelayLedger.Member(BlockPos.of(key), kind));
+            }
+            SLOT.set(level, new Retained.Read<>(new RelayLedger(members)));
+        }
+        n.dirty = false;
     }
 
     private static void process(ServerLevel level, Net n) {
@@ -276,6 +293,26 @@ public final class RelayService {
     }
 
     // --- admission and status -----------------------------------------------------------------
+
+    /**
+     * A member's persisted membership.
+     *
+     * @param kind its kind
+     * @param unlinked whether a range rebuild left it out of every component
+     * @param size its component's member count, 0 while unlinked
+     */
+    public record Membership(RelayNetwork.Kind kind, boolean unlinked, int size) {}
+
+    /** The persisted membership at {@code pos}, or null when no member is recorded there. */
+    public static @Nullable Membership membership(ServerLevel level, BlockPos pos) {
+        Net n = state(level);
+        RelayNetwork.Kind kind = n.net.kind(pos.asLong());
+        if (kind == null) {
+            return null;
+        }
+        int c = n.net.component(pos.asLong());
+        return new Membership(kind, c < 0, c < 0 ? 0 : n.net.members(c).size());
+    }
 
     /** The admission size of a new member at {@code pos} (wands spec, "Admission check"). */
     static int admissionSize(ServerLevel level, BlockPos pos) {
@@ -414,11 +451,9 @@ public final class RelayService {
         return out;
     }
 
-    /** The pulse (wands spec, "Flow"), on the ticks where {@code gameTime % relay.pulse == 0}. */
-    private static void pulse(ServerLevel level, Net n, VisTuning t) {
-        long now = level.getGameTime();
-        int period = t.integer("relay.pulse");
-        if (n.sinks.isEmpty() || now % period != 0) {
+    /** The pulse (wands spec, "Flow"): every component with an active sink, at {@code now}. */
+    private static void pulse(ServerLevel level, Net n, VisTuning t, long now) {
+        if (n.sinks.isEmpty()) {
             return;
         }
         WandParts parts = WandParts.of(level.registryAccess());
