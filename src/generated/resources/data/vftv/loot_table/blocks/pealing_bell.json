@@ -1,0 +1,15 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "vftv:pealing_bell"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "vftv:blocks/pealing_bell"
+}

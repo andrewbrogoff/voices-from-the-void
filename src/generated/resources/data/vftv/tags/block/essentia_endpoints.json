@@ -5,6 +5,7 @@
     {
       "id": "vftv:node_tap",
       "required": false
-    }
+    },
+    "vftv:pealing_bell"
   ]
 }

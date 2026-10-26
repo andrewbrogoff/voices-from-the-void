@@ -1,0 +1,25 @@
+{
+  "type": "vftv:infusion",
+  "centre": "minecraft:bell",
+  "components": [
+    "vftv:resonant_brass_ingot",
+    "vftv:resonant_brass_ingot",
+    "#c:gems/amethyst",
+    "#c:gems/amethyst",
+    "minecraft:white_wool",
+    "minecraft:white_wool"
+  ],
+  "essentia": {
+    "vftv:ordo": 8,
+    "vftv:sonus": 16
+  },
+  "instability": 10,
+  "kind": "ordinary",
+  "research": "vftv:the_hush",
+  "result": {
+    "item": {
+      "count": 1,
+      "id": "vftv:pealing_bell"
+    }
+  }
+}

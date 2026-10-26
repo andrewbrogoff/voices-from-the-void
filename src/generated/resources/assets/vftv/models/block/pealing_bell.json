@@ -1,0 +1,217 @@
+{
+  "parent": "minecraft:block/block",
+  "display": {
+    "gui": {
+      "rotation": [
+        30,
+        225,
+        0
+      ],
+      "scale": [
+        0.85,
+        0.85,
+        0.85
+      ]
+    }
+  },
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "cullface": "down",
+          "texture": "#yoke"
+        },
+        "east": {
+          "texture": "#yoke"
+        },
+        "north": {
+          "texture": "#yoke"
+        },
+        "south": {
+          "texture": "#yoke"
+        },
+        "up": {
+          "texture": "#yoke"
+        },
+        "west": {
+          "texture": "#yoke"
+        }
+      },
+      "from": [
+        1,
+        0,
+        1
+      ],
+      "to": [
+        15,
+        2,
+        15
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#yoke"
+        },
+        "east": {
+          "texture": "#yoke"
+        },
+        "north": {
+          "texture": "#yoke"
+        },
+        "south": {
+          "texture": "#yoke"
+        },
+        "up": {
+          "texture": "#yoke"
+        },
+        "west": {
+          "texture": "#yoke"
+        }
+      },
+      "from": [
+        1,
+        2,
+        7
+      ],
+      "to": [
+        3,
+        14,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#yoke"
+        },
+        "east": {
+          "texture": "#yoke"
+        },
+        "north": {
+          "texture": "#yoke"
+        },
+        "south": {
+          "texture": "#yoke"
+        },
+        "up": {
+          "texture": "#yoke"
+        },
+        "west": {
+          "texture": "#yoke"
+        }
+      },
+      "from": [
+        13,
+        2,
+        7
+      ],
+      "to": [
+        15,
+        14,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#yoke"
+        },
+        "east": {
+          "texture": "#yoke"
+        },
+        "north": {
+          "texture": "#yoke"
+        },
+        "south": {
+          "texture": "#yoke"
+        },
+        "up": {
+          "texture": "#yoke"
+        },
+        "west": {
+          "texture": "#yoke"
+        }
+      },
+      "from": [
+        1,
+        14,
+        6
+      ],
+      "to": [
+        15,
+        16,
+        10
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#bell"
+        },
+        "east": {
+          "texture": "#bell"
+        },
+        "north": {
+          "texture": "#bell"
+        },
+        "south": {
+          "texture": "#bell"
+        },
+        "up": {
+          "texture": "#bell"
+        },
+        "west": {
+          "texture": "#bell"
+        }
+      },
+      "from": [
+        5,
+        10,
+        5
+      ],
+      "to": [
+        11,
+        13,
+        11
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#bell"
+        },
+        "east": {
+          "texture": "#bell"
+        },
+        "north": {
+          "texture": "#bell"
+        },
+        "south": {
+          "texture": "#bell"
+        },
+        "up": {
+          "texture": "#bell"
+        },
+        "west": {
+          "texture": "#bell"
+        }
+      },
+      "from": [
+        4,
+        4,
+        4
+      ],
+      "to": [
+        12,
+        10,
+        12
+      ]
+    }
+  ],
+  "textures": {
+    "bell": "vftv:block/pealing_bell_bell",
+    "particle": "vftv:block/pealing_bell_bell",
+    "yoke": "vftv:block/pealing_bell_yoke"
+  }
+}

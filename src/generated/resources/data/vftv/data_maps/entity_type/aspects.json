@@ -454,6 +454,11 @@
       "vftv:humanus": 4,
       "vftv:praecantatio": 1,
       "vftv:sonus": 3
+    },
+    "vftv:hollow": {
+      "vftv:bestia": 1,
+      "vftv:silentium": 4,
+      "vftv:vacuos": 2
     }
   }
 }

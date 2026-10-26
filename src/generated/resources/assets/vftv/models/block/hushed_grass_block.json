@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "vftv:block/hushed_dirt",
+    "side": "vftv:block/hushed_grass_block_side",
+    "top": "vftv:block/hushed_grass_block_top"
+  }
+}

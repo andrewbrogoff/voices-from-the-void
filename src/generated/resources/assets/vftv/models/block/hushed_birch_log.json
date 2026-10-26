@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "vftv:block/hushed_birch_log_top",
+    "side": "vftv:block/hushed_birch_log_side"
+  }
+}

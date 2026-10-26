@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vftv:block/pealing_bell",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vftv:block/pealing_bell"
+    },
+    "facing=south": {
+      "model": "vftv:block/pealing_bell",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vftv:block/pealing_bell",
+      "y": 270
+    }
+  }
+}

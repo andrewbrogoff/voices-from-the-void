@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "vftv:block/hushed_deepslate",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "vftv:block/hushed_deepslate"
+    },
+    "axis=z": {
+      "model": "vftv:block/hushed_deepslate",
+      "x": 90
+    }
+  }
+}
