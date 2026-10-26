@@ -17,8 +17,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.packs.PackType;
+import net.minecraft.server.packs.repository.ServerPacksSource;
+import net.minecraft.server.packs.resources.MultiPackResourceManager;
+import net.minecraft.tags.TagLoader;
 import net.minecraft.world.item.ItemStack;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,6 +45,17 @@ class ArcaneContentLintTest {
     @BeforeAll
     static void bind() {
         TestItems.bindComponents();
+        // The Bell's slabs are a vanilla tag; bind vanilla's tags as datagen does, so its round
+        // trip has members.
+        try (MultiPackResourceManager data =
+                new MultiPackResourceManager(
+                        PackType.SERVER_DATA,
+                        List.of(ServerPacksSource.createVanillaPackSource()))) {
+            TagLoader.loadTagsForExistingRegistries(
+                            data,
+                            RegistryAccess.fromRegistryOfRegistries(BuiltInRegistries.REGISTRY))
+                    .forEach(Registry.PendingTags::apply);
+        }
     }
 
     private static Map<String, JsonObject> bodies() {

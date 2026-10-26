@@ -283,6 +283,11 @@ public final class ArcaneBodies {
             AspectTable.ids(cell, BuiltInRegistries.ITEM).stream()
                     .sorted()
                     .forEach(item -> alternatives.add(new Derivation.Alternative(item, null)));
+            if (alternatives.isEmpty()) {
+                // An unbound tag would make the gate skip this round trip unchecked.
+                throw new IllegalStateException(
+                        "Arcane recipe " + id + ": ingredient " + cell + " names no items");
+            }
             ingredients.add(alternatives);
         }
         JsonObject result = body.getAsJsonObject("result");
