@@ -47,7 +47,10 @@ public final class WorldgenNeoForgeClient {
                                                         WorldgenNeoForgeClient::dump)));
     }
 
-    /** The harness's {@code vftv:worldgen_client} dump: the Answerers the client sees, and the chant. */
+    /**
+     * The harness's {@code vftv:worldgen_client} dump: the Answerers the client sees, and the
+     * chant.
+     */
     private static String dump(String args) {
         JsonObject data = new JsonObject();
         Minecraft minecraft = Minecraft.getInstance();

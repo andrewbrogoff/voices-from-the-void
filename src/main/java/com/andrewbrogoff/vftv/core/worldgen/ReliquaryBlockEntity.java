@@ -153,6 +153,15 @@ public final class ReliquaryBlockEntity extends BlockEntity {
         return record;
     }
 
+    /** Removal loses an unreadable record, with one WARN logging its raw tag (conventions). */
+    @Override
+    public void preRemoveSideEffects(BlockPos pos, BlockState state) {
+        if (record instanceof Retained.Unreadable<WorldgenCodecs.Reliquary> u
+                && level instanceof ServerLevel) {
+            LOGGER.warn("Reliquary at {} removed; its unreadable record is lost: {}", pos, u.raw());
+        }
+    }
+
     private void warnIfUnreadable() {
         if (record instanceof Retained.Unreadable<WorldgenCodecs.Reliquary> u
                 && level instanceof ServerLevel

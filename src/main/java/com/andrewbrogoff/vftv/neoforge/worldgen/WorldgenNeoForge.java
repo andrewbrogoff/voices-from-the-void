@@ -8,9 +8,9 @@ import com.andrewbrogoff.vftv.core.worldgen.ChoirSitePlaceQuery;
 import com.andrewbrogoff.vftv.core.worldgen.ReliquaryBlockEntity;
 import com.andrewbrogoff.vftv.core.worldgen.ReliquaryService;
 import com.andrewbrogoff.vftv.core.worldgen.WorldgenCodecs;
-import com.andrewbrogoff.vftv.core.worldgen.model.ChoirClaims;
 import com.andrewbrogoff.vftv.core.worldgen.WorldgenContent;
 import com.andrewbrogoff.vftv.core.worldgen.WorldgenService;
+import com.andrewbrogoff.vftv.core.worldgen.model.ChoirClaims;
 import com.andrewbrogoff.vftv.core.worldgen.model.WorldgenTuning;
 import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
 import com.google.gson.JsonArray;
@@ -25,17 +25,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.ReloadableServerResources;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.packs.resources.Resource;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.InterModComms;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
@@ -104,7 +104,8 @@ public final class WorldgenNeoForge {
                                 () ->
                                         Map.entry(
                                                 "vftv:worldgen",
-                                                (Function<String, String>) WorldgenNeoForge::dump)));
+                                                (Function<String, String>)
+                                                        WorldgenNeoForge::dump)));
         gameBus.addListener(
                 ServerStoppedEvent.class,
                 event -> {
@@ -116,8 +117,8 @@ public final class WorldgenNeoForge {
 
     /**
      * The harness's {@code vftv:worldgen} dump, for the first player: their claims, the Choir pages
-     * they hold, whether they stand in a Choir site, and the Answerers within 48 blocks; with {@code
-     * pos}, that block's Reliquary record.
+     * they hold, whether they stand in a Choir site, and the Answerers within 48 blocks; with
+     * {@code pos}, that block's Reliquary record.
      */
     private static String dump(String args) {
         JsonObject data = new JsonObject();
@@ -152,17 +153,21 @@ public final class WorldgenNeoForge {
         }
         data.addProperty("pagesHeld", pages);
         ServerLevel level = player.level();
-        data.addProperty("choirSite", ChoirSitePlaceQuery.INSTANCE.test(level, player.blockPosition()));
+        data.addProperty(
+                "choirSite", ChoirSitePlaceQuery.INSTANCE.test(level, player.blockPosition()));
         List<Answerer> near =
                 level.getEntitiesOfClass(Answerer.class, player.getBoundingBox().inflate(48));
         data.addProperty("answerers", near.size());
         data.addProperty("cantors", near.stream().filter(Answerer::isCantor).count());
         data.addProperty("chanting", near.stream().anyMatch(Answerer::chanting));
-        data.addProperty("targeting", near.stream().filter(a -> java.util.Objects.equals(player, a.getTarget())).count());
+        data.addProperty(
+                "targeting",
+                near.stream().filter(a -> java.util.Objects.equals(player, a.getTarget())).count());
         JsonObject request = JsonParser.parseString(args).getAsJsonObject();
         if (request.has("pos")) {
             JsonArray p = request.getAsJsonArray("pos");
-            BlockPos pos = new BlockPos(p.get(0).getAsInt(), p.get(1).getAsInt(), p.get(2).getAsInt());
+            BlockPos pos =
+                    new BlockPos(p.get(0).getAsInt(), p.get(1).getAsInt(), p.get(2).getAsInt());
             if (level.getBlockEntity(pos) instanceof ReliquaryBlockEntity be) {
                 data.addProperty(
                         "reliquary",
