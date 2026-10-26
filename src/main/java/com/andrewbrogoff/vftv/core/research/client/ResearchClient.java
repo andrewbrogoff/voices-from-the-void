@@ -57,7 +57,8 @@ public final class ResearchClient {
     /**
      * The {@code vftv:research} dump: how many entries and categories the client's synced
      * registries hold, and the owner's synced record (Stage, learned count and ids, revealed ids,
-     * revision, and Vacuos's links in their view), or {@code readable: false}.
+     * revision, open notes, and Vacuos's links in their view), or {@code readable: false}; and the
+     * open book's latest quotes (revision, mode and each quoted entry's skip price).
      */
     public static String dump(String args) {
         JsonObject data = new JsonObject();
@@ -88,6 +89,21 @@ public final class ResearchClient {
                 var view = ResearchService.Data.of(level.registryAccess()).view(record);
                 data.addProperty("trueView", view.revealed("vftv:vacuos"));
                 data.add("vacuosLinks", ids(view.links("vftv:vacuos")));
+                data.add("notes", ids(record.notes().keySet()));
+            }
+            ResearchFeedback.Quotes q = quotes;
+            if (q != null) {
+                JsonObject out = new JsonObject();
+                out.addProperty("revision", q.revision());
+                out.addProperty("mode", q.mode());
+                JsonObject prices = new JsonObject();
+                for (ResearchFeedback.EntryQuote e : q.entries()) {
+                    JsonObject price = new JsonObject();
+                    e.price().forEach(price::addProperty);
+                    prices.add(e.entry(), price);
+                }
+                out.add("prices", prices);
+                data.add("quotes", out);
             }
         }
         return data.toString();

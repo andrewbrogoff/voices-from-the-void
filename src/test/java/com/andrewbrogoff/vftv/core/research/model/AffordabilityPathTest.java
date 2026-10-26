@@ -201,6 +201,46 @@ class AffordabilityPathTest {
     }
 
     @Test
+    void rewardsTeachAndTheirDiscoveriesAreEvidence() {
+        Map<String, Fixtures.B> w = Fixtures.world();
+        Objects.requireNonNull(w.get("vftv:taking_notes")).rewards.put("vftv:motus", 1);
+        Fixtures.B moving =
+                Fixtures.b(1, "vftv:resonance", 3, 3, EntryKind.FIND).parents("vftv:resonance");
+        moving.triggers.add(new Trigger.Discovered("vftv:motus"));
+        w.put("vftv:moving", moving);
+        AffordabilityPath.State end =
+                path("""
+                        {"use": "geode"}, {"use": "torch"}, {"learn": "vftv:taking_notes"},
+                        {"use": "drip"}""")
+                        .replay(world(Fixtures.build(w)), AffordabilityPath.State.EMPTY);
+        assertTrue(end.knowledge().known().containsAll(List.of("vftv:ordo", "vftv:motus")));
+        assertTrue(end.research().isLearned("vftv:moving"), "the discovery latched a find");
+        assertTrue(end.research().rewarded().contains("vftv:taking_notes"));
+    }
+
+    @Test
+    void aSourceThatCannotGiveIsRejected() {
+        String file =
+                """
+                {"schema": "vftv:affordability_path/1", "stage": 1,
+                 "sources": {
+                   "page": {"choir_page": "vftv:choir/beneath_the_notes", "site": "vftv:choir_ruin",
+                            "count": 1, "why": "too early"},
+                   "dust": {"scan": "item:test:nothing", "count": 1, "why": "no values"}
+                 },
+                 "steps": [{"use": "STEP"}]}""";
+        AffordabilityPath.World w = world(fixtures());
+        for (String step : List.of("page", "dust")) {
+            assertThrows(
+                    IllegalArgumentException.class,
+                    () ->
+                            AffordabilityPath.parse(file.replace("STEP", step))
+                                    .replay(w, AffordabilityPath.State.EMPTY),
+                    step);
+        }
+    }
+
+    @Test
     void theSchemaRejectsMalformedFiles() {
         for (String bad :
                 List.of(
