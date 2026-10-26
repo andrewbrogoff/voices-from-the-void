@@ -265,8 +265,13 @@ public record InfusionPreview(
                             ? Component.literal(Integer.toString(run.abandonFlux()))
                             : absent(field);
             case "stabilisers_capped" ->
-                    plan != null ? yesNo(plan.stabilisersCapped()) : absent(field);
-            case "clamped" -> plan != null ? yesNo(plan.clamped()) : absent(field);
+                    plan != null
+                            ? yesNo(plan.stabilisersCapped())
+                            : run != null ? yesNo(run.stabilisersCapped()) : absent(field);
+            case "clamped" ->
+                    plan != null
+                            ? yesNo(plan.clamped())
+                            : run != null ? yesNo(run.clamped()) : absent(field);
             case "status" ->
                     switch (availability) {
                         case NO_ALTAR ->

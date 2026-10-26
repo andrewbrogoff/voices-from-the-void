@@ -106,7 +106,9 @@ final class InfusionRunner {
                 bowl.markDirty();
             }
             if (sound != null) {
-                InfusionAltars.play(level, soundAt, sound, 1.0f);
+                Identifier s = sound;
+                BlockPos at = soundAt;
+                InfusionAltars.notify(pos, () -> InfusionAltars.play(level, at, s, 1.0f));
             }
         }
         if (after != null) {
@@ -356,7 +358,8 @@ final class InfusionRunner {
         ResourceKey<Recipe<?>> recipe = ResourceKey.create(Registries.RECIPE, run.recipe);
         int seq = run.seq;
         return () -> {
-            InfusionAltars.play(level, pos, InfusionContent.FINISH, 1.0f);
+            InfusionAltars.notify(
+                    pos, () -> InfusionAltars.play(level, pos, InfusionContent.FINISH, 1.0f));
             level.sendParticles(
                     ParticleTypes.ENCHANT,
                     pos.getX() + 0.5,

@@ -86,6 +86,8 @@ public record InfusionReadout(
      * @param upsetFlux the upset flux bound under the run's frozen rules
      * @param abandonFlux {@code essentiaFlux(drawn, ABANDONED, rules)} under the current rules
      * @param abandonArmed whether an abandon is armed
+     * @param stabilisersCapped whether the frozen matched pairs exceeded the frozen cap
+     * @param clamped whether the frozen stability was clamped
      */
     public record Run(
             ResourceKey<Recipe<?>> recipe,
@@ -105,7 +107,9 @@ public record InfusionReadout(
             @Nullable BlockPos missing,
             long upsetFlux,
             int abandonFlux,
-            boolean abandonArmed) {
+            boolean abandonArmed,
+            boolean stabilisersCapped,
+            boolean clamped) {
         /** Copies. */
         public Run {
             output = output.copy();
@@ -217,6 +221,8 @@ public record InfusionReadout(
             }
             buf.writeVarLong(run.upsetFlux());
             buf.writeBoolean(run.abandonArmed());
+            buf.writeBoolean(run.stabilisersCapped());
+            buf.writeBoolean(run.clamped());
         }
     }
 
@@ -303,6 +309,8 @@ public record InfusionReadout(
                             missing,
                             flux,
                             v[9],
+                            buf.readBoolean(),
+                            buf.readBoolean(),
                             buf.readBoolean());
         }
         return new InfusionReadout(status, reason, args, dimension, pos, plan, run, changed);

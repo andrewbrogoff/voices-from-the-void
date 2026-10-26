@@ -110,6 +110,17 @@ public abstract sealed class AltarBlockEntity extends BlockEntity
         item = stack;
     }
 
+    /**
+     * Marks the chunk unsaved without vanilla's neighbour signal update: neither block has a
+     * comparator output, and a commit's or a step's writes must run no foreign code.
+     */
+    @Override
+    public void setChanged() {
+        if (level != null) {
+            level.blockEntityChanged(worldPosition);
+        }
+    }
+
     @Override
     public ItemStack getTheItem() {
         return item;

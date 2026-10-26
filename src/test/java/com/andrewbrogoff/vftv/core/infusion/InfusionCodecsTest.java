@@ -281,6 +281,8 @@ class InfusionCodecsTest {
                         new BlockPos(1, 2, 3),
                         300L,
                         1,
+                        true,
+                        false,
                         true);
         RegistryFriendlyByteBuf rb = buffer();
         var cleared =
@@ -308,6 +310,7 @@ class InfusionCodecsTest {
         assertEquals(8, rr.cells().getFirst().cost());
         assertTrue(rr.abandonArmed());
         assertEquals(20, rr.instability());
+        assertTrue(rr.clamped());
         RegistryFriendlyByteBuf over = buffer();
         InfusionPayloads.Readout.STREAM_CODEC.encode(
                 over,

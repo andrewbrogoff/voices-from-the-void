@@ -890,7 +890,17 @@ public final class InfusionAltars {
                         flux,
                         FluxMath.essentiaFlux(
                                 drawn, SpillCause.ABANDONED, FluxRulesService.current()),
-                        run.abandon != null && run.abandon.until() > level.getGameTime());
+                        run.abandon != null && run.abandon.until() > level.getGameTime(),
+                        run.stability.matched() > run.rules.maxPairs(),
+                        InfusionMath.rawStability(
+                                        run.stability.r(),
+                                        run.stability.lonePedestals(),
+                                        run.stability.loneItems(),
+                                        run.stability.warp(),
+                                        run.stability.bonus(),
+                                        run.rules.lonePedestal(),
+                                        run.rules.loneItem())
+                                != run.stability.s());
         return new InfusionReadout(
                 InfusionStatus.RINGING,
                 null,
@@ -1055,13 +1065,14 @@ public final class InfusionAltars {
                 ARMS.remove(d.player(), arm);
                 continue;
             }
-            BlockEntity be = level.getBlockEntity(arm.pos);
             if (!player.isAlive()
                     || !player.level().equals(level)
                     || !arm.dimension.equals(level.dimension())
                     || !player.isWithinBlockInteractionRange(arm.pos, 1.0)
                     || now - arm.lastStrike > tuning().armTtl()
-                    || !(be instanceof BowlBlockEntity bowl)
+                    || level.getChunkSource().getChunkNow(arm.pos.getX() >> 4, arm.pos.getZ() >> 4)
+                            == null
+                    || !(level.getBlockEntity(arm.pos) instanceof BowlBlockEntity bowl)
                     || bowl.id != arm.bowlId) {
                 end(player, arm);
                 continue;
