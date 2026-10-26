@@ -121,6 +121,7 @@ public final class FluxService {
                     aura.seep = pos.asLong();
                     aura.spiller = player == null ? null : player.getUUID();
                     platform().createAura(chunk, aura);
+                    state.auras.add(chunk.getPos().pack());
                 } else {
                     aura.flux += retained;
                     aura.hasSeep = true;
@@ -324,6 +325,9 @@ public final class FluxService {
                     aura.reason());
         }
         state(level).loaded.add(chunk.getPos().pack());
+        if (aura != null) {
+            state(level).auras.add(chunk.getPos().pack());
+        }
     }
 
     /** {@code ChunkEvent.Unload}: the chunk leaves every queue. */
@@ -334,6 +338,7 @@ public final class FluxService {
         state.unsaturate(pack);
         state.loaded.remove(pack);
         state.dirty.remove(pack);
+        state.auras.remove(pack);
     }
 
     /**
@@ -387,6 +392,7 @@ public final class FluxService {
                 aura.seep = entry.seep();
                 aura.spiller = entry.spiller().orElse(null);
                 platform().createAura(chunk, aura);
+                state.auras.add(chunk.getPos().pack());
             } else {
                 aura.flux += kept;
                 aura.hasSeep = true;

@@ -199,6 +199,7 @@ final class HushGameTests {
         tests.put("hush_restore_command_continues", HushGameTests::restoreContinues);
         tests.put("hush_node_beside_a_pool", HushGameTests::nodeBesidePool);
         tests.put("hush_pealing_bell_scopes", HushGameTests::pealingScopes);
+        tests.put("hush_tuning_reload_requeues", HushGameTests::tuningReload);
     }
 
     // --- helpers ------------------------------------------------------------------------------
@@ -1291,6 +1292,29 @@ final class HushGameTests {
         }
         helper.assertValueEqual(aura(helper, rel).flux(), 14, "one spill of the final balance");
         clearAura(helper, rel);
+        helper.succeed();
+    }
+
+    /** A reload that lowers the onset queues a loaded aura that was below the old threshold. */
+    private static void tuningReload(GameTestHelper helper) {
+        BlockPos rel = new BlockPos(1, 2, 1);
+        deposit(helper, rel, 30);
+        ChunkPos c = chunk(helper, rel);
+        helper.assertTrue(!HushService.queued(helper.getLevel(), c), "30 < 50: idle");
+        int[] lowered = FluxTuning.defaults();
+        lowered[3] = 20; // hush.onset
+        try {
+            FluxRulesService.applyTuning(
+                    com.mojang.serialization.DataResult.success(lowered), true);
+            HushService.onTuningReload(helper.getLevel().getServer());
+            helper.assertTrue(
+                    HushService.queued(helper.getLevel(), c), "queued under the new onset");
+        } finally {
+            FluxRulesService.applyTuning(
+                    com.mojang.serialization.DataResult.success(FluxTuning.defaults()), true);
+            HushService.onTuningReload(helper.getLevel().getServer());
+            clearAura(helper, rel);
+        }
         helper.succeed();
     }
 

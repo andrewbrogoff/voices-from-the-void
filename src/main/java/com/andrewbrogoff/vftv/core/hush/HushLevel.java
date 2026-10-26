@@ -19,6 +19,10 @@ final class HushLevel {
     final Map<Long, Integer> misses = new HashMap<>();
     final TreeSet<Long> loaded = new TreeSet<>();
     final Set<Long> dirty = new LinkedHashSet<>();
+
+    /** Loaded chunks holding an aura: a tuning reload reconsiders every one. */
+    final Set<Long> auras = new java.util.HashSet<>();
+
     final DueQueue bells = new DueQueue();
     final Map<Long, PealingBellBlockEntity> bellIndex = new HashMap<>();
 

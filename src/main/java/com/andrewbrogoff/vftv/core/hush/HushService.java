@@ -135,8 +135,7 @@ public final class HushService {
         for (ServerLevel level : server.getAllLevels()) {
             HushLevel state = FluxService.state(level);
             long g = level.getGameTime();
-            List<Long> queued = state.due.keys();
-            queued.addAll(state.saturated);
+            List<Long> queued = new java.util.ArrayList<>(state.auras);
             state.saturated.clear();
             state.misses.clear();
             state.due.clear();
