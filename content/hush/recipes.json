@@ -1,0 +1,13 @@
+{"schema": "vftv:hush_recipes/1", "recipes": {
+  "vftv:clearing_bell": {"type": "vftv:arcane", "research": "vftv:clearing_bell", "kind": "ordinary",
+    "pattern": [" S ", "BAB", " C "],
+    "key": {"S": "minecraft:stick", "B": "vftv:resonant_brass_ingot", "A": "minecraft:amethyst_shard", "C": "minecraft:copper_ingot"},
+    "result": {"id": "vftv:clearing_bell", "count": 1},
+    "vis": {"vftv:aer": 12, "vftv:ordo": 12}},
+  "vftv:pealing_bell": {"type": "vftv:infusion", "research": "vftv:the_hush", "kind": "ordinary",
+    "centre": "minecraft:bell",
+    "components": ["vftv:resonant_brass_ingot", "vftv:resonant_brass_ingot", "minecraft:amethyst_shard",
+                   "minecraft:amethyst_shard", "minecraft:white_wool", "minecraft:white_wool"],
+    "essentia": {"vftv:sonus": 16, "vftv:ordo": 8},
+    "instability": 10,
+    "result": {"item": {"id": "vftv:pealing_bell", "count": 1}}}}}

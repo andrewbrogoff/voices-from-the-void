@@ -1,0 +1,4 @@
+{"schema": "vftv:node_types/1", "types": {
+  "vftv:hushed": {"aspects": [{"aspect": "vftv:silentium", "range": [1, 1]}],
+                  "main_aspect": "vftv:silentium",
+                  "clarity": {"faint": 1, "steady": 0, "clear": 0}}}}

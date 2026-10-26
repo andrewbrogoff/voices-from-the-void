@@ -1,0 +1,53 @@
+{"schema": "vftv:hush_fixtures/1",
+ "spill": [
+  {"cap": 1000, "d": 0, "w": 1000, "base": [10, 0, 1], "kind": "ordinary", "expect": {"effective": [10, 0, 1], "neutral": [10, 0, 1], "surcharge": 0, "spill": 0}},
+  {"cap": 850, "d": 300, "w": 1000, "base": [10, 3, 1], "kind": "ordinary", "expect": {"effective": [6, 2, 1], "neutral": [6, 2, 1], "surcharge": 0, "spill": 0}},
+  {"cap": 850, "d": 100, "w": 1250, "base": [32, 7], "kind": "ordinary", "expect": {"effective": [31, 7], "neutral": [25, 6], "surcharge": 7, "spill": 7}},
+  {"cap": 2000, "d": 0, "w": 10000, "base": [1000], "kind": "ordinary", "expect": {"effective": [4000], "neutral": [2000], "surcharge": 2000, "spill": 2000}},
+  {"cap": 250, "d": 900, "w": 1000, "base": [5], "kind": "ordinary", "expect": {"effective": [3], "neutral": [3], "surcharge": 0, "spill": 0}},
+  {"cap": 250, "d": 900, "w": 1500, "base": [100], "kind": "ordinary", "expect": {"effective": [50], "neutral": [50], "surcharge": 0, "spill": 0}},
+  {"cap": 1000, "d": 0, "w": 1200, "base": [30], "kind": "ordinary", "expect": {"effective": [36], "neutral": [30], "surcharge": 6, "spill": 6}},
+  {"cap": 1000, "d": 0, "w": 1030, "base": [3], "kind": "ordinary", "expect": {"effective": [4], "neutral": [3], "surcharge": 1, "spill": 1}},
+  {"cap": 850, "d": 0, "w": 1370, "base": [12, 12], "kind": "ordinary", "expect": {"effective": [14, 14], "neutral": [11, 11], "surcharge": 6, "spill": 6}},
+  {"cap": 1000, "d": 0, "w": 1000, "base": [40], "kind": "void", "expect": {"effective": [40], "neutral": [40], "spill": 10}},
+  {"cap": 1000, "d": 0, "w": 1000, "base": [1], "kind": "void", "expect": {"effective": [1], "neutral": [1], "spill": 1}},
+  {"cap": 2000, "d": 0, "w": 10000, "base": [1000, 1000, 1000, 1000, 1000, 1000, 1000, 1000], "kind": "ordinary", "expect": {"effective": [4000, 4000, 4000, 4000, 4000, 4000, 4000, 4000], "neutral": [2000, 2000, 2000, 2000, 2000, 2000, 2000, 2000], "surcharge": 16000, "spill": 16000}}],
+ "essentia": [
+  {"total": 0, "pm": 1000, "expect": 0},
+  {"total": 0, "pm": 500, "expect": 0},
+  {"total": 1, "pm": 1000, "expect": 1},
+  {"total": 1, "pm": 500, "expect": 1},
+  {"total": 3, "pm": 1000, "expect": 3},
+  {"total": 3, "pm": 500, "expect": 2},
+  {"total": 200, "pm": 1000, "expect": 200},
+  {"total": 200, "pm": 500, "expect": 100},
+  {"total": 1000, "pm": 1000, "expect": 1000},
+  {"total": 1000, "pm": 500, "expect": 500},
+  {"total": 10000, "pm": 1000, "expect": 10000},
+  {"total": 10000, "pm": 500, "expect": 5000},
+  {"total": 640000, "pm": 1000, "expect": 640000},
+  {"total": 640000, "pm": 500, "expect": 320000},
+  {"total": 50, "pm": 1000, "times": 6, "expect": 300}],
+ "phase": [
+  {"chunk": [0, 0], "interval": 10, "expect": {"fold": "0xC21D48E4BBC2BCC8", "phase": 2}},
+  {"chunk": [-1, 0], "interval": 10, "expect": {"fold": "0xEF2949749A6FF19D", "phase": 7}},
+  {"chunk": [0, -1], "interval": 10, "expect": {"fold": "0x970A1F109E0E25D4", "phase": 4}},
+  {"chunk": [-12345, 6789], "interval": 10, "expect": {"fold": "0x1CFB81FE4D218FCB", "phase": 3}}],
+ "stream": [
+  {"seed": "0x123456789ABCDEF", "chunk": [0, 0], "steps": "0x0", "count": 12, "expect": {"h": "0x88B1CC95D8BDED57", "directions": [2, 5, 5, 5, 4, 0, 4, 1, 3, 3, 3, 4]}}],
+ "kernel": [
+  {"world": "flat63", "seed": "0x123456789ABCDEF", "seep": [8, 64, 8], "radius": 12, "walk": 32, "attempts": 16, "expect": [{"steps": "0x0", "result": "convert", "at": [10, 63, 7], "used": 6}, {"steps": "0x1", "result": "convert", "at": [7, 63, 7], "used": 5}, {"steps": "0x2", "result": "convert", "at": [8, 63, 8], "used": 1}, {"steps": "0x3", "result": "miss", "reason": "none", "used": 32}, {"steps": "0x4", "result": "convert", "at": [13, 63, 9], "used": 13}, {"steps": "0x5", "result": "convert", "at": [9, 63, 7], "used": 15}, {"steps": "0x6", "result": "convert", "at": [9, 63, 9], "used": 5}, {"steps": "0x7", "result": "convert", "at": [5, 63, 8], "used": 8}, {"steps": "0x8", "result": "convert", "at": [7, 63, 8], "used": 2}, {"steps": "0x9", "result": "convert", "at": [7, 63, 9], "used": 5}, {"steps": "0xA", "result": "convert", "at": [9, 63, 8], "used": 2}, {"steps": "0xB", "result": "convert", "at": [7, 62, 8], "used": 15}, {"steps": "0xC", "result": "miss", "reason": "none", "used": 32}, {"steps": "0xD", "result": "miss", "reason": "none", "used": 32}, {"steps": "0xE", "result": "convert", "at": [11, 63, 11], "used": 15}, {"steps": "0xF", "result": "convert", "at": [9, 62, 7], "used": 4}]},
+  {"world": "flat63", "seed": "0x123456789ABCDEF", "seep": [15, 64, 15], "radius": 12, "walk": 32, "attempts": 6, "expect": [{"steps": "0x0", "result": "miss", "reason": "unloaded", "used": 2}, {"steps": "0x1", "result": "convert", "at": [14, 63, 14], "used": 5}, {"steps": "0x2", "result": "convert", "at": [15, 63, 15], "used": 1}, {"steps": "0x3", "result": "miss", "reason": "unloaded", "used": 2}, {"steps": "0x4", "result": "miss", "reason": "unloaded", "used": 1}, {"steps": "0x5", "result": "miss", "reason": "unloaded", "used": 2}]}],
+ "scheduler": [
+  {"world": "flat63", "seed": "0x123456789ABCDEF", "seep": [8, 64, 8], "radius": 12, "walk": 32, "nodes": [[8, 64, 9]], "flux": 150, "onset": 50, "block_cost": 5, "node_cost": 50, "every": 4, "hollow_flux": 25, "visits": 16, "expect": [{"visit": 0, "result": "block", "at": [10, 63, 7], "used": 6, "flux": 145, "steps": "0x1", "taken": "0x1"}, {"visit": 1, "result": "block", "at": [7, 63, 7], "used": 5, "flux": 140, "steps": "0x2", "taken": "0x2"}, {"visit": 2, "result": "block", "at": [8, 63, 8], "used": 1, "flux": 135, "steps": "0x3", "taken": "0x3"}, {"visit": 3, "result": "miss", "reason": "none", "used": 32, "flux": 135, "steps": "0x4", "taken": "0x3"}, {"visit": 4, "result": "node", "at": [8, 64, 9], "used": 1, "flux": 85, "steps": "0x5", "taken": "0x3"}, {"visit": 5, "result": "block", "at": [9, 63, 7], "used": 15, "rise": "rose", "flux": 55, "steps": "0x6", "taken": "0x4"}, {"visit": 6, "result": "block", "at": [9, 63, 9], "used": 5, "flux": 50, "steps": "0x7", "taken": "0x5"}, {"visit": 7, "result": "block", "at": [5, 63, 8], "used": 8, "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 8, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 9, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 10, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 11, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 12, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 13, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 14, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}, {"visit": 15, "result": "idle", "flux": 45, "steps": "0x8", "taken": "0x6"}]}],
+ "hud": [
+  {"onset": 50, "block_cost": 2, "flux": 200, "expect": 76},
+  {"onset": 50, "block_cost": 5, "flux": 200, "expect": 31},
+  {"onset": 50, "block_cost": 5, "flux": 49, "expect": 0},
+  {"onset": 50, "block_cost": 5, "flux": 50, "expect": 1},
+  {"onset": 0, "block_cost": 5, "flux": 6, "expect": 1},
+  {"onset": 0, "block_cost": 5, "flux": 4, "expect": 0},
+  {"onset": 10, "block_cost": 3, "flux": 11, "expect": 1}],
+ "ball": [
+  {"radius": 5, "expect": {"count": 515, "first": [[0, 0, 0], [-1, 0, 0], [0, -1, 0], [0, 0, -1], [0, 0, 1], [0, 1, 0], [1, 0, 0], [-1, -1, 0]], "last": [5, 0, 0]}},
+  {"radius": 8, "expect": {"count": 2109, "first": [[0, 0, 0], [-1, 0, 0], [0, -1, 0], [0, 0, -1], [0, 0, 1], [0, 1, 0], [1, 0, 0], [-1, -1, 0]], "last": [8, 0, 0]}}]}
