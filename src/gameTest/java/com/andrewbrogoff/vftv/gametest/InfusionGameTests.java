@@ -185,9 +185,13 @@ final class InfusionGameTests {
                 .useItemOn(held, helper.getLevel(), player, InteractionHand.MAIN_HAND, hit);
     }
 
+    /** An empty main hand, as vanilla routes it: the item use first, then the empty-hand use. */
     private static InteractionResult useEmpty(
             GameTestHelper helper, ServerPlayer player, BlockPos abs) {
-        player.setItemInHand(InteractionHand.MAIN_HAND, ItemStack.EMPTY);
+        InteractionResult first = use(helper, player, abs, ItemStack.EMPTY);
+        if (!(first instanceof InteractionResult.TryEmptyHandInteraction)) {
+            return first;
+        }
         BlockHitResult hit = new BlockHitResult(Vec3.atCenterOf(abs), Direction.UP, abs, false);
         return helper.getLevel().getBlockState(abs).useWithoutItem(helper.getLevel(), player, hit);
     }

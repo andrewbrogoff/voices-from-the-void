@@ -260,8 +260,8 @@ public final class InfusionAltars {
     /** {@code useItemOn} on either block (infusion spec, "Hand use"): the hand used decides. */
     static InteractionResult useItemOn(
             Level level, BlockPos pos, Player player, InteractionHand hand, ItemStack stack) {
-        if (!(level.getBlockEntity(pos) instanceof AltarBlockEntity be)) {
-            return InteractionResult.TRY_WITH_EMPTY_HAND;
+        if (stack.isEmpty() || !(level.getBlockEntity(pos) instanceof AltarBlockEntity be)) {
+            return InteractionResult.TRY_WITH_EMPTY_HAND; // an empty hand is useWithoutItem's
         }
         ServerPlayer sp = player instanceof ServerPlayer p ? p : null;
         boolean server = level instanceof ServerLevel;
