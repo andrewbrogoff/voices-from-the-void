@@ -1148,6 +1148,18 @@ final class RelayGameTests {
         typed.loadWithComponents(
                 TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), badType));
         helper.assertTrue(typed.unreadable(), "a malformed format is unreadable");
+        CompoundTag wrongType = saved.copy();
+        wrongType.putString("cradle", "future-record");
+        WandCradleBlockEntity scalar =
+                new WandCradleBlockEntity(pos, VisContent.wandCradle().defaultBlockState());
+        scalar.loadWithComponents(
+                TagValueInput.create(
+                        ProblemReporter.DISCARDING, level.registryAccess(), wrongType));
+        helper.assertTrue(scalar.unreadable(), "a record of the wrong type is unreadable");
+        helper.assertValueEqual(
+                scalar.saveWithFullMetadata(level.registryAccess()).getStringOr("cradle", ""),
+                "future-record",
+                "and kept as it was");
         level.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         level.getEntitiesOfClass(ItemEntity.class, new AABB(pos).inflate(1))
                 .forEach(ItemEntity::discard);

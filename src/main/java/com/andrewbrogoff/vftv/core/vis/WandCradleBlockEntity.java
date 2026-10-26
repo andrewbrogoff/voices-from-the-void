@@ -8,10 +8,12 @@ import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.ClientGamePacketListener;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.ExtraCodecs;
 import net.minecraft.world.Containers;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -61,7 +63,7 @@ public final class WandCradleBlockEntity extends RelayBlockEntity {
                     Set.of("format", "wand"));
 
     private ItemStack wand = ItemStack.EMPTY;
-    private @Nullable CompoundTag raw; // the whole record while unreadable, written back unchanged
+    private @Nullable Tag raw; // the whole record while unreadable, written back unchanged
 
     /** A cradle block entity. */
     public WandCradleBlockEntity(BlockPos pos, BlockState state) {
@@ -92,7 +94,7 @@ public final class WandCradleBlockEntity extends RelayBlockEntity {
     @Override
     protected void loadAdditional(ValueInput input) {
         super.loadAdditional(input);
-        Optional<CompoundTag> stored = input.read(KEY, CompoundTag.CODEC);
+        Optional<Tag> stored = input.read(KEY, ExtraCodecs.NBT); // any tag, even a wrong type
         Optional<ItemStack> read;
         try {
             read = input.read(KEY, RECORD);
@@ -110,7 +112,7 @@ public final class WandCradleBlockEntity extends RelayBlockEntity {
     protected void saveAdditional(ValueOutput output) {
         super.saveAdditional(output);
         if (raw != null) {
-            output.store(KEY, CompoundTag.CODEC, raw);
+            output.store(KEY, ExtraCodecs.NBT, raw);
         } else {
             output.store(KEY, RECORD, wand);
         }
