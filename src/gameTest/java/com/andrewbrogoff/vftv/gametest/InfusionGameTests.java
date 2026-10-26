@@ -95,29 +95,31 @@ final class InfusionGameTests {
     static void register(Map<String, Consumer<GameTestHelper>> tests, IEventBus modBus) {
         NeoForge.EVENT_BUS.addListener(InfusionEvent.class, EVENTS::add);
         tests.put("infusion_registered", InfusionGameTests::registered);
-        tests.put("infusion_hand_place_take", h -> handPlaceTake(h, 1));
-        tests.put("infusion_strike_reads_ready", h -> strikeReadsReady(h, 2));
-        tests.put("infusion_second_strike_starts", h -> secondStrikeStarts(h, 3));
-        tests.put("infusion_first_strike_never_commits", h -> firstStrikeNeverCommits(h, 4));
-        tests.put("infusion_stale_after_change", h -> staleAfterChange(h, 5));
-        tests.put("infusion_seen_bad_input", h -> seenBadInput(h, 6));
-        tests.put("infusion_run_completes", h -> runCompletes(h, 7));
-        tests.put("infusion_unlearned_no_recipe", h -> unlearned(h, 8));
-        tests.put("infusion_enchant_to_cap", h -> enchantToCap(h, 9));
-        tests.put("infusion_enchant_refusals", h -> enchantRefusals(h, 10));
-        tests.put("infusion_transmute_keeps_components", h -> transmute(h, 11));
-        tests.put("infusion_claims_refuse_second_bowl", h -> claimsRefuse(h, 12));
-        tests.put("infusion_item_handler_rules", h -> handlerRules(h, 13));
-        tests.put("infusion_container_path", h -> containerPath(h, 14));
-        tests.put("infusion_abandon_flow", h -> abandonFlow(h, 15));
-        tests.put("infusion_removal_spills", h -> removalSpills(h, 16));
-        tests.put("infusion_persistence", h -> persistence(h, 17));
-        tests.put("infusion_unreadable_record", h -> unreadable(h, 18));
+        tests.put("infusion_hand_place_take", staggered(1, h -> handPlaceTake(h, 1)));
+        tests.put("infusion_strike_reads_ready", staggered(2, h -> strikeReadsReady(h, 2)));
+        tests.put("infusion_second_strike_starts", staggered(3, h -> secondStrikeStarts(h, 3)));
+        tests.put(
+                "infusion_first_strike_never_commits",
+                staggered(4, h -> firstStrikeNeverCommits(h, 4)));
+        tests.put("infusion_stale_after_change", staggered(5, h -> staleAfterChange(h, 5)));
+        tests.put("infusion_seen_bad_input", staggered(6, h -> seenBadInput(h, 6)));
+        tests.put("infusion_run_completes", staggered(7, h -> runCompletes(h, 7)));
+        tests.put("infusion_unlearned_no_recipe", staggered(8, h -> unlearned(h, 8)));
+        tests.put("infusion_enchant_to_cap", staggered(9, h -> enchantToCap(h, 9)));
+        tests.put("infusion_enchant_refusals", staggered(10, h -> enchantRefusals(h, 10)));
+        tests.put("infusion_transmute_keeps_components", staggered(11, h -> transmute(h, 11)));
+        tests.put("infusion_claims_refuse_second_bowl", staggered(12, h -> claimsRefuse(h, 12)));
+        tests.put("infusion_item_handler_rules", staggered(13, h -> handlerRules(h, 13)));
+        tests.put("infusion_container_path", staggered(14, h -> containerPath(h, 14)));
+        tests.put("infusion_abandon_flow", staggered(15, h -> abandonFlow(h, 15)));
+        tests.put("infusion_removal_spills", staggered(16, h -> removalSpills(h, 16)));
+        tests.put("infusion_persistence", staggered(17, h -> persistence(h, 17)));
+        tests.put("infusion_unreadable_record", staggered(18, h -> unreadable(h, 18)));
         tests.put("infusion_recipe_codec", InfusionGameTests::recipeCodec);
-        tests.put("infusion_shown_altar", h -> shownAltar(h, 19));
-        tests.put("infusion_draws_only_inside_box", h -> drawsInsideBox(h, 20));
-        tests.put("infusion_preview_context", h -> preview(h, 21));
-        tests.put("infusion_assessment_budget", online(h -> budget(h, 22)));
+        tests.put("infusion_shown_altar", staggered(19, h -> shownAltar(h, 19)));
+        tests.put("infusion_draws_only_inside_box", staggered(20, h -> drawsInsideBox(h, 20)));
+        tests.put("infusion_preview_context", staggered(21, h -> preview(h, 21)));
+        tests.put("infusion_assessment_budget", staggered(22, online(h -> budget(h, 22))));
         tests.put("infusion_tuning_rules", InfusionGameTests::tuningRules);
     }
 
@@ -285,6 +287,14 @@ final class InfusionGameTests {
     @SuppressWarnings("removal") // the only helper that puts a mock player on the player list
     private static ServerPlayer onlinePlayer(GameTestHelper helper) {
         return helper.makeMockServerPlayerInLevel();
+    }
+
+    /**
+     * Runs a test on tick {@code band}: strikes and commits share the level's allowance of 16
+     * assessments a tick, so tests that all struck on tick 0 would queue each other.
+     */
+    private static Consumer<GameTestHelper> staggered(int band, Consumer<GameTestHelper> test) {
+        return helper -> helper.runAfterDelay(band, () -> test.accept(helper));
     }
 
     private static Consumer<GameTestHelper> online(Consumer<GameTestHelper> test) {
