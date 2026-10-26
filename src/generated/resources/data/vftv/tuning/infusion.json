@@ -1,0 +1,17 @@
+{
+  "abandon.window": 100,
+  "arm.refresh": 10,
+  "arm.ttl": 1200,
+  "enchant.instability_per_level": 5,
+  "run.interval": 10,
+  "run.rate": 4,
+  "stabilise.max_pairs": 8,
+  "stabilise.per_pair": 3,
+  "symmetry.lone_item": 4,
+  "symmetry.lone_pedestal": 6,
+  "upset.jolt_weight": 1,
+  "upset.max": 6,
+  "upset.max_chance": 150,
+  "upset.spill": 50,
+  "upset.spill_weight": 1
+}

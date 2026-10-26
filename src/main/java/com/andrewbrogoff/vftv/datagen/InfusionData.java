@@ -136,8 +136,8 @@ final class InfusionData implements FeatureData {
             return List.of("type " + t.getAsString() + " is neither vftv:arcane nor vftv:infusion");
         }
         JsonObject copy = o.deepCopy();
-        copy.addProperty("schema", "vftv:body");
-        return new Schema("vftv:body", shape.fields(), r -> List.of()).validate(copy);
+        copy.addProperty("schema", "vftv:body/1");
+        return new Schema("vftv:body/1", shape.fields(), r -> List.of()).validate(copy);
     }
 
     /** {@code vftv:infusion_recipes/1} with its "Rejected:" rules. */
@@ -718,7 +718,9 @@ final class InfusionData implements FeatureData {
             }
             if (read(file) instanceof JsonObject root && root.get("recipes") instanceof JsonObject all) {
                 for (String id : all.keySet()) {
-                    if (ids.contains(id)) {
+                    if (ids.contains(id)
+                            && all.get(id) instanceof JsonObject b
+                            && b.has("type")) { // a recipe body, not a bootstrap entry
                         seen.put(id, rel);
                     }
                 }

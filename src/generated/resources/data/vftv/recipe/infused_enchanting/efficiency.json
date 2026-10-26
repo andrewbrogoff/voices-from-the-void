@@ -1,0 +1,21 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/mining",
+  "components": [
+    "#c:dusts/redstone",
+    "#c:dusts/redstone",
+    "#c:gems/quartz",
+    "#c:gems/quartz"
+  ],
+  "essentia": {
+    "vftv:instrumentum": 24,
+    "vftv:motus": 20
+  },
+  "instability": 10,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:efficiency",
+    "max_level": 5
+  }
+}

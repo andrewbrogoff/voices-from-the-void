@@ -1,0 +1,20 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/mining_loot",
+  "components": [
+    "#c:gems/lapis",
+    "#c:gems/lapis",
+    "#c:ingots/gold"
+  ],
+  "essentia": {
+    "vftv:permutatio": 40,
+    "vftv:praecantatio": 34
+  },
+  "instability": 15,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:fortune",
+    "max_level": 3
+  }
+}

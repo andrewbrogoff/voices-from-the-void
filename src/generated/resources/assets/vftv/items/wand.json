@@ -15,6 +15,13 @@
           {
             "model": {
               "type": "minecraft:model",
+              "model": "vftv:item/wand/rod/echo"
+            },
+            "when": "vftv:echo"
+          },
+          {
+            "model": {
+              "type": "minecraft:model",
               "model": "vftv:item/wand/rod/wooden"
             },
             "when": "vftv:wooden"
@@ -36,6 +43,13 @@
               "model": "vftv:item/wand/cap/copper"
             },
             "when": "vftv:copper"
+          },
+          {
+            "model": {
+              "type": "minecraft:model",
+              "model": "vftv:item/wand/cap/echo"
+            },
+            "when": "vftv:echo"
           },
           {
             "model": {

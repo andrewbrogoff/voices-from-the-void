@@ -137,7 +137,10 @@ public final class InfusionBodies {
                                     problems.add(where + "unknown aspect " + key.identifier());
                                 }
                             }
-                            recipe.checkResult().ifError(e -> problems.add(where + e.message()));
+                            if (!(recipe.result() instanceof InfusionRecipe.Result.Item item)
+                                    || item.item().item().areComponentsBound()) {
+                                recipe.checkResult().ifError(e -> problems.add(where + e.message()));
+                            }
                             recipe.checkEnchantBound().ifError(e -> problems.add(where + e.message()));
                         });
         return problems;

@@ -1,0 +1,22 @@
+{
+  "type": "vftv:infusion",
+  "centre": "vftv:resonant_brass_cap",
+  "components": [
+    "minecraft:echo_shard",
+    "#c:gems/amethyst"
+  ],
+  "essentia": {
+    "vftv:praecantatio": 8,
+    "vftv:sonus": 12,
+    "vftv:vitreus": 4
+  },
+  "instability": 8,
+  "kind": "ordinary",
+  "research": "vftv:echo_wands",
+  "result": {
+    "item": {
+      "count": 1,
+      "id": "vftv:echo_cap"
+    }
+  }
+}

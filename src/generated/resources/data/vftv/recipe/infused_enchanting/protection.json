@@ -1,0 +1,21 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/armor",
+  "components": [
+    "#c:ingots/iron",
+    "#c:ingots/iron",
+    "minecraft:leather",
+    "minecraft:leather"
+  ],
+  "essentia": {
+    "vftv:praecantatio": 25,
+    "vftv:tutamen": 30
+  },
+  "instability": 10,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:protection",
+    "max_level": 4
+  }
+}

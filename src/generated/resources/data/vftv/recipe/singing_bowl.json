@@ -1,0 +1,23 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "a": "#c:gems/amethyst",
+    "b": "vftv:resonant_brass_ingot",
+    "d": "minecraft:polished_deepslate"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "b b",
+    "bab",
+    " d "
+  ],
+  "research": "vftv:infusion",
+  "result": {
+    "count": 1,
+    "id": "vftv:singing_bowl"
+  },
+  "vis": {
+    "vftv:aer": 24,
+    "vftv:ordo": 20
+  }
+}
