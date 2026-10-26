@@ -3,7 +3,6 @@ package com.andrewbrogoff.vftv.core.hush;
 import com.andrewbrogoff.vftv.api.hush.HushKeys;
 import com.andrewbrogoff.vftv.api.hush.HushedForm;
 import com.andrewbrogoff.vftv.core.common.Registrar;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -128,9 +127,7 @@ public final class HushContent {
 
     /** Every hushed form, in the table's order. */
     public static List<Block> forms() {
-        List<Block> out = new ArrayList<>();
-        forms.values().forEach(s -> out.add(s.get()));
-        return out;
+        return forms.values().stream().map(Supplier::get).toList();
     }
 
     /** The Clearing Bell. */

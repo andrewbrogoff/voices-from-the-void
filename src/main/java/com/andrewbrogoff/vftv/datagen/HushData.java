@@ -163,12 +163,20 @@ final class HushData implements FeatureData {
      * pack itself.
      */
     static Set<String> vanillaMembers(Identifier tag) {
+        return vanillaMembers("block", tag);
+    }
+
+    /**
+     * Every id a vanilla tag of {@code kind} ({@code block}, {@code item}) holds, nested resolved.
+     */
+    static Set<String> vanillaMembers(String kind, Identifier tag) {
         Set<String> out = new TreeSet<>();
-        collect(tag, out, new LinkedHashSet<>());
+        collect(kind, tag, out, new LinkedHashSet<>());
         return out;
     }
 
-    private static void collect(Identifier tag, Set<String> out, Set<Identifier> seen) {
+    private static void collect(
+            String kind, Identifier tag, Set<String> out, Set<Identifier> seen) {
         if (!seen.add(tag)) {
             return;
         }
@@ -178,7 +186,7 @@ final class HushData implements FeatureData {
                                 PackType.SERVER_DATA,
                                 Identifier.fromNamespaceAndPath(
                                         tag.getNamespace(),
-                                        "tags/block/" + tag.getPath() + ".json"));
+                                        "tags/" + kind + "/" + tag.getPath() + ".json"));
         if (resource == null) {
             return;
         }
@@ -196,7 +204,7 @@ final class HushData implements FeatureData {
                             ? value.getAsJsonObject().get("id").getAsString()
                             : value.getAsString();
             if (id.startsWith("#")) {
-                collect(Identifier.parse(id.substring(1)), out, seen);
+                collect(kind, Identifier.parse(id.substring(1)), out, seen);
             } else {
                 out.add(Identifier.parse(id).toString());
             }
@@ -763,7 +771,8 @@ final class HushData implements FeatureData {
                     id.equals("vftv:resonant_brass_ingot")
                             || id.equals("minecraft:amethyst_shard")
                             || id.equals("#minecraft:wool")
-                            || vanillaItemTag("wool").contains(id);
+                            || vanillaMembers("item", Identifier.withDefaultNamespace("wool"))
+                                    .contains(id);
             if (!ok) {
                 problems.add(p + ".components: " + id + " is not allowed");
             }
@@ -795,28 +804,6 @@ final class HushData implements FeatureData {
             problems.add("$.recipes: no recipe may use vftv:hush_ash");
         }
         return problems;
-    }
-
-    /** Every item id a vanilla item tag holds, nested tags resolved. */
-    private static Set<String> vanillaItemTag(String path) {
-        Set<String> out = new TreeSet<>();
-        IoSupplier<InputStream> resource =
-                ServerPacksSource.createVanillaPackSource()
-                        .getResource(
-                                PackType.SERVER_DATA,
-                                Identifier.withDefaultNamespace("tags/item/" + path + ".json"));
-        if (resource == null) {
-            return out;
-        }
-        try (InputStream in = resource.get()) {
-            StrictJson.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8))
-                    .getAsJsonObject()
-                    .getAsJsonArray("values")
-                    .forEach(v -> out.add(Identifier.parse(v.getAsString()).toString()));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-        return out;
     }
 
     private static void expect(

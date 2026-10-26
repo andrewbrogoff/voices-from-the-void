@@ -15,40 +15,36 @@ import org.jspecify.annotations.Nullable;
  * restored cell holds exactly the state that was hushed.
  */
 public final class HushedForms {
-    private static volatile @Nullable Map<Block, Block> toForm;
-    private static volatile @Nullable Map<Block, Block> toSource;
+    /** Built on first use, after registration: source to form, and form to source. */
+    private record Table(Map<Block, Block> toForm, Map<Block, Block> toSource) {}
+
+    private static volatile @Nullable Table table;
 
     private HushedForms() {}
 
-    private static Map<Block, Block> toForm() {
-        Map<Block, Block> m = toForm;
-        if (m == null) {
-            build();
-            m = toForm;
+    private static Table table() {
+        Table t = table;
+        if (t == null) {
+            Map<Block, Block> forms = new HashMap<>();
+            Map<Block, Block> sources = new HashMap<>();
+            for (HushedForm f : HushKeys.FORMS) {
+                Block source = BuiltInRegistries.BLOCK.getValue(f.source());
+                Block form = HushContent.form(f.form());
+                forms.put(source, form);
+                sources.put(form, source);
+            }
+            t = new Table(forms, sources);
+            table = t;
         }
-        return java.util.Objects.requireNonNull(m);
+        return t;
+    }
+
+    private static Map<Block, Block> toForm() {
+        return table().toForm();
     }
 
     private static Map<Block, Block> toSource() {
-        Map<Block, Block> m = toSource;
-        if (m == null) {
-            build();
-            m = toSource;
-        }
-        return java.util.Objects.requireNonNull(m);
-    }
-
-    private static synchronized void build() {
-        Map<Block, Block> forms = new HashMap<>();
-        Map<Block, Block> sources = new HashMap<>();
-        for (HushedForm f : HushKeys.FORMS) {
-            Block source = BuiltInRegistries.BLOCK.getValue(f.source());
-            Block form = HushContent.form(f.form());
-            forms.put(source, form);
-            sources.put(form, source);
-        }
-        toSource = sources;
-        toForm = forms;
+        return table().toSource();
     }
 
     /** Whether {@code state} is a source of the table. */

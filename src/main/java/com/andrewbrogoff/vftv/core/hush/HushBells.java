@@ -26,7 +26,6 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.chunk.LevelChunk;
-import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
@@ -392,10 +391,5 @@ public final class HushBells {
                 FluxMath.essentiaFlux(new int[] {sonus}, SpillCause.REMOVED, HushService.rules());
         FluxService.deposit(
                 level, be.getBlockPos(), flux, new FluxSource.Essentia(SpillCause.REMOVED), null);
-    }
-
-    /** The bell indexed at {@code pos}, or null. */
-    public static @Nullable PealingBellBlockEntity indexed(ServerLevel level, BlockPos pos) {
-        return FluxService.state(level).bellIndex.get(pos.asLong());
     }
 }
