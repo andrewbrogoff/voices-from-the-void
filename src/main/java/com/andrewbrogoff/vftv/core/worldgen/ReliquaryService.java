@@ -212,8 +212,14 @@ public final class ReliquaryService {
     /** Builds the player's claimed set at login. */
     public static void login(ServerPlayer player) {
         forget(player);
-        if (claims().get(player) instanceof Retained.Read<ChoirClaims> r) {
-            claimed(player, r.value());
+        switch (claims().get(player)) {
+            case Retained.Read<ChoirClaims> r -> claimed(player, r.value());
+            case Retained.Unreadable<ChoirClaims> u ->
+                    LOGGER.warn(
+                            "{}'s vftv:choir_claims record is unreadable ({}); Reliquaries refuse"
+                                    + " them until it reads",
+                            player.getGameProfile().name(),
+                            u.reason());
         }
     }
 

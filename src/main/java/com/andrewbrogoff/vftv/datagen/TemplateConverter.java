@@ -8,6 +8,7 @@ import com.andrewbrogoff.vftv.core.worldgen.model.TemplateRules;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.mojang.brigadier.StringReader;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -37,6 +38,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.EnderChestBlock;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.SpawnerBlock;
@@ -549,7 +551,12 @@ public final class TemplateConverter {
     private static @Nullable BlockState parse(String text, String where, List<String> problems) {
         BlockStateParser.BlockResult result;
         try {
-            result = BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK, text, false);
+            StringReader reader = new StringReader(text);
+            result = BlockStateParser.parseForBlock(BuiltInRegistries.BLOCK, reader, false);
+            if (reader.canRead()) {
+                problems.add(where + "does not parse: trailing input at " + reader.getCursor());
+                return null;
+            }
         } catch (CommandSyntaxException e) {
             problems.add(where + "does not parse: " + e.getMessage());
             return null;
@@ -589,7 +596,8 @@ public final class TemplateConverter {
         if (state.is(Blocks.STRUCTURE_BLOCK)
                 || block instanceof SpawnerBlock
                 || block instanceof TrialSpawnerBlock
-                || block instanceof VaultBlock) {
+                || block instanceof VaultBlock
+                || block instanceof EnderChestBlock) {
             problems.add(where + id + " is never allowed in a template");
         } else if (block instanceof EntityBlock entity && !state.is(Blocks.CHEST)) {
             BlockEntity be = entity.newBlockEntity(BlockPos.ZERO, state);

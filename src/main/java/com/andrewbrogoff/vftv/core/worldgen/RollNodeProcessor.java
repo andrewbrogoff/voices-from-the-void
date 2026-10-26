@@ -15,7 +15,7 @@ import java.util.Optional;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
-import net.minecraft.resources.Identifier;
+import net.minecraft.nbt.NbtOps;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.WorldGenLevel;
@@ -80,24 +80,25 @@ public final class RollNodeProcessor implements StructureProcessor {
             return null;
         }
         CompoundTag node = nbt.getCompoundOrEmpty("node");
-        Optional<String> typeId = node.getString("type");
+        NodeState record = NodeState.BOUNDED.parse(NbtOps.INSTANCE, node).result().orElse(null);
+        if (record == null) {
+            return null; // an unreadable template record stays exactly as it is
+        }
         Optional<NodeType> type =
-                typeId.flatMap(
-                        t ->
-                                level.registryAccess()
-                                        .lookup(VisKeys.NODE_TYPE_REGISTRY)
-                                        .flatMap(
-                                                r ->
-                                                        r.getOptional(
-                                                                ResourceKey.create(
-                                                                        VisKeys.NODE_TYPE_REGISTRY,
-                                                                        Identifier.parse(t)))));
+                level.registryAccess()
+                        .lookup(VisKeys.NODE_TYPE_REGISTRY)
+                        .flatMap(
+                                r ->
+                                        r.getOptional(
+                                                ResourceKey.create(
+                                                        VisKeys.NODE_TYPE_REGISTRY,
+                                                        record.type())));
         if (type.isEmpty() || !(type.get() instanceof NodeTypeEntry entry)) {
             if (!warnedType) {
                 warnedType = true;
                 LOGGER.warn(
                         "A structure node's type {} is missing; it stays unrolled and inert",
-                        typeId.orElse("?"));
+                        record.type());
             }
             return null;
         }

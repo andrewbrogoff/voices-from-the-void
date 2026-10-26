@@ -117,7 +117,10 @@ public final class Cantor extends Answerer {
         return true;
     }
 
-    /** The chant: no flags, so it runs concurrently with melee and movement. */
+    /**
+     * The chant: no flags, so it runs concurrently with melee and movement; it runs while the
+     * Cantor has a target and checks the schedule every tick.
+     */
     static final class ChantGoal extends Goal {
         private final Cantor mob;
 
@@ -128,12 +131,19 @@ public final class Cantor extends Answerer {
 
         @Override
         public boolean canUse() {
-            return mob.level() instanceof ServerLevel level && mob.chantIfDue(level);
+            return mob.getTarget() instanceof Player;
         }
 
         @Override
-        public boolean canContinueToUse() {
-            return false;
+        public boolean requiresUpdateEveryTick() {
+            return true;
+        }
+
+        @Override
+        public void tick() {
+            if (mob.level() instanceof ServerLevel level) {
+                mob.chantIfDue(level);
+            }
         }
     }
 }

@@ -99,14 +99,17 @@ public class Answerer extends Monster {
         return false;
     }
 
+    /** Retention, before the goals run each tick: an invalid target is dropped at once. */
     @Override
-    protected void customServerAiStep(ServerLevel level) {
-        try (var _ = TickBudget.enter("worldgen")) {
-            if (getTarget() instanceof Player p && !validTarget(this, p)) {
-                setTarget(null);
+    public void aiStep() {
+        if (level() instanceof ServerLevel) {
+            try (var _ = TickBudget.enter("worldgen")) {
+                if (getTarget() instanceof Player p && !validTarget(this, p)) {
+                    setTarget(null);
+                }
             }
-            super.customServerAiStep(level);
         }
+        super.aiStep();
     }
 
     @Override
@@ -150,8 +153,7 @@ public class Answerer extends Monster {
                         m ->
                                 m.isAlive()
                                         && m.typeHolder().is(WorldgenKeys.ANSWERERS)
-                                        && (!untargeted || m.getTarget() == null)
-                                        && m.distanceToSqr(centre) <= radius * radius)
+                                        && (!untargeted || m.getTarget() == null))
                 .stream()
                 .sorted(
                         Comparator.<Mob>comparingDouble(m -> m.distanceToSqr(centre))
