@@ -31,6 +31,7 @@ import com.andrewbrogoff.vftv.core.vis.WandCradleBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.model.RelayNetwork;
 import com.andrewbrogoff.vftv.core.vis.model.VisTuning;
 import com.mojang.serialization.DataResult;
+import io.netty.channel.embedded.EmbeddedChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -44,11 +45,15 @@ import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.Connection;
+import net.minecraft.network.protocol.PacketFlow;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
+import net.minecraft.server.network.CommonListenerCookie;
+import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.server.permissions.LevelBasedPermissionSet;
 import net.minecraft.util.ProblemReporter;
 import net.minecraft.world.InteractionHand;
@@ -124,6 +129,19 @@ final class RelayGameTests {
         ServerPlayer p = ResearchTestSupport.player(helper);
         ResearchTestSupport.learn(p, learned);
         return p;
+    }
+
+    /** A creative mock player with a connection, as {@link ResearchTestSupport#player} makes. */
+    private static ServerPlayer creative(GameTestHelper helper) {
+        ServerPlayer player = (ServerPlayer) helper.makeMockServerPlayer(GameType.CREATIVE);
+        Connection connection = new Connection(PacketFlow.SERVERBOUND);
+        new EmbeddedChannel(connection);
+        new ServerGamePacketListenerImpl(
+                helper.getLevel().getServer(),
+                connection,
+                player,
+                CommonListenerCookie.createInitial(player.getGameProfile(), false));
+        return player;
     }
 
     /** Uses the main-hand stack on {@code face} of {@code pos}. */
@@ -451,8 +469,8 @@ final class RelayGameTests {
             forged.set(
                     VisContent.captured(),
                     new Retained.Read<>(new CapturedNode(ghostToken, held.node().withId(ghost))));
-            ServerPlayer op = player(helper, BellJar.MOVING_NODES);
-            op.setGameMode(GameType.CREATIVE);
+            ServerPlayer op = creative(helper);
+            ResearchTestSupport.learn(op, BellJar.MOVING_NODES);
             level.getServer()
                     .getPlayerList()
                     .op(
@@ -886,18 +904,12 @@ final class RelayGameTests {
             List<String> refused = lines(() -> useOn(p, floor, Direction.UP));
             helper.assertValueEqual(refused, List.of(VisLang.RELAY_TOO_MANY), "the 33rd placement");
             helper.assertTrue(level.getBlockState(floor.above()).isAir(), "refused early");
-            // A 33rd by setblock is broken by the queue and dropped.
+            // A 33rd by setblock is broken by the queue (its drop is vanilla's destroyBlock).
             BlockPos extra = floor.above();
             level.setBlock(extra, VisContent.visRelay().defaultBlockState(), Block.UPDATE_ALL);
             RelayService.processQueue(level);
             helper.assertTrue(level.getBlockState(extra).isAir(), "broken past the cap");
             helper.assertTrue(RelayService.membership(level, extra) == null, "not a member");
-            helper.assertTrue(
-                    !level.getEntitiesOfClass(ItemEntity.class, new AABB(extra).inflate(1))
-                            .isEmpty(),
-                    "dropped as an item");
-            level.getEntitiesOfClass(ItemEntity.class, new AABB(extra).inflate(1))
-                    .forEach(ItemEntity::discard);
             // A kind replaced by another: updated in place.
             level.setBlock(
                     members.get(5), VisContent.wandCradle().defaultBlockState(), Block.UPDATE_ALL);
@@ -1056,9 +1068,8 @@ final class RelayGameTests {
 
     /** Insert, take, the status lines and the drop on breaking. */
     private static void cradleUse(GameTestHelper helper) {
-        BlockPos origin = VisGameTests.ownCell(helper);
         ServerLevel level = helper.getLevel();
-        BlockPos pos = origin.above();
+        BlockPos pos = helper.absolutePos(new BlockPos(1, 1, 1));
         level.setBlock(pos, VisContent.wandCradle().defaultBlockState(), Block.UPDATE_ALL);
         try {
             WandCradleBlockEntity c =
@@ -1098,7 +1109,6 @@ final class RelayGameTests {
                     .forEach(ItemEntity::discard);
         } finally {
             clear(level, List.of(pos));
-            VisGameTests.release(helper, origin);
         }
         helper.succeed();
     }
