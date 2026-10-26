@@ -546,8 +546,7 @@ public final class TemplateConverter {
                 || block instanceof TrialSpawnerBlock
                 || block instanceof VaultBlock) {
             problems.add(where + id + " is never allowed in a template");
-        }
-        if (block instanceof EntityBlock entity && !state.is(Blocks.CHEST)) {
+        } else if (block instanceof EntityBlock entity && !state.is(Blocks.CHEST)) {
             BlockEntity be = entity.newBlockEntity(BlockPos.ZERO, state);
             if (be instanceof Container) {
                 problems.add(where + id + ": the only container allowed is a chest");
