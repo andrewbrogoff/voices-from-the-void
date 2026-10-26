@@ -25,9 +25,8 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 
 /**
- * Replays {@code content/warp/fixtures.json} (warp spec, "Fixtures"): the sections this build's
- * warp core computes. The {@code checks} draws and the foci {@code magnitude} rows are the Voice
- * events' and the foci's to replay.
+ * Replays {@code content/warp/fixtures.json} (warp spec, "Fixtures"): every section, the Voice
+ * checks' draws over the shipped roster and the foci magnitude rows included.
  */
 class WarpFixturesTest {
     private static final JsonObject FIXTURES = load();
@@ -273,5 +272,137 @@ class WarpFixturesTest {
             assertEquals(expected, ops);
             assertTrue(counter > 0, "gear and decay never touch the counter");
         }
+    }
+
+    /** The shipped Voice events, as the registry loads them. */
+    private static final java.util.SortedMap<String, VoiceContent.Event> EVENTS = shippedEvents();
+
+    private static java.util.SortedMap<String, VoiceContent.Event> shippedEvents() {
+        java.util.SortedMap<String, VoiceContent.Event> out = new java.util.TreeMap<>();
+        StrictJson.parse(VoiceContent.SHIPPED_EVENTS)
+                .getAsJsonObject()
+                .asMap()
+                .forEach((id, e) -> out.put(id, VoiceContent.event(e.getAsJsonObject())));
+        return out;
+    }
+
+    /**
+     * The checks: the roll, the chance, eligibility over the shipped roster, the pick, the cue
+     * seed, each type's parameter and the counter after the outcome.
+     */
+    @Test
+    void checks() {
+        java.util.Map<String, Integer> bargainWeights = new java.util.TreeMap<>();
+        StrictJson.parse(VoiceContent.SHIPPED_BARGAINS)
+                .getAsJsonObject()
+                .asMap()
+                .forEach(
+                        (id, b) ->
+                                bargainWeights.put(
+                                        id, VoiceContent.bargain(b.getAsJsonObject()).weight()));
+        for (JsonObject row : rows("checks")) {
+            String at = row.toString();
+            JsonObject e = row.getAsJsonObject("expect");
+            int total = i(row, "total");
+            int counter = i(row, "counter");
+            int max = row.has("counter_max") ? i(row, "counter_max") : 1000;
+            JsonObject json = WarpTuning.toJson(DEFAULTS, true);
+            json.addProperty("counter.max", max);
+            WarpRules rules = WarpTuning.fromJson(json, true);
+            int known = row.has("known") ? i(row, "known") : 7;
+            Set<String> disabled = new HashSet<>();
+            if (row.has("disabled")) {
+                row.getAsJsonArray("disabled").forEach(d -> disabled.add(d.getAsString()));
+            }
+            List<String> bargains = new ArrayList<>(bargainWeights.keySet());
+            if (row.has("bargains")) {
+                bargains.clear();
+                row.getAsJsonArray("bargains").forEach(b -> bargains.add(b.getAsString()));
+            }
+            int[] weights = bargains.stream().mapToInt(bargainWeights::get).toArray();
+            int pm = WarpMath.chancePm(total, i(row, "permanent"), counter, rules);
+            assertEquals(i(e, "pm"), pm, at);
+            List<VoiceDraws.Candidate> eligible =
+                    VoiceDraws.eligible(
+                            EVENTS,
+                            disabled,
+                            WarpMath.band(total, rules),
+                            () -> flag(row, "context", false),
+                            flag(row, "offer", false),
+                            known,
+                            java.util.Arrays.stream(weights).sum());
+            VoiceDraws.Draw d =
+                    VoiceDraws.draw(
+                            UUID.fromString(row.get("uuid").getAsString()),
+                            row.get("index").getAsLong(),
+                            pm,
+                            flag(row, "forced", false),
+                            eligible);
+            assertEquals(i(e, "roll"), d.roll(), at);
+            String outcome = e.get("outcome").getAsString();
+            assertEquals(
+                    outcome,
+                    d.result().name().toLowerCase(Locale.ROOT).replace("picked", "fired"),
+                    at);
+            boolean fired = outcome.equals("fired");
+            assertEquals(
+                    i(e, "counter"),
+                    fired
+                            ? WarpMath.counterAfterEvent(counter, rules)
+                            : WarpMath.counter(counter, rules),
+                    at);
+            if (!fired) {
+                continue;
+            }
+            assertEquals(i(e, "pick"), d.pick(), at);
+            assertEquals(i(e, "of"), d.of(), at);
+            String event = eligible.get(d.index()).id();
+            assertEquals(e.get("event").getAsString(), event, at);
+            assertEquals(
+                    e.get("cue").getAsString(), String.format(Locale.ROOT, "%016X", d.cue()), at);
+            if (e.has("aspect")) {
+                JsonArray aspect = e.getAsJsonArray("aspect");
+                assertEquals(aspect.get(0).getAsInt(), d.param(), at);
+                assertEquals(aspect.get(1).getAsInt(), known, at);
+            }
+            if (e.has("bargain")) {
+                assertEquals(
+                        e.get("bargain").getAsString(),
+                        bargains.get(VoiceDraws.weighted(d.param(), weights)),
+                        at);
+            }
+        }
+    }
+
+    /** The foci magnitude rows at the amended 40 per mille, and the 20 per mille regression. */
+    @Test
+    void magnitude() {
+        for (JsonObject row : rows("magnitude")) {
+            JsonObject e = row.getAsJsonObject("expect");
+            int power = 1000 + i(row, "force") * i(row, "step_pm");
+            int amp =
+                    flag(row, "void", false)
+                            ? 1000
+                                    + Math.min(
+                                            i(row, "max_bonus_pm"),
+                                            Math.clamp(i(row, "w"), 0, 10_000)
+                                                    * i(row, "per_warp_pm"))
+                            : 1000;
+            long out =
+                    Math.min(
+                            i(row, "cap"),
+                            Math.floorDiv((long) i(row, "base") * power * amp, 1_000_000L));
+            assertEquals(i(e, "power_pm"), power, row.toString());
+            assertEquals(i(e, "amp_pm"), amp, row.toString());
+            assertEquals(e.get("out").getAsLong(), out, row.toString());
+        }
+    }
+
+    /**
+     * Every section the fixtures convention requires is present, and the file passes its schema.
+     */
+    @Test
+    void theFileIsWhole() {
+        assertEquals(List.of(), VoiceContent.FIXTURES.validate(FIXTURES));
     }
 }
