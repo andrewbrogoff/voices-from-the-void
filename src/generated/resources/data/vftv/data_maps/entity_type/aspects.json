@@ -444,6 +444,16 @@
       "vftv:exanimis": 4,
       "vftv:humanus": 2,
       "vftv:ignis": 1
+    },
+    "vftv:answerer": {
+      "vftv:humanus": 4,
+      "vftv:metallum": 1,
+      "vftv:sonus": 2
+    },
+    "vftv:answerer_cantor": {
+      "vftv:humanus": 4,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 3
     }
   }
 }

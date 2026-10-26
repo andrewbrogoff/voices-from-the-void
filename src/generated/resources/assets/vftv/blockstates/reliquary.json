@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "vftv:block/reliquary",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vftv:block/reliquary"
+    },
+    "facing=south": {
+      "model": "vftv:block/reliquary",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vftv:block/reliquary",
+      "y": 270
+    }
+  }
+}

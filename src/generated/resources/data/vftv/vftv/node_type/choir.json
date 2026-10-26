@@ -1,0 +1,38 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:aer",
+      "range": [
+        16,
+        32
+      ]
+    },
+    {
+      "aspect": "vftv:ordo",
+      "range": [
+        24,
+        48
+      ]
+    },
+    {
+      "aspect": "vftv:sonus",
+      "range": [
+        4,
+        12
+      ]
+    },
+    {
+      "aspect": "vftv:vacuos",
+      "range": [
+        4,
+        12
+      ]
+    }
+  ],
+  "clarity": {
+    "clear": 40,
+    "faint": 0,
+    "steady": 60
+  },
+  "main_aspect": "vftv:ordo"
+}

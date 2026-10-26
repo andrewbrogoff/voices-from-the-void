@@ -1,0 +1,8 @@
+{
+  "answerer.home_radius": 24,
+  "cantor.amplifier": 0,
+  "cantor.duration": 120,
+  "cantor.interval": 100,
+  "cantor.max_targets": 6,
+  "cantor.radius": 8
+}

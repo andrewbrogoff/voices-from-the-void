@@ -1,0 +1,16 @@
+{
+  "values": [
+    "minecraft:tuff",
+    "minecraft:tuff_bricks",
+    "minecraft:chiseled_tuff",
+    "minecraft:polished_tuff",
+    "minecraft:calcite",
+    "minecraft:deepslate_tiles",
+    "minecraft:cracked_deepslate_tiles",
+    "minecraft:cobbled_deepslate",
+    "minecraft:waxed_cut_copper",
+    "minecraft:waxed_exposed_cut_copper",
+    "minecraft:waxed_weathered_cut_copper",
+    "minecraft:waxed_oxidized_cut_copper"
+  ]
+}
