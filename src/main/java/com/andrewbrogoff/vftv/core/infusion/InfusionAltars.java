@@ -109,8 +109,6 @@ public final class InfusionAltars {
         final Set<AltarBlockEntity> dirty = new LinkedHashSet<>();
         long allowanceTick = Long.MIN_VALUE;
         int assessments;
-        int stepsRun; // for the bounds test: steps in the last tick
-        int popsRun;
 
         boolean spend(long now) {
             if (allowanceTick != now) {
@@ -1148,15 +1146,13 @@ public final class InfusionAltars {
                 again.add(new Due(next < 0 ? d.due() : next, d.pos(), bowl.id, run.seq));
             }
         }
-        s.stepsRun = steps;
-        s.popsRun = pops;
         s.steps.addAll(again);
     }
 
-    /** The step queue's size and the last tick's steps and pops, for the bounds tests. */
+    /** The step queue's size, the pending assessments and this tick's assessments, for tests. */
     public static int[] queueStats(ServerLevel level) {
         LevelState s = state(level);
-        return new int[] {s.steps.size(), s.stepsRun, s.popsRun, s.pending.size(), s.assessments};
+        return new int[] {s.steps.size(), s.pending.size(), s.assessments};
     }
 
     // --- Sync -----------------------------------------------------------------------------

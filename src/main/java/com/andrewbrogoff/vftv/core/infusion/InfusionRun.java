@@ -21,7 +21,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.UUID;
 import net.minecraft.core.UUIDUtil;
@@ -144,19 +143,9 @@ public final class InfusionRun {
         return recipe;
     }
 
-    /** The frozen output. */
-    public ItemStack output() {
-        return output.copy();
-    }
-
     /** The components in absorb order. */
     public List<Part> parts() {
         return parts;
-    }
-
-    /** Whether component {@code i} is absorbed. */
-    public boolean done(int i) {
-        return done[i];
     }
 
     /** The cost aspects, in ascending id. */
@@ -192,11 +181,6 @@ public final class InfusionRun {
     /** The upsets so far. */
     public int upsets() {
         return upsets;
-    }
-
-    /** The armed abandon, or null. */
-    public @Nullable Abandon abandon() {
-        return abandon;
     }
 
     /** Units owed in all. */
@@ -250,17 +234,6 @@ public final class InfusionRun {
     public int ceiling() {
         return InfusionMath.ceiling(
                 InfusionMath.worst(costs, parts.size()), rules.max(), rules.spill());
-    }
-
-    /** The drawn amounts by aspect id, zero amounts omitted, ascending. */
-    SortedMap<String, Integer> drawnMap() {
-        SortedMap<String, Integer> out = new TreeMap<>();
-        for (int i = 0; i < drawn.length; i++) {
-            if (drawn[i] > 0) {
-                out.put(aspects.get(i).identifier().toString(), drawn[i]);
-            }
-        }
-        return out;
     }
 
     // --- Codec ----------------------------------------------------------------------------

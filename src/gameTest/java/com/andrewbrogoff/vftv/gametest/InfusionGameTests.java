@@ -1030,14 +1030,14 @@ final class InfusionGameTests {
                         use(helper, p, a.bowl(), wand());
                     }
                     int[] stats = InfusionAltars.queueStats(helper.getLevel());
-                    helper.assertTrue(stats[4] <= 16, "at most 16 assessments this tick");
-                    helper.assertTrue(stats[3] >= 4, "the rest wait");
+                    helper.assertTrue(stats[2] <= 16, "at most 16 assessments this tick");
+                    helper.assertTrue(stats[1] >= 4, "the rest wait");
                     helper.runAfterDelay(
                             2,
                             () -> {
                                 eq(
                                         helper,
-                                        InfusionAltars.queueStats(helper.getLevel())[3],
+                                        InfusionAltars.queueStats(helper.getLevel())[1],
                                         0,
                                         "every pending one serviced");
                                 for (ServerPlayer p : players) {

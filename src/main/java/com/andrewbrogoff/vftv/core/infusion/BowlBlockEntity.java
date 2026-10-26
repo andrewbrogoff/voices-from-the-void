@@ -147,9 +147,9 @@ public final class BowlBlockEntity extends AltarBlockEntity {
         return runs;
     }
 
-    /** The synced view (client), or the live one (server). */
+    /** The synced view (client). */
     public BowlView view() {
-        return level instanceof ServerLevel ? InfusionAltars.view(this) : view;
+        return view;
     }
 
     @Override
