@@ -375,6 +375,7 @@ public final class HushService {
             if (misses >= r.hushMaxMisses()) {
                 state.saturated.add(pack);
                 state.misses.remove(pack);
+                state.due.remove(pack); // saturated: it leaves the queue until an exit
             }
         } else {
             state.misses.remove(pack);

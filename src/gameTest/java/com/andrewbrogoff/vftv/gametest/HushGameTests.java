@@ -217,7 +217,10 @@ final class HushGameTests {
                                 real.get().accept(p, line);
                             }));
         }
-        return LINES.stream().filter(e -> e.getKey() == player).map(Map.Entry::getValue).toList();
+        return LINES.stream()
+                .filter(e -> e.getKey().equals(player))
+                .map(Map.Entry::getValue)
+                .toList();
     }
 
     private static boolean says(List<Component> lines, String key) {
@@ -235,7 +238,7 @@ final class HushGameTests {
         helper.assertValueEqual(HushContent.forms().size(), 13, "13 hushed forms");
         for (HushedForm f : HushKeys.FORMS) {
             Block form = BuiltInRegistries.BLOCK.getValue(f.form());
-            helper.assertTrue(form == HushContent.form(f.form()), "registered " + f.form());
+            helper.assertTrue(form.equals(HushContent.form(f.form())), "registered " + f.form());
             helper.assertTrue(
                     form.defaultBlockState().is(HushKeys.HUSHED), f.form() + " in #vftv:hushed");
             helper.assertTrue(
@@ -261,14 +264,16 @@ final class HushGameTests {
             for (BlockState state : source.getStateDefinition().getPossibleStates()) {
                 BlockState hushed = Objects.requireNonNull(HushedForms.hushed(state));
                 helper.assertTrue(
-                        hushed.getBlock() == HushContent.form(f.form()), "the form of " + state);
+                        hushed.getBlock().equals(HushContent.form(f.form())),
+                        "the form of " + state);
                 helper.assertTrue(
                         !LightEngine.hasDifferentLightProperties(state, hushed),
                         "light properties of " + state);
                 for (Property<?> p : state.getProperties()) {
                     helper.assertValueEqual(hushed.getValue(p), state.getValue(p), p.getName());
                 }
-                helper.assertValueEqual(HushedForms.restored(hushed), state, "restored exactly");
+                helper.assertTrue(
+                        Objects.equals(state, HushedForms.restored(hushed)), "restored exactly");
                 helper.assertValueEqual(
                         hushed.getFluidState().getType(), state.getFluidState().getType(), "fluid");
             }
@@ -280,17 +285,18 @@ final class HushGameTests {
             helper.assertTrue(HushService.swap(level, at, state), "swap back");
             helper.assertValueEqual(level.getBlockState(at), state, "the cell after both swaps");
         }
-        // restored sand over air: the swap schedules no falling tick
-        level.setBlock(at.below(), Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        // restored sand over air: the swap itself schedules no falling tick
+        BlockPos sand = helper.absolutePos(new BlockPos(3, 2, 3));
+        level.setBlock(sand.below(), Blocks.AIR.defaultBlockState(), HushService.SWAP_FLAGS);
         level.setBlock(
-                at,
+                sand,
                 Objects.requireNonNull(HushedForms.hushed(Blocks.SAND.defaultBlockState())),
-                Block.UPDATE_ALL);
-        HushService.swap(level, at, Blocks.SAND.defaultBlockState());
+                HushService.SWAP_FLAGS);
+        HushService.swap(level, sand, Blocks.SAND.defaultBlockState());
         helper.runAfterDelay(
                 5,
                 () -> {
-                    helper.assertBlockPresent(Blocks.SAND, new BlockPos(1, 2, 1));
+                    helper.assertBlockPresent(Blocks.SAND, new BlockPos(3, 2, 3));
                     helper.succeed();
                 });
     }
@@ -363,16 +369,17 @@ final class HushGameTests {
                         player);
         helper.assertValueEqual(r.retained(), 40, "retained");
         Aura aura = aura(helper, rel);
-        helper.assertValueEqual(aura.seep(), helper.absolutePos(rel), "seep");
-        helper.assertValueEqual(aura.spiller(), player.getUUID(), "spiller");
+        helper.assertTrue(Objects.equals(helper.absolutePos(rel), aura.seep()), "seep");
+        helper.assertTrue(player.getUUID().equals(aura.spiller()), "spiller");
         FluxService.deposit(
                 helper.getLevel(),
                 helper.absolutePos(rel.east()),
                 5,
                 new FluxSource.Command(),
                 null);
-        helper.assertValueEqual(
-                aura.spiller(), player.getUUID(), "an unattributed deposit keeps the spiller");
+        helper.assertTrue(
+                player.getUUID().equals(aura.spiller()),
+                "an unattributed deposit keeps the spiller");
         helper.assertValueEqual(aura.flux(), 45, "pooled");
         helper.assertTrue(FLUX.size() >= events + 2, "FluxEvent(ADDED) posted");
         helper.assertTrue(
@@ -729,7 +736,6 @@ final class HushGameTests {
     // --- the bells -----------------------------------------------------------------------------
 
     private static void clearingBell(GameTestHelper helper) {
-        ServerLevel level = helper.getLevel();
         BlockPos rel = new BlockPos(2, 2, 2);
         deposit(helper, rel, 80);
         BlockState hushed =
@@ -881,7 +887,7 @@ final class HushGameTests {
         Tag tag = codec.encodeStart(NbtOps.INSTANCE, aura).getOrThrow();
         Aura back = codec.parse(NbtOps.INSTANCE, tag).getOrThrow();
         helper.assertValueEqual(back.flux(), 77, "flux");
-        helper.assertValueEqual(back.seep(), aura.seep(), "seep");
+        helper.assertTrue(Objects.equals(back.seep(), aura.seep()), "seep");
         CompoundTag future = ((CompoundTag) tag).copy();
         future.putInt("format", 2);
         Aura unreadable = codec.parse(NbtOps.INSTANCE, future).getOrThrow();

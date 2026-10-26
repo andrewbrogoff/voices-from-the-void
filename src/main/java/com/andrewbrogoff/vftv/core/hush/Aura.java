@@ -95,7 +95,7 @@ public final class Aura {
 
     /** Pooled flux; 0 while unreadable. */
     public int flux() {
-        return raw == null ? 0 : flux;
+        return raw == null ? flux : 0;
     }
 
     /** The seep, or null. */

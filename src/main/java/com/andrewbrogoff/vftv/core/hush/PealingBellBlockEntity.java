@@ -63,7 +63,7 @@ public final class PealingBellBlockEntity extends BlockEntity {
 
     /** Stored Sonus; 0 while unreadable. */
     public int sonus() {
-        return unreadable == null ? 0 : sonus;
+        return unreadable == null ? sonus : 0;
     }
 
     /** The scan's cursor. */
