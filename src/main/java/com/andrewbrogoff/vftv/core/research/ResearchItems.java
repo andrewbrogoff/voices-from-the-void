@@ -12,12 +12,14 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.Item;
 
 /**
  * The research feature's items, component and sounds (research spec, "The item", "Choir pages" and
- * "Book UI keys"): the Commonplace Book, a viewer of its holder's own research; the Choir page,
- * whose {@code vftv:page} component names its entry; and the book's sound events.
+ * "Book UI keys"): the Commonplace Book, a viewer of its holder's own research, and its menu; the
+ * Choir page, whose {@code vftv:page} component names its entry; and the book's sound events.
  */
 public final class ResearchItems {
     /** {@code vftv:commonplace_book}, stacking to 1 and bound to no one. */
@@ -31,6 +33,10 @@ public final class ResearchItems {
                 throw new IllegalStateException("ResearchFeature.init has not run");
             };
     private static Supplier<Item> choirPage = commonplaceBook;
+    private static Supplier<MenuType<CommonplaceMenu>> menu =
+            () -> {
+                throw new IllegalStateException("ResearchFeature.init has not run");
+            };
     private static Supplier<DataComponentType<?>> page =
             () -> {
                 throw new IllegalStateException("ResearchFeature.init has not run");
@@ -82,7 +88,18 @@ public final class ResearchItems {
                 registrar.register(
                         Registries.ITEM,
                         COMMONPLACE_BOOK_NAME,
-                        () -> new Item(properties(COMMONPLACE_BOOK_NAME).stacksTo(1)));
+                        () ->
+                                new CommonplaceBookItem(
+                                        properties(COMMONPLACE_BOOK_NAME).stacksTo(1)));
+        Supplier<MenuType<?>> type =
+                registrar.register(
+                        Registries.MENU,
+                        COMMONPLACE_BOOK_NAME,
+                        () -> new MenuType<>(CommonplaceMenu::new, FeatureFlags.VANILLA_SET));
+        // Registered from a MenuType<CommonplaceMenu> just above.
+        @SuppressWarnings("unchecked")
+        Supplier<MenuType<CommonplaceMenu>> typed = () -> (MenuType<CommonplaceMenu>) type.get();
+        menu = typed;
         choirPage =
                 registrar.register(
                         Registries.ITEM,
@@ -93,6 +110,11 @@ public final class ResearchItems {
     /** The Commonplace Book. */
     public static Item commonplaceBook() {
         return commonplaceBook.get();
+    }
+
+    /** The {@code vftv:commonplace_book} menu type. */
+    public static MenuType<CommonplaceMenu> menu() {
+        return menu.get();
     }
 
     /** The book sound {@code vftv:book.<name>}, one of {@link #SOUNDS}. */

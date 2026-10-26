@@ -17,6 +17,7 @@ import com.andrewbrogoff.vftv.core.common.OperationGuard;
 import com.andrewbrogoff.vftv.core.research.ResearchService.Data;
 import com.andrewbrogoff.vftv.core.research.model.EntryKind;
 import com.andrewbrogoff.vftv.core.research.model.Evidence;
+import com.andrewbrogoff.vftv.core.research.model.Notes;
 import com.andrewbrogoff.vftv.core.research.model.RenderState;
 import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
@@ -24,6 +25,7 @@ import com.andrewbrogoff.vftv.core.research.model.Resolution;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
 import com.andrewbrogoff.vftv.core.warp.WarpRecord;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
+import com.mojang.logging.LogUtils;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,6 +50,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.tags.TagKey;
 import org.jspecify.annotations.Nullable;
+import org.slf4j.Logger;
 
 /**
  * The research resolution engine (research spec, "Triggers", "Stage gates", "Rewards", "Events"):
@@ -65,6 +68,7 @@ public final class Resolver {
     /** No warp applied. */
     public static final WarpPreview NO_WARP = new WarpPreview(0, 0, 0, false);
 
+    private static final Logger LOGGER = LogUtils.getLogger();
     private static final OperationGuard GUARD = new OperationGuard("research");
     private static final Map<UUID, Deque<Job>> QUEUED = new HashMap<>();
     private static final Map<UUID, ServerPlayer> DEFERRED = new LinkedHashMap<>();
@@ -277,8 +281,9 @@ public final class Resolver {
 
     /**
      * The login pass (research spec, "Triggers", "Reconciliation"): bookmarks naming an entry that
-     * is gone are dropped, every trigger whose condition holds now is latched, and the record is
-     * resolved. Ids of entries that are gone stay in the sets, inert.
+     * is gone are dropped, open notes are reconciled with the data ({@link Notes#reconcile}), every
+     * trigger whose condition holds now is latched, and the record is resolved. Ids of entries that
+     * are gone stay in the sets, inert.
      */
     public static void login(ServerPlayer player) {
         Predicate<Trigger> holds = holds(player);
@@ -289,6 +294,16 @@ public final class Resolver {
                             r.bookmarks().stream().filter(d.entries()::containsKey).toList();
                     ResearchRecord next =
                             kept.size() == r.bookmarks().size() ? r : r.withBookmarks(kept);
+                    next =
+                            Notes.reconcile(
+                                    next,
+                                    d.entries(),
+                                    d.aspects()::contains,
+                                    msg ->
+                                            LOGGER.info(
+                                                    "Research reconciliation for {}: {}",
+                                                    player.getPlainTextName(),
+                                                    msg));
                     return d.triggers().catchUp(next, holds);
                 });
     }

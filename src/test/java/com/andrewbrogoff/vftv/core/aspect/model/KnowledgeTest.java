@@ -185,6 +185,17 @@ class KnowledgeTest {
         assertEquals(Integer.MAX_VALUE, nonNull(full.credit("lux", 5)).pool().get("lux"));
     }
 
+    @Test
+    void debitIsAllOrNothingAndItsDeltaRebuildsTheClient() {
+        Knowledge k = nonNull(nonNull(Knowledge.EMPTY.discover("lux", 5)).discover("aer", 2));
+        assertNull(k.debit(Map.of("lux", 6)));
+        assertNull(k.debit(Map.of("lux", 1, "ignis", 1)), "a short aspect spends nothing");
+        assertNull(k.debit(Map.of("lux", -1)));
+        Knowledge spent = nonNull(k.debit(Map.of("lux", 2, "aer", 2, "ignis", 0)));
+        assertEquals(Map.of("lux", 3), spent.pool());
+        assertEquals(Map.of("lux", 3), k.baseline().apply(nonNull(spent.delta())).pool());
+    }
+
     private static <T> T nonNull(@Nullable T value) {
         return Objects.requireNonNull(value);
     }

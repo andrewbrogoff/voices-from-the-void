@@ -9,16 +9,27 @@ import com.andrewbrogoff.vftv.api.neoforge.warp.WarpChangedEvent;
 import com.andrewbrogoff.vftv.api.warp.WarpState;
 import com.andrewbrogoff.vftv.core.aspect.AspectSet;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
+import com.andrewbrogoff.vftv.core.research.ResearchActions;
 import com.andrewbrogoff.vftv.core.research.ResearchEvents;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.Resolver;
 import com.andrewbrogoff.vftv.core.research.model.Evidence;
+import com.andrewbrogoff.vftv.core.research.model.ResearchTuning;
 import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.DataResult;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.ReloadableServerResources;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.packs.resources.Resource;
+import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
+import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
+import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityTypes;
 import net.neoforged.bus.api.Event;
 import net.neoforged.bus.api.IEventBus;
@@ -75,6 +86,15 @@ public final class ResearchNeoForge {
                         event.addDependency(WARP_TUNING, VALIDATION);
                     }
                 });
+        // The tuning file (research spec, "Tuning"): refuses the world at open, keeps the previous
+        // record on /reload; open books re-quote at their next change check.
+        gameBus.addListener(
+                AddServerReloadListenersEvent.class,
+                event ->
+                        event.addListener(
+                                Identifier.fromNamespaceAndPath("vftv", "research_tuning"),
+                                new TuningListener(
+                                        ServerLifecycleHooks.getCurrentServer() == null)));
         // The triggers (research spec, "Triggers"): each sibling event is evidence.
         // NeoForge posts AdvancementEarnEvent only for advancements with a display, and the finds
         // are hidden: a granted criterion that completes the advancement is the earn.
@@ -126,6 +146,7 @@ public final class ResearchNeoForge {
                 event -> {
                     if (event.getEntity() instanceof ServerPlayer player) {
                         Resolver.logout(player);
+                        ResearchActions.logout(player);
                     }
                 });
         gameBus.addListener(
@@ -139,6 +160,7 @@ public final class ResearchNeoForge {
                 ServerStoppedEvent.class,
                 event -> {
                     Resolver.onServerStopped();
+                    ResearchActions.onServerStopped();
                     ResearchService.onServerStopped();
                 });
     }
@@ -155,6 +177,39 @@ public final class ResearchNeoForge {
             NeoForge.EVENT_BUS.post(event);
         } catch (RuntimeException e) {
             LOGGER.error("A listener of {} threw; the state stands", event.getClass().getName(), e);
+        }
+    }
+
+    /** Reads {@code research.json} off-thread and applies it on the reload's own thread. */
+    private static final class TuningListener
+            extends SimplePreparableReloadListener<DataResult<ResearchTuning>> {
+        private static final Identifier FILE =
+                Identifier.fromNamespaceAndPath("vftv", ResearchService.TUNING_PATH);
+        private final boolean opening;
+
+        TuningListener(boolean opening) {
+            this.opening = opening;
+        }
+
+        @Override
+        protected DataResult<ResearchTuning> prepare(
+                ResourceManager manager, ProfilerFiller profiler) {
+            Optional<Resource> resource = manager.getResource(FILE);
+            if (resource.isEmpty()) {
+                return DataResult.success(ResearchTuning.DEFAULTS);
+            }
+            try (InputStream in = resource.get().open()) {
+                return ResearchService.parseTuning(
+                        new String(in.readAllBytes(), StandardCharsets.UTF_8));
+            } catch (IOException e) {
+                return DataResult.error(e::toString);
+            }
+        }
+
+        @Override
+        protected void apply(
+                DataResult<ResearchTuning> read, ResourceManager manager, ProfilerFiller profiler) {
+            ResearchService.applyTuning(read, !opening);
         }
     }
 

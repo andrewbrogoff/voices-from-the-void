@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.core.research.client;
 
 import com.andrewbrogoff.vftv.core.common.client.ClientNetwork;
+import com.andrewbrogoff.vftv.core.research.ResearchFeedback;
 
 /**
  * The research feature's client entry: {@code Vftv.initClient} calls {@link #init} once, during
@@ -10,5 +11,8 @@ public final class ResearchClientFeature {
     private ResearchClientFeature() {}
 
     /** Registers the feature's client payload handlers. */
-    public static void init(ClientNetwork network) {}
+    public static void init(ClientNetwork network) {
+        network.handler(ResearchFeedback.Quotes.TYPE, ResearchClient::onQuotes);
+        network.handler(ResearchFeedback.Result.TYPE, ResearchClient::onResult);
+    }
 }

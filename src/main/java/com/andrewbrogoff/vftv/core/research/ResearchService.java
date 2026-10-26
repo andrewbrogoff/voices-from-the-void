@@ -11,19 +11,24 @@ import com.andrewbrogoff.vftv.core.common.DataSlot;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.research.model.AspectGraph;
 import com.andrewbrogoff.vftv.core.research.model.CategoryEntry;
+import com.andrewbrogoff.vftv.core.research.model.EntryKind;
 import com.andrewbrogoff.vftv.core.research.model.EntryRules;
+import com.andrewbrogoff.vftv.core.research.model.Notes;
 import com.andrewbrogoff.vftv.core.research.model.ResearchDelta;
 import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
+import com.andrewbrogoff.vftv.core.research.model.ResearchTuning;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
 import com.andrewbrogoff.vftv.core.research.model.TriggerIndex;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
 import com.mojang.logging.LogUtils;
+import com.mojang.serialization.DataResult;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
@@ -73,6 +78,11 @@ public final class ResearchService {
     private static @Nullable DataSlot<Player, ResearchAttachment> slot;
     private static volatile ResearchConfig config = ResearchConfig.DEFAULT;
     private static volatile @Nullable Data data;
+    private static volatile ResearchTuning tuning = ResearchTuning.DEFAULTS;
+    private static volatile @Nullable Prices prices;
+
+    /** The tuning file under {@code data/vftv/}. */
+    public static final String TUNING_PATH = "tuning/research.json";
 
     private ResearchService() {}
 
@@ -170,11 +180,92 @@ public final class ResearchService {
 
     /**
      * Re-sends quotes, with the new mode, to every open Commonplace Book after a changed {@code
-     * research.mode}.
-     *
-     * <p>ponytail: no book opens yet; the notes ticket sends its quotes from here.
+     * research.mode}, even if no price changed.
      */
-    public static void resendQuotes(MinecraftServer server) {}
+    public static void resendQuotes(MinecraftServer server) {
+        for (ServerPlayer player : server.getPlayerList().getPlayers()) {
+            if (player.containerMenu instanceof CommonplaceMenu menu) {
+                menu.quote(player, true);
+            }
+        }
+    }
+
+    // --- Tuning (research spec, "Tuning"). ---
+
+    /** The tuning in force. */
+    public static ResearchTuning tuning() {
+        return tuning;
+    }
+
+    /** Reads a tuning file's text, or why it is invalid. */
+    public static DataResult<ResearchTuning> parseTuning(String json) {
+        try {
+            return DataResult.success(ResearchTuning.parse(json));
+        } catch (IllegalArgumentException e) {
+            return DataResult.error(e::getMessage);
+        }
+    }
+
+    /**
+     * Applies a tuning read: an invalid one refuses the world at open and keeps the previous record
+     * on {@code /reload}. Prices rebuild on next use; open books re-quote at their change check,
+     * and open notes keep their snapshot.
+     *
+     * @throws IllegalStateException for an invalid read while the world opens
+     */
+    public static synchronized void applyTuning(
+            DataResult<ResearchTuning> read, boolean reloading) {
+        read.ifSuccess(t -> tuning = t)
+                .ifError(
+                        error -> {
+                            String message =
+                                    "Invalid data/vftv/" + TUNING_PATH + ": " + error.message();
+                            if (!reloading) {
+                                throw new IllegalStateException(message);
+                            }
+                            LOGGER.error("{}; keeping the previous research tuning", message);
+                        });
+    }
+
+    /**
+     * The preset a mode's new notes use: its own, or the standard preset's numbers for skip
+     * eligibility, which has no preset of its own.
+     */
+    public static ResearchTuning.Preset preset(ResearchConfig.Mode mode) {
+        ResearchTuning t = tuning;
+        return switch (mode) {
+            case GENTLE -> t.gentle();
+            case HARD -> t.hard();
+            case STANDARD, SKIP -> t.standard();
+        };
+    }
+
+    /**
+     * An entry's skip price under the tuning in force: its authored {@code skip_cost}, else the
+     * scaled reference vector. Computed once per tuning and world, not per player.
+     */
+    // Identity on purpose: a new world's data or a reload's tuning is a new instance.
+    @SuppressWarnings("ReferenceEquality")
+    public static SortedMap<String, Integer> skipPrice(Data data, String entry) {
+        ResearchTuning t = tuning;
+        Prices p = prices;
+        if (p == null || p.tuning() != t || p.data() != data) {
+            Map<String, SortedMap<String, Integer>> out = new TreeMap<>();
+            data.entries()
+                    .forEach(
+                            (id, e) -> {
+                                if (e.kind() == EntryKind.NOTE) {
+                                    out.put(id, Notes.skipPrice(e, data.aspects(), t));
+                                }
+                            });
+            p = new Prices(t, data, Map.copyOf(out));
+            prices = p;
+        }
+        return p.prices().getOrDefault(entry, new TreeMap<>());
+    }
+
+    private record Prices(
+            ResearchTuning tuning, Data data, Map<String, SortedMap<String, Integer>> prices) {}
 
     // --- Load validation (research spec, "Registry format"). ---
 
@@ -267,9 +358,11 @@ public final class ResearchService {
         return d;
     }
 
-    /** The server stopped: the next world indexes its own data. */
+    /** The server stopped: the next world indexes its own data and reads its own tuning. */
     public static void onServerStopped() {
         data = null;
+        prices = null;
+        tuning = ResearchTuning.DEFAULTS;
     }
 
     /**

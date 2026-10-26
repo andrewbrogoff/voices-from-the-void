@@ -84,7 +84,7 @@ public record Knowledge(
      *
      * @param known aspects newly known
      * @param scans ledger entries written
-     * @param pool pool amounts that changed, at their new value
+     * @param pool pool amounts that changed, at their new value (0 when spent out)
      */
     public record Delta(Set<String> known, Map<String, Scan> scans, Map<String, Integer> pool) {
         /** Copies the collections. */
@@ -232,14 +232,49 @@ public record Knowledge(
         return change(Set.of(), null, null, Map.of(aspect, points));
     }
 
-    /** Applies a delta the server sent, as the client does. */
+    /**
+     * Spends points (research spec, "Paying for placements": a Learn or a purchase), all or
+     * nothing; an amount spent to 0 leaves the pool.
+     *
+     * @param points the amount of each aspect to take, each at least 0
+     * @return the knowledge after it, or null if any balance is short
+     */
+    public @Nullable Knowledge debit(Map<String, Integer> points) {
+        Map<String, Integer> p = new HashMap<>(pool);
+        Map<String, Integer> changed = new HashMap<>();
+        for (Map.Entry<String, Integer> e : points.entrySet()) {
+            int left = p.getOrDefault(e.getKey(), 0) - e.getValue();
+            if (e.getValue() < 0 || left < 0) {
+                return null;
+            }
+            if (e.getValue() > 0) {
+                changed.put(e.getKey(), left);
+                if (left == 0) {
+                    p.remove(e.getKey());
+                } else {
+                    p.put(e.getKey(), left);
+                }
+            }
+        }
+        return new Knowledge(known, scans, p, new Delta(Set.of(), Map.of(), changed));
+    }
+
+    /** Applies a delta the server sent, as the client does; an amount of 0 leaves the pool. */
     public Knowledge apply(Delta change) {
         Set<String> k = new HashSet<>(known);
         k.addAll(change.known());
         Map<String, Scan> s = new HashMap<>(scans);
         s.putAll(change.scans());
         Map<String, Integer> p = new HashMap<>(pool);
-        p.putAll(change.pool());
+        change.pool()
+                .forEach(
+                        (aspect, n) -> {
+                            if (n > 0) {
+                                p.put(aspect, n);
+                            } else {
+                                p.remove(aspect);
+                            }
+                        });
         return new Knowledge(k, s, p, change);
     }
 
