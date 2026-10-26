@@ -120,14 +120,7 @@ public record WorldgenTuning(List<Integer> values) {
                     problems.add(k.name() + ": not an integer");
                 } else if (n.compareTo(BigDecimal.valueOf(k.min())) < 0
                         || n.compareTo(BigDecimal.valueOf(k.max())) > 0) {
-                    problems.add(
-                            k.name()
-                                    + ": "
-                                    + n.toPlainString()
-                                    + " outside "
-                                    + k.min()
-                                    + ".."
-                                    + k.max());
+                    problems.add(k.name() + ": " + n + " outside " + k.min() + ".." + k.max());
                 } else {
                     value = n.intValueExact();
                 }

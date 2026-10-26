@@ -210,6 +210,7 @@ class WorldgenModelTest {
         for (String bad :
                 List.of(
                         "{\"cantor.radius\": 17}",
+                        "{\"cantor.radius\": 1e999999999}",
                         "{\"cantor.radius\": 1}",
                         "{\"cantor.radius\": 2.5}",
                         "{\"cantor.radius\": \"8\"}",

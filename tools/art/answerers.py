@@ -212,6 +212,7 @@ if __name__ == "__main__":
     tex = os.path.join(ASSETS, "vftv/textures/entity")
     save64(paint(False), os.path.join(tex, "answerer.png"))
     save64(paint(True), os.path.join(tex, "answerer_cantor.png"))
+    os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "answerer.bbmodel"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(bbmodel(), f, indent=1, sort_keys=True)
         f.write("\n")
