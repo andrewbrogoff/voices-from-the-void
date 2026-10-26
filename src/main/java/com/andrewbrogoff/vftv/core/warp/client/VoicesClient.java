@@ -541,6 +541,12 @@ public final class VoicesClient {
         json.addProperty("held", held != null);
         json.addProperty("drain", DRAIN.intensity());
         json.addProperty("apparition", apparition != null);
+        Apparition a = apparition;
+        if (a != null) {
+            json.addProperty("apparitionX", a.getX());
+            json.addProperty("apparitionY", a.getY());
+            json.addProperty("apparitionZ", a.getZ());
+        }
         json.addProperty("phantomSounds", phantomSounds.size());
         json.addProperty("lines", lines.size());
         json.addProperty("quietSent", sentOpen != null && sentOpen);
