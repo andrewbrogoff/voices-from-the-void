@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.infusion.InfusionCost;
 import com.andrewbrogoff.vftv.api.infusion.InfusionLimits;
 import com.andrewbrogoff.vftv.api.infusion.InfusionPlan;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
+import com.andrewbrogoff.vftv.core.infusion.InfusionStatus.EnchantRefusal;
 import io.netty.handler.codec.DecoderException;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ import org.jspecify.annotations.Nullable;
  */
 public record InfusionReadout(
         InfusionStatus status,
-        InfusionStatus.@Nullable EnchantRefusal reason,
+        @Nullable EnchantRefusal reason,
         List<Component> args,
         ResourceKey<Level> dimension,
         BlockPos pos,
@@ -218,8 +219,7 @@ public record InfusionReadout(
 
     private static InfusionReadout read(RegistryFriendlyByteBuf buf) {
         InfusionStatus status = buf.readEnum(InfusionStatus.class);
-        InfusionStatus.EnchantRefusal reason =
-                buf.readBoolean() ? buf.readEnum(InfusionStatus.EnchantRefusal.class) : null;
+        EnchantRefusal reason = buf.readBoolean() ? buf.readEnum(EnchantRefusal.class) : null;
         int n = bounded(buf.readVarInt(), 0, MAX_ARGS, "arguments");
         List<Component> args = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {

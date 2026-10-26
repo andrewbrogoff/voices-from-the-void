@@ -427,7 +427,7 @@ public final class InfusionRecipe implements Recipe<SingleRecipeInput> {
     }
 
     /** {@code essentia[a] × c(c + 1)/2 ≤ 1000} for every aspect of an enchanting recipe. */
-    DataResult<InfusionRecipe> checkEnchantBound() {
+    public DataResult<InfusionRecipe> checkEnchantBound() {
         if (result instanceof Result.Enchant e) {
             int levels = InfusionMath.levels(0, e.cap());
             for (Map.Entry<ResourceKey<Aspect>, Integer> cost : essentia.entrySet()) {

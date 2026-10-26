@@ -1,0 +1,3 @@
+{"schema": "vftv:wand_parts/1",
+ "rods": {"vftv:echo": {"item": "vftv:echo_rod", "capacity": 300}},
+ "caps": {"vftv:echo": {"item": "vftv:echo_cap", "cost_multiplier": 0.70}}}

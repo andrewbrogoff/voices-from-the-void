@@ -1,0 +1,24 @@
+{"schema": "vftv:infusion_bootstrap/1",
+ "recipes": {
+  "vftv:echo_rod": {
+    "items": [
+      {"item": "vftv:chime_rod", "why": "Stage 2: crafted at the Worktable from amethyst shards and Resonant Brass under vftv:singing_wands, before any Echo part exists."},
+      {"item": "minecraft:echo_shard", "why": "Found in ancient city chests deep under the Deep Dark; reachable with Stage 1-2 tools and no magic at all."},
+      {"item": "minecraft:amethyst_shard", "why": "Mined from amethyst geodes from the very start of Stage 1."}
+    ],
+    "aspects": [
+      {"aspect": "vftv:sonus", "why": "Amethyst shards and Resonant Brass dissolve into Sonus in a crucible (Stage 2)."},
+      {"aspect": "vftv:praecantatio", "why": "Rabbit's feet and the mod's tuned parts dissolve into Praecantatio in a crucible (Stage 2)."},
+      {"aspect": "vftv:vitreus", "why": "Amethyst shards, quartz and glass dissolve into Vitreus in a crucible (Stage 2)."}
+    ]},
+  "vftv:echo_cap": {
+    "items": [
+      {"item": "vftv:resonant_brass_cap", "why": "Stage 2: crafted at the Worktable from Resonant Brass under vftv:singing_wands."},
+      {"item": "minecraft:echo_shard", "why": "Found in ancient city chests deep under the Deep Dark; reachable with Stage 1-2 tools."},
+      {"item": "minecraft:amethyst_shard", "why": "Mined from amethyst geodes from the start of Stage 1."}
+    ],
+    "aspects": [
+      {"aspect": "vftv:sonus", "why": "Amethyst shards and Resonant Brass dissolve into Sonus in a crucible (Stage 2)."},
+      {"aspect": "vftv:praecantatio", "why": "Rabbit's feet and tuned parts dissolve into Praecantatio in a crucible (Stage 2)."},
+      {"aspect": "vftv:vitreus", "why": "Amethyst shards, quartz and glass dissolve into Vitreus in a crucible (Stage 2)."}
+    ]}}}

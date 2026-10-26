@@ -47,3 +47,9 @@ python3 "$ART/sheet.py" "$PREVIEWS/worktable.png" "$ASSETS/vftv/textures/block/w
     "$WT/worktable/preview_idle.png" "$WT/worktable/preview_ready.png" "$WT/worktable/preview_hover.png" \
     "$WT/worktable/preview_disabled.png" "$WT/worktable/cost_cell.png" "$WT/worktable/cost_cell_short.png" \
     "$WT/worktable/beyond.png" "$WT/container/slot/wand.png"
+python3 "$ART/infusion.py" "$ASSETS" "$PREVIEWS/infusion"
+INF="$ASSETS/vftv/textures"
+python3 "$ART/sheet.py" "$PREVIEWS/infusion.png" "$INF/block/singing_bowl_side.png" "$INF/block/singing_bowl_top.png" \
+    "$INF/block/singing_bowl_inner.png" "$INF/block/singing_bowl_bottom.png" "$INF/block/pedestal_side.png" \
+    "$INF/block/pedestal_top.png" "$INF/block/pedestal_bottom.png" "$INF/item/echo_rod.png" "$INF/item/echo_cap.png" \
+    "$PREVIEWS"/infusion/wand_*.png
