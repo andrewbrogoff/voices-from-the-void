@@ -54,7 +54,17 @@ final class HushClientData implements FeatureClientData {
                                                                                         "hushed_dirt")))),
                                         blocks.modelOutput);
                         case "deepslate", "oak_log", "birch_log", "spruce_log" ->
-                                TexturedModel.COLUMN.create(block, blocks.modelOutput);
+                                ModelTemplates.CUBE_COLUMN.create(
+                                        block,
+                                        new TextureMapping()
+                                                .put(
+                                                        TextureSlot.SIDE,
+                                                        TextureMapping.getBlockTexture(block))
+                                                .put(
+                                                        TextureSlot.END,
+                                                        TextureMapping.getBlockTexture(
+                                                                block, "_top")),
+                                        blocks.modelOutput);
                         case "short_grass" ->
                                 ModelTemplates.CROSS.create(
                                         block, TextureMapping.cross(block), blocks.modelOutput);

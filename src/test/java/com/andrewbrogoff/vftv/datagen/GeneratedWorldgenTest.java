@@ -106,6 +106,13 @@ class GeneratedWorldgenTest {
                         "*/loot_table/**.json",
                         "vftv/vftv/**.json")) {
             for (Path p : files(glob)) {
+                // The Hush's own drop tables (a hushed block's Silk Touch drop, a Hollow's Ash) are
+                // what the player-caused Hush yields, not something worldgen places.
+                String rel = p.toString().replace('\\', '/');
+                if (rel.contains("/loot_table/blocks/hushed_")
+                        || rel.endsWith("/loot_table/entities/hollow.json")) {
+                    continue;
+                }
                 JsonElement json = StrictJson.parse(Files.readString(p, StandardCharsets.UTF_8));
                 scan(json, p.toString(), problems);
             }

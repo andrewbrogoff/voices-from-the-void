@@ -2,6 +2,6 @@
   "parent": "minecraft:block/cube_column",
   "textures": {
     "end": "vftv:block/hushed_spruce_log_top",
-    "side": "vftv:block/hushed_spruce_log_side"
+    "side": "vftv:block/hushed_spruce_log"
   }
 }
