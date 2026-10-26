@@ -106,7 +106,8 @@ final class InfusionData implements FeatureData {
 
                                     @Override
                                     protected Iterable<Block> getKnownBlocks() {
-                                        return List.of(InfusionContent.bowl(), InfusionContent.pedestal());
+                                        return List.of(
+                                                InfusionContent.bowl(), InfusionContent.pedestal());
                                     }
                                 },
                         LootContextParamSets.BLOCK));
@@ -173,7 +174,11 @@ final class InfusionData implements FeatureData {
             }
             if (id.equals(BOWL) || id.equals(PEDESTAL)) {
                 expect(problems, at + ".type", type, "vftv:arcane");
-                expect(problems, at + ".research", body.get("research").getAsString(), "vftv:infusion");
+                expect(
+                        problems,
+                        at + ".research",
+                        body.get("research").getAsString(),
+                        "vftv:infusion");
                 if (!type.equals("vftv:arcane")) {
                     continue;
                 }
@@ -187,12 +192,21 @@ final class InfusionData implements FeatureData {
                         .forEach(
                                 v -> {
                                     if (v.getValue().getAsInt() > chimeCapacity) {
-                                        problems.add(at + ".vis." + v.getKey() + ": over the chime rod's capacity " + chimeCapacity);
+                                        problems.add(
+                                                at
+                                                        + ".vis."
+                                                        + v.getKey()
+                                                        + ": over the chime rod's capacity "
+                                                        + chimeCapacity);
                                     }
                                 });
             } else if (id.equals(ECHO_ROD) || id.equals(ECHO_CAP)) {
                 expect(problems, at + ".type", type, "vftv:infusion");
-                expect(problems, at + ".research", body.get("research").getAsString(), "vftv:echo_wands");
+                expect(
+                        problems,
+                        at + ".research",
+                        body.get("research").getAsString(),
+                        "vftv:echo_wands");
                 if (!type.equals("vftv:infusion")) {
                     continue;
                 }
@@ -205,7 +219,11 @@ final class InfusionData implements FeatureData {
                 if (!result.has("item")) {
                     problems.add(at + ".result: must be the item " + id);
                 } else {
-                    expect(problems, at + ".result.item.id", result.getAsJsonObject("item").get("id").getAsString(), id);
+                    expect(
+                            problems,
+                            at + ".result.item.id",
+                            result.getAsJsonObject("item").get("id").getAsString(),
+                            id);
                 }
                 if (result.has("transmute") && result.get("transmute").getAsBoolean()) {
                     problems.add(at + ".result.transmute: must be omitted or false");
@@ -217,7 +235,11 @@ final class InfusionData implements FeatureData {
             } else if (id.startsWith(ENCHANTING)) {
                 enchanting++;
                 expect(problems, at + ".type", type, "vftv:infusion");
-                expect(problems, at + ".research", body.get("research").getAsString(), "vftv:infused_enchanting");
+                expect(
+                        problems,
+                        at + ".research",
+                        body.get("research").getAsString(),
+                        "vftv:infused_enchanting");
                 if (!type.equals("vftv:infusion")) {
                     continue;
                 }
@@ -234,7 +256,12 @@ final class InfusionData implements FeatureData {
                         .forEach(
                                 c -> {
                                     if ((long) c.getValue().getAsInt() * maxLevel < PRICE_FLOOR) {
-                                        problems.add(at + ".essentia." + c.getKey() + ": times max_level under the price floor " + PRICE_FLOOR);
+                                        problems.add(
+                                                at
+                                                        + ".essentia."
+                                                        + c.getKey()
+                                                        + ": times max_level under the price floor "
+                                                        + PRICE_FLOOR);
                                     }
                                 });
                 int instability = body.get("instability").getAsInt();
@@ -266,8 +293,12 @@ final class InfusionData implements FeatureData {
     static final Schema PARTS =
             Schema.of(
                             "vftv:wand_parts/1",
-                            Schema.required("rods", new Schema.MapOf(new Schema.Str(3, 256, ID), PART_ROD, 1, 1)),
-                            Schema.required("caps", new Schema.MapOf(new Schema.Str(3, 256, ID), PART_CAP, 1, 1)))
+                            Schema.required(
+                                    "rods",
+                                    new Schema.MapOf(new Schema.Str(3, 256, ID), PART_ROD, 1, 1)),
+                            Schema.required(
+                                    "caps",
+                                    new Schema.MapOf(new Schema.Str(3, 256, ID), PART_CAP, 1, 1)))
                     .withExtra(InfusionData::partRules);
 
     private static List<String> partRules(JsonObject root) {
@@ -289,7 +320,8 @@ final class InfusionData implements FeatureData {
     }
 
     private static final Pattern STATE =
-            Pattern.compile("([a-z0-9_.-]+:[a-z0-9_./-]+)(\\[([a-z0-9_]+=[a-z0-9_]+)(,[a-z0-9_]+=[a-z0-9_]+)*\\])?");
+            Pattern.compile(
+                    "([a-z0-9_.-]+:[a-z0-9_./-]+)(\\[([a-z0-9_]+=[a-z0-9_]+)(,[a-z0-9_]+=[a-z0-9_]+)*\\])?");
 
     /** {@code vftv:multiblocks/1}, here exactly {@code vftv:infusion_altar}. */
     static final Schema MULTIBLOCKS =
@@ -304,14 +336,22 @@ final class InfusionData implements FeatureData {
                                                             Schema.required(
                                                                     "key",
                                                                     new Schema.MapOf(
-                                                                            new Schema.Str(1, 1, null),
-                                                                            new Schema.Str(3, 512, STATE),
+                                                                            new Schema.Str(
+                                                                                    1, 1, null),
+                                                                            new Schema.Str(
+                                                                                    3, 512, STATE),
                                                                             1,
                                                                             64)),
                                                             Schema.required(
                                                                     "layers",
                                                                     new Schema.ListOf(
-                                                                            new Schema.ListOf(new Schema.Str(1, 9, null), 1, 9, false),
+                                                                            new Schema.ListOf(
+                                                                                    new Schema.Str(
+                                                                                            1, 9,
+                                                                                            null),
+                                                                                    1,
+                                                                                    9,
+                                                                                    false),
                                                                             1,
                                                                             4,
                                                                             false)))),
@@ -349,7 +389,13 @@ final class InfusionData implements FeatureData {
                     String value = pair.substring(pair.indexOf('=') + 1);
                     Property<?> property = block.get().getStateDefinition().getProperty(name);
                     if (property == null || property.getValue(value).isEmpty()) {
-                        problems.add("$.key." + e.getKey() + ": " + pair + " is not a property of " + id);
+                        problems.add(
+                                "$.key."
+                                        + e.getKey()
+                                        + ": "
+                                        + pair
+                                        + " is not a property of "
+                                        + id);
                     }
                 }
             }
@@ -382,7 +428,14 @@ final class InfusionData implements FeatureData {
             for (int z = 0; z < rows.size(); z++) {
                 String row = rows.get(z).getAsString();
                 if (row.length() != width) {
-                    problems.add("$.layers[" + y + "][" + z + "]: every row has " + width + " characters");
+                    problems.add(
+                            "$.layers["
+                                    + y
+                                    + "]["
+                                    + z
+                                    + "]: every row has "
+                                    + width
+                                    + " characters");
                     continue;
                 }
                 for (int x = 0; x < width; x++) {
@@ -396,7 +449,10 @@ final class InfusionData implements FeatureData {
                         bowls++;
                         bowlHere = true;
                         if (x != width / 2 || z != depth / 2) {
-                            problems.add("$.layers[" + y + "]: the bowl is off its layer's centre column");
+                            problems.add(
+                                    "$.layers["
+                                            + y
+                                            + "]: the bowl is off its layer's centre column");
                         }
                     } else if (key.get(c).getAsString().startsWith(PEDESTAL)) {
                         pedestalHere = true;
@@ -481,8 +537,20 @@ final class InfusionData implements FeatureData {
                                             new Schema.Str(3, 256, ID),
                                             new Schema.Obj(
                                                     List.of(
-                                                            Schema.required("items", new Schema.ListOf(ENTRY_ITEM, 1, 17, false)),
-                                                            Schema.required("aspects", new Schema.ListOf(ENTRY_ASPECT, 1, 8, false)))),
+                                                            Schema.required(
+                                                                    "items",
+                                                                    new Schema.ListOf(
+                                                                            ENTRY_ITEM,
+                                                                            1,
+                                                                            17,
+                                                                            false)),
+                                                            Schema.required(
+                                                                    "aspects",
+                                                                    new Schema.ListOf(
+                                                                            ENTRY_ASPECT,
+                                                                            1,
+                                                                            8,
+                                                                            false)))),
                                             2,
                                             2)))
                     .withExtra(
@@ -490,10 +558,16 @@ final class InfusionData implements FeatureData {
                                 JsonObject recipes = root.getAsJsonObject("recipes");
                                 return recipes.keySet().equals(Set.of(ECHO_ROD, ECHO_CAP))
                                         ? List.of()
-                                        : List.of("$.recipes: exactly " + ECHO_ROD + " and " + ECHO_CAP);
+                                        : List.of(
+                                                "$.recipes: exactly "
+                                                        + ECHO_ROD
+                                                        + " and "
+                                                        + ECHO_CAP);
                             });
 
-    /** The bootstrap covers every centre and component item and every aspect of each Echo recipe. */
+    /**
+     * The bootstrap covers every centre and component item and every aspect of each Echo recipe.
+     */
     static List<String> bootstrapCoverage(JsonObject bootstrap, JsonObject recipes) {
         List<String> problems = new ArrayList<>();
         for (String id : List.of(ECHO_ROD, ECHO_CAP)) {
@@ -503,9 +577,11 @@ final class InfusionData implements FeatureData {
                 continue;
             }
             Set<String> items = new HashSet<>();
-            entry.getAsJsonArray("items").forEach(i -> items.add(i.getAsJsonObject().get("item").getAsString()));
+            entry.getAsJsonArray("items")
+                    .forEach(i -> items.add(i.getAsJsonObject().get("item").getAsString()));
             Set<String> aspects = new HashSet<>();
-            entry.getAsJsonArray("aspects").forEach(a -> aspects.add(a.getAsJsonObject().get("aspect").getAsString()));
+            entry.getAsJsonArray("aspects")
+                    .forEach(a -> aspects.add(a.getAsJsonObject().get("aspect").getAsString()));
             List<String> wanted = new ArrayList<>();
             wanted.add(recipe.get("centre").getAsString());
             recipe.getAsJsonArray("components").forEach(c -> wanted.add(c.getAsString()));
@@ -557,7 +633,8 @@ final class InfusionData implements FeatureData {
     private static Path contentRoot() {
         String root = System.getProperty(ContentProvider.CONTENT_DIR);
         if (root == null) {
-            throw new IllegalStateException("the system property " + ContentProvider.CONTENT_DIR + " is not set");
+            throw new IllegalStateException(
+                    "the system property " + ContentProvider.CONTENT_DIR + " is not set");
         }
         return Path.of(root);
     }
@@ -581,8 +658,18 @@ final class InfusionData implements FeatureData {
         private final CompletableFuture<HolderLookup.Provider> lookup;
         private final ResourceManager data;
 
-        Content(PackOutput output, CompletableFuture<HolderLookup.Provider> lookup, ResourceManager data) {
-            super(output, DIR, List.of(recipesSchema(chimeCapacity(contentRoot())), PARTS, MULTIBLOCKS, BOOTSTRAP));
+        Content(
+                PackOutput output,
+                CompletableFuture<HolderLookup.Provider> lookup,
+                ResourceManager data) {
+            super(
+                    output,
+                    DIR,
+                    List.of(
+                            recipesSchema(chimeCapacity(contentRoot())),
+                            PARTS,
+                            MULTIBLOCKS,
+                            BOOTSTRAP));
             this.lookup = lookup;
             this.data = data;
         }
@@ -601,7 +688,11 @@ final class InfusionData implements FeatureData {
             List<CompletableFuture<?>> writes = new ArrayList<>();
             JsonObject recipes = null;
             JsonObject bootstrap = null;
-            Set<String> inTable = tagMembers(data, Identifier.withDefaultNamespace("in_enchanting_table"), new TreeSet<>());
+            Set<String> inTable =
+                    tagMembers(
+                            data,
+                            Identifier.withDefaultNamespace("in_enchanting_table"),
+                            new TreeSet<>());
             for (Envelope e : envelopes) {
                 JsonObject json = e.json().getAsJsonObject();
                 switch (e.schema().id()) {
@@ -610,11 +701,15 @@ final class InfusionData implements FeatureData {
                         for (Map.Entry<String, JsonElement> r : recipes.entrySet()) {
                             JsonObject body = r.getValue().getAsJsonObject();
                             if (body.get("type").getAsString().equals("vftv:arcane")) {
-                                problems.addAll(ArcaneBodies.check(r.getKey(), body, registries, research));
+                                problems.addAll(
+                                        ArcaneBodies.check(r.getKey(), body, registries, research));
                                 writes.add(ArcaneBodies.write(cache, output, r.getKey(), body));
                             } else {
-                                problems.addAll(InfusionBodies.check(r.getKey(), body, registries, research));
-                                problems.addAll(enchantRules(r.getKey(), body, registries, inTable));
+                                problems.addAll(
+                                        InfusionBodies.check(
+                                                r.getKey(), body, registries, research));
+                                problems.addAll(
+                                        enchantRules(r.getKey(), body, registries, inTable));
                                 problems.addAll(voidGate(r.getKey(), body, loaded));
                                 writes.add(InfusionBodies.write(cache, output, r.getKey(), body));
                             }
@@ -627,26 +722,32 @@ final class InfusionData implements FeatureData {
                             json.getAsJsonObject(table)
                                     .entrySet()
                                     .forEach(
-                                            p -> writes.add(
-                                                    save(
-                                                            cache,
-                                                            PackOutput.Target.DATA_PACK,
-                                                            Identifier.parse(p.getKey()),
-                                                            table.equals("rods") ? "vftv/wand_rod" : "vftv/wand_cap",
-                                                            p.getValue())));
+                                            p ->
+                                                    writes.add(
+                                                            save(
+                                                                    cache,
+                                                                    PackOutput.Target.DATA_PACK,
+                                                                    Identifier.parse(p.getKey()),
+                                                                    table.equals("rods")
+                                                                            ? "vftv/wand_rod"
+                                                                            : "vftv/wand_cap",
+                                                                    p.getValue())));
                         }
                     }
                     case "vftv:multiblocks/1" ->
                             json.getAsJsonObject("multiblocks")
                                     .entrySet()
                                     .forEach(
-                                            m -> writes.add(
-                                                    save(
-                                                            cache,
-                                                            PackOutput.Target.RESOURCE_PACK,
-                                                            Identifier.parse(m.getKey()),
-                                                            "multiblock",
-                                                            multiblock(m.getValue().getAsJsonObject()))));
+                                            m ->
+                                                    writes.add(
+                                                            save(
+                                                                    cache,
+                                                                    PackOutput.Target.RESOURCE_PACK,
+                                                                    Identifier.parse(m.getKey()),
+                                                                    "multiblock",
+                                                                    multiblock(
+                                                                            m.getValue()
+                                                                                    .getAsJsonObject()))));
                     default -> bootstrap = json.getAsJsonObject("recipes");
                 }
             }
@@ -654,17 +755,25 @@ final class InfusionData implements FeatureData {
                 problems.addAll(bootstrapCoverage(bootstrap, recipes));
             }
             if (!problems.isEmpty()) {
-                throw new IllegalStateException("Rejected infusion content:\n" + String.join("\n", problems));
+                throw new IllegalStateException(
+                        "Rejected infusion content:\n" + String.join("\n", problems));
             }
             return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
         }
 
         private CompletableFuture<?> save(
-                CachedOutput cache, PackOutput.Target target, Identifier id, String dir, JsonElement json) {
+                CachedOutput cache,
+                PackOutput.Target target,
+                Identifier id,
+                String dir,
+                JsonElement json) {
             return DataProvider.saveStable(
                     cache,
                     json,
-                    output.getOutputFolder(target).resolve(id.getNamespace()).resolve(dir).resolve(id.getPath() + ".json"));
+                    output.getOutputFolder(target)
+                            .resolve(id.getNamespace())
+                            .resolve(dir)
+                            .resolve(id.getPath() + ".json"));
         }
 
         @Override
@@ -687,11 +796,19 @@ final class InfusionData implements FeatureData {
             problems.add(where + enchantment + " is not in #minecraft:in_enchanting_table");
         }
         Optional<Enchantment> value =
-                registries.lookupOrThrow(Registries.ENCHANTMENT)
-                        .get(ResourceKey.create(Registries.ENCHANTMENT, Identifier.parse(enchantment)))
+                registries
+                        .lookupOrThrow(Registries.ENCHANTMENT)
+                        .get(
+                                ResourceKey.create(
+                                        Registries.ENCHANTMENT, Identifier.parse(enchantment)))
                         .map(h -> h.value());
         if (value.isPresent() && result.get("max_level").getAsInt() > value.get().getMaxLevel()) {
-            problems.add(where + "max_level over " + enchantment + "'s maximum " + value.get().getMaxLevel());
+            problems.add(
+                    where
+                            + "max_level over "
+                            + enchantment
+                            + "'s maximum "
+                            + value.get().getMaxLevel());
         }
         return problems;
     }
@@ -716,7 +833,8 @@ final class InfusionData implements FeatureData {
             if (rel.equals(DIR + "/" + own)) {
                 continue;
             }
-            if (read(file) instanceof JsonObject root && root.get("recipes") instanceof JsonObject all) {
+            if (read(file) instanceof JsonObject root
+                    && root.get("recipes") instanceof JsonObject all) {
                 for (String id : all.keySet()) {
                     if (ids.contains(id)
                             && all.get(id) instanceof JsonObject b
@@ -726,7 +844,9 @@ final class InfusionData implements FeatureData {
                 }
             }
         }
-        seen.forEach((id, file) -> problems.add("recipe " + id + " is also declared in content/" + file));
+        seen.forEach(
+                (id, file) ->
+                        problems.add("recipe " + id + " is also declared in content/" + file));
         return problems;
     }
 
@@ -769,12 +889,19 @@ final class InfusionData implements FeatureData {
 
     /** An enchantment tag's members from the server data, following tag references. */
     static Set<String> tagMembers(ResourceManager data, Identifier tag, Set<String> into) {
-        Identifier file = Identifier.fromNamespaceAndPath(tag.getNamespace(), "tags/enchantment/" + tag.getPath() + ".json");
+        Identifier file =
+                Identifier.fromNamespaceAndPath(
+                        tag.getNamespace(), "tags/enchantment/" + tag.getPath() + ".json");
         for (Resource resource : data.getResourceStack(file)) {
             try (InputStream in = resource.open()) {
-                JsonObject json = StrictJson.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8)).getAsJsonObject();
+                JsonObject json =
+                        StrictJson.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8))
+                                .getAsJsonObject();
                 for (JsonElement v : json.getAsJsonArray("values")) {
-                    String entry = v.isJsonObject() ? v.getAsJsonObject().get("id").getAsString() : v.getAsString();
+                    String entry =
+                            v.isJsonObject()
+                                    ? v.getAsJsonObject().get("id").getAsString()
+                                    : v.getAsString();
                     if (entry.startsWith("#")) {
                         tagMembers(data, Identifier.parse(entry.substring(1)), into);
                     } else {

@@ -1,1 +1,26 @@
 # The discovery guard's ids for the infusion feature: one vftv:infusion_<what> id per line.
+vftv:infusion_registered
+vftv:infusion_hand_place_take
+vftv:infusion_strike_reads_ready
+vftv:infusion_second_strike_starts
+vftv:infusion_first_strike_never_commits
+vftv:infusion_stale_after_change
+vftv:infusion_seen_bad_input
+vftv:infusion_run_completes
+vftv:infusion_unlearned_no_recipe
+vftv:infusion_enchant_to_cap
+vftv:infusion_enchant_refusals
+vftv:infusion_transmute_keeps_components
+vftv:infusion_claims_refuse_second_bowl
+vftv:infusion_item_handler_rules
+vftv:infusion_container_path
+vftv:infusion_abandon_flow
+vftv:infusion_removal_spills
+vftv:infusion_persistence
+vftv:infusion_unreadable_record
+vftv:infusion_recipe_codec
+vftv:infusion_shown_altar
+vftv:infusion_draws_only_inside_box
+vftv:infusion_preview_context
+vftv:infusion_assessment_budget
+vftv:infusion_tuning_rules

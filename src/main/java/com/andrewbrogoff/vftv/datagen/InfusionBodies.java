@@ -82,7 +82,8 @@ public final class InfusionBodies {
                                                                     List.of(
                                                                             Schema.required(
                                                                                     "id",
-                                                                                    new Schema.Id()),
+                                                                                    new Schema
+                                                                                            .Id()),
                                                                             Schema.optional(
                                                                                     "count",
                                                                                     new Schema.Int(
@@ -91,7 +92,8 @@ public final class InfusionBodies {
                                                     Schema.optional("transmute", new Schema.Bool()),
                                                     Schema.optional("enchantment", new Schema.Id()),
                                                     Schema.optional(
-                                                            "max_level", new Schema.Int(1, 255)))))));
+                                                            "max_level",
+                                                            new Schema.Int(1, 255)))))));
 
     private InfusionBodies() {}
 
@@ -139,9 +141,11 @@ public final class InfusionBodies {
                             }
                             if (!(recipe.result() instanceof InfusionRecipe.Result.Item item)
                                     || item.item().item().areComponentsBound()) {
-                                recipe.checkResult().ifError(e -> problems.add(where + e.message()));
+                                recipe.checkResult()
+                                        .ifError(e -> problems.add(where + e.message()));
                             }
-                            recipe.checkEnchantBound().ifError(e -> problems.add(where + e.message()));
+                            recipe.checkEnchantBound()
+                                    .ifError(e -> problems.add(where + e.message()));
                         });
         return problems;
     }
@@ -201,15 +205,24 @@ public final class InfusionBodies {
                             List<List<Derivation.Alternative>> ingredients = new ArrayList<>();
                             List<String> cells = new ArrayList<>();
                             cells.add(body.get("centre").getAsString());
-                            body.getAsJsonArray("components").forEach(c -> cells.add(c.getAsString()));
+                            body.getAsJsonArray("components")
+                                    .forEach(c -> cells.add(c.getAsString()));
                             for (String cell : cells) {
                                 List<Derivation.Alternative> alternatives = new ArrayList<>();
                                 AspectTable.ids(cell, BuiltInRegistries.ITEM).stream()
                                         .sorted()
-                                        .forEach(i -> alternatives.add(new Derivation.Alternative(i, null)));
+                                        .forEach(
+                                                i ->
+                                                        alternatives.add(
+                                                                new Derivation.Alternative(
+                                                                        i, null)));
                                 if (alternatives.isEmpty()) {
                                     throw new IllegalStateException(
-                                            "Infusion recipe " + id + ": ingredient " + cell + " names no items");
+                                            "Infusion recipe "
+                                                    + id
+                                                    + ": ingredient "
+                                                    + cell
+                                                    + " names no items");
                                 }
                                 ingredients.add(alternatives);
                             }

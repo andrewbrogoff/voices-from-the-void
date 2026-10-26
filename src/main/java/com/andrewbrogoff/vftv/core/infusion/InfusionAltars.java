@@ -463,6 +463,10 @@ public final class InfusionAltars {
             ServerLevel level, BowlBlockEntity bowl, ServerPlayer player, InteractionHand hand) {
         LevelState s = state(level);
         long now = level.getGameTime();
+        if (bowl.id == 0 && !bowl.unreadable()) {
+            bowl.id = mintId(level); // a bowl placed this tick, before its first load
+            bowl.setChanged();
+        }
         if (bowl.ringing()) {
             subscribe(level, bowl, player, true);
             play(level, bowl.getBlockPos(), InfusionContent.STRIKE, 1.0f);
@@ -816,6 +820,16 @@ public final class InfusionAltars {
         return bowl.ringing()
                 ? runReadout(level, bowl)
                 : AltarReading.assess(level, bowl, player, null).readout();
+    }
+
+    /** The box's {@code L}, {@code I} and {@code P} around a bowl, as an assessment counts them. */
+    public static int[] symmetry(ServerLevel level, BowlBlockEntity bowl, ServerPlayer player) {
+        Inputs in = new Inputs(level, bowl, player, 0);
+        return new int[] {
+            InfusionMath.lonePedestals(in.pedestals),
+            InfusionMath.loneItems(in.pedestals, in.items),
+            InfusionMath.matchedPairs(in.stabilisers)
+        };
     }
 
     /** The player's current arm's revision and seen state, for tests; null without an arm. */

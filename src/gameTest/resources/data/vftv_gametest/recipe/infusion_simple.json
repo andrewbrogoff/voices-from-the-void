@@ -1,0 +1,3 @@
+{"type": "vftv:infusion", "research": "vftv:infusion", "centre": "minecraft:stick",
+ "components": ["minecraft:flint"], "essentia": {"vftv:aer": 2}, "instability": 0,
+ "result": {"item": {"id": "minecraft:blaze_rod", "count": 1}}}

@@ -17,8 +17,10 @@ import net.minecraft.resources.Identifier;
  * and {@code items/wand.json} come from the wands generator, which reads every parts file.
  */
 final class InfusionClientData implements FeatureClientData {
-    private static final Identifier BOWL = Identifier.fromNamespaceAndPath("vftv", "block/singing_bowl");
-    private static final Identifier PEDESTAL = Identifier.fromNamespaceAndPath("vftv", "block/pedestal");
+    private static final Identifier BOWL =
+            Identifier.fromNamespaceAndPath("vftv", "block/singing_bowl");
+    private static final Identifier PEDESTAL =
+            Identifier.fromNamespaceAndPath("vftv", "block/pedestal");
 
     @Override
     public void models(BlockModelGenerators blocks, ItemModelGenerators items) {
