@@ -224,7 +224,7 @@ public final class VoiceChecks {
         }
         VoiceDraws.Draw draw = VoiceDraws.draw(player.getUUID(), r.checks(), pm, forced, eligible);
         if (draw.result() != VoiceDraws.Result.PICKED) {
-            settle(player, offerLive ? offer : null, false);
+            settle(player, null, false);
             return only != null ? Outcome.FAILED : outcome(draw.result());
         }
         String id = eligible.get(draw.index()).id();
@@ -281,7 +281,7 @@ public final class VoiceChecks {
             }
             default -> {}
         }
-        settle(player, created != null ? created : offerLive ? offer : null, fired);
+        settle(player, created, fired);
         if (fired && cue) {
             send(
                     player,
@@ -319,8 +319,15 @@ public final class VoiceChecks {
                             r.lastListen(),
                             r.silenced(),
                             r.revision() + 1);
-            // A Silencing between the draws and here deleted the offer: never bring one back.
-            WarpAttachment.Offer kept = r.silenced() ? null : offer;
+            // A new offer replaces none (a bargain needs no live one); otherwise the offer as it is
+            // now, after any callback's Silencing or death, with an expired one deleted.
+            WarpAttachment.Offer now = WarpService.get(player).offer();
+            WarpAttachment.Offer kept =
+                    offer != null
+                            ? offer
+                            : now != null && WarpService.gameTime(player) < now.expires()
+                                    ? now
+                                    : null;
             WarpService.write(
                     player,
                     r,
