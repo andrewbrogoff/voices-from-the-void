@@ -60,3 +60,7 @@ WG="$ASSETS/vftv/textures"
 python3 "$ART/sheet.py" "$PREVIEWS/worldgen.png" "$WG/block/reliquary_side.png" "$WG/block/reliquary_front.png" \
     "$WG/block/reliquary_top.png" "$WG/block/reliquary_bottom.png" "$WG/entity/answerer.png" \
     "$WG/entity/answerer_cantor.png"
+python3 "$ART/warp.py" "$ASSETS" "$ART/warp"
+WP="$ASSETS/vftv/textures"
+python3 "$ART/sheet.py" "$PREVIEWS/warp.png" "$WP/item/stilling_draught.png" "$WP/entity/apparition.png" \
+    "$WP/gui/sprites/hud/voice_text.png"

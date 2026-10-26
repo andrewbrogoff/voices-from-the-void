@@ -1,0 +1,9 @@
+{"schema": "vftv:voice_events/1", "events": {
+  "vftv:whisper":       {"type": "vftv:whisper",       "weight": 40},
+  "vftv:insight":       {"type": "vftv:insight",       "weight": 15, "points": 3},
+  "vftv:footsteps":     {"type": "vftv:sound",         "weight": 15, "min_band": 1},
+  "vftv:drained":       {"type": "vftv:colour",        "weight": 10, "min_band": 1},
+  "vftv:offer":         {"type": "vftv:bargain",       "weight": 8,  "min_band": 1},
+  "vftv:watcher":       {"type": "vftv:phantom_mob",   "weight": 6,  "min_band": 2},
+  "vftv:pressing_dark": {"type": "vftv:status",        "weight": 10, "min_band": 2, "context": true,
+                         "effects": [{"effect": "minecraft:slowness", "amplifier": 0, "duration": 100}]}}}

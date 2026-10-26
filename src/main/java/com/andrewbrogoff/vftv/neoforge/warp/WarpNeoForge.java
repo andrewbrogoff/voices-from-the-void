@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.neoforge.warp.WarpDataMaps;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
 import com.andrewbrogoff.vftv.api.warp.WarpRules;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
+import com.andrewbrogoff.vftv.core.warp.WarpAttachment;
 import com.andrewbrogoff.vftv.core.warp.WarpRecord;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
@@ -36,6 +37,7 @@ import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -91,6 +93,13 @@ public final class WarpNeoForge {
                     }
                 });
         gameBus.addListener(
+                LivingDeathEvent.class,
+                event -> {
+                    if (event.getEntity() instanceof ServerPlayer player) {
+                        WarpService.onDeath(player);
+                    }
+                });
+        gameBus.addListener(
                 VisSpentEvent.class,
                 event -> {
                     if (event.payload().context().kind() == VisKind.VOID) {
@@ -138,7 +147,13 @@ public final class WarpNeoForge {
         JsonArray players = new JsonArray();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                players.add(WarpRecord.dump(player.getPlainTextName(), WarpService.record(player)));
+                JsonObject entry =
+                        WarpRecord.dump(player.getPlainTextName(), WarpService.record(player));
+                WarpAttachment.Offer offer = WarpService.offer(player);
+                entry.addProperty("offerSeq", offer == null ? 0 : offer.seq());
+                entry.addProperty("offerBargain", offer == null ? "" : offer.bargain().toString());
+                entry.addProperty("listenDue", WarpService.listenDue(player));
+                players.add(entry);
             }
         }
         data.add("players", players);

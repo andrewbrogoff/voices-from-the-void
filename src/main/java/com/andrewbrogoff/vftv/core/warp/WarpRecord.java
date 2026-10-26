@@ -210,6 +210,8 @@ public record WarpRecord(
             json.addProperty("gear", r.gear);
             json.addProperty("total", r.total());
             json.addProperty("counter", r.counter);
+            json.addProperty("checks", r.checks);
+            json.addProperty("lastListen", r.lastListen);
             json.addProperty("silenced", r.silenced);
             json.addProperty("revision", r.revision);
             JsonArray paid = new JsonArray();

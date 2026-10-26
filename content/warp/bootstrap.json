@@ -1,0 +1,35 @@
+{
+  "schema": "vftv:warp_bootstrap/1",
+  "items": [
+    {
+      "item": "minecraft:glass_bottle",
+      "why": "The catalyst: three glass blocks make three bottles, and sand smelts to glass at any furnace."
+    }
+  ],
+  "aspects": [
+    {
+      "aspect": "vftv:silentium",
+      "sources": [
+        "#minecraft:wool"
+      ],
+      "why": "Wool is silence a Listener can carry: every sheep in every Stage 3 world gives it, and it dissolves to Silentium."
+    },
+    {
+      "aspect": "vftv:ordo",
+      "sources": [
+        "minecraft:quartz",
+        "minecraft:calcite",
+        "minecraft:honeycomb"
+      ],
+      "why": "Nether quartz, calcite in amethyst geodes and honeycomb from bee nests are ordered matter a Stage 3 Listener has already found."
+    },
+    {
+      "aspect": "vftv:aqua",
+      "sources": [
+        "minecraft:kelp",
+        "minecraft:cactus"
+      ],
+      "why": "Kelp and cactus grow wherever water or sand is, renewable from the first day."
+    }
+  ]
+}

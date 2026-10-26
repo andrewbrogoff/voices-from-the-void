@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.core.warp.client;
 
 import com.andrewbrogoff.vftv.core.common.client.ClientNetwork;
+import com.andrewbrogoff.vftv.core.warp.VoicePayloads;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesPayload;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 
@@ -15,5 +16,8 @@ public final class WarpClientFeature {
     public static void init(ClientNetwork network) {
         network.handler(
                 WarpRulesPayload.TYPE, payload -> WarpRulesService.receive(payload.rules()));
+        network.handler(VoicePayloads.VoiceCue.TYPE, VoicesClient::onCue);
+        network.handler(VoicePayloads.VoiceClear.TYPE, payload -> VoicesClient.clear());
+        VoicesClient.init(network);
     }
 }

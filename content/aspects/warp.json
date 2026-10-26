@@ -1,0 +1,16 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The warp feature's things. The Stilling Draught is a stoppered glass phial of hush-grey draught brewed from wool's silence, order and water; it returns its bottle when drunk, so it carries only what the brewing added, below the recipe's 14 points. The apparition is a client-only glimpse with no server identity, so the fork never strikes it.",
+  "items": {
+    "vftv:stilling_draught": {
+      "vftv:silentium": 3,
+      "vftv:ordo": 2,
+      "vftv:aqua": 2
+    }
+  },
+  "exempt": {
+    "entities": {
+      "vftv:apparition": "client-only: no server identity, so the fork never strikes one (warp spec, Phantoms)"
+    }
+  }
+}

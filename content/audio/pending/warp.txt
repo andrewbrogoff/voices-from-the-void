@@ -1,0 +1,7 @@
+# The warp feature's sound events with no audio yet (core.common.model.PendingAudio).
+# The 46 Voice line events (vftv:voice.<line>) are not registered sound events: the client plays a
+# line only once its sounds.json entry exists, which the owner's recordings bring (#58).
+vftv:apparition.vanish
+vftv:voice.insight
+vftv:bargain.accept
+vftv:stilling.drink_end

@@ -49,9 +49,6 @@ public record ResearchAction(int containerId, int requestId, Variant variant)
 
     /** What an action asks. */
     public sealed interface Variant {
-        /** The entry it names. */
-        String entry();
-
         /** Whether it is a commit, of which at most one per player per tick is processed. */
         default boolean commit() {
             return false;
@@ -168,6 +165,46 @@ public record ResearchAction(int containerId, int requestId, Variant variant)
      */
     public record Bookmark(String entry, boolean on) implements Variant {}
 
+    /**
+     * Accept the live offer: a quoted commit, whose offer checks are the warp spec's.
+     *
+     * @param offerSeq the offer's sequence number, positive
+     * @param revision the quotes' revision the client holds
+     * @param echoedWarp the offer's warp preview the confirm showed
+     */
+    public record AcceptOffer(long offerSeq, int revision, WarpPreview echoedWarp)
+            implements Variant {
+        @Override
+        public boolean commit() {
+            return true;
+        }
+    }
+
+    /**
+     * Refuse the live offer, at no cost.
+     *
+     * @param offerSeq the offer's sequence number, positive
+     */
+    public record RefuseOffer(long offerSeq) implements Variant {
+        @Override
+        public boolean commit() {
+            return true;
+        }
+    }
+
+    /**
+     * The Listen rite: a quoted commit passed to {@code WarpService.listen}.
+     *
+     * @param revision the quotes' revision the client holds
+     * @param echoedWarp the rite's warp preview the card showed
+     */
+    public record ListenRite(int revision, WarpPreview echoedWarp) implements Variant {
+        @Override
+        public boolean commit() {
+            return true;
+        }
+    }
+
     private static void write(RegistryFriendlyByteBuf buf, ResearchAction a) {
         buf.writeVarInt(a.containerId);
         buf.writeVarInt(a.requestId);
@@ -227,6 +264,21 @@ public record ResearchAction(int containerId, int requestId, Variant variant)
                 buf.writeUtf(v.entry(), MAX_ID_CHARS);
                 buf.writeBoolean(v.on());
             }
+            case AcceptOffer v -> {
+                buf.writeByte(8);
+                buf.writeVarLong(v.offerSeq());
+                buf.writeInt(v.revision());
+                writeWarp(buf, v.echoedWarp());
+            }
+            case RefuseOffer v -> {
+                buf.writeByte(9);
+                buf.writeVarLong(v.offerSeq());
+            }
+            case ListenRite v -> {
+                buf.writeByte(10);
+                buf.writeInt(v.revision());
+                writeWarp(buf, v.echoedWarp());
+            }
         }
     }
 
@@ -245,6 +297,9 @@ public record ResearchAction(int containerId, int requestId, Variant variant)
                     case 5 -> new Buy(id(buf), buf.readInt(), price(buf), warp(buf));
                     case 6 -> new Listen(id(buf), buf.readInt(), warp(buf));
                     case 7 -> new Bookmark(id(buf), buf.readBoolean());
+                    case 8 -> new AcceptOffer(offerSeq(buf), buf.readInt(), warp(buf));
+                    case 9 -> new RefuseOffer(offerSeq(buf));
+                    case 10 -> new ListenRite(buf.readInt(), warp(buf));
                     default -> throw new DecoderException("unknown research action " + tag);
                 };
         return new ResearchAction(containerId, requestId, variant);
@@ -294,6 +349,15 @@ public record ResearchAction(int containerId, int requestId, Variant variant)
             throw new DecoderException("note revision " + revision);
         }
         return revision;
+    }
+
+    /** A positive offer sequence number. */
+    private static long offerSeq(FriendlyByteBuf buf) {
+        long seq = buf.readVarLong();
+        if (seq < 1) {
+            throw new DecoderException("offer seq " + seq);
+        }
+        return seq;
     }
 
     private static int coord(FriendlyByteBuf buf) {

@@ -120,6 +120,7 @@ final class WarpGameTests {
         tests.put("warp_owner_only_sync", WarpGameTests::ownerOnlySync);
         tests.put("warp_persistence", WarpGameTests::persistence);
         tests.put("warp_commands", WarpGameTests::commands);
+        VoicesGameTests.register(tests);
     }
 
     // ---- Tuning ------------------------------------------------------------------------------

@@ -1,0 +1,101 @@
+{
+ "animations": [],
+ "elements": [
+  {
+   "autouv": 0,
+   "box_uv": true,
+   "color": 0,
+   "from": [
+    -3,
+    23,
+    -3
+   ],
+   "locked": false,
+   "mirror_uv": false,
+   "name": "hood",
+   "origin": [
+    0,
+    23,
+    0
+   ],
+   "rescale": false,
+   "to": [
+    3,
+    30,
+    3
+   ],
+   "uuid": "7d9e3d78-ef36-5ef8-a616-2348effeab57",
+   "uv_offset": [
+    0,
+    0
+   ]
+  },
+  {
+   "autouv": 0,
+   "box_uv": true,
+   "color": 0,
+   "from": [
+    -4,
+    0,
+    -3
+   ],
+   "locked": false,
+   "mirror_uv": false,
+   "name": "robe",
+   "origin": [
+    0,
+    23,
+    0
+   ],
+   "rescale": false,
+   "to": [
+    4,
+    23,
+    3
+   ],
+   "uuid": "079af35c-acb3-59d9-8bd9-3dffbd3d3e80",
+   "uv_offset": [
+    0,
+    16
+   ]
+  }
+ ],
+ "meta": {
+  "box_uv": true,
+  "format_version": "4.10",
+  "model_format": "modded_entity"
+ },
+ "model_identifier": "vftv:apparition",
+ "name": "apparition",
+ "outliner": [
+  {
+   "children": [
+    "7d9e3d78-ef36-5ef8-a616-2348effeab57"
+   ],
+   "name": "hood",
+   "origin": [
+    0,
+    23,
+    0
+   ],
+   "uuid": "ef2cbf3c-3535-520e-9253-195f7f4150c3"
+  },
+  {
+   "children": [
+    "079af35c-acb3-59d9-8bd9-3dffbd3d3e80"
+   ],
+   "name": "robe",
+   "origin": [
+    0,
+    23,
+    0
+   ],
+   "uuid": "871af29a-c62a-5fa8-815d-6b56167e9f5c"
+  }
+ ],
+ "resolution": {
+  "height": 64,
+  "width": 64
+ },
+ "textures": []
+}

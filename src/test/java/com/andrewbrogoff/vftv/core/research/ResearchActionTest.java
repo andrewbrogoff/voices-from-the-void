@@ -43,7 +43,10 @@ class ResearchActionTest {
                         new ResearchAction.Learn(NOTE, 4, -9, new WarpPreview(1, 2, 3, true)),
                         new ResearchAction.Buy(NOTE, 3, new TreeMap<>(Map.of("vftv:lux", 2)), NONE),
                         new ResearchAction.Listen(NOTE, 3, NONE),
-                        new ResearchAction.Bookmark(NOTE, true));
+                        new ResearchAction.Bookmark(NOTE, true),
+                        new ResearchAction.AcceptOffer(7, 3, new WarpPreview(2, 1, 0, false)),
+                        new ResearchAction.RefuseOffer(7),
+                        new ResearchAction.ListenRite(3, new WarpPreview(0, 2, 0, true)));
         for (ResearchAction.Variant v : variants) {
             ResearchAction a = new ResearchAction(5, 9, v);
             assertEquals(a, roundTrip(a));
@@ -74,6 +77,12 @@ class ResearchActionTest {
                         new ResearchAction(
                                 5, 9, new ResearchAction.Place(NOTE, -1, 0, 0, "vftv:aer")),
                         new ResearchAction(5, 9, new ResearchAction.Begin("Not An Id")),
+                        new ResearchAction(5, 9, new ResearchAction.AcceptOffer(0, 3, NONE)),
+                        new ResearchAction(5, 9, new ResearchAction.RefuseOffer(-4)),
+                        new ResearchAction(
+                                5,
+                                9,
+                                new ResearchAction.ListenRite(3, new WarpPreview(0, -2, 0, false))),
                         new ResearchAction(-1, 9, new ResearchAction.Begin(NOTE)),
                         new ResearchAction(5, -2, new ResearchAction.Begin(NOTE)));
         for (ResearchAction a : bad) {
@@ -82,7 +91,7 @@ class ResearchActionTest {
         RegistryFriendlyByteBuf unknown = buffer();
         unknown.writeVarInt(1);
         unknown.writeVarInt(1);
-        unknown.writeByte(8);
+        unknown.writeByte(11);
         assertThrows(RuntimeException.class, () -> ResearchAction.STREAM_CODEC.decode(unknown));
     }
 
@@ -102,6 +111,29 @@ class ResearchActionTest {
         RegistryFriendlyByteBuf buf = buffer();
         ResearchFeedback.Quotes.STREAM_CODEC.encode(buf, q);
         assertEquals(q, ResearchFeedback.Quotes.STREAM_CODEC.decode(buf));
+        ResearchFeedback.Quotes withOffer =
+                new ResearchFeedback.Quotes(
+                        8,
+                        1,
+                        List.of(),
+                        new ResearchFeedback.OfferQuote(4, new WarpPreview(2, 1, 0, false)),
+                        new ResearchFeedback.RiteQuote(
+                                new WarpPreview(0, 2, 0, false),
+                                "message.vftv.warp.listen_cooldown"));
+        buf = buffer();
+        ResearchFeedback.Quotes.STREAM_CODEC.encode(buf, withOffer);
+        assertEquals(withOffer, ResearchFeedback.Quotes.STREAM_CODEC.decode(buf));
+        RegistryFriendlyByteBuf badSeq = buffer();
+        ResearchFeedback.Quotes.STREAM_CODEC.encode(
+                badSeq,
+                new ResearchFeedback.Quotes(
+                        8,
+                        1,
+                        List.of(),
+                        new ResearchFeedback.OfferQuote(0, new WarpPreview(0, 0, 0, false)),
+                        null));
+        assertThrows(
+                RuntimeException.class, () -> ResearchFeedback.Quotes.STREAM_CODEC.decode(badSeq));
         ResearchFeedback.Result r =
                 new ResearchFeedback.Result(3, false, ResearchActions.SHORT, List.of("vftv:aer"));
         buf = buffer();

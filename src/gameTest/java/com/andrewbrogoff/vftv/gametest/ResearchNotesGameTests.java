@@ -2,7 +2,10 @@ package com.andrewbrogoff.vftv.gametest;
 
 import com.andrewbrogoff.vftv.api.aspect.AspectValues;
 import com.andrewbrogoff.vftv.api.research.ResearchLimits;
+import com.andrewbrogoff.vftv.api.warp.WarpCost;
 import com.andrewbrogoff.vftv.api.warp.WarpPreview;
+import com.andrewbrogoff.vftv.api.warp.WarpSource;
+import com.andrewbrogoff.vftv.api.warp.WarpSourceKind;
 import com.andrewbrogoff.vftv.core.aspect.AspectLookup;
 import com.andrewbrogoff.vftv.core.aspect.AspectSet;
 import com.andrewbrogoff.vftv.core.aspect.KnowledgeService;
@@ -90,6 +93,8 @@ final class ResearchNotesGameTests {
         tests.put("research_listen_action", ResearchNotesGameTests::listenAction);
         tests.put("research_bookmarks", ResearchNotesGameTests::bookmarks);
         tests.put("research_affordability_paths", ResearchNotesGameTests::affordabilityPaths);
+        tests.put("research_offer_actions", ResearchNotesGameTests::offerActions);
+        tests.put("research_listen_rite_action", ResearchNotesGameTests::listenRiteAction);
     }
 
     private static synchronized void capture(ServerPlayer player, CustomPacketPayload payload) {
@@ -877,6 +882,126 @@ final class ResearchNotesGameTests {
                                                         new WarpPreview(3, 0, 0, false))),
                                         ResearchActions.NOT_NOW,
                                         "never twice")));
+    }
+
+    /**
+     * The offer actions (warp spec, "Accepting"): the live offer in the quotes; a stale seq refused
+     * with the offer kept; acceptance; refusal; the cleanup exception for an expired offer; and a
+     * second commit in one tick dropped.
+     */
+    private static void offerActions(GameTestHelper helper) {
+        Bench b = new Bench(helper, plenty());
+        long g = helper.getLevel().getServer().overworld().getGameTime();
+        WarpPreview price = new WarpPreview(3, 0, 0, false);
+        steps(
+                helper,
+                List.of(
+                        () -> {
+                            WarpService.putOffer(b.player, VoicesGameTests.live(5, g));
+                            b.menu().quote(b.player, false);
+                            ResearchFeedback.Quotes q = Objects.requireNonNull(b.menu().quotes());
+                            helper.assertTrue(
+                                    q.offer() != null
+                                            && q.offer().seq() == 5
+                                            && q.offer().warp().equals(price),
+                                    "the offer is quoted: " + q.offer());
+                            b.refused(
+                                    b.act(new ResearchAction.AcceptOffer(4, b.quotes(), price)),
+                                    "message.vftv.warp.offer_gone",
+                                    "a stale seq");
+                            helper.assertTrue(WarpService.offer(b.player) != null, "kept");
+                        },
+                        () -> {
+                            b.ok(
+                                    b.act(new ResearchAction.AcceptOffer(5, b.quotes(), price)),
+                                    "accepted");
+                            helper.assertValueEqual(
+                                    Objects.requireNonNull(WarpService.record(b.player))
+                                            .temporary(),
+                                    3,
+                                    "charged");
+                            helper.assertTrue(
+                                    Objects.requireNonNull(b.menu().quotes()).offer() == null,
+                                    "the quotes refreshed");
+                        },
+                        () -> {
+                            WarpService.putOffer(b.player, VoicesGameTests.live(6, g));
+                            b.ok(b.act(new ResearchAction.RefuseOffer(6)), "refused");
+                            helper.assertTrue(WarpService.get(b.player).offer() == null, "gone");
+                        },
+                        () -> {
+                            WarpService.putOffer(b.player, VoicesGameTests.expired(7, g));
+                            var before = Objects.requireNonNull(WarpService.record(b.player));
+                            b.menu().quote(b.player, false);
+                            b.refused(
+                                    b.act(new ResearchAction.AcceptOffer(7, b.quotes(), price)),
+                                    "message.vftv.warp.offer_gone",
+                                    "expired");
+                            helper.assertTrue(WarpService.get(b.player).offer() == null, "deleted");
+                            helper.assertValueEqual(
+                                    Objects.requireNonNull(WarpService.record(b.player)),
+                                    before,
+                                    "nothing charged");
+                        },
+                        () -> {
+                            WarpService.putOffer(b.player, VoicesGameTests.live(8, g));
+                            b.ok(b.act(new ResearchAction.RefuseOffer(8)), "the first commit");
+                            helper.assertTrue(
+                                    b.act(new ResearchAction.AcceptOffer(8, b.quotes(), price))
+                                            == null,
+                                    "the second commit of the tick is dropped");
+                        }));
+    }
+
+    /**
+     * The Listen rite through the book: refused before the reveal; quoted with no refusal at a
+     * Void-touched place; on OK, the book closes; reopened, the quote carries the cooldown.
+     */
+    private static void listenRiteAction(GameTestHelper helper) {
+        Bench b = new Bench(helper, plenty());
+        WarpPreview cost = new WarpPreview(0, 2, 0, false);
+        steps(
+                helper,
+                List.of(
+                        () -> {
+                            VoicesGameTests.place(helper, b.player);
+                            b.refused(
+                                    b.act(new ResearchAction.ListenRite(b.quotes(), cost)),
+                                    "message.vftv.warp.listen_closed",
+                                    "before the reveal");
+                        },
+                        () -> {
+                            Resolver.grant(b.player, List.of("vftv:silence_beneath"));
+                            WarpService.apply(
+                                    b.player,
+                                    new WarpCost(0, -1000, 0),
+                                    new WarpSource(WarpSourceKind.COMMAND, null));
+                            b.menu().quote(b.player, false);
+                            ResearchFeedback.RiteQuote rite =
+                                    Objects.requireNonNull(
+                                            Objects.requireNonNull(b.menu().quotes()).rite());
+                            helper.assertTrue(
+                                    rite.warp().equals(cost) && rite.refusal().isEmpty(),
+                                    "quoted: " + rite);
+                            b.ok(b.act(new ResearchAction.ListenRite(b.quotes(), cost)), "rite");
+                            helper.assertFalse(
+                                    b.player.containerMenu instanceof CommonplaceMenu,
+                                    "the book closed");
+                            helper.assertValueEqual(
+                                    Objects.requireNonNull(WarpService.record(b.player)).lasting(),
+                                    2,
+                                    "lasting 2");
+                        },
+                        () -> {
+                            CommonplaceBookItem.open(b.player);
+                            ResearchFeedback.RiteQuote rite =
+                                    Objects.requireNonNull(
+                                            Objects.requireNonNull(b.menu().quotes()).rite());
+                            helper.assertValueEqual(
+                                    rite.refusal(),
+                                    "message.vftv.warp.listen_cooldown",
+                                    "cooling, quoted");
+                        }));
     }
 
     /** Up to nine bookmarks, never a HIDDEN entry; clearing always works. */

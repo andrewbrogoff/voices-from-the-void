@@ -25,6 +25,11 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/item/stilling_draught.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/warp.py` (Stage 3: a stoppered phial, mauve felt at the neck, brass cap, hush-grey draught, teal1 groove); deterministic, no seed | palette lock in `lib.save()`; contact sheet `build/previews/warp.png` at GUI scale 2 | 2026-10-26 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/entity/apparition.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/warp.py` (64 × 64 box UVs: mauve cloth, an ink hollow for the face, no teal); deterministic, no seed | palette lock in `lib.check()`; contact sheet `build/previews/warp.png` | 2026-10-26 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/gui/sprites/ledger/offer_panel.png`, `gui/sprites/hud/voice_text.png` (+ `.mcmeta`, nine-slice border 4) | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/warp.py` (the offer card's 130 × 64 brass-ruled frame; the Voice text backing, ink at alpha 0.8); deterministic, no seed | palette lock in `lib.check()` | 2026-10-26 | none (agent-authored) |
+| `tools/art/warp/apparition.bbmodel`, `tools/art/warp/apparition_uv.png` | Python 3 + Pillow (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/warp.py`: the hood and robe cuboids, pivots and UV origins of `ApparitionRenderer`'s layer; a labelled UV guide at 8× | none | 2026-10-26 | none (agent-authored) |
+| `src/main/resources/assets/vftv/post_effect/voice_drain.json`, `shaders/post/voice_drain.fsh` | hand-written (no model) | code under NOTICE.md rule 4 | the colour drain's pass: Rec. 709 luminance-preserving desaturation | none | 2026-10-26 | none (agent-authored) |
 
 ## research
 

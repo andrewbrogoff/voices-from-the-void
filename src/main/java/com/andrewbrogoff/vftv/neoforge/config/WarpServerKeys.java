@@ -1,16 +1,20 @@
 package com.andrewbrogoff.vftv.neoforge.config;
 
+import com.andrewbrogoff.vftv.core.warp.VoiceChecks;
 import com.andrewbrogoff.vftv.core.warp.WarpConfig;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.neoforge.common.ConfigKeys;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 /**
- * The server keys 2 and 10-12 ({@code warp.voices.enabled}, {@code warp.tax}, {@code
- * warp.amplifier}, {@code warp.gear}) of {@code vftv-server.toml} (configuration, "Server keys"),
- * and the WarpConfig in core.warp they fill. {@link VftvServerConfig} calls {@link #define} once.
- * The per-type Voice switches (keys 3-9) join with the Voice events.
+ * The server keys 2-12 ({@code warp.voices.enabled}, {@code warp.tax}, {@code warp.amplifier},
+ * {@code warp.gear}) of {@code vftv-server.toml} (configuration, "Server keys"), and the WarpConfig
+ * in core.warp they fill. {@link VftvServerConfig} calls {@link #define} once. The per-type Voice
+ * switches (keys 3-9) are server-only and fill VoiceChecks' set of types off.
  */
 final class WarpServerKeys {
     private WarpServerKeys() {}
@@ -26,6 +30,16 @@ final class WarpServerKeys {
                         WarpConfig.VOICES_COMMENT,
                         "options.vftv.warp.voices.enabled",
                         WarpConfig.DEFAULT.voices());
+        List<ModConfigSpec.ConfigValue<Boolean>> types = new ArrayList<>();
+        for (WarpConfig.TypeSwitch t : WarpConfig.TYPE_SWITCHES) {
+            types.add(
+                    ConfigKeys.bool(
+                            builder,
+                            t.key(),
+                            t.comment(),
+                            "options.vftv.warp.voices." + t.key(),
+                            true));
+        }
         builder.pop();
         ModConfigSpec.ConfigValue<Boolean> tax =
                 ConfigKeys.bool(
@@ -55,6 +69,20 @@ final class WarpServerKeys {
                         WarpRulesService::config,
                         WarpRulesService::installConfig,
                         WarpConfig.DEFAULT,
-                        WarpRulesService::sendToAll));
+                        WarpRulesService::sendToAll),
+                new ServerConfigPublisher.ServerRecord<Set<String>>(
+                        () -> {
+                            Set<String> off = new TreeSet<>();
+                            for (int i = 0; i < types.size(); i++) {
+                                if (!types.get(i).get()) {
+                                    off.add(WarpConfig.TYPE_SWITCHES.get(i).type());
+                                }
+                            }
+                            return Set.copyOf(off);
+                        },
+                        VoiceChecks::typesOff,
+                        VoiceChecks::installTypesOff,
+                        Set.of(),
+                        server -> {}));
     }
 }

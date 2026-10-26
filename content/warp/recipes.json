@@ -1,0 +1,4 @@
+{"schema": "vftv:warp_recipes/1", "recipes": {
+  "vftv:stilling_draught": {"type": "vftv:crucible", "research": "vftv:being_heard", "catalyst": "minecraft:glass_bottle",
+                            "aspects": {"vftv:silentium": 6, "vftv:ordo": 4, "vftv:aqua": 4},
+                            "result": {"id": "vftv:stilling_draught", "count": 1}}}}

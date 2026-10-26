@@ -1,0 +1,10 @@
+{
+  "type": "vftv:effect",
+  "amplifier": 0,
+  "cost": {
+    "temporary": 3
+  },
+  "duration": 6000,
+  "effect": "minecraft:night_vision",
+  "weight": 30
+}
