@@ -58,6 +58,7 @@ final class ArcaneGameTests {
         tests.put("arcane_research_checked", ArcaneGameTests::researchChecked);
         tests.put("arcane_loaded_from_data", ArcaneGameTests::loadedFromData);
         tests.put("arcane_selects_by_research", ArcaneGameTests::selectsByResearch);
+        WorktableGameTests.register(tests);
     }
 
     private static final ResourceKey<Research> ARCANE_CRAFTING =

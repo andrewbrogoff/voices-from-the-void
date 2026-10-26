@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_bottom_top",
+  "textures": {
+    "bottom": "vftv:block/worktable_bottom",
+    "side": "vftv:block/worktable_side",
+    "top": "vftv:block/worktable_top"
+  }
+}

@@ -14,7 +14,10 @@ import net.minecraft.world.item.crafting.RecipeType;
 public final class ArcaneFeature {
     private ArcaneFeature() {}
 
-    /** Registers the {@code vftv:arcane} recipe type and serializer. */
+    /**
+     * Registers the {@code vftv:arcane} recipe type and serializer, the Worktable, its menu and
+     * sounds, and the {@link WorktableCraft} payload.
+     */
     public static void init(Platform platform) {
         String name = ArcaneRecipe.ID.getPath();
         platform.registrar()
@@ -22,5 +25,8 @@ public final class ArcaneFeature {
         platform.registrar()
                 .<RecipeSerializer<?>>register(
                         Registries.RECIPE_SERIALIZER, name, () -> ArcaneRecipe.SERIALIZER);
+        ArcaneContent.register(platform.registrar());
+        platform.network()
+                .serverbound(WorktableCraft.TYPE, WorktableCraft.STREAM_CODEC, Worktables::onCraft);
     }
 }

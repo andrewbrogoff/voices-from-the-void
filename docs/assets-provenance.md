@@ -45,6 +45,9 @@ Each feature appends its rows under its own heading below, never another's, so p
 
 | Output path | Tool and exact model revision | Licence of the tool's terms, and version | Generator script, or prompt and seed | Processing steps | Date | Human contribution |
 |---|---|---|---|---|---|---|
+| `src/main/resources/assets/vftv/textures/block/worktable_top.png`, `worktable_side.png`, `worktable_bottom.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/worktable.py` (Stage 1 boards in a crafting table's frame; inlaid fork and chime bar, hanging fork and striker; teal tick outside every object on the top); deterministic, no seed | palette lock in `lib.save()`; contact sheet `build/previews/worktable.png` at GUI scale 2 and 3, greyscale and CVD previews | 2026-10-18 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/gui/container/worktable.png` (176×220 on 256×256) | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/worktable.py` `background()` (a well at every menu slot; title and inventory strips uniform `brass4`, status rectangle uniform `brass5`) | palette lock; text regions checked by `AccessibilityGatesTest` | 2026-10-18 | none (agent-authored) |
+| `src/main/resources/assets/vftv/textures/gui/sprites/worktable/preview_{idle,ready,hover,disabled}.png`, `cost_cell.png`, `cost_cell_short.png`, `beyond.png`, `…/sprites/container/slot/wand.png` | Python 3 + Pillow + numpy (code-authored, no model) | MPL-2.0 generator; outputs CC-BY-4.0 (NOTICE.md) | `tools/art/worktable.py` (preview frames distinct by ring, brightness and hatch; the short cell's 3×3 `ink1` notch) | palette lock; luma variant check and the number field's and count corner's contrast checked by `AccessibilityGatesTest`; contact sheet `build/previews/worktable.png` | 2026-10-18 | none (agent-authored) |
 
 ## crucible
 

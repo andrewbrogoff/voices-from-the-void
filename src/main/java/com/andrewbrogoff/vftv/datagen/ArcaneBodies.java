@@ -3,14 +3,22 @@ package com.andrewbrogoff.vftv.datagen;
 import com.andrewbrogoff.vftv.api.aspect.Aspect;
 import com.andrewbrogoff.vftv.api.aspect.AspectKeys;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
+import com.andrewbrogoff.vftv.core.arcane.ArcaneContent;
 import com.andrewbrogoff.vftv.core.arcane.ArcaneRecipe;
+import com.andrewbrogoff.vftv.core.aspect.model.Derivation;
 import com.andrewbrogoff.vftv.core.common.model.Schema;
+import com.andrewbrogoff.vftv.core.common.model.StrictJson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.mojang.serialization.JsonOps;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -22,6 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
@@ -31,6 +40,7 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.common.Tags;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The {@code vftv:arcane} recipe body in authored content (arcane spec, "Authored content"), for
@@ -193,6 +203,106 @@ public final class ArcaneBodies {
                 widen(body),
                 output.createRegistryElementsPathProvider(Registries.RECIPE)
                         .json(Identifier.parse(id)));
+    }
+
+    /** The crafting table → Worktable conversion's id in the non-amplification report. */
+    static final String CONVERSION = "vftv:worktable_conversion";
+
+    /**
+     * The non-amplification gate's arcane round trips (aspects spec, "Coverage and supply"): every
+     * {@code vftv:arcane} body under {@code content/}, with vis counted as no material input, and
+     * the crafting table → Worktable conversion. A {@code #tag} ingredient expands to the members
+     * bound in the static item registry.
+     *
+     * @param content the {@code content/} directory
+     */
+    static List<Derivation.Recipe> roundTrips(Path content) {
+        List<Derivation.Recipe> trips = new ArrayList<>();
+        bodies(content).forEach((id, body) -> trips.add(roundTrip(id, body)));
+        trips.add(
+                new Derivation.Recipe(
+                        CONVERSION,
+                        List.of(
+                                List.of(
+                                        new Derivation.Alternative(
+                                                "minecraft:crafting_table", null))),
+                        ArcaneContent.WORKTABLE_ITEM_KEY.identifier().toString(),
+                        1,
+                        false));
+        return trips;
+    }
+
+    /** Every {@code vftv:arcane} body under {@code content/}, by recipe id, in file order. */
+    static Map<String, JsonObject> bodies(Path content) {
+        Map<String, JsonObject> bodies = new LinkedHashMap<>();
+        List<Path> files;
+        try (Stream<Path> walk = Files.walk(content)) {
+            files = walk.filter(p -> p.toString().endsWith(".json")).sorted().toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        for (Path file : files) {
+            JsonElement json;
+            try {
+                json = StrictJson.parse(Files.readString(file));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+            if (json instanceof JsonObject root && root.get("recipes") instanceof JsonObject all) {
+                all.asMap()
+                        .forEach(
+                                (id, body) -> {
+                                    if (body instanceof JsonObject b
+                                            && "vftv:arcane".equals(string(b, "type"))) {
+                                        bodies.put(id, b);
+                                    }
+                                });
+            }
+        }
+        return bodies;
+    }
+
+    /** One arcane body as the derivation's recipe: every occupied cell is one ingredient. */
+    static Derivation.Recipe roundTrip(String id, JsonObject body) {
+        List<String> cells = new ArrayList<>();
+        if (body.get("pattern") instanceof JsonArray rows
+                && body.get("key") instanceof JsonObject key) {
+            for (JsonElement row : rows) {
+                for (char symbol : row.getAsString().toCharArray()) {
+                    if (symbol != ' ') {
+                        cells.add(key.get(String.valueOf(symbol)).getAsString());
+                    }
+                }
+            }
+        } else if (body.get("ingredients") instanceof JsonArray ingredients) {
+            ingredients.forEach(i -> cells.add(i.getAsString()));
+        }
+        List<List<Derivation.Alternative>> ingredients = new ArrayList<>();
+        for (String cell : cells) {
+            List<Derivation.Alternative> alternatives = new ArrayList<>();
+            AspectTable.ids(cell, BuiltInRegistries.ITEM).stream()
+                    .sorted()
+                    .forEach(item -> alternatives.add(new Derivation.Alternative(item, null)));
+            if (alternatives.isEmpty()) {
+                // An unbound tag would make the gate skip this round trip unchecked.
+                throw new IllegalStateException(
+                        "Arcane recipe " + id + ": ingredient " + cell + " names no items");
+            }
+            ingredients.add(alternatives);
+        }
+        JsonObject result = body.getAsJsonObject("result");
+        return new Derivation.Recipe(
+                id,
+                ingredients,
+                result.get("id").getAsString(),
+                result.has("count") ? result.get("count").getAsInt() : 1,
+                false);
+    }
+
+    private static @Nullable String string(JsonObject object, String field) {
+        return object.get(field) instanceof JsonPrimitive p && p.isString()
+                ? p.getAsString()
+                : null;
     }
 
     private static JsonElement widen(JsonElement ingredient) {

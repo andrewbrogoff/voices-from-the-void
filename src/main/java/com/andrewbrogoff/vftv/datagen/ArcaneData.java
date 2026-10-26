@@ -1,8 +1,12 @@
 package com.andrewbrogoff.vftv.datagen;
 
+import com.andrewbrogoff.vftv.api.arcane.ArcaneKeys;
 import com.andrewbrogoff.vftv.api.aspect.AspectKeys;
+import com.andrewbrogoff.vftv.core.arcane.ArcaneContent;
+import com.andrewbrogoff.vftv.core.arcane.ArcaneLang;
 import com.andrewbrogoff.vftv.core.common.model.Schema;
 import com.andrewbrogoff.vftv.core.common.model.StrictJson;
+import com.andrewbrogoff.vftv.core.text.model.LangEntry;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.io.IOException;
@@ -18,9 +22,17 @@ import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.loot.BlockLootSubProvider;
+import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.tags.BlockTags;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 /**
@@ -57,6 +69,40 @@ final class ArcaneData implements FeatureData {
     @Override
     public void providers(GatherDataEvent event) {
         event.createProvider(Recipes::new);
+    }
+
+    @Override
+    public List<LangEntry> lang() {
+        return ArcaneLang.TABLE;
+    }
+
+    /** {@code #vftv:converts_to_worktable} (the crafting table) and the Worktable on the axe. */
+    @Override
+    public void tags(Tags tags) {
+        tags.tag(ArcaneKeys.CONVERTS_TO_WORKTABLE)
+                .add(BuiltInRegistries.BLOCK.getResourceKey(Blocks.CRAFTING_TABLE).orElseThrow());
+        tags.tag(BlockTags.MINEABLE_WITH_AXE).add(ArcaneContent.WORKTABLE_BLOCK_KEY);
+    }
+
+    /** {@code vftv:blocks/worktable}: drops itself. */
+    @Override
+    public List<LootTableProvider.SubProviderEntry> loot() {
+        return List.of(
+                new LootTableProvider.SubProviderEntry(
+                        registries ->
+                                new BlockLootSubProvider(
+                                        Set.of(), FeatureFlags.REGISTRY.allFlags(), registries) {
+                                    @Override
+                                    protected void generate() {
+                                        dropSelf(ArcaneContent.worktable());
+                                    }
+
+                                    @Override
+                                    protected Iterable<Block> getKnownBlocks() {
+                                        return List.of(ArcaneContent.worktable());
+                                    }
+                                },
+                        LootContextParamSets.BLOCK));
     }
 
     private static final int BELL_MAX_STACK = 64;

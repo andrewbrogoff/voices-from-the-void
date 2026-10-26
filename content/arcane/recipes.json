@@ -1,0 +1,10 @@
+{"schema": "vftv:arcane_recipes/1", "recipes": {
+  "vftv:bell": {
+    "type": "vftv:arcane",
+    "research": "vftv:arcane_crafting",
+    "kind": "ordinary",
+    "pattern": ["sss", "cac", "c c"],
+    "key": {"s": "#minecraft:wooden_slabs", "c": "minecraft:copper_ingot", "a": "minecraft:amethyst_shard"},
+    "result": {"id": "minecraft:bell", "count": 1},
+    "vis": {"vftv:aer": 8, "vftv:ordo": 6, "vftv:terra": 4}}
+}}

@@ -337,13 +337,13 @@ public final class ArcaneRecipe implements Recipe<CraftingInput> {
     }
 
     /**
-     * Vanilla's shaped or shapeless crafting display, for the book and JEI. The crafting station is
-     * empty until the Worktable exists (the arcane crafting ticket).
+     * Vanilla's shaped or shapeless crafting display, for the book and JEI, with the Worktable as
+     * the crafting station.
      */
     @Override
     public List<RecipeDisplay> display() {
         SlotDisplay output = new SlotDisplay.ItemStackSlotDisplay(result);
-        SlotDisplay station = SlotDisplay.Empty.INSTANCE;
+        SlotDisplay station = new SlotDisplay.ItemSlotDisplay(ArcaneContent.worktableItem());
         return List.of(
                 shape.<RecipeDisplay>map(
                         p ->

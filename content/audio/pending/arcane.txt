@@ -1,0 +1,3 @@
+# The arcane feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:worktable.convert
+vftv:worktable.craft

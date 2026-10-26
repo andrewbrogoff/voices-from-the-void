@@ -167,8 +167,11 @@ final class AspectTable {
      * the derived values to write. Throws listing every problem.
      *
      * @param capture the captured vanilla and VFTV recipes, adapted
+     * @param roundTrips the built-in {@code vftv:arcane} recipes and the table conversion, which
+     *     the non-amplification gate replays with the captured recipes (never derived from)
      */
-    SortedMap<String, SortedMap<String, Integer>> derive(DerivationRecipes.Capture capture) {
+    SortedMap<String, SortedMap<String, Integer>> derive(
+            DerivationRecipes.Capture capture, List<Derivation.Recipe> roundTrips) {
         SortedMap<String, Entry> items = expand("items", BuiltInRegistries.ITEM);
         SortedMap<String, Entry> defaults = expand("defaults", BuiltInRegistries.ITEM);
         SortedMap<String, Entry> blocks = expand("blocks", BuiltInRegistries.BLOCK);
@@ -193,14 +196,7 @@ final class AspectTable {
         checkExempt(all, blocks, entities);
         checkSemantic(all);
         checkSupply(all, blocks, entities);
-        Derivation.amplifying(all, capture.recipes())
-                .forEach(
-                        a ->
-                                problems.add(
-                                        "non-amplification: "
-                                                + a
-                                                + ". Hand-enter both sides of the conversion as"
-                                                + " exact multiples in content/aspects/"));
+        problems.addAll(nonAmplification(all, capture.recipes(), roundTrips));
         if (!problems.isEmpty()) {
             throw new IllegalStateException(
                     "Rejected aspect values ("
@@ -209,6 +205,29 @@ final class AspectTable {
                             + String.join("\n", problems));
         }
         return result.values();
+    }
+
+    /**
+     * The non-amplification gate (aspects spec, "Coverage and supply"): no round trip through the
+     * captured recipes, every built-in {@code vftv:arcane} recipe (vis counting as no material
+     * input) and the crafting table → Worktable conversion yields more aspects than went in.
+     */
+    static List<String> nonAmplification(
+            Map<String, ? extends SortedMap<String, Integer>> values,
+            List<Derivation.Recipe> captured,
+            List<Derivation.Recipe> roundTrips) {
+        List<Derivation.Recipe> all = new ArrayList<>(captured);
+        all.addAll(roundTrips);
+        List<String> problems = new ArrayList<>();
+        Derivation.amplifying(values, all)
+                .forEach(
+                        a ->
+                                problems.add(
+                                        "non-amplification: "
+                                                + a
+                                                + ". Hand-enter both sides of the conversion as"
+                                                + " exact multiples in content/aspects/"));
+        return problems;
     }
 
     private void coverItems(
