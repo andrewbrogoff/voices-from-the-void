@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.worldgen.WorldgenLimits;
 import com.andrewbrogoff.vftv.core.common.DataSlot;
 import com.andrewbrogoff.vftv.core.common.OperationGuard;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
+import com.andrewbrogoff.vftv.core.common.TickBudget;
 import com.andrewbrogoff.vftv.core.research.ResearchItems;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.text.StatusLines;
@@ -65,6 +66,12 @@ public final class ReliquaryService {
 
     /** One use of the Reliquary at {@code pos} by {@code player}; returns the row's outcome. */
     public static Offers.Outcome use(ServerPlayer player, BlockPos pos) {
+        try (var _ = TickBudget.enter("worldgen")) {
+            return attempt(player, pos);
+        }
+    }
+
+    private static Offers.Outcome attempt(ServerPlayer player, BlockPos pos) {
         ServerLevel level = player.level();
         UUID uuid = player.getUUID();
         long now = level.getServer().getTickCount();
