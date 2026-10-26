@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -331,10 +332,11 @@ public final class WarpService {
      */
     public static Answer riteRefusal(ServerPlayer player) {
         WarpRecord r = get(player).readable();
-        if (r == null) {
-            return Answer.UNREADABLE;
-        }
-        WarpRules rules = WarpRulesService.current();
+        return r == null ? Answer.UNREADABLE : riteRefusal(player, r, WarpRulesService.current());
+    }
+
+    /** Rows 3–6 of the rite over a readable record: closed, place, cooling, clipped, else OK. */
+    private static Answer riteRefusal(ServerPlayer player, WarpRecord r, WarpRules rules) {
         if (r.silenced() || !rules.voicesEnabled()) {
             return Answer.CLOSED;
         }
@@ -383,20 +385,13 @@ public final class WarpService {
             }
             WarpRules rules = WarpRulesService.current();
             long g = gameTime(player);
-            if (r.silenced() || !rules.voicesEnabled()) {
-                return Answer.CLOSED;
-            }
-            if (!inVoidTouchedPlace(player.level(), player.blockPosition())) {
-                return Answer.PLACE;
-            }
-            if (!riteReady(r, g, rules)) {
-                return Answer.COOLDOWN;
+            Answer refusal = riteRefusal(player, r, rules);
+            if (refusal != Answer.OK) {
+                return refusal;
             }
             WarpSource source = source(WarpSourceKind.LISTEN);
-            WarpPreview actual = preview(r, listenCost(rules), source, rules);
-            if (actual == null || actual.clipped()) {
-                return Answer.FULL;
-            }
+            WarpPreview actual =
+                    Objects.requireNonNull(preview(r, listenCost(rules), source, rules));
             if (!actual.equals(expected)) {
                 return Answer.STALE;
             }
@@ -846,7 +841,7 @@ public final class WarpService {
     /** Writes a whole value (record and offer), then posts the event if warp moved. */
     static void write(
             ServerPlayer player, WarpRecord before, WarpAttachment value, WarpSource source) {
-        WarpRecord next = java.util.Objects.requireNonNull(value.readable());
+        WarpRecord next = Objects.requireNonNull(value.readable());
         slot().set(player, value);
         if (!before.state().equals(next.state())) {
             publish(player, before.state(), next.state(), source);

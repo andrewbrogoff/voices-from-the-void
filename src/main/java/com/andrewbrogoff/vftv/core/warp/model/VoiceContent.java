@@ -234,56 +234,6 @@ public final class VoiceContent {
                 json.get("duration").getAsInt());
     }
 
-    /** An event's or a bargain's JSON form, as datagen writes it and the codec re-encodes it. */
-    public static JsonObject toJson(Event e) {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", e.type());
-        json.addProperty("weight", e.weight());
-        if (e.minBand() != 0) {
-            json.addProperty("min_band", e.minBand());
-        }
-        if (e.maxBand() != 3) {
-            json.addProperty("max_band", e.maxBand());
-        }
-        if (e.context()) {
-            json.addProperty("context", true);
-        }
-        if (e.type().equals(INSIGHT)) {
-            json.addProperty("points", e.points());
-        }
-        if (e.type().equals(STATUS)) {
-            JsonArray effects = new JsonArray();
-            for (Effect f : e.effects()) {
-                JsonObject o = new JsonObject();
-                o.addProperty("effect", f.effect());
-                o.addProperty("amplifier", f.amplifier());
-                o.addProperty("duration", f.duration());
-                effects.add(o);
-            }
-            json.add("effects", effects);
-        }
-        return json;
-    }
-
-    /** A bargain's JSON form. */
-    public static JsonObject toJson(Bargain b) {
-        JsonObject json = new JsonObject();
-        json.addProperty("type", EFFECT);
-        json.addProperty("weight", b.weight());
-        JsonObject cost = new JsonObject();
-        if (b.costTemporary() > 0) {
-            cost.addProperty("temporary", b.costTemporary());
-        }
-        if (b.costLasting() > 0) {
-            cost.addProperty("lasting", b.costLasting());
-        }
-        json.add("cost", cost);
-        json.addProperty("effect", b.effect());
-        json.addProperty("amplifier", b.amplifier());
-        json.addProperty("duration", b.duration());
-        return json;
-    }
-
     private static List<String> entryProblems(Schema schema, JsonObject json) {
         if (json.has("schema")) {
             return List.of("$.schema: unknown field");

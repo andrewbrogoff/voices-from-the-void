@@ -17,12 +17,14 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.mojang.logging.LogUtils;
 import java.io.IOException;
-import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
+import java.util.stream.Collectors;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
@@ -456,12 +458,12 @@ public final class VoicesClient {
             }
         }
         lines = readLines;
-        Map<String, List<String>> byPool = new HashMap<>();
-        readLines.forEach(
-                (id, info) -> byPool.computeIfAbsent(info.pool(), p -> new ArrayList<>()).add(id));
-        Map<String, List<String>> sorted = new HashMap<>();
-        byPool.forEach((pool, ids) -> sorted.put(pool, CueDraws.sorted(ids)));
-        pools = sorted;
+        Map<String, LineInfo> read = readLines;
+        pools =
+                CueDraws.sorted(read.keySet()).stream()
+                        .collect(
+                                Collectors.groupingBy(
+                                        id -> Objects.requireNonNull(read.get(id)).pool()));
         reloads++;
     }
 
@@ -516,13 +518,9 @@ public final class VoicesClient {
     }
 
     private static JsonObject parse(Resource resource) throws IOException {
-        try (Reader reader = resource.openAsReader()) {
-            StringBuilder text = new StringBuilder();
-            char[] buffer = new char[4096];
-            for (int n; (n = reader.read(buffer)) > 0; ) {
-                text.append(buffer, 0, n);
-            }
-            return StrictJson.parse(text.toString()).getAsJsonObject();
+        try (java.io.InputStream in = resource.open()) {
+            return StrictJson.parse(new String(in.readAllBytes(), StandardCharsets.UTF_8))
+                    .getAsJsonObject();
         }
     }
 

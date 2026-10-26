@@ -128,25 +128,13 @@ class VoiceContentTest {
     }
 
     @Test
-    void entriesParseRoundTripAndRefuse() {
+    void entriesParseAndRefuse() {
         JsonObject events = StrictJson.parse(VoiceContent.SHIPPED_EVENTS).getAsJsonObject();
-        events.asMap()
-                .forEach(
-                        (id, e) ->
-                                assertEquals(
-                                        e,
-                                        VoiceContent.toJson(
-                                                VoiceContent.event(e.getAsJsonObject())),
-                                        id));
-        JsonObject bargains = StrictJson.parse(VoiceContent.SHIPPED_BARGAINS).getAsJsonObject();
-        bargains.asMap()
-                .forEach(
-                        (id, b) ->
-                                assertEquals(
-                                        b,
-                                        VoiceContent.toJson(
-                                                VoiceContent.bargain(b.getAsJsonObject())),
-                                        id));
+        events.asMap().forEach((id, e) -> VoiceContent.event(e.getAsJsonObject()));
+        StrictJson.parse(VoiceContent.SHIPPED_BARGAINS)
+                .getAsJsonObject()
+                .asMap()
+                .forEach((id, b) -> VoiceContent.bargain(b.getAsJsonObject()));
         VoiceContent.Event status =
                 VoiceContent.event(events.getAsJsonObject("vftv:pressing_dark"));
         assertEquals(

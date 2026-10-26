@@ -59,11 +59,12 @@ public final class WarpContent {
 
     private WarpContent() {}
 
-    /** One {@code vftv:voice_event} entry. */
-    public record VoiceEventEntry(VoiceContent.Event event) implements VoiceEvent {}
+    /** One {@code vftv:voice_event} entry, with the JSON it was read from. */
+    public record VoiceEventEntry(VoiceContent.Event event, JsonObject json)
+            implements VoiceEvent {}
 
-    /** One {@code vftv:bargain} entry. */
-    public record BargainEntry(VoiceContent.Bargain bargain) implements Bargain {}
+    /** One {@code vftv:bargain} entry, with the JSON it was read from. */
+    public record BargainEntry(VoiceContent.Bargain bargain, JsonObject json) implements Bargain {}
 
     /** The entry codec of {@code vftv:voice_event}: the warp spec's fields and rules. */
     public static final Codec<VoiceEvent> VOICE_EVENT_CODEC =
@@ -71,9 +72,9 @@ public final class WarpContent {
                     o -> {
                         VoiceContent.Event e = VoiceContent.event(o);
                         e.effects().forEach(f -> effect(f.effect()));
-                        return new VoiceEventEntry(e);
+                        return new VoiceEventEntry(e, o);
                     },
-                    v -> VoiceContent.toJson(((VoiceEventEntry) v).event()));
+                    v -> ((VoiceEventEntry) v).json());
 
     /** The entry codec of {@code vftv:bargain}. */
     public static final Codec<Bargain> BARGAIN_CODEC =
@@ -81,9 +82,9 @@ public final class WarpContent {
                     o -> {
                         VoiceContent.Bargain b = VoiceContent.bargain(o);
                         effect(b.effect());
-                        return new BargainEntry(b);
+                        return new BargainEntry(b, o);
                     },
-                    b -> VoiceContent.toJson(((BargainEntry) b).bargain()));
+                    b -> ((BargainEntry) b).json());
 
     /** The Stilling Draught. */
     public static Item stillingDraught() {

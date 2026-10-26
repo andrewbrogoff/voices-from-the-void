@@ -1,6 +1,5 @@
 package com.andrewbrogoff.vftv.core.warp.model;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Random;
@@ -48,9 +47,7 @@ public final class CueDraws {
 
     /** A pool's ids in the draw order: sorted by {@code String.compareTo}. */
     public static List<String> sorted(Collection<String> pool) {
-        List<String> out = new ArrayList<>(pool);
-        out.sort(null);
-        return out;
+        return pool.stream().sorted().toList();
     }
 
     /**
