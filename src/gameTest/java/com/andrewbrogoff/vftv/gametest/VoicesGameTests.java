@@ -572,6 +572,15 @@ final class VoicesGameTests {
      */
     private static void stilling(GameTestHelper helper) {
         ServerPlayer p = state(helper, UUID.randomUUID(), 0, 6, 0, 0, 0);
+        p.getAbilities().instabuild = true;
+        ItemStack infinite = new ItemStack(WarpContent.stillingDraught(), 1);
+        helper.assertValueEqual(
+                infinite.finishUsingItem(helper.getLevel(), p).getCount(),
+                1,
+                "infinite materials consume no draught");
+        helper.assertValueEqual(record(helper, p).lasting(), 2, "but it still stills");
+        WarpService.apply(p, new WarpCost(0, 4, 0), new WarpSource(WarpSourceKind.COMMAND, null));
+        p.getAbilities().instabuild = false;
         ItemStack draught = new ItemStack(WarpContent.stillingDraught(), 2);
         p.setItemInHand(InteractionHand.MAIN_HAND, draught);
         ItemStack left = draught.finishUsingItem(helper.getLevel(), p);
