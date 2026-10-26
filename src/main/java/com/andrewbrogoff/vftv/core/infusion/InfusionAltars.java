@@ -737,7 +737,10 @@ public final class InfusionAltars {
     static void refreshSubscription(
             ServerLevel level, BowlBlockEntity bowl, ServerPlayer player, boolean solicited) {
         Arm arm = ARMS.get(player.getUUID());
-        if (arm != null && arm.kind == Kind.RUN && arm.pos.equals(bowl.getBlockPos())) {
+        if (arm != null
+                && arm.kind == Kind.RUN
+                && arm.pos.equals(bowl.getBlockPos())
+                && arm.dimension.equals(level.dimension())) {
             arm.readout = runReadout(level, bowl);
             send(player, arm, solicited);
         } else {
@@ -1057,8 +1060,8 @@ public final class InfusionAltars {
             ArmDue d = s.arms.pollFirst();
             pops++;
             Arm arm = ARMS.get(d.player());
-            if (arm == null || arm.due != d.due()) {
-                continue; // stale
+            if (arm == null || arm.due != d.due() || !arm.dimension.equals(level.dimension())) {
+                continue; // stale: the arm ended or lives in another level's queue
             }
             ServerPlayer player = level.getServer().getPlayerList().getPlayer(d.player());
             if (player == null) {
