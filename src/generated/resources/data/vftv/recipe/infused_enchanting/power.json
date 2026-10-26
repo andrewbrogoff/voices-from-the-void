@@ -1,0 +1,21 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/bow",
+  "components": [
+    "minecraft:flint",
+    "minecraft:flint",
+    "minecraft:feather",
+    "minecraft:feather"
+  ],
+  "essentia": {
+    "vftv:aer": 20,
+    "vftv:telum": 24
+  },
+  "instability": 12,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:power",
+    "max_level": 5
+  }
+}

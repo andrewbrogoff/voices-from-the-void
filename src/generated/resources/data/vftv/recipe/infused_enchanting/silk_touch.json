@@ -1,0 +1,20 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/mining_loot",
+  "components": [
+    "minecraft:string",
+    "minecraft:string",
+    "minecraft:slime_ball"
+  ],
+  "essentia": {
+    "vftv:ordo": 100,
+    "vftv:praecantatio": 100
+  },
+  "instability": 20,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:silk_touch",
+    "max_level": 1
+  }
+}

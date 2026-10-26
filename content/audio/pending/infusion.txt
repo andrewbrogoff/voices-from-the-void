@@ -1,0 +1,9 @@
+# The infusion feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:infusion.strike
+vftv:infusion.begin
+vftv:infusion.draw
+vftv:infusion.absorb
+vftv:infusion.upset
+vftv:infusion.finish
+vftv:infusion.abandon
+vftv:infusion.ring

@@ -1,0 +1,18 @@
+{
+  "type": "vftv:arcane",
+  "ingredients": [
+    "minecraft:polished_deepslate",
+    "minecraft:polished_deepslate",
+    "vftv:resonant_brass_ingot"
+  ],
+  "kind": "ordinary",
+  "research": "vftv:infusion",
+  "result": {
+    "count": 1,
+    "id": "vftv:pedestal"
+  },
+  "vis": {
+    "vftv:ordo": 10,
+    "vftv:terra": 20
+  }
+}

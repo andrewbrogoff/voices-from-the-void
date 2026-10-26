@@ -1,0 +1,24 @@
+{
+  "type": "vftv:infusion",
+  "centre": "vftv:chime_rod",
+  "components": [
+    "minecraft:echo_shard",
+    "minecraft:echo_shard",
+    "#c:gems/amethyst",
+    "#c:gems/amethyst"
+  ],
+  "essentia": {
+    "vftv:praecantatio": 16,
+    "vftv:sonus": 24,
+    "vftv:vitreus": 8
+  },
+  "instability": 12,
+  "kind": "ordinary",
+  "research": "vftv:echo_wands",
+  "result": {
+    "item": {
+      "count": 1,
+      "id": "vftv:echo_rod"
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{"schema": "vftv:infusion_recipes/1", "recipes": {
+  "vftv:singing_bowl": {
+    "type": "vftv:arcane", "research": "vftv:infusion", "kind": "ordinary",
+    "pattern": ["b b", "bab", " d "],
+    "key": {"b": "vftv:resonant_brass_ingot", "a": "minecraft:amethyst_shard", "d": "minecraft:polished_deepslate"},
+    "result": {"id": "vftv:singing_bowl", "count": 1},
+    "vis": {"vftv:aer": 24, "vftv:ordo": 20}},
+  "vftv:pedestal": {
+    "type": "vftv:arcane", "research": "vftv:infusion", "kind": "ordinary",
+    "ingredients": ["minecraft:polished_deepslate", "minecraft:polished_deepslate", "vftv:resonant_brass_ingot"],
+    "result": {"id": "vftv:pedestal", "count": 1},
+    "vis": {"vftv:terra": 20, "vftv:ordo": 10}},
+  "vftv:echo_rod": {
+    "type": "vftv:infusion", "research": "vftv:echo_wands", "kind": "ordinary",
+    "centre": "vftv:chime_rod",
+    "components": ["minecraft:echo_shard", "minecraft:echo_shard", "minecraft:amethyst_shard", "minecraft:amethyst_shard"],
+    "essentia": {"vftv:sonus": 24, "vftv:praecantatio": 16, "vftv:vitreus": 8},
+    "instability": 12,
+    "result": {"item": {"id": "vftv:echo_rod", "count": 1}}},
+  "vftv:echo_cap": {
+    "type": "vftv:infusion", "research": "vftv:echo_wands", "kind": "ordinary",
+    "centre": "vftv:resonant_brass_cap",
+    "components": ["minecraft:echo_shard", "minecraft:amethyst_shard"],
+    "essentia": {"vftv:sonus": 12, "vftv:praecantatio": 8, "vftv:vitreus": 4},
+    "instability": 8,
+    "result": {"item": {"id": "vftv:echo_cap", "count": 1}}},
+  "vftv:infused_enchanting/sharpness": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/sharp_weapon",
+    "components": ["minecraft:flint", "minecraft:flint", "minecraft:quartz", "minecraft:quartz"],
+    "essentia": {"vftv:telum": 24, "vftv:praecantatio": 20},
+    "instability": 10,
+    "result": {"enchantment": "minecraft:sharpness", "max_level": 5}},
+  "vftv:infused_enchanting/efficiency": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/mining",
+    "components": ["minecraft:redstone", "minecraft:redstone", "minecraft:quartz", "minecraft:quartz"],
+    "essentia": {"vftv:instrumentum": 24, "vftv:motus": 20},
+    "instability": 10,
+    "result": {"enchantment": "minecraft:efficiency", "max_level": 5}},
+  "vftv:infused_enchanting/protection": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/armor",
+    "components": ["minecraft:iron_ingot", "minecraft:iron_ingot", "minecraft:leather", "minecraft:leather"],
+    "essentia": {"vftv:tutamen": 30, "vftv:praecantatio": 25},
+    "instability": 10,
+    "result": {"enchantment": "minecraft:protection", "max_level": 4}},
+  "vftv:infused_enchanting/unbreaking": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/durability",
+    "components": ["minecraft:obsidian", "minecraft:obsidian", "minecraft:iron_ingot"],
+    "essentia": {"vftv:ordo": 40, "vftv:tutamen": 34},
+    "instability": 8,
+    "result": {"enchantment": "minecraft:unbreaking", "max_level": 3}},
+  "vftv:infused_enchanting/power": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/bow",
+    "components": ["minecraft:flint", "minecraft:flint", "minecraft:feather", "minecraft:feather"],
+    "essentia": {"vftv:telum": 24, "vftv:aer": 20},
+    "instability": 12,
+    "result": {"enchantment": "minecraft:power", "max_level": 5}},
+  "vftv:infused_enchanting/fortune": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/mining_loot",
+    "components": ["minecraft:lapis_lazuli", "minecraft:lapis_lazuli", "minecraft:gold_ingot"],
+    "essentia": {"vftv:permutatio": 40, "vftv:praecantatio": 34},
+    "instability": 15,
+    "result": {"enchantment": "minecraft:fortune", "max_level": 3}},
+  "vftv:infused_enchanting/feather_falling": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/foot_armor",
+    "components": ["minecraft:feather", "minecraft:feather", "minecraft:phantom_membrane"],
+    "essentia": {"vftv:aer": 30, "vftv:motus": 25},
+    "instability": 8,
+    "result": {"enchantment": "minecraft:feather_falling", "max_level": 4}},
+  "vftv:infused_enchanting/silk_touch": {
+    "type": "vftv:infusion", "research": "vftv:infused_enchanting", "kind": "ordinary",
+    "centre": "#minecraft:enchantable/mining_loot",
+    "components": ["minecraft:string", "minecraft:string", "minecraft:slime_ball"],
+    "essentia": {"vftv:ordo": 100, "vftv:praecantatio": 100},
+    "instability": 20,
+    "result": {"enchantment": "minecraft:silk_touch", "max_level": 1}}
+}}

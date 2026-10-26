@@ -1,0 +1,20 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/durability",
+  "components": [
+    "minecraft:obsidian",
+    "minecraft:obsidian",
+    "#c:ingots/iron"
+  ],
+  "essentia": {
+    "vftv:ordo": 40,
+    "vftv:tutamen": 34
+  },
+  "instability": 8,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:unbreaking",
+    "max_level": 3
+  }
+}

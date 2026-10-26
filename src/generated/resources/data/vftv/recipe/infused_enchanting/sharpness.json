@@ -1,0 +1,21 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/sharp_weapon",
+  "components": [
+    "minecraft:flint",
+    "minecraft:flint",
+    "#c:gems/quartz",
+    "#c:gems/quartz"
+  ],
+  "essentia": {
+    "vftv:praecantatio": 20,
+    "vftv:telum": 24
+  },
+  "instability": 10,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:sharpness",
+    "max_level": 5
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "type": "vftv:infusion",
+  "centre": "#minecraft:enchantable/foot_armor",
+  "components": [
+    "minecraft:feather",
+    "minecraft:feather",
+    "minecraft:phantom_membrane"
+  ],
+  "essentia": {
+    "vftv:aer": 30,
+    "vftv:motus": 25
+  },
+  "instability": 8,
+  "kind": "ordinary",
+  "research": "vftv:infused_enchanting",
+  "result": {
+    "enchantment": "minecraft:feather_falling",
+    "max_level": 4
+  }
+}

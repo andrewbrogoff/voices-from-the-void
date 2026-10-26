@@ -162,7 +162,10 @@ final class AspectData implements FeatureData {
         SortedMap<String, SortedMap<String, Integer>> derived =
                 table.derive(
                         DerivationRecipes.capture(capture(registries), registries),
-                        ArcaneBodies.roundTrips(Path.of(root)));
+                        java.util.stream.Stream.concat(
+                                        ArcaneBodies.roundTrips(Path.of(root)).stream(),
+                                        InfusionBodies.roundTrips(Path.of(root)).stream())
+                                .toList());
         add(maps, AspectDataMaps.ITEM, Registries.ITEM, table.table("items"), derived);
         add(maps, AspectDataMaps.BLOCK, Registries.BLOCK, table.table("blocks"), Map.of());
         add(

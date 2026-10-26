@@ -1,0 +1,13 @@
+{"schema": "vftv:multiblocks/1",
+ "multiblocks": {
+  "vftv:infusion_altar": {
+    "key": {"B": "vftv:singing_bowl", "P": "vftv:pedestal", "A": "minecraft:amethyst_cluster"},
+    "layers": [[
+      "...A...",
+      ".P.P.P.",
+      ".......",
+      "AP.B.PA",
+      ".......",
+      ".P.P.P.",
+      "...A..."
+    ]]}}}

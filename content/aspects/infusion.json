@@ -1,0 +1,30 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The infusion feature's items. The Singing Bowl is a brass bowl on a deepslate plinth that rings; the Pedestal a polished deepslate column with a brass top. The Echo rod and cap are chime parts infused with echo shards: more sound and spirit than the chime and brass they grew from.",
+  "items": {
+    "vftv:singing_bowl": {
+      "vftv:metallum": 6,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 3,
+      "vftv:terra": 2
+    },
+    "vftv:pedestal": {
+      "vftv:metallum": 2,
+      "vftv:ordo": 1,
+      "vftv:tenebrae": 1,
+      "vftv:terra": 3
+    },
+    "vftv:echo_rod": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 2,
+      "vftv:sonus": 4,
+      "vftv:spiritus": 1
+    },
+    "vftv:echo_cap": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 2,
+      "vftv:spiritus": 1
+    }
+  }
+}
