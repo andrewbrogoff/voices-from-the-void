@@ -258,20 +258,11 @@ final class WorldgenData implements FeatureData {
 
     // --- the content ---------------------------------------------------------------------------
 
-    static Path contentDir() {
-        String root = System.getProperty(ContentProvider.CONTENT_DIR);
-        if (root == null) {
-            throw new IllegalStateException(
-                    "the system property " + ContentProvider.CONTENT_DIR + " is not set");
-        }
-        return Path.of(root);
-    }
-
     private static JsonObject readContent(String file) {
         try {
             return com.andrewbrogoff.vftv.core.common.model.StrictJson.parse(
                             Files.readString(
-                                    contentDir().resolve("worldgen").resolve(file),
+                                    VisData.contentDir().resolve("worldgen").resolve(file),
                                     StandardCharsets.UTF_8))
                     .getAsJsonObject();
         } catch (IOException e) {
@@ -927,7 +918,7 @@ final class WorldgenData implements FeatureData {
                                                     .getAsInt()));
                         });
         Map<String, SiteRules.Entry> entries = new TreeMap<>();
-        ResearchContent.read(contentDir())
+        ResearchContent.read(VisData.contentDir())
                 .plainEntries()
                 .forEach(
                         (id, e) ->
