@@ -198,6 +198,19 @@ class AffordabilityPathTest {
                                         stage3.formatted("{\"listen\": \"vftv:silence_beneath\"}"))
                                 .replay(w, two),
                 "a secret listen before its page is not eligible");
+        Map<String, Fixtures.B> milestoneWorld = Fixtures.world();
+        Fixtures.B deeper =
+                Fixtures.b(3, "vftv:ruins", 3, 3, EntryKind.LISTEN).parents("vftv:ruins");
+        deeper.warp = new ResearchEntry.Warp(0, 0, 2);
+        milestoneWorld.put("vftv:deeper", deeper);
+        IllegalArgumentException milestone =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                AffordabilityPath.parse(
+                                                stage3.formatted("{\"listen\": \"vftv:deeper\"}"))
+                                        .replay(world(Fixtures.build(milestoneWorld)), two));
+        assertTrue(Objects.requireNonNull(milestone.getMessage()).contains("milestone"));
     }
 
     @Test

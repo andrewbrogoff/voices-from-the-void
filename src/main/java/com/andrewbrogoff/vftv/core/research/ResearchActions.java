@@ -82,8 +82,8 @@ public final class ResearchActions {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    /** Per connection: a reconnect is a new player entity (weak, so no cleanup). */
-    private static final Map<ServerPlayer, Window> WINDOWS = new WeakHashMap<>();
+    /** Per connection, which a respawn keeps and a reconnect replaces (weak, so no cleanup). */
+    private static final Map<Object, Window> WINDOWS = new WeakHashMap<>();
 
     private static @Nullable Network network;
     private static BiConsumer<ServerPlayer, CustomPacketPayload> sender =
@@ -191,7 +191,7 @@ public final class ResearchActions {
 
     private static void handle(ResearchAction action, ServerPlayer player) {
         long tick = player.level().getServer().getTickCount();
-        Window rate = WINDOWS.computeIfAbsent(player, k -> new Window());
+        Window rate = WINDOWS.computeIfAbsent(player.connection, k -> new Window());
         if (rate.tick != tick) {
             rate.tick = tick;
             rate.actions = 0;

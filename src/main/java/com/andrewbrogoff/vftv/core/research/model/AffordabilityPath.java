@@ -508,6 +508,9 @@ public record AffordabilityPath(int stage, Map<String, Source> sources, List<Ste
 
         /** Applies the entry's warp to the ledger, learns it, then the warp evidence fires. */
         void commit(String id, ResearchEntry e, ResearchSource source, String at) {
+            if (e.warp().permanent() > 0) {
+                throw new IllegalArgumentException(at + ": a path never commits a milestone");
+            }
             boolean warped = e.warp().any();
             if (warped) {
                 WarpPreview applied =
