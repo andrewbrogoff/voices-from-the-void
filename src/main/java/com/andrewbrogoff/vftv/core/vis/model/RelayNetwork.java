@@ -307,13 +307,22 @@ public final class RelayNetwork {
                 }
             }
         }
+        Map<Integer, Integer> sizes = new HashMap<>();
+        group.values().forEach(g -> sizes.merge(g, 1, Integer::sum));
+        Map<Integer, Integer> admitted = new HashMap<>();
         Map<Integer, Long> firstUnlinked = new TreeMap<>();
         for (Member m : all) {
-            if (admissionSize(m.key, m.x, m.y, m.z) <= MAX_MEMBERS) {
+            int g = group.getOrDefault(m.key, -1);
+            // An oversized group admits its first 32 in ascending key; the rest stay unlinked.
+            boolean quota =
+                    sizes.getOrDefault(g, 0) <= MAX_MEMBERS
+                            || admitted.getOrDefault(g, 0) < MAX_MEMBERS;
+            if (quota && admissionSize(m.key, m.x, m.y, m.z) <= MAX_MEMBERS) {
                 link(m);
+                admitted.merge(g, 1, Integer::sum);
             } else {
                 unlinkedSet.add(m.key);
-                firstUnlinked.putIfAbsent(group.get(m.key), m.key);
+                firstUnlinked.putIfAbsent(g, m.key);
             }
         }
         List<Long> out = new ArrayList<>(firstUnlinked.values());

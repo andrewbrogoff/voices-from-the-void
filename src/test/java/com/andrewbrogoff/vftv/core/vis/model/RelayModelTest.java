@@ -135,6 +135,19 @@ class RelayModelTest {
     }
 
     @Test
+    void anOversizedGroupKeepsOnlyItsFirst32EvenWhenTheRestCouldStartAnother() {
+        // Two lines with a 4-block gap: at range 4 one group of 40 forms; members past the 32nd
+        // that touch no admitted member must still stay unlinked.
+        RelayNetwork n = new RelayNetwork(2.0);
+        for (int i = 0; i < 20; i++) {
+            add(n, i * 2);
+            add(n, 42 + i * 2);
+        }
+        assertEquals(1, n.rebuild(4.0).size());
+        assertEquals(8, n.keys().stream().filter(n::unlinked).count());
+    }
+
+    @Test
     void loadThenRebuildRestoresComponents() {
         RelayNetwork n = new RelayNetwork(3.0);
         n.load(key(0, 0, 0), 0, 0, 0, RelayNetwork.Kind.TAP);

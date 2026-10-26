@@ -133,7 +133,8 @@ public final class NodeRenderer
                         registry.get(
                                 net.minecraft.resources.ResourceKey.create(
                                         AspectKeys.REGISTRY, a.aspect()));
-                if (holder.isPresent() && built.count < VisLimits.MAX_NODE_ASPECTS) {
+                // A cultivated aspect's reserved slot (max 0) is drawn once its max reaches 1.
+                if (holder.isPresent() && a.max() > 0 && built.count < VisLimits.MAX_NODE_ASPECTS) {
                     built.sprites[built.count++] = gui.getSprite(AspectIcons.of(holder.get()));
                 }
             }
