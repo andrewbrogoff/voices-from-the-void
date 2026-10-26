@@ -230,6 +230,29 @@ public record ResearchRecord(
                 attempts);
     }
 
+    /**
+     * This record with {@code note} open, created or changed, at the next revision, which the note
+     * takes as its own: a note revision is never reused (research spec, "Sync and state").
+     */
+    public ResearchRecord withNote(Note note) {
+        NavigableMap<String, Note> next = new TreeMap<>(notes);
+        next.put(note.entry(), Notes.with(note, note.placements(), revision + 1));
+        return withNotes(next);
+    }
+
+    /**
+     * The player abandons a note (research spec, "Generating a note"): it is dropped and the
+     * entry's attempt counter rises by 1, at the next revision.
+     */
+    public ResearchRecord abandon(String entry) {
+        NavigableMap<String, Note> next = new TreeMap<>(notes);
+        next.remove(entry);
+        NavigableMap<String, Integer> tries = new TreeMap<>(attempts);
+        tries.merge(entry, 1, Integer::sum);
+        return copy(
+                stage, learned, revealed, latched, revealLatched, next, bookmarks, rewarded, tries);
+    }
+
     /** This record with the given bookmarks, at the next revision. */
     public ResearchRecord withBookmarks(List<String> bookmarks) {
         return copy(
