@@ -1,0 +1,36 @@
+{"schema": "vftv:template/1",
+ "size": [9, 2, 9],
+ "palette": {
+  "#": "minecraft:tuff_bricks",
+  "^": "minecraft:jigsaw[orientation=north_up]",
+  "c": "minecraft:chiseled_tuff"
+ },
+ "layers": [
+  [
+   "#########",
+   "#########",
+   "#########",
+   "#########",
+   "#########",
+   "#########",
+   "#########",
+   "#########",
+   "#########"
+  ],
+  [
+   "    ^    ",
+   " #       ",
+   "   #  c  ",
+   "         ",
+   "  ##     ",
+   "         ",
+   "      #  ",
+   " c       ",
+   "         "
+  ]
+ ],
+ "block_entities": {
+  "4,1,0": {"jigsaw": {"name": "vftv:choir_ruin/end_plug", "target": "minecraft:empty", "pool": "minecraft:empty", "final_state": "minecraft:air", "joint": "aligned"}}
+ },
+ "entities": [
+ ]}

@@ -1,0 +1,16 @@
+{
+  "placement": {
+    "type": "minecraft:random_spread",
+    "frequency": 1.0,
+    "salt": 1128812370,
+    "separation": 14,
+    "spacing": 36,
+    "spread_type": "linear"
+  },
+  "structures": [
+    {
+      "structure": "vftv:choir_ruin",
+      "weight": 1
+    }
+  ]
+}

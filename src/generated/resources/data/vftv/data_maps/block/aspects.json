@@ -306,6 +306,12 @@
       "vftv:fames": 3,
       "vftv:lux": 1,
       "vftv:victus": 1
+    },
+    "vftv:reliquary": {
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:sonus": 2,
+      "vftv:terra": 3
     }
   }
 }

@@ -1,0 +1,29 @@
+{"schema": "vftv:choir_ruin/1",
+ "structure_set": {"spacing": 36, "separation": 14, "salt": 1128812370},
+ "pools": {
+  "chancel": {"vftv:choir_ruin/chancel_a": 1, "vftv:choir_ruin/chancel_b": 1},
+  "wings": {"vftv:choir_ruin/cloister": 1, "vftv:choir_ruin/bell_pit": 1, "vftv:choir_ruin/scriptorium": 1, "vftv:choir_ruin/fallen_nave": 1},
+  "ends": {"vftv:choir_ruin/rubble_a": 2, "vftv:choir_ruin/rubble_b": 2, "minecraft:empty": 1}},
+ "weathering": [
+  {"input": "minecraft:tuff_bricks", "probability": 0.15, "output": "minecraft:tuff"},
+  {"input": "minecraft:deepslate_tiles", "probability": 0.2, "output": "minecraft:cracked_deepslate_tiles"}],
+ "biomes": {
+  "include": ["minecraft:swamp", "minecraft:mangrove_swamp", "minecraft:snowy_plains", "minecraft:windswept_gravelly_hills",
+              "minecraft:grove", "minecraft:windswept_hills", "minecraft:snowy_taiga", "minecraft:windswept_forest",
+              "minecraft:taiga", "minecraft:plains", "minecraft:meadow", "minecraft:forest", "minecraft:old_growth_spruce_taiga",
+              "minecraft:flower_forest", "minecraft:birch_forest", "minecraft:dark_forest", "minecraft:pale_garden",
+              "minecraft:savanna_plateau", "minecraft:savanna", "minecraft:jungle", "minecraft:badlands", "minecraft:desert",
+              "minecraft:wooded_badlands", "minecraft:ice_spikes", "minecraft:old_growth_pine_taiga", "minecraft:sunflower_plains",
+              "minecraft:old_growth_birch_forest", "minecraft:sparse_jungle", "minecraft:bamboo_jungle",
+              "minecraft:eroded_badlands", "minecraft:windswept_savanna", "minecraft:cherry_grove"],
+  "exclude": {
+   "minecraft:mushroom_fields": "a rare island, left to itself",
+   "minecraft:deep_frozen_ocean": "water", "minecraft:frozen_ocean": "water", "minecraft:deep_cold_ocean": "water",
+   "minecraft:cold_ocean": "water", "minecraft:deep_ocean": "water", "minecraft:ocean": "water",
+   "minecraft:deep_lukewarm_ocean": "water", "minecraft:lukewarm_ocean": "water", "minecraft:warm_ocean": "water",
+   "minecraft:stony_shore": "a narrow shore", "minecraft:snowy_beach": "a narrow shore", "minecraft:beach": "a narrow shore",
+   "minecraft:snowy_slopes": "too steep", "minecraft:jagged_peaks": "too steep", "minecraft:stony_peaks": "too steep",
+   "minecraft:frozen_peaks": "too steep",
+   "minecraft:frozen_river": "water", "minecraft:river": "water",
+   "minecraft:dripstone_caves": "underground", "minecraft:lush_caves": "underground",
+   "minecraft:sulfur_caves": "underground", "minecraft:deep_dark": "underground"}}}

@@ -1,0 +1,21 @@
+{
+  "schema": "vftv:lang/1",
+  "strings": {
+    "block.vftv.reliquary": "Reliquary",
+    "entity.vftv.answerer": "Answerer",
+    "entity.vftv.answerer_cantor": "Cantor",
+    "node_type.vftv.choir": "Choir",
+    "reliquary.vftv.silent": "The reliquary is silent.",
+    "reliquary.vftv.done": "I have taken all that this reliquary holds for me.",
+    "reliquary.vftv.reissued": "It gives back what I lost.",
+    "reliquary.vftv.all_held": "I already hold every page these ruins keep.",
+    "reliquary.vftv.full": "I can keep no more of these places in mind.",
+    "reliquary.vftv.given": "The reliquary yields its pages.",
+    "subtitles.vftv.answerer.ambient": "Answerer mutters",
+    "subtitles.vftv.answerer.hurt": "Answerer hurts",
+    "subtitles.vftv.answerer.death": "Answerer dies",
+    "subtitles.vftv.cantor.chant": "Cantor chants",
+    "subtitles.vftv.reliquary.give": "Reliquary gives pages",
+    "subtitles.vftv.reliquary.empty": "Reliquary is still"
+  }
+}

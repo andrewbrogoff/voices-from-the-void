@@ -1,0 +1,36 @@
+{"schema": "vftv:worldgen_loot/1", "tables": {
+  "vftv:chests/choir_ruin": {"type": "minecraft:chest", "pools": [
+   {"rolls": {"type": "minecraft:uniform", "min": 3, "max": 6},
+    "entries": [
+     {"type": "minecraft:item", "name": "minecraft:paper", "weight": 10,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 4}}]},
+     {"type": "minecraft:item", "name": "minecraft:book", "weight": 5,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 2}}]},
+     {"type": "minecraft:item", "name": "minecraft:candle", "weight": 6,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 3}}]},
+     {"type": "minecraft:item", "name": "minecraft:amethyst_shard", "weight": 4,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 3}}]},
+     {"type": "minecraft:item", "name": "minecraft:copper_ingot", "weight": 4,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 1, "max": 3}}]},
+     {"type": "minecraft:item", "name": "minecraft:gold_nugget", "weight": 3,
+      "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 2, "max": 6}}]},
+     {"type": "minecraft:item", "name": "minecraft:bell", "weight": 1}]}]},
+  "vftv:entities/answerer": {"type": "minecraft:entity", "pools": [
+   {"rolls": 1,
+    "entries": [{"type": "minecraft:item", "name": "minecraft:paper",
+     "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 0, "max": 2}},
+                   {"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                    "count": {"type": "minecraft:uniform", "min": 0, "max": 1}}]}]},
+   {"rolls": 1,
+    "entries": [{"type": "minecraft:item", "name": "minecraft:candle",
+     "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 0, "max": 1}},
+                   {"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                    "count": {"type": "minecraft:uniform", "min": 0, "max": 1}}]}]}]},
+  "vftv:entities/answerer_cantor": {"type": "minecraft:entity", "pools": [
+   {"rolls": 1,
+    "entries": [{"type": "minecraft:item", "name": "minecraft:book"}]},
+   {"rolls": 1,
+    "entries": [{"type": "minecraft:item", "name": "minecraft:candle",
+     "functions": [{"function": "minecraft:set_count", "count": {"type": "minecraft:uniform", "min": 0, "max": 2}},
+                   {"function": "minecraft:enchanted_count_increase", "enchantment": "minecraft:looting",
+                    "count": {"type": "minecraft:uniform", "min": 0, "max": 1}}]}]}]}}}

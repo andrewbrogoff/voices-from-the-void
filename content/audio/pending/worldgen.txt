@@ -1,0 +1,7 @@
+# The worldgen feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:answerer.ambient
+vftv:answerer.hurt
+vftv:answerer.death
+vftv:cantor.chant
+vftv:reliquary.give
+vftv:reliquary.empty
