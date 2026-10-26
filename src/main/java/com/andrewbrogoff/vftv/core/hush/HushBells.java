@@ -107,7 +107,9 @@ public final class HushBells {
                 if (HushService.ticking(level, pos) == null) {
                     continue;
                 }
-                HushService.Restorer who = new HushService.Restorer(player, null);
+                HushService.Restorer who =
+                        new HushService.Restorer(
+                                player, null, () -> stillRinging(player, level, hand, stack));
                 if (restored < r.bellRestore() && HushService.restoreBlock(level, pos, who)) {
                     restored++;
                     first = first == null ? pos.immutable() : first;
@@ -296,7 +298,7 @@ public final class HushBells {
                 int side = 2 * radius + 1;
                 int cube = side * side * side;
                 int cursor = be.cursor % cube;
-                HushService.Restorer who = new HushService.Restorer(null, at);
+                HushService.Restorer who = new HushService.Restorer(null, at, null);
                 BlockPos.MutableBlockPos pos = new BlockPos.MutableBlockPos();
                 for (int examined = 0; examined < r.pealScan(); examined++) {
                     if (restored >= r.pealRestore() && (node || cleared > 0)) {

@@ -707,14 +707,24 @@ public final class HushService {
      *
      * @param player the ringing player, or null
      * @param bell the pealing bell's position, or null
+     * @param still the actor's revalidation after authorising (the ringer still rings), or null
      */
-    record Restorer(@Nullable ServerPlayer player, @Nullable BlockPos bell) {
-        static final Restorer COMMAND = new Restorer(null, null);
+    record Restorer(
+            @Nullable ServerPlayer player,
+            @Nullable BlockPos bell,
+            java.util.function.@Nullable BooleanSupplier still) {
+        static final Restorer COMMAND = new Restorer(null, null, null);
+
+        /** Revalidate, after the claim's callback: the actor is still able to act. */
+        boolean valid() {
+            return still == null || still.getAsBoolean();
+        }
 
         boolean authorise(ServerLevel level, BlockPos pos, BlockState state, HushChange change) {
             if (player != null) {
-                return level.mayInteract(player, pos)
-                        && FluxService.platform().mayBreak(player, level, pos, state);
+                BlockPos at = pos.immutable(); // the event keeps it; callers pass a reused cursor
+                return level.mayInteract(player, at)
+                        && FluxService.platform().mayBreak(player, level, at, state);
             }
             if (bell != null) {
                 return FluxService.platform()
@@ -743,7 +753,8 @@ public final class HushService {
         BlockState before = chunk.getBlockState(pos);
         BlockState after = HushedForms.restored(before);
         if (after == null
-                || !who.authorise(level, pos, before, new HushChange.Block(before, after))) {
+                || !who.authorise(level, pos, before, new HushChange.Block(before, after))
+                || !who.valid()) {
             return false;
         }
         chunk = ticking(level, pos);
@@ -799,8 +810,8 @@ public final class HushService {
                             level,
                             pos,
                             level.getBlockState(pos),
-                            new HushChange.Node(
-                                    id, HushKeys.HUSHED_NODE, typeKey(original.type())))) {
+                            new HushChange.Node(id, HushKeys.HUSHED_NODE, typeKey(original.type())))
+                    || !who.valid()) {
                 return false;
             }
             NodeBlockEntity again = NodeService.placedNode(level, pos);

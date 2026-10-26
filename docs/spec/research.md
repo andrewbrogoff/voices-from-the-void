@@ -660,7 +660,7 @@ road   : <key>                               exactly one of the keys listed unde
 | `hush.onset`, `hush.block_cost`, `hush.node_cost`, `hollow.flux`, `bell.flux`, `peal.flux` | flux | integer |
 | `hush.threshold` | derived: max(`hush.onset`, `hush.block_cost`) | integer |
 | `hush.radius`, `hollow.min_player_distance`, `bell.radius`, `peal.radius` | blocks | integer |
-| `hush.walk`, `hush.max_misses`, `hush.player_chunks`, `hollow.every`, `hollow.max_near`, `hollow.max_per_level`, `bell.restore`, `peal.restore`, `peal.scan`, `peal.capacity` | counts | integer |
+| `hush.walk`, `hush.max_misses`, `hush.player_chunks`, `hollow.every`, `hollow.max_near`, `bell.restore`, `peal.restore`, `peal.scan`, `peal.capacity` | counts | integer |
 | `peal.suction` | the Pealing Bell's rank on the essentia suction scale | integer |
 | `hush.interval`, `bell.cooldown`, `peal.interval` | ticks | integer |
 | `hush.interval_seconds`, `bell.cooldown_seconds`, `peal.interval_seconds` | derived: the ticks / 20 | decimal with up to 2 places, trimmed ("1", "2", "10") |

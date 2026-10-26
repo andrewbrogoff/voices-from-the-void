@@ -90,6 +90,9 @@ final class HushGameTests {
     /** Flux events seen, for tests that listen. */
     private static final List<FluxPayload> FLUX = new ArrayList<>();
 
+    /** Cells whose break event runs a test's callback (a listener swapping the held bell). */
+    private static final Map<BlockPos, Runnable> ON_BREAK = new java.util.HashMap<>();
+
     /** Cells whose break events a test cancels (a claim refusing the Clearing Bell). */
     private static final Set<BlockPos> NO_BREAK = new HashSet<>();
 
@@ -133,6 +136,10 @@ final class HushGameTests {
                 e -> {
                     if (NO_BREAK.contains(e.getPos())) {
                         e.setCanceled(true);
+                    }
+                    Runnable callback = ON_BREAK.get(e.getPos());
+                    if (callback != null) {
+                        callback.run();
                     }
                 });
         NeoForge.EVENT_BUS.addListener(
@@ -200,6 +207,7 @@ final class HushGameTests {
         tests.put("hush_node_beside_a_pool", HushGameTests::nodeBesidePool);
         tests.put("hush_pealing_bell_scopes", HushGameTests::pealingScopes);
         tests.put("hush_tuning_reload_requeues", HushGameTests::tuningReload);
+        tests.put("hush_clearing_bell_swapped_mid_ring", HushGameTests::bellSwapped);
     }
 
     // --- helpers ------------------------------------------------------------------------------
@@ -1315,6 +1323,42 @@ final class HushGameTests {
             HushService.onTuningReload(helper.getLevel().getServer());
             clearAura(helper, rel);
         }
+        helper.succeed();
+    }
+
+    /** A break listener that swaps the held bell mid-ring gets no free cell and dodges no cost. */
+    private static void bellSwapped(GameTestHelper helper) {
+        BlockPos rel = new BlockPos(2, 2, 2);
+        clearAura(helper, rel);
+        BlockState hushed =
+                Objects.requireNonNull(HushedForms.hushed(Blocks.STONE.defaultBlockState()));
+        helper.setBlock(1, 1, 2, hushed);
+        helper.setBlock(3, 1, 2, hushed);
+        ServerPlayer player = ResearchTestSupport.player(helper);
+        player.snapTo(net.minecraft.world.phys.Vec3.atBottomCenterOf(helper.absolutePos(rel)));
+        ItemStack bell = new ItemStack(HushContent.clearingBell());
+        player.setItemInHand(InteractionHand.MAIN_HAND, bell);
+        Runnable swap =
+                () ->
+                        player.setItemInHand(
+                                InteractionHand.MAIN_HAND,
+                                new ItemStack(HushContent.clearingBell()));
+        BlockPos a = helper.absolutePos(new BlockPos(1, 1, 2));
+        BlockPos b = helper.absolutePos(new BlockPos(3, 1, 2));
+        ON_BREAK.put(a, swap);
+        ON_BREAK.put(b, swap);
+        try {
+            HushBells.ring(player, InteractionHand.MAIN_HAND);
+        } finally {
+            ON_BREAK.remove(a);
+            ON_BREAK.remove(b);
+        }
+        helper.assertTrue(
+                helper.getBlockState(new BlockPos(1, 1, 2)).is(HushKeys.HUSHED), "no free cell");
+        helper.assertTrue(
+                helper.getBlockState(new BlockPos(3, 1, 2)).is(HushKeys.HUSHED),
+                "the ring stopped");
+        helper.assertValueEqual(bell.getDamageValue(), 0, "nothing done, nothing paid");
         helper.succeed();
     }
 
