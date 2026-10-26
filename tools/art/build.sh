@@ -53,3 +53,10 @@ python3 "$ART/sheet.py" "$PREVIEWS/infusion.png" "$INF/block/singing_bowl_side.p
     "$INF/block/singing_bowl_inner.png" "$INF/block/singing_bowl_bottom.png" "$INF/block/pedestal_side.png" \
     "$INF/block/pedestal_top.png" "$INF/block/pedestal_bottom.png" "$INF/item/echo_rod.png" "$INF/item/echo_cap.png" \
     "$PREVIEWS"/infusion/wand_*.png
+python3 "$ART/choir_ruin.py" "$ART/../../content" "$PREVIEWS/choir_ruin"
+python3 "$ART/reliquary.py" "$ASSETS"
+python3 "$ART/answerers.py" "$ASSETS" "$ART/answerers"
+WG="$ASSETS/vftv/textures"
+python3 "$ART/sheet.py" "$PREVIEWS/worldgen.png" "$WG/block/reliquary_side.png" "$WG/block/reliquary_front.png" \
+    "$WG/block/reliquary_top.png" "$WG/block/reliquary_bottom.png" "$WG/entity/answerer.png" \
+    "$WG/entity/answerer_cantor.png"

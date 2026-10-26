@@ -1,0 +1,29 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The worldgen feature's things. The Answerers are living would-be listeners in mauve cloth with brass mouthpieces, who speak back to the Voices without understanding them; the Cantor leads their chant with a cracked bell. The Reliquary is a mauve-stone plinth carrying a brass-bound page box; it is survival-unbreakable and never dropped, so its item is exempt and the block carries the value the Tuning Fork reads.",
+  "blocks": {
+    "vftv:reliquary": {
+      "vftv:metallum": 1,
+      "vftv:ordo": 2,
+      "vftv:sonus": 2,
+      "vftv:terra": 3
+    }
+  },
+  "entities": {
+    "vftv:answerer": {
+      "vftv:humanus": 4,
+      "vftv:metallum": 1,
+      "vftv:sonus": 2
+    },
+    "vftv:answerer_cantor": {
+      "vftv:humanus": 4,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 3
+    }
+  },
+  "exempt": {
+    "items": {
+      "vftv:reliquary": "creative only: survival-unbreakable and never dropped"
+    }
+  }
+}

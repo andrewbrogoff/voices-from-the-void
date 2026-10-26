@@ -61,6 +61,11 @@ public final class Cantor extends Answerer {
     }
 
     @Override
+    public boolean isCantor() {
+        return true;
+    }
+
+    @Override
     public boolean chanting() {
         return entityData.get(CHANTING);
     }

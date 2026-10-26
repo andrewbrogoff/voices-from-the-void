@@ -199,6 +199,11 @@ public class Answerer extends Monster {
         return WorldgenContent.sound(WorldgenContent.ANSWERER_DEATH);
     }
 
+    /** Whether this is a Cantor. */
+    public boolean isCantor() {
+        return false;
+    }
+
     /** Whether the Cantor is showing its chant; always false for an Answerer. */
     public boolean chanting() {
         return false;
