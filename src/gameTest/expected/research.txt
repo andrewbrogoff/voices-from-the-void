@@ -35,3 +35,5 @@ vftv:research_note_reconcile
 vftv:research_listen_action
 vftv:research_bookmarks
 vftv:research_affordability_paths
+vftv:research_offer_actions
+vftv:research_listen_rite_action

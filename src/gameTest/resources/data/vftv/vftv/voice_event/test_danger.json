@@ -1,0 +1,3 @@
+{"type": "vftv:status", "weight": 1, "min_band": 3, "context": true,
+ "effects": [{"effect": "minecraft:weakness", "amplifier": 0, "duration": 100},
+             {"effect": "minecraft:mining_fatigue", "amplifier": 0, "duration": 100}]}

@@ -534,6 +534,23 @@ public final class WarpService {
         }
     }
 
+    /**
+     * Replaces the standing offer under the guard, for GameTests that need an offer in a given
+     * state (an expired one, say) without waiting out its lifetime.
+     */
+    public static void putOffer(ServerPlayer player, WarpAttachment.@Nullable Offer offer) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope != null) {
+                slot().set(player, new WarpAttachment(get(player).record(), offer));
+            }
+        }
+    }
+
+    /** Whether the Listen rite's forced check is due; for GameTests and the harness dump. */
+    public static boolean listenDue(ServerPlayer player) {
+        return transientOf(player).listenDue;
+    }
+
     static WarpCost offerCost(WarpAttachment.Offer o) {
         return new WarpCost(o.costTemporary(), o.costLasting(), 0);
     }
