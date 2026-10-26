@@ -1,0 +1,11 @@
+{
+  "type": "vftv:effect",
+  "amplifier": 1,
+  "cost": {
+    "lasting": 1,
+    "temporary": 2
+  },
+  "duration": 3600,
+  "effect": "minecraft:haste",
+  "weight": 20
+}

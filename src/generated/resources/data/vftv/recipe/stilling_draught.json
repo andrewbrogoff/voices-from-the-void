@@ -1,0 +1,14 @@
+{
+  "type": "vftv:crucible",
+  "aspects": {
+    "vftv:aqua": 4,
+    "vftv:ordo": 4,
+    "vftv:silentium": 6
+  },
+  "catalyst": "minecraft:glass_bottle",
+  "research": "vftv:being_heard",
+  "result": {
+    "count": 1,
+    "id": "vftv:stilling_draught"
+  }
+}

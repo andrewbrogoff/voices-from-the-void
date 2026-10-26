@@ -1,0 +1,13 @@
+{
+  "type": "vftv:status",
+  "context": true,
+  "effects": [
+    {
+      "amplifier": 0,
+      "duration": 100,
+      "effect": "minecraft:slowness"
+    }
+  ],
+  "min_band": 2,
+  "weight": 10
+}

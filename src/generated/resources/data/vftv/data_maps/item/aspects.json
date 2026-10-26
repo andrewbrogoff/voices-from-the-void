@@ -5455,6 +5455,11 @@
       "vftv:sonus": 3,
       "vftv:terra": 2
     },
+    "vftv:stilling_draught": {
+      "vftv:aqua": 2,
+      "vftv:ordo": 2,
+      "vftv:silentium": 3
+    },
     "vftv:tube_valve": {
       "vftv:machina": 1,
       "vftv:metallum": 1

@@ -1,0 +1,234 @@
+{
+  "lines": {
+    "vftv:band0_0": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band0_1": {
+      "pool": "band0",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band0_2": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band0_3": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band0_4": {
+      "pool": "band0",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band0_5": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band0_6": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band0_7": {
+      "pool": "band0",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:band1_0": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band1_1": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band1_2": {
+      "pool": "band1",
+      "ticks": 60,
+      "void": false
+    },
+    "vftv:band1_3": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band1_4": {
+      "pool": "band1",
+      "ticks": 60,
+      "void": false
+    },
+    "vftv:band1_5": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band1_6": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band1_7": {
+      "pool": "band1",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:band2_0": {
+      "pool": "band2",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band2_1": {
+      "pool": "band2",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:band2_2": {
+      "pool": "band2",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:band2_3": {
+      "pool": "band2",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:band2_4": {
+      "pool": "band2",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band2_5": {
+      "pool": "band2",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band2_6": {
+      "pool": "band2",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:band2_7": {
+      "pool": "band2",
+      "ticks": 40,
+      "void": true
+    },
+    "vftv:band3_0": {
+      "pool": "band3",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band3_1": {
+      "pool": "band3",
+      "ticks": 40,
+      "void": true
+    },
+    "vftv:band3_2": {
+      "pool": "band3",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band3_3": {
+      "pool": "band3",
+      "ticks": 70,
+      "void": true
+    },
+    "vftv:band3_4": {
+      "pool": "band3",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band3_5": {
+      "pool": "band3",
+      "ticks": 40,
+      "void": true
+    },
+    "vftv:band3_6": {
+      "pool": "band3",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:band3_7": {
+      "pool": "band3",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:insight_0": {
+      "pool": "insight",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:insight_1": {
+      "pool": "insight",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:insight_2": {
+      "pool": "insight",
+      "ticks": 40,
+      "void": true
+    },
+    "vftv:insight_3": {
+      "pool": "insight",
+      "ticks": 40,
+      "void": false
+    },
+    "vftv:joining_0": {
+      "pool": "joining",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:joining_1": {
+      "pool": "joining",
+      "ticks": 70,
+      "void": true
+    },
+    "vftv:joining_2": {
+      "pool": "joining",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:offer_0": {
+      "pool": "offer",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:offer_1": {
+      "pool": "offer",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:offer_2": {
+      "pool": "offer",
+      "ticks": 50,
+      "void": false
+    },
+    "vftv:offer_3": {
+      "pool": "offer",
+      "ticks": 60,
+      "void": true
+    },
+    "vftv:silencing_0": {
+      "pool": "silencing",
+      "ticks": 50,
+      "void": true
+    },
+    "vftv:silencing_1": {
+      "pool": "silencing",
+      "ticks": 70,
+      "void": true
+    },
+    "vftv:silencing_2": {
+      "pool": "silencing",
+      "ticks": 50,
+      "void": true
+    }
+  }
+}
