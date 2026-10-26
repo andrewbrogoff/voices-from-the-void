@@ -4,7 +4,12 @@ import com.andrewbrogoff.vftv.api.neoforge.vis.NodeEvent;
 import com.andrewbrogoff.vftv.api.neoforge.vis.VisSpentEvent;
 import com.andrewbrogoff.vftv.api.vis.VisKeys;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
+import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaCapabilities;
 import com.andrewbrogoff.vftv.core.vis.NodeService;
+import com.andrewbrogoff.vftv.core.vis.NodeTapBlock;
+import com.andrewbrogoff.vftv.core.vis.RelayBlockEntity;
+import com.andrewbrogoff.vftv.core.vis.RelayService;
+import com.andrewbrogoff.vftv.core.vis.VisContent;
 import com.andrewbrogoff.vftv.core.vis.Tapping;
 import com.andrewbrogoff.vftv.core.vis.VisEvents;
 import com.andrewbrogoff.vftv.core.vis.VisFeature;
@@ -22,6 +27,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
@@ -34,22 +41,29 @@ import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.InterModComms;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 import net.neoforged.neoforge.common.PercentageAttribute;
+import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
 import net.neoforged.neoforge.event.TagsUpdatedEvent;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.level.ChunkEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.level.block.BreakBlockEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
 import net.neoforged.neoforge.event.tick.LevelTickEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The vis feature's NeoForge wiring, called once from the {@code @Mod} constructor: game-bus and
@@ -77,6 +91,8 @@ public final class VisNeoForge {
         VisEvents.install(
                 p -> NeoForge.EVENT_BUS.post(new VisSpentEvent(p)),
                 p -> NeoForge.EVENT_BUS.post(new NodeEvent(p)));
+        VisEvents.installProtection(new Protection());
+        modBus.addListener(RegisterCapabilitiesEvent.class, VisNeoForge::capabilities);
         gameBus.addListener(
                 AddServerReloadListenersEvent.class,
                 event ->
@@ -95,12 +111,28 @@ public final class VisNeoForge {
                 event -> {
                     NodeService.clear();
                     Tapping.clear();
+                    RelayService.clear();
+                });
+        gameBus.addListener(
+                LevelEvent.Unload.class,
+                event -> {
+                    if (event.getLevel() instanceof ServerLevel level) {
+                        RelayService.unload(level);
+                    }
+                });
+        gameBus.addListener(
+                ServerTickEvent.Post.class,
+                event -> {
+                    try (var _ = TickBudget.enter("vis")) {
+                        RelayService.tickEnd(event.getServer());
+                    }
                 });
         gameBus.addListener(
                 ChunkEvent.Load.class,
                 event -> {
                     if (event.getLevel() instanceof ServerLevel level) {
                         NodeService.queue(level, event.getChunk().getPos());
+                        RelayService.queueChunk(level, event.getChunk().getPos());
                     }
                 });
         gameBus.addListener(
@@ -149,6 +181,46 @@ public final class VisNeoForge {
                                         Map.entry(
                                                 "vftv:vis",
                                                 (Function<String, String>) VisNeoForge::dump)));
+    }
+
+    /** The Node Tap's handler and suction on every face but its node's, and the null side. */
+    private static void capabilities(RegisterCapabilitiesEvent event) {
+        event.registerBlockEntity(
+                EssentiaCapabilities.HANDLER,
+                VisContent.nodeTapEntity(),
+                (tap, side) -> faces(tap, side) ? NodeTapEssentia.of(tap) : null);
+        event.registerBlockEntity(
+                EssentiaCapabilities.SUCTION,
+                VisContent.nodeTapEntity(),
+                (tap, side) -> faces(tap, side) ? NodeTapEssentia.of(tap) : null);
+    }
+
+    private static boolean faces(RelayBlockEntity tap, @Nullable Direction side) {
+        return side == null || side != tap.getBlockState().getValue(NodeTapBlock.FACING);
+    }
+
+    /** The capture's break event and the release's placement event, which claim mods answer. */
+    private static final class Protection implements VisEvents.Protection {
+        @Override
+        public boolean mayBreak(
+                ServerPlayer player, ServerLevel level, BlockPos pos, BlockState state) {
+            return !NeoForge.EVENT_BUS.post(new BreakBlockEvent(level, pos, state, player))
+                    .isCanceled();
+        }
+
+        @Override
+        public boolean mayPlace(
+                ServerPlayer player,
+                ServerLevel level,
+                BlockPos pos,
+                BlockState against,
+                Runnable install) {
+            BlockSnapshot snapshot = BlockSnapshot.create(level.dimension(), level, pos);
+            install.run();
+            return !NeoForge.EVENT_BUS.post(
+                            new BlockEvent.EntityPlaceEvent(snapshot, against, player))
+                    .isCanceled();
+        }
     }
 
     // The registrar's supplier is NeoForge's DeferredHolder, which is the registry holder.

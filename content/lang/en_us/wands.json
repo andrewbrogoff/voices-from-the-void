@@ -79,6 +79,12 @@
     "subtitles.vftv.wand.tap_stop": "Wand stops drawing",
     "subtitles.vftv.wand.full": "Wand is full",
     "subtitles.vftv.wand.tap_drone": "Wand draws",
-    "subtitles.vftv.node.hum": "Node hums"
+    "subtitles.vftv.node.hum": "Node hums",
+    "subtitles.vftv.node.absorb": "Node drinks essentia",
+    "subtitles.vftv.node.clarity_rise": "Node rings clearer",
+    "subtitles.vftv.relay.link": "Relay joins the chord",
+    "subtitles.vftv.cradle.charge": "Cradled wand fills",
+    "subtitles.vftv.bell_jar.capture": "Bell Jar takes up a node",
+    "subtitles.vftv.bell_jar.release": "Bell Jar sets down a node"
   }
 }

@@ -4,3 +4,9 @@ vftv:wand.tap_stop
 vftv:wand.full
 vftv:wand.tap_drone
 vftv:node.hum
+vftv:node.absorb
+vftv:node.clarity_rise
+vftv:relay.link
+vftv:cradle.charge
+vftv:bell_jar.capture
+vftv:bell_jar.release
