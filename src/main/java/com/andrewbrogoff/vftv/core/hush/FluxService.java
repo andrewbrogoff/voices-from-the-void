@@ -75,7 +75,7 @@ public final class FluxService {
     }
 
     /** The loaded, block-ticking-or-not chunk at {@code pack}, or null; never loads. */
-    static @Nullable LevelChunk chunkNow(ServerLevel level, long pack) {
+    public static @Nullable LevelChunk chunkNow(ServerLevel level, long pack) {
         return level.getChunkSource().getChunkNow(ChunkPos.getX(pack), ChunkPos.getZ(pack));
     }
 

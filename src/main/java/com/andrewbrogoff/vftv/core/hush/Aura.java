@@ -108,6 +108,11 @@ public final class Aura {
         return spiller;
     }
 
+    /** Sets the conversion counter (tests: to reach a Hollow turn). */
+    public void setTaken(long value) {
+        taken = value;
+    }
+
     /** Attempts made. */
     public long steps() {
         return steps;

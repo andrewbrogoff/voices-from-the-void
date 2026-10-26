@@ -182,6 +182,57 @@ public final class HushService {
         }
     }
 
+    /**
+     * One attempt from a loaded chunk's seep now, outside the queue (the harness and tests): what
+     * the service's visit does.
+     *
+     * @return the spread mutations made, or -1 when the chunk has no readable seeped aura
+     */
+    public static int attempt(ServerLevel level, ChunkPos chunkPos) {
+        LevelChunk chunk = FluxService.chunkNow(level, chunkPos.pack());
+        Aura aura = chunk == null ? null : FluxService.aura(chunk);
+        if (chunk == null || aura == null || !aura.readable() || !aura.hasSeep) {
+            return -1;
+        }
+        FluxRules r = rules();
+        return visit(
+                level,
+                FluxService.state(level),
+                chunk,
+                aura,
+                r,
+                HushMath.hollowTurn(aura.taken, r.hollowEvery()));
+    }
+
+    /**
+     * One spread operation at a chosen target from the chunk's seep, skipping the walk (tests): a
+     * block conversion, followed by a rise on a Hollow turn, or a node hushed.
+     *
+     * @return the spread mutations made
+     */
+    public static int spreadTo(ServerLevel level, ChunkPos chunkPos, BlockPos target) {
+        LevelChunk chunk = FluxService.chunkNow(level, chunkPos.pack());
+        Aura aura = chunk == null ? null : FluxService.aura(chunk);
+        if (chunk == null || aura == null || !aura.readable() || !aura.hasSeep) {
+            return 0;
+        }
+        FluxRules r = rules();
+        HushOrigin origin = new HushOrigin.Seep(chunkPos, aura.spiller);
+        if (level.getBlockState(target).is(VisContent.node())) {
+            return hushNode(level, chunk, aura, target, r, origin) ? 1 : 0;
+        }
+        boolean turn = HushMath.hollowTurn(aura.taken, r.hollowEvery());
+        if (!convert(level, chunk, aura, target, r, origin)) {
+            return 0;
+        }
+        return turn && rise(level, chunk, aura, target, r, origin) ? 2 : 1;
+    }
+
+    /** Whether a chunk is in the due queue. */
+    public static boolean queued(ServerLevel level, ChunkPos chunk) {
+        return FluxService.state(level).due.contains(chunk.pack());
+    }
+
     /** The spread's service, in {@code (due, pack)} order under the per-tick caps. */
     static void serve(ServerLevel level) {
         FluxRules r = rules();
@@ -390,7 +441,7 @@ public final class HushService {
 
     /** The swap, checked: {@code setBlock} returned true and the cell holds exactly the state. */
     @SuppressWarnings("ReferenceEquality") // instance identity is the revalidation rule
-    static boolean swap(ServerLevel level, BlockPos pos, BlockState state) {
+    public static boolean swap(ServerLevel level, BlockPos pos, BlockState state) {
         return level.setBlock(pos, state, SWAP_FLAGS) && level.getBlockState(pos) == state;
     }
 

@@ -259,7 +259,7 @@ public final class HushBells {
      * One peal: reserve one Sonus, clear the 3 × 3 chunks, scan from the cursor, then commit the
      * reservation at the first work or refund it when nothing happened.
      */
-    static void peal(ServerLevel level, PealingBellBlockEntity be, FluxRules r) {
+    public static void peal(ServerLevel level, PealingBellBlockEntity be, FluxRules r) {
         try (var bell = HushService.GUARD.tryEnter(be);
                 var guard = bell == null ? null : HushService.GUARD.tryEnter(level.dimension())) {
             if (bell == null || guard == null || be.unreadable() || be.busy() || be.sonus < 1) {
