@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.neoforge.warp.WarpDataMaps;
 import com.andrewbrogoff.vftv.api.vis.VisKind;
 import com.andrewbrogoff.vftv.api.warp.WarpRules;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
+import com.andrewbrogoff.vftv.core.warp.WarpAttachment;
 import com.andrewbrogoff.vftv.core.warp.WarpRecord;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
@@ -146,7 +147,13 @@ public final class WarpNeoForge {
         JsonArray players = new JsonArray();
         if (server != null) {
             for (ServerPlayer player : server.getPlayerList().getPlayers()) {
-                players.add(WarpRecord.dump(player.getPlainTextName(), WarpService.record(player)));
+                JsonObject entry =
+                        WarpRecord.dump(player.getPlainTextName(), WarpService.record(player));
+                WarpAttachment.Offer offer = WarpService.offer(player);
+                entry.addProperty("offerSeq", offer == null ? 0 : offer.seq());
+                entry.addProperty("offerBargain", offer == null ? "" : offer.bargain().toString());
+                entry.addProperty("listenDue", WarpService.listenDue(player));
+                players.add(entry);
             }
         }
         data.add("players", players);
