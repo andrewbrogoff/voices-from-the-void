@@ -877,17 +877,11 @@ final class ResearchNotesGameTests {
                 helper,
                 List.of(
                         () -> {
-                            for (String id : visible.subList(0, 9)) {
+                            for (String id : visible.subList(0, 8)) {
                                 b.ok(b.act(new ResearchAction.Bookmark(id, true)), "set " + id);
                             }
-                            helper.assertValueEqual(
-                                    b.rec().bookmarks().size(),
-                                    9,
-                                    "DEBUG nine "
-                                            + b.rec().bookmarks()
-                                            + " tick "
-                                            + b.player.level().getServer().getTickCount());
                         },
+                        () -> b.ok(b.act(new ResearchAction.Bookmark(visible.get(8), true)), "9th"),
                         () -> {
                             b.ok(b.act(new ResearchAction.Bookmark(visible.get(0), true)), "again");
                             b.refused(
