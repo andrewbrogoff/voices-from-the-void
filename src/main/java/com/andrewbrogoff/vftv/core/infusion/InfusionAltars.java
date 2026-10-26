@@ -835,9 +835,11 @@ public final class InfusionAltars {
     /** A ringing bowl's run readout: frozen figures, live counters, the abandon price now. */
     static InfusionReadout runReadout(ServerLevel level, BowlBlockEntity bowl) {
         InfusionRun run = java.util.Objects.requireNonNull(bowl.run);
+        List<InfusionCost> costs = new ArrayList<>();
         List<InfusionCost> cells = new ArrayList<>();
         int[] drawn = new int[run.costs.length];
         for (int i = 0; i < run.costs.length; i++) {
+            costs.add(new InfusionCost(run.aspects.get(i), run.costs[i], 0));
             cells.add(new InfusionCost(run.aspects.get(i), run.costs[i] - run.drawn[i], 0));
             drawn[i] = run.drawn[i];
         }
@@ -858,6 +860,7 @@ public final class InfusionAltars {
                         run.stability.chance(),
                         run.drawnTotal(),
                         run.owedTotal(),
+                        costs,
                         cells,
                         run.absorbed(),
                         run.parts.size(),

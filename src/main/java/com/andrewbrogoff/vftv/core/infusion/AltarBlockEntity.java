@@ -102,6 +102,14 @@ public abstract sealed class AltarBlockEntity extends BlockEntity
         }
     }
 
+    /**
+     * Writes the slot with no publication, for the platform's item handler inside a transaction:
+     * its journal publishes on the root commit.
+     */
+    public void writeSlot(ItemStack stack) {
+        item = stack;
+    }
+
     @Override
     public ItemStack getTheItem() {
         return item;

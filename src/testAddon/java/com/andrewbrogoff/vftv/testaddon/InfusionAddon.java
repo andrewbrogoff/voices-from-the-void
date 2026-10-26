@@ -44,7 +44,12 @@ final class InfusionAddon {
 
     /** Subscribes a listener per event. */
     static void register(IEventBus modBus, IEventBus gameBus) {
-        gameBus.addListener(InfusionEvent.class, e -> read(e.payload()));
+        gameBus.addListener(
+                InfusionEvent.class,
+                e -> {
+                    read(e.payload());
+                    VftvAddon.consume(e.fluxRules());
+                });
     }
 
     /** Reads every accessor of every variant, as an addon would. */

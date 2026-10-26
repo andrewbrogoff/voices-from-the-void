@@ -73,6 +73,7 @@ public record InfusionReadout(
      * @param chance the frozen {@code p}
      * @param drawn units drawn in all
      * @param owed units owed in all
+     * @param costs each cost aspect with its frozen effective cost ({@code heldNow} 0)
      * @param cells each cost aspect with its units still owed ({@code heldNow} 0)
      * @param absorbed components absorbed
      * @param components components in all
@@ -91,6 +92,7 @@ public record InfusionReadout(
             int chance,
             int drawn,
             int owed,
+            List<InfusionCost> costs,
             List<InfusionCost> cells,
             int absorbed,
             int components,
@@ -104,6 +106,7 @@ public record InfusionReadout(
         /** Copies. */
         public Run {
             output = output.copy();
+            costs = List.copyOf(costs);
             cells = List.copyOf(cells);
         }
     }
@@ -201,6 +204,7 @@ public record InfusionReadout(
                     }) {
                 buf.writeVarInt(v);
             }
+            writeCells(buf, run.costs());
             writeCells(buf, run.cells());
             buf.writeEnum(run.stall());
             buf.writeBoolean(run.missing() != null);
@@ -272,6 +276,7 @@ public record InfusionReadout(
             for (int i = 0; i < v.length; i++) {
                 v[i] = bounded(buf.readVarInt(), 0, 1_000_000, "figure");
             }
+            List<InfusionCost> costs = readCells(buf);
             List<InfusionCost> cells = readCells(buf);
             Stall stall = buf.readEnum(Stall.class);
             BlockPos missing = buf.readBoolean() ? buf.readBlockPos() : null;
@@ -284,6 +289,7 @@ public record InfusionReadout(
                             v[1],
                             v[2],
                             v[3],
+                            costs,
                             cells,
                             v[4],
                             v[5],
