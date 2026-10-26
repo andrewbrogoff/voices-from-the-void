@@ -284,11 +284,14 @@ public final class RelayService {
                         1);
             }
             refreshSink(level, pos);
-        } else if (actual != null && actual != persisted) {
-            n.net.setKind(key, actual);
-            n.dirty = true;
+        } else if (actual != null) {
+            if (actual != persisted) {
+                n.net.setKind(key, actual);
+                n.dirty = true;
+            }
+            // A cradle's own load may run before its chunk is visible; settle its sink here.
             refreshSink(level, pos);
-        } else if (actual == null && persisted != null) {
+        } else if (persisted != null) {
             n.net.remove(key);
             Set<Long> in = n.byChunk.get(ChunkPos.pack(pos));
             if (in != null) {

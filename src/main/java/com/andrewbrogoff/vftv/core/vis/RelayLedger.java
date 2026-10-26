@@ -24,19 +24,6 @@ public record RelayLedger(List<Member> members) {
     /** No members. */
     public static final RelayLedger EMPTY = new RelayLedger(List.of());
 
-    /** A member kind by its lower-case name. */
-    static final Codec<RelayNetwork.Kind> KIND =
-            Codec.STRING.comapFlatMap(
-                    s -> {
-                        for (RelayNetwork.Kind k : RelayNetwork.Kind.values()) {
-                            if (k.name().toLowerCase(Locale.ROOT).equals(s)) {
-                                return DataResult.success(k);
-                            }
-                        }
-                        return DataResult.error(() -> "unknown member kind " + s);
-                    },
-                    k -> k.name().toLowerCase(Locale.ROOT));
-
     /**
      * One member.
      *
@@ -44,6 +31,19 @@ public record RelayLedger(List<Member> members) {
      * @param kind its kind
      */
     public record Member(BlockPos pos, RelayNetwork.Kind kind) {
+        /** A member kind by its lower-case name. */
+        static final Codec<RelayNetwork.Kind> KIND =
+                Codec.STRING.comapFlatMap(
+                        s -> {
+                            for (RelayNetwork.Kind k : RelayNetwork.Kind.values()) {
+                                if (k.name().toLowerCase(Locale.ROOT).equals(s)) {
+                                    return DataResult.success(k);
+                                }
+                            }
+                            return DataResult.error(() -> "unknown member kind " + s);
+                        },
+                        k -> k.name().toLowerCase(Locale.ROOT));
+
         static final Codec<Member> CODEC =
                 VisCodecs.strict(
                         RecordCodecBuilder.create(
