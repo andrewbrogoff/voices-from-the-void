@@ -1,0 +1,17 @@
+{
+  "aspects": [
+    {
+      "aspect": "vftv:silentium",
+      "range": [
+        1,
+        1
+      ]
+    }
+  ],
+  "clarity": {
+    "clear": 0,
+    "faint": 1,
+    "steady": 0
+  },
+  "main_aspect": "vftv:silentium"
+}

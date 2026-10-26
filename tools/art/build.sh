@@ -64,3 +64,9 @@ python3 "$ART/warp.py" "$ASSETS" "$ART/warp"
 WP="$ASSETS/vftv/textures"
 python3 "$ART/sheet.py" "$PREVIEWS/warp.png" "$WP/item/stilling_draught.png" "$WP/entity/apparition.png" \
     "$WP/gui/sprites/hud/voice_text.png"
+python3 "$ART/hush_blocks.py" "$ASSETS"
+python3 "$ART/hush.py" "$ASSETS" "$ART/hush"
+HU="$ASSETS/vftv/textures"
+python3 "$ART/sheet.py" "$PREVIEWS/hush.png" "$HU"/block/hushed_*.png "$HU"/particle/hush_mote_*.png \
+    "$HU/item/clearing_bell.png" "$HU/item/hush_ash.png" "$HU/block/pealing_bell_yoke.png" \
+    "$HU/block/pealing_bell_bell.png" "$HU/gui/sprites/hud/hush_frame.png" "$HU/entity/hollow.png"

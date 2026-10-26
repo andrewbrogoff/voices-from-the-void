@@ -55,6 +55,9 @@ public final class VisHud {
     /** The cached layout, and what it was built from. */
     private static @Nullable Layout layout;
 
+    /** The bottom edge of the frame drawn this frame, or -1 when the layer drew nothing. */
+    private static int drawnBottom = -1;
+
     private record Layout(
             ItemStack stack,
             InteractionHand hand,
@@ -68,6 +71,14 @@ public final class VisHud {
 
     private VisHud() {}
 
+    /**
+     * The bottom edge of the frame this layer drew this frame, or -1 when it drew nothing: the Hush
+     * reading anchors 2 px below it (Hush spec, "Reading").
+     */
+    public static int frameBottom() {
+        return drawnBottom;
+    }
+
     /** Takes a published client config. */
     public static void installConfig(VisClientConfig next) {
         config = next;
@@ -80,6 +91,7 @@ public final class VisHud {
 
     /** The layer. */
     public static void layer(GuiGraphicsExtractor graphics, DeltaTracker delta) {
+        drawnBottom = -1;
         Minecraft mc = Minecraft.getInstance();
         LocalPlayer player = mc.player;
         if (player == null
@@ -96,6 +108,7 @@ public final class VisHud {
         int x = Math.max(0, Math.min(config.x(), graphics.guiWidth() - l.width()));
         int y = Math.max(0, Math.min(config.y(), graphics.guiHeight() - l.height()));
         graphics.blitSprite(RenderPipelines.GUI_TEXTURED, FRAME, x, y, l.width(), l.height());
+        drawnBottom = y + l.height();
         int pad = VisLimits.HUD_PADDING;
         if (!l.text().isEmpty()) {
             for (int i = 0; i < l.text().size(); i++) {

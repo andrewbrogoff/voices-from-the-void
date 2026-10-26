@@ -1,4 +1,13 @@
 {
   "feature": "hush",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "fill 48 118 48 79 118 79 minecraft:dirt"}},
+    {"op": "cmd", "args": {"command": "fill 48 119 48 79 119 79 minecraft:grass_block"}},
+    {"op": "cmd", "args": {"command": "vftv flux add 50 120 50 500"}},
+    {"op": "cmd", "args": {"command": "vftv flux add 70 120 50 500"}},
+    {"op": "cmd", "args": {"command": "vftv flux add 50 120 70 500"}},
+    {"op": "cmd", "args": {"command": "vftv flux add 70 120 70 500"}},
+    {"op": "cmd", "args": {"command": "setblock 64 120 64 vftv:pealing_bell{bell:{format:1,sonus:64,cursor:0}}"}},
+    {"op": "wait_ticks", "args": {"ticks": 40}}
+  ]
 }

@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "axis=x": {
+      "model": "vftv:block/hushed_oak_log",
+      "x": 90,
+      "y": 90
+    },
+    "axis=y": {
+      "model": "vftv:block/hushed_oak_log"
+    },
+    "axis=z": {
+      "model": "vftv:block/hushed_oak_log",
+      "x": 90
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "A": "#c:gems/amethyst",
+    "B": "vftv:resonant_brass_ingot",
+    "C": "#c:ingots/copper",
+    "S": "minecraft:stick"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    " S ",
+    "BAB",
+    " C "
+  ],
+  "research": "vftv:clearing_bell",
+  "result": {
+    "count": 1,
+    "id": "vftv:clearing_bell"
+  },
+  "vis": {
+    "vftv:aer": 12,
+    "vftv:ordo": 12
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "schema": "vftv:aspects/1",
+  "about": "The Hush's things. Each hushed block keeps its source's earth or wood but loses its colour and life to silence; Hush Ash is what a Hollow leaves, silence and emptiness; the Clearing Bell and the Pealing Bell are brass instruments that ring the Hush back out; the Hollow is a silent creature of ash and emptiness.",
+  "items": {
+    "vftv:hushed_grass_block": {"vftv:silentium": 1, "vftv:terra": 2},
+    "vftv:hushed_dirt": {"vftv:silentium": 1, "vftv:terra": 2},
+    "vftv:hushed_stone": {"vftv:silentium": 1, "vftv:terra": 2},
+    "vftv:hushed_deepslate": {"vftv:silentium": 1, "vftv:tenebrae": 1, "vftv:terra": 2},
+    "vftv:hushed_sand": {"vftv:perditio": 1, "vftv:silentium": 1, "vftv:terra": 1},
+    "vftv:hushed_gravel": {"vftv:perditio": 1, "vftv:silentium": 1, "vftv:terra": 1},
+    "vftv:hushed_short_grass": {"vftv:silentium": 1},
+    "vftv:hushed_oak_log": {"vftv:arbor": 3, "vftv:silentium": 1},
+    "vftv:hushed_birch_log": {"vftv:arbor": 3, "vftv:silentium": 1},
+    "vftv:hushed_spruce_log": {"vftv:arbor": 3, "vftv:silentium": 1},
+    "vftv:hushed_oak_leaves": {"vftv:arbor": 1, "vftv:silentium": 1},
+    "vftv:hushed_birch_leaves": {"vftv:arbor": 1, "vftv:silentium": 1},
+    "vftv:hushed_spruce_leaves": {"vftv:arbor": 1, "vftv:silentium": 1},
+    "vftv:hush_ash": {"vftv:silentium": 2, "vftv:vacuos": 1},
+    "vftv:clearing_bell": {"vftv:metallum": 8, "vftv:ordo": 2, "vftv:sonus": 4},
+    "vftv:pealing_bell": {"vftv:metallum": 8, "vftv:ordo": 2, "vftv:pannus": 1, "vftv:sonus": 6}
+  },
+  "entities": {
+    "vftv:hollow": {"vftv:bestia": 1, "vftv:silentium": 4, "vftv:vacuos": 2}
+  }
+}

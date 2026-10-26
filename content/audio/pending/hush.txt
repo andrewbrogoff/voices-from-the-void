@@ -1,0 +1,12 @@
+# The hush feature's sound events with no audio yet (core.common.model.PendingAudio).
+vftv:block.hushed.step
+vftv:block.hushed.break
+vftv:block.hushed.place
+vftv:block.hushed.hit
+vftv:block.hushed.fall
+vftv:clearing_bell.ring
+vftv:pealing_bell.ring
+vftv:hush.restore
+vftv:hollow.rise
+vftv:hollow.hurt
+vftv:hollow.death
