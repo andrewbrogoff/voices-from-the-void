@@ -99,22 +99,27 @@ public class Answerer extends Monster {
         return false;
     }
 
-    /**
-     * Retention, before the goals run each tick: an invalid target is dropped at once. The whole
-     * server-side tick, goals and navigation included, is timed as worldgen.
-     */
+    /** The whole server-side entity tick is timed as worldgen (architecture, "Tick timing"). */
     @Override
-    public void aiStep() {
+    public void tick() {
         if (!(level() instanceof ServerLevel)) {
-            super.aiStep();
+            super.tick();
             return;
         }
         try (var _ = TickBudget.enter("worldgen")) {
-            if (getTarget() instanceof Player p && !validTarget(this, p)) {
-                setTarget(null);
-            }
-            super.aiStep();
+            super.tick();
         }
+    }
+
+    /** Retention, before the goals run each tick: an invalid target is dropped at once. */
+    @Override
+    public void aiStep() {
+        if (level() instanceof ServerLevel
+                && getTarget() instanceof Player p
+                && !validTarget(this, p)) {
+            setTarget(null);
+        }
+        super.aiStep();
     }
 
     @Override
