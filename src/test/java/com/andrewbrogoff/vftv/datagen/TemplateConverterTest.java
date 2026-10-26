@@ -60,73 +60,177 @@ class TemplateConverterTest {
             assertEquals(List.of(), r.problems(), name);
             assertNotNull(r.nbt(), name);
         }
-        assertTrue(convert("other", template("rubble_a")).problems().getFirst().contains("not a file"));
+        assertTrue(
+                convert("other", template("rubble_a"))
+                        .problems()
+                        .getFirst()
+                        .contains("not a file"));
     }
 
     @Test
     void theFormat() {
         rejects("rubble_a", j -> row(j, 1, 2, "  #"), "columns, not 9");
-        rejects("rubble_a", j -> j.getAsJsonArray("layers").get(1).getAsJsonArray().remove(8), "rows, not 9");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonArray("layers").get(1).getAsJsonArray().remove(8),
+                "rows, not 9");
         rejects("rubble_a", j -> j.getAsJsonArray("layers").remove(1), "layers, not 2");
         rejects("rubble_a", j -> cell(j, 1, 1, 1, 'Q'), "'Q' is not in the palette");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:chiseled_tuff[x=y]"), "does not parse");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("^", "minecraft:jigsaw"), "missing [orientation]");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:not_a_block"), "does not parse");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:chiseled_tuff[x=y]"),
+                "does not parse");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("^", "minecraft:jigsaw"),
+                "missing [orientation]");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:not_a_block"),
+                "does not parse");
         rejects("rubble_a", j -> j.getAsJsonArray("size").set(0, new JsonPrimitive(49)), "49");
     }
 
     @Test
     void blocksAndNamespaces() {
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:structure_block[mode=save]"), "never allowed");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:spawner"), "never allowed");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:vault[facing=north,ominous=false,vault_state=inactive]"), "never allowed");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:barrel[facing=up,open=false]"), "the only container allowed is a chest");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "vftv:pedestal"), "is not a vftv block");
-        rejects("rubble_a", j -> j.getAsJsonObject("palette").addProperty("c", "vftv:hushed_stone"), "palette.c");
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("palette")
+                                .addProperty("c", "minecraft:structure_block[mode=save]"),
+                "never allowed");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("c", "minecraft:spawner"),
+                "never allowed");
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("palette")
+                                .addProperty(
+                                        "c",
+                                        "minecraft:vault[facing=north,ominous=false,vault_state=inactive]"),
+                "never allowed");
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("palette")
+                                .addProperty("c", "minecraft:barrel[facing=up,open=false]"),
+                "the only container allowed is a chest");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("c", "vftv:pedestal"),
+                "is not a vftv block");
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("palette").addProperty("c", "vftv:hushed_stone"),
+                "palette.c");
     }
 
     @Test
     void blockEntities() {
-        rejects("rubble_a", j -> j.getAsJsonObject("block_entities").remove("4,1,0"), "needs its block entity");
-        rejects("rubble_a",
-                j -> j.getAsJsonObject("block_entities").add("1,1,1", JsonParserHelper.obj("{\"chest\": {\"loot_table\": \"vftv:chests/choir_ruin\"}}")),
+        rejects(
+                "rubble_a",
+                j -> j.getAsJsonObject("block_entities").remove("4,1,0"),
+                "needs its block entity");
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("block_entities")
+                                .add(
+                                        "1,1,1",
+                                        JsonParserHelper.obj(
+                                                "{\"chest\": {\"loot_table\": \"vftv:chests/choir_ruin\"}}")),
                 "a chest on minecraft:tuff_bricks");
-        rejects("rubble_a",
-                j -> j.getAsJsonObject("block_entities").add("9,1,1", JsonParserHelper.obj("{\"chest\": {\"loot_table\": \"vftv:chests/choir_ruin\"}}")),
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("block_entities")
+                                .add(
+                                        "9,1,1",
+                                        JsonParserHelper.obj(
+                                                "{\"chest\": {\"loot_table\": \"vftv:chests/choir_ruin\"}}")),
                 "outside the size");
-        rejects("rubble_a",
-                j -> j.getAsJsonObject("block_entities").getAsJsonObject("4,1,0").getAsJsonObject("jigsaw").addProperty("placement_priority", 3),
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("block_entities")
+                                .getAsJsonObject("4,1,0")
+                                .getAsJsonObject("jigsaw")
+                                .addProperty("placement_priority", 3),
                 "priorities are 0");
-        rejects("rubble_a",
-                j -> j.getAsJsonObject("block_entities").getAsJsonObject("4,1,0").add("node", JsonParserHelper.obj("{\"type\": \"vftv:choir\"}")),
+        rejects(
+                "rubble_a",
+                j ->
+                        j.getAsJsonObject("block_entities")
+                                .getAsJsonObject("4,1,0")
+                                .add("node", JsonParserHelper.obj("{\"type\": \"vftv:choir\"}")),
                 "exactly one of");
-        rejects("chancel_a",
-                j -> j.getAsJsonObject("block_entities").entrySet().stream()
-                        .filter(e -> e.getValue().getAsJsonObject().has("node"))
-                        .forEach(e -> e.getValue().getAsJsonObject().getAsJsonObject("node").addProperty("type", "vftv:hushed")),
+        rejects(
+                "chancel_a",
+                j ->
+                        j.getAsJsonObject("block_entities").entrySet().stream()
+                                .filter(e -> e.getValue().getAsJsonObject().has("node"))
+                                .forEach(
+                                        e ->
+                                                e.getValue()
+                                                        .getAsJsonObject()
+                                                        .getAsJsonObject("node")
+                                                        .addProperty("type", "vftv:hushed")),
                 "a node of type vftv:hushed");
-        rejects("chancel_a",
-                j -> j.getAsJsonObject("block_entities").entrySet().stream()
-                        .filter(e -> e.getValue().getAsJsonObject().has("node"))
-                        .forEach(e -> e.getValue().getAsJsonObject().getAsJsonObject("node").addProperty("type", "vftv:nope")),
+        rejects(
+                "chancel_a",
+                j ->
+                        j.getAsJsonObject("block_entities").entrySet().stream()
+                                .filter(e -> e.getValue().getAsJsonObject().has("node"))
+                                .forEach(
+                                        e ->
+                                                e.getValue()
+                                                        .getAsJsonObject()
+                                                        .getAsJsonObject("node")
+                                                        .addProperty("type", "vftv:nope")),
                 "unknown node type");
-        rejects("bell_pit",
-                j -> j.getAsJsonObject("block_entities").entrySet().stream()
-                        .filter(e -> e.getValue().getAsJsonObject().has("chest"))
-                        .forEach(e -> e.getValue().getAsJsonObject().getAsJsonObject("chest").addProperty("loot_table", "minecraft:chests/simple_dungeon")),
+        rejects(
+                "bell_pit",
+                j ->
+                        j.getAsJsonObject("block_entities").entrySet().stream()
+                                .filter(e -> e.getValue().getAsJsonObject().has("chest"))
+                                .forEach(
+                                        e ->
+                                                e.getValue()
+                                                        .getAsJsonObject()
+                                                        .getAsJsonObject("chest")
+                                                        .addProperty(
+                                                                "loot_table",
+                                                                "minecraft:chests/simple_dungeon")),
                 "the loot table must be one of");
     }
 
     @Test
     void entitiesAndStructure() {
-        rejects("cloister",
-                j -> j.getAsJsonArray("entities").get(0).getAsJsonObject().addProperty("type", "vftv:hollow"),
+        rejects(
+                "cloister",
+                j ->
+                        j.getAsJsonArray("entities")
+                                .get(0)
+                                .getAsJsonObject()
+                                .addProperty("type", "vftv:hollow"),
                 "is not one of");
-        rejects("cloister",
-                j -> j.getAsJsonArray("entities").get(0).getAsJsonObject().add("pos", JsonParserHelper.arr("[8, 9, 8]")),
+        rejects(
+                "cloister",
+                j ->
+                        j.getAsJsonArray("entities")
+                                .get(0)
+                                .getAsJsonObject()
+                                .add("pos", JsonParserHelper.arr("[8, 9, 8]")),
                 "outside the size");
-        rejects("cloister",
-                j -> j.getAsJsonArray("entities").get(0).getAsJsonObject().add("pos", JsonParserHelper.arr("[0, 1, 0]")),
+        rejects(
+                "cloister",
+                j ->
+                        j.getAsJsonArray("entities")
+                                .get(0)
+                                .getAsJsonObject()
+                                .add("pos", JsonParserHelper.arr("[0, 1, 0]")),
                 "is not a standing cell");
     }
 
@@ -142,19 +246,26 @@ class TemplateConverterTest {
                         + "{aspect:\"vftv:sonus\",current:4,max:4},{aspect:\"vftv:vacuos\",current:4,max:4}],"
                         + "clarity:\"steady\",cultivation:{counters:{},sonus:0},format:1,id:0L,origin:\"structure\","
                         + "regen:{divisor:1,interval:1,tick:0L},type:\"vftv:choir\"}",
-                sorted(TemplateConverter.nodeRecord(net.minecraft.resources.Identifier.parse("vftv:choir"), minima)));
+                sorted(
+                        TemplateConverter.nodeRecord(
+                                net.minecraft.resources.Identifier.parse("vftv:choir"), minima)));
     }
 
     /** SNBT with every compound's keys sorted, so the pinned record compares field for field. */
     static String sorted(net.minecraft.nbt.Tag tag) {
         if (tag instanceof net.minecraft.nbt.CompoundTag c) {
             StringBuilder b = new StringBuilder("{");
-            c.keySet().stream().sorted().forEach(k -> {
-                if (b.length() > 1) {
-                    b.append(',');
-                }
-                b.append(k).append(':').append(sorted(java.util.Objects.requireNonNull(c.get(k))));
-            });
+            c.keySet().stream()
+                    .sorted()
+                    .forEach(
+                            k -> {
+                                if (b.length() > 1) {
+                                    b.append(',');
+                                }
+                                b.append(k)
+                                        .append(':')
+                                        .append(sorted(java.util.Objects.requireNonNull(c.get(k))));
+                            });
             return b.append('}').toString();
         }
         if (tag instanceof net.minecraft.nbt.ListTag l) {

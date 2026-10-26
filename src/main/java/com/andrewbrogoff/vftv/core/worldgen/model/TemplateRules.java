@@ -63,7 +63,9 @@ public final class TemplateRules {
     /** {@code end_socket}. */
     public static final Fields END_SOCKET =
             new Fields(
-                    "vftv:choir_ruin/end_socket", "vftv:choir_ruin/end_plug", "vftv:choir_ruin/ends");
+                    "vftv:choir_ruin/end_socket",
+                    "vftv:choir_ruin/end_plug",
+                    "vftv:choir_ruin/ends");
 
     /** {@code end_plug}. */
     public static final Fields END_PLUG =
@@ -275,15 +277,29 @@ public final class TemplateRules {
     private static void size(List<String> problems, int sx, int sy, int sz, int side, int high) {
         if (sx != side || sz != side || sy < 1 || sy > high) {
             problems.add(
-                    "size: must be exactly " + side + " × ≤ " + high + " × " + side + ", not " + sx
-                            + " × " + sy + " × " + sz);
+                    "size: must be exactly "
+                            + side
+                            + " × ≤ "
+                            + high
+                            + " × "
+                            + side
+                            + ", not "
+                            + sx
+                            + " × "
+                            + sy
+                            + " × "
+                            + sz);
         }
     }
 
     private static void count(List<String> problems, String what, long n, int min, int max) {
         if (n < min || n > max) {
             problems.add(
-                    what + "s: " + n + ", not " + (min == max ? "exactly " + min : min + "–" + max));
+                    what
+                            + "s: "
+                            + n
+                            + ", not "
+                            + (min == max ? "exactly " + min : min + "–" + max));
         }
     }
 
@@ -316,7 +332,10 @@ public final class TemplateRules {
         for (Slot s : required) {
             if (!filled.contains(s)) {
                 problems.add(
-                        "connectors: no " + s.fields().name() + " at " + where(s.x(), FLOOR, s.z()));
+                        "connectors: no "
+                                + s.fields().name()
+                                + " at "
+                                + where(s.x(), FLOOR, s.z()));
             }
         }
     }

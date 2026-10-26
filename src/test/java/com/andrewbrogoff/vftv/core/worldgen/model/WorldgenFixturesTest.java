@@ -83,7 +83,8 @@ class WorldgenFixturesTest {
                             ranges);
             assertEquals(hex(expect.get("h")), r.h(), "h " + pos);
             assertEquals(
-                    List.of("faint", "steady", "clear").indexOf(expect.get("clarity").getAsString()),
+                    List.of("faint", "steady", "clear")
+                            .indexOf(expect.get("clarity").getAsString()),
                     r.clarity(),
                     "clarity " + pos);
             JsonObject maxes = expect.getAsJsonObject("maxes");
@@ -120,7 +121,8 @@ class WorldgenFixturesTest {
             step++;
             if (s.has("latch")) {
                 JsonObject l = s.getAsJsonObject("latch");
-                Set<String> h = held.computeIfAbsent(l.get("player").getAsString(), k -> new HashSet<>());
+                Set<String> h =
+                        held.computeIfAbsent(l.get("player").getAsString(), k -> new HashSet<>());
                 l.getAsJsonArray("pages").forEach(p -> h.add(p.getAsString()));
                 continue;
             }

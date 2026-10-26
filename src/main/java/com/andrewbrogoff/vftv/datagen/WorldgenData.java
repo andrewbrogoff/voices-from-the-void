@@ -92,7 +92,10 @@ final class WorldgenData implements FeatureData {
 
     /** The three loot tables. */
     static final Set<String> LOOT_TABLES =
-            Set.of("vftv:chests/choir_ruin", "vftv:entities/answerer", "vftv:entities/answerer_cantor");
+            Set.of(
+                    "vftv:chests/choir_ruin",
+                    "vftv:entities/answerer",
+                    "vftv:entities/answerer_cantor");
 
     /** {@code vftv:choir_ruin/1}. */
     static final Schema RUIN = ruinSchema();
@@ -286,7 +289,9 @@ final class WorldgenData implements FeatureData {
                         "vftv:choir_ruin/bell_pit",
                         "vftv:choir_ruin/scriptorium",
                         "vftv:choir_ruin/fallen_nave"));
-        m.put("ends", Set.of("vftv:choir_ruin/rubble_a", "vftv:choir_ruin/rubble_b", "minecraft:empty"));
+        m.put(
+                "ends",
+                Set.of("vftv:choir_ruin/rubble_a", "vftv:choir_ruin/rubble_b", "minecraft:empty"));
         return java.util.Collections.unmodifiableMap(m);
     }
 
@@ -588,7 +593,8 @@ final class WorldgenData implements FeatureData {
                         List.of(
                                 Schema.required(
                                         "pages",
-                                        new Schema.ListOf(new Schema.Str(1, 256, null), 1, 64, true)),
+                                        new Schema.ListOf(
+                                                new Schema.Str(1, 256, null), 1, 64, true)),
                                 Schema.required("pages_per_claim", new Schema.Int(1, 8)),
                                 Schema.required("steps", new Schema.ListOf(step, 1, 256, false))));
         return Schema.of(
@@ -680,7 +686,9 @@ final class WorldgenData implements FeatureData {
                     if (!e.path().startsWith("templates/")) {
                         problems.add("worldgen/" + e.path() + ": templates live in templates/");
                     }
-                    templates.put(e.path().substring(e.path().lastIndexOf('/') + 1).replace(".json", ""), json);
+                    templates.put(
+                            e.path().substring(e.path().lastIndexOf('/') + 1).replace(".json", ""),
+                            json);
                 } else if (bySchema.put(e.schema().id(), json) != null) {
                     problems.add("worldgen/" + e.path() + ": a second " + e.schema().id());
                 }
@@ -924,7 +932,9 @@ final class WorldgenData implements FeatureData {
                 .forEach(
                         (id, e) ->
                                 entries.put(
-                                        id, new SiteRules.Entry(e.category(), e.stage(), e.kind().id())));
+                                        id,
+                                        new SiteRules.Entry(
+                                                e.category(), e.stage(), e.kind().id())));
         List<String> problems = new ArrayList<>(SiteRules.check(kinds, entries));
         Offers.Site ruin = kinds.get(SiteRules.CHOIR_RUIN);
         if (ruin != null) {
@@ -973,7 +983,8 @@ final class WorldgenData implements FeatureData {
                                                 .get(0)
                                                 .getAsInt()));
         List<NodeState.NodeAspect> out = new ArrayList<>();
-        mins.forEach((id, min) -> out.add(new NodeState.NodeAspect(Identifier.parse(id), min, min)));
+        mins.forEach(
+                (id, min) -> out.add(new NodeState.NodeAspect(Identifier.parse(id), min, min)));
         return out;
     }
 

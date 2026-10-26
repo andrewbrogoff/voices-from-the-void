@@ -108,7 +108,9 @@ public final class RollNodeProcessor implements StructureProcessor {
                         world.getSeed(),
                         target.asLong(),
                         new int[] {
-                            entry.clarity().faint(), entry.clarity().steady(), entry.clarity().clear()
+                            entry.clarity().faint(),
+                            entry.clarity().steady(),
+                            entry.clarity().clear()
                         },
                         ranges.stream()
                                 .map(

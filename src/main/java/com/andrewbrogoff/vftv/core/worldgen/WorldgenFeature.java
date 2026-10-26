@@ -11,7 +11,8 @@ import com.andrewbrogoff.vftv.core.worldgen.model.ChoirClaims;
  * The worldgen feature's entry into {@code core}: {@code Vftv.init} calls {@link #init} once,
  * during mod construction. It registers the Reliquary, the Answerers, the sounds and the node roll
  * processor; the server-only {@code vftv:choir_site} registry (no network codec); the {@code
- * vftv:choir_claims} player slot (kept through death, never synced); and the Choir-site place query.
+ * vftv:choir_claims} player slot (kept through death, never synced); and the Choir-site place
+ * query.
  */
 public final class WorldgenFeature {
     private WorldgenFeature() {}

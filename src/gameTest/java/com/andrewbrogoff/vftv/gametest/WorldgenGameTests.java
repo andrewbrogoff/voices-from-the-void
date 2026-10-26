@@ -41,6 +41,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.SectionPos;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.contents.TranslatableContents;
@@ -56,14 +57,12 @@ import net.minecraft.world.InteractionResult;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntitySpawnReason;
-import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.entity.monster.zombie.Zombie;
 import net.minecraft.world.entity.projectile.arrow.Arrow;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.ChunkPos;
-import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.ChestBlockEntity;
 import net.minecraft.world.level.chunk.LevelChunk;
@@ -78,7 +77,6 @@ import net.minecraft.world.level.storage.TagValueOutput;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.minecraft.gametest.framework.GameTestHelper;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.util.FakePlayerFactory;
@@ -109,7 +107,8 @@ final class WorldgenGameTests {
     private static volatile Toss toss = Toss.NONE;
     private static volatile UUID tosser = new UUID(0, 0);
     private static volatile BlockPos tossAt = BlockPos.ZERO;
-    private static final List<Offers.Outcome> REENTRY = Collections.synchronizedList(new ArrayList<>());
+    private static final List<Offers.Outcome> REENTRY =
+            Collections.synchronizedList(new ArrayList<>());
     private static volatile UUID cancelUse = new UUID(0, 0);
 
     private static final List<Map.Entry<ServerPlayer, Component>> LINES =
@@ -210,7 +209,8 @@ final class WorldgenGameTests {
         synchronized (WorldgenGameTests.class) {
             if (!capturing) {
                 capturing = true;
-                AtomicReference<BiConsumer<ServerPlayer, StatusLine>> real = new AtomicReference<>();
+                AtomicReference<BiConsumer<ServerPlayer, StatusLine>> real =
+                        new AtomicReference<>();
                 real.set(
                         StatusLines.swapSender(
                                 (p, line) -> {
@@ -221,14 +221,19 @@ final class WorldgenGameTests {
         }
         List<Component> out = new ArrayList<>();
         synchronized (LINES) {
-            LINES.stream().filter(e -> Objects.equals(e.getKey(), player)).forEach(e -> out.add(e.getValue()));
+            LINES.stream()
+                    .filter(e -> Objects.equals(e.getKey(), player))
+                    .forEach(e -> out.add(e.getValue()));
         }
         return out;
     }
 
     private static boolean said(ServerPlayer player, String key) {
         return lines(player).stream()
-                .anyMatch(l -> l.getContents() instanceof TranslatableContents t && t.getKey().equals(key));
+                .anyMatch(
+                        l ->
+                                l.getContents() instanceof TranslatableContents t
+                                        && t.getKey().equals(key));
     }
 
     /** A far column of its own for a test that places a ruin or a template. */
@@ -238,8 +243,12 @@ final class WorldgenGameTests {
     }
 
     private static void load(ServerLevel level, BoundingBox box) {
-        for (int cx = SectionPos.blockToSectionCoord(box.minX()); cx <= SectionPos.blockToSectionCoord(box.maxX()); cx++) {
-            for (int cz = SectionPos.blockToSectionCoord(box.minZ()); cz <= SectionPos.blockToSectionCoord(box.maxZ()); cz++) {
+        for (int cx = SectionPos.blockToSectionCoord(box.minX());
+                cx <= SectionPos.blockToSectionCoord(box.maxX());
+                cx++) {
+            for (int cz = SectionPos.blockToSectionCoord(box.minZ());
+                    cz <= SectionPos.blockToSectionCoord(box.maxZ());
+                    cz++) {
                 level.getChunk(cx, cz);
             }
         }
@@ -270,8 +279,12 @@ final class WorldgenGameTests {
         BoundingBox box = start.getBoundingBox();
         load(level, box);
         ChunkPos.rangeClosed(
-                        new ChunkPos(SectionPos.blockToSectionCoord(box.minX()), SectionPos.blockToSectionCoord(box.minZ())),
-                        new ChunkPos(SectionPos.blockToSectionCoord(box.maxX()), SectionPos.blockToSectionCoord(box.maxZ())))
+                        new ChunkPos(
+                                SectionPos.blockToSectionCoord(box.minX()),
+                                SectionPos.blockToSectionCoord(box.minZ())),
+                        new ChunkPos(
+                                SectionPos.blockToSectionCoord(box.maxX()),
+                                SectionPos.blockToSectionCoord(box.maxZ())))
                 .forEach(
                         c ->
                                 start.placeInChunk(
@@ -279,7 +292,13 @@ final class WorldgenGameTests {
                                         level.structureManager(),
                                         generator,
                                         level.getRandom(),
-                                        new BoundingBox(c.getMinBlockX(), level.getMinY(), c.getMinBlockZ(), c.getMaxBlockX(), level.getMaxY() + 1, c.getMaxBlockZ()),
+                                        new BoundingBox(
+                                                c.getMinBlockX(),
+                                                level.getMinY(),
+                                                c.getMinBlockZ(),
+                                                c.getMaxBlockX(),
+                                                level.getMaxY() + 1,
+                                                c.getMaxBlockZ()),
                                         c));
         return start;
     }
@@ -289,7 +308,10 @@ final class WorldgenGameTests {
         StructureProcessorList list =
                 level.registryAccess()
                         .lookupOrThrow(Registries.PROCESSOR_LIST)
-                        .getValueOrThrow(ResourceKey.create(Registries.PROCESSOR_LIST, Identifier.fromNamespaceAndPath("vftv", "choir_ruin")));
+                        .getValueOrThrow(
+                                ResourceKey.create(
+                                        Registries.PROCESSOR_LIST,
+                                        Identifier.fromNamespaceAndPath("vftv", "choir_ruin")));
         StructurePlaceSettings s = new StructurePlaceSettings().setFinalizeEntities(true);
         list.list().forEach(s::addProcessor);
         return s;
@@ -300,9 +322,11 @@ final class WorldgenGameTests {
                 .getOrCreate(Identifier.fromNamespaceAndPath("vftv", "choir_ruin/chancel_a"));
     }
 
-    private static List<BlockPos> find(ServerLevel level, BoundingBox box, net.minecraft.world.level.block.Block block) {
+    private static List<BlockPos> find(
+            ServerLevel level, BoundingBox box, net.minecraft.world.level.block.Block block) {
         List<BlockPos> out = new ArrayList<>();
-        BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())
+        BlockPos.betweenClosed(
+                        box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())
                 .forEach(
                         p -> {
                             if (level.getBlockState(p).is(block)) {
@@ -313,7 +337,10 @@ final class WorldgenGameTests {
     }
 
     private static Answerer answerer(GameTestHelper helper, BlockPos rel, boolean cantor) {
-        return helper.spawn(cantor ? WorldgenContent.cantor() : WorldgenContent.answerer(), rel, EntitySpawnReason.STRUCTURE);
+        return helper.spawn(
+                cantor ? WorldgenContent.cantor() : WorldgenContent.answerer(),
+                rel,
+                EntitySpawnReason.STRUCTURE);
     }
 
     private static ServerPlayer survivor(GameTestHelper helper, BlockPos rel) {
@@ -324,7 +351,9 @@ final class WorldgenGameTests {
     }
 
     private static CompoundTag save(Entity entity) {
-        TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, entity.registryAccess());
+        TagValueOutput out =
+                TagValueOutput.createWithContext(
+                        ProblemReporter.DISCARDING, entity.registryAccess());
         entity.saveWithoutId(out);
         return out.buildResult();
     }
@@ -334,18 +363,64 @@ final class WorldgenGameTests {
     /** Everything registered, tagged and loaded; the site kind in the server-only registry. */
     private static void registered(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        helper.assertTrue(WorldgenContent.reliquary().defaultBlockState().is(net.minecraft.tags.BlockTags.FEATURES_CANNOT_REPLACE), "the Reliquary cannot be replaced by features");
-        helper.assertTrue(WorldgenContent.reliquary().defaultBlockState().is(net.minecraft.tags.BlockTags.WITHER_IMMUNE), "wither-immune");
-        helper.assertTrue(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).getOrThrow(WorldgenContent.ANSWERER_KEY).is(WorldgenKeys.ANSWERERS), "#vftv:answerers");
-        helper.assertTrue(helper.getLevel().registryAccess().lookupOrThrow(Registries.ENTITY_TYPE).getOrThrow(WorldgenContent.CANTOR_KEY).is(WorldgenKeys.ANSWERERS), "#vftv:answerers");
+        helper.assertTrue(
+                WorldgenContent.reliquary()
+                        .defaultBlockState()
+                        .is(net.minecraft.tags.BlockTags.FEATURES_CANNOT_REPLACE),
+                "the Reliquary cannot be replaced by features");
+        helper.assertTrue(
+                WorldgenContent.reliquary()
+                        .defaultBlockState()
+                        .is(net.minecraft.tags.BlockTags.WITHER_IMMUNE),
+                "wither-immune");
+        helper.assertTrue(
+                helper.getLevel()
+                        .registryAccess()
+                        .lookupOrThrow(Registries.ENTITY_TYPE)
+                        .getOrThrow(WorldgenContent.ANSWERER_KEY)
+                        .is(WorldgenKeys.ANSWERERS),
+                "#vftv:answerers");
+        helper.assertTrue(
+                helper.getLevel()
+                        .registryAccess()
+                        .lookupOrThrow(Registries.ENTITY_TYPE)
+                        .getOrThrow(WorldgenContent.CANTOR_KEY)
+                        .is(WorldgenKeys.ANSWERERS),
+                "#vftv:answerers");
         helper.assertTrue(WorldgenContent.answerer().isAllowedInPeaceful(), "allowed in peaceful");
-        helper.assertTrue(Blocks.TUFF_BRICKS.defaultBlockState().is(WorldgenKeys.CHOIR_WEATHERING), "#vftv:choir_weathering");
-        helper.assertTrue(level.registryAccess().lookupOrThrow(Registries.STRUCTURE).get(WorldgenKeys.CHOIR_RUIN).isPresent(), "the structure");
-        helper.assertTrue(level.registryAccess().lookupOrThrow(Registries.STRUCTURE_SET).get(ResourceKey.create(Registries.STRUCTURE_SET, WorldgenKeys.CHOIR_RUIN.identifier())).isPresent(), "the structure set");
+        helper.assertTrue(
+                Blocks.TUFF_BRICKS.defaultBlockState().is(WorldgenKeys.CHOIR_WEATHERING),
+                "#vftv:choir_weathering");
+        helper.assertTrue(
+                level.registryAccess()
+                        .lookupOrThrow(Registries.STRUCTURE)
+                        .get(WorldgenKeys.CHOIR_RUIN)
+                        .isPresent(),
+                "the structure");
+        helper.assertTrue(
+                level.registryAccess()
+                        .lookupOrThrow(Registries.STRUCTURE_SET)
+                        .get(
+                                ResourceKey.create(
+                                        Registries.STRUCTURE_SET,
+                                        WorldgenKeys.CHOIR_RUIN.identifier()))
+                        .isPresent(),
+                "the structure set");
         helper.assertValueEqual(ChoirSitePlaceQuery.resolved(), 1, "#vftv:choir_sites resolved");
-        helper.assertTrue(level.registryAccess().lookupOrThrow(WorldgenKeys.CHOIR_SITE).get(WorldgenKeys.CHOIR_RUIN_SITE).isPresent(), "the site kind");
-        helper.assertTrue(level.registryAccess().lookupOrThrow(com.andrewbrogoff.vftv.api.vis.VisKeys.NODE_TYPE_REGISTRY).get(WorldgenKeys.CHOIR_NODE_TYPE).isPresent(), "the vftv:choir node type");
-        helper.assertValueEqual(WorldgenService.tuning(), WorldgenTuning.DEFAULTS, "the shipped tuning");
+        helper.assertTrue(
+                level.registryAccess()
+                        .lookupOrThrow(WorldgenKeys.CHOIR_SITE)
+                        .get(WorldgenKeys.CHOIR_RUIN_SITE)
+                        .isPresent(),
+                "the site kind");
+        helper.assertTrue(
+                level.registryAccess()
+                        .lookupOrThrow(com.andrewbrogoff.vftv.api.vis.VisKeys.NODE_TYPE_REGISTRY)
+                        .get(WorldgenKeys.CHOIR_NODE_TYPE)
+                        .isPresent(),
+                "the vftv:choir node type");
+        helper.assertValueEqual(
+                WorldgenService.tuning(), WorldgenTuning.DEFAULTS, "the shipped tuning");
         helper.succeed();
     }
 
@@ -354,9 +429,19 @@ final class WorldgenGameTests {
         var access = helper.getLevel().registryAccess();
         var sites = WorldgenService.sites(access);
         var entries = WorldgenService.entries(access);
-        helper.assertValueEqual(com.andrewbrogoff.vftv.core.worldgen.model.SiteRules.check(sites, entries), List.of(), "load rules");
-        helper.assertValueEqual(com.andrewbrogoff.vftv.core.worldgen.model.SiteRules.builtIn(Objects.requireNonNull(sites.get("vftv:choir_ruin")), entries), List.of(), "built-in rules");
-        helper.assertValueEqual(Objects.requireNonNull(sites.get("vftv:choir_ruin")).perClaim(), 6, "pages_per_claim");
+        helper.assertValueEqual(
+                com.andrewbrogoff.vftv.core.worldgen.model.SiteRules.check(sites, entries),
+                List.of(),
+                "load rules");
+        helper.assertValueEqual(
+                com.andrewbrogoff.vftv.core.worldgen.model.SiteRules.builtIn(
+                        Objects.requireNonNull(sites.get("vftv:choir_ruin")), entries),
+                List.of(),
+                "built-in rules");
+        helper.assertValueEqual(
+                Objects.requireNonNull(sites.get("vftv:choir_ruin")).perClaim(),
+                6,
+                "pages_per_claim");
         boolean refused = false;
         try {
             WorldgenService.validateAtOpen(access);
@@ -369,7 +454,10 @@ final class WorldgenGameTests {
 
     // --- the Reliquary ------------------------------------------------------------------------
 
-    /** Two players each get beneath_the_notes from one Reliquary: two claims, neither touching the other. */
+    /**
+     * Two players each get beneath_the_notes from one Reliquary: two claims, neither touching the
+     * other.
+     */
     private static void twoPlayers(GameTestHelper helper) {
         lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
@@ -380,9 +468,16 @@ final class WorldgenGameTests {
         helper.assertValueEqual(pages(a), 1, "a's page");
         helper.assertValueEqual(pages(b), 1, "b's page");
         String dim = helper.getLevel().dimension().identifier().toString();
-        helper.assertValueEqual(Objects.requireNonNull(claims(a).at(dim, abs.asLong())), List.of(PAGE.identifier().toString()), "a's claim");
-        helper.assertValueEqual(Objects.requireNonNull(claims(b).at(dim, abs.asLong())), List.of(PAGE.identifier().toString()), "b's claim");
-        helper.assertTrue(said(a, "reliquary.vftv.given") && said(b, "reliquary.vftv.given"), "both given");
+        helper.assertValueEqual(
+                Objects.requireNonNull(claims(a).at(dim, abs.asLong())),
+                List.of(PAGE.identifier().toString()),
+                "a's claim");
+        helper.assertValueEqual(
+                Objects.requireNonNull(claims(b).at(dim, abs.asLong())),
+                List.of(PAGE.identifier().toString()),
+                "b's claim");
+        helper.assertTrue(
+                said(a, "reliquary.vftv.given") && said(b, "reliquary.vftv.given"), "both given");
         helper.succeed();
     }
 
@@ -391,7 +486,10 @@ final class WorldgenGameTests {
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         List<ServerPlayer> players = new ArrayList<>();
         for (int i = 0; i < 129; i++) {
-            ServerPlayer p = FakePlayerFactory.get(helper.getLevel(), new GameProfile(new UUID(0x7417, i), "claimant" + i));
+            ServerPlayer p =
+                    FakePlayerFactory.get(
+                            helper.getLevel(),
+                            new GameProfile(new UUID(0x7417, i), "claimant" + i));
             p.setPos(abs.getX() + 0.5, abs.getY(), abs.getZ() - 0.5);
             ReliquaryService.forget(p);
             ReliquaryService.claims().set(p, new Retained.Read<>(ChoirClaims.EMPTY));
@@ -401,8 +499,11 @@ final class WorldgenGameTests {
         for (ServerPlayer p : players) {
             outcomes.add(ReliquaryService.use(p, abs));
         }
-        helper.assertTrue(outcomes.stream().allMatch(o -> o == Offers.Outcome.GIVEN), "all given: " + outcomes);
-        helper.assertValueEqual(claims(players.get(128)), claims(players.get(0)), "the 129th claim is the first's");
+        helper.assertTrue(
+                outcomes.stream().allMatch(o -> o == Offers.Outcome.GIVEN),
+                "all given: " + outcomes);
+        helper.assertValueEqual(
+                claims(players.get(128)), claims(players.get(0)), "the 129th claim is the first's");
         players.forEach(ReliquaryService::forget);
         helper.succeed();
     }
@@ -412,35 +513,65 @@ final class WorldgenGameTests {
         lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         BlockPos silent = reliquary(helper, new BlockPos(3, 1, 1));
-        ReliquaryBlockEntity be = Objects.requireNonNull(helper.getLevel().getBlockEntity(silent, WorldgenContent.reliquaryType()).orElse(null));
+        ReliquaryBlockEntity be =
+                Objects.requireNonNull(
+                        helper.getLevel()
+                                .getBlockEntity(silent, WorldgenContent.reliquaryType())
+                                .orElse(null));
         CompoundTag pack = new CompoundTag();
         pack.putString("id", "vftv:reliquary");
         pack.putInt("format", 1);
         pack.putString("site", "pack:none");
-        be.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), pack));
+        be.loadWithComponents(
+                TagValueInput.create(
+                        ProblemReporter.DISCARDING, helper.getLevel().registryAccess(), pack));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         ServerPlayer c = survivor(helper, new BlockPos(1, 1, 0));
         ResearchTestSupport.latch(c, PAGE);
         helper.startSequence()
-                .thenExecute(() -> helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.GIVEN, "row 8"))
-                .thenExecuteAfter(1, () -> {
-                    a.getInventory().clearContent();
-                    helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "row 5");
-                    helper.assertValueEqual(pages(a), 1, "the lost page back");
-                })
-                .thenExecuteAfter(1, () -> {
-                    ResearchTestSupport.latch(a, PAGE);
-                    helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.DONE, "row 4");
-                    helper.assertValueEqual(ReliquaryService.use(c, abs), Offers.Outcome.ALL_HELD, "row 6");
-                })
-                .thenExecuteAfter(1, () -> {
-                    helper.assertValueEqual(ReliquaryService.use(c, abs), Offers.Outcome.ALL_HELD, "row 6 again: nothing recorded");
-                    helper.assertValueEqual(claims(c).sites().size(), 0, "no claim recorded");
-                    helper.assertValueEqual(ReliquaryService.use(a, silent), Offers.Outcome.SILENT, "row 3");
-                    helper.assertTrue(said(a, "reliquary.vftv.silent"), ".silent");
-                    helper.assertTrue(said(a, "reliquary.vftv.done") && said(a, "reliquary.vftv.reissued"), "the messages");
-                    helper.assertTrue(said(c, "reliquary.vftv.all_held"), ".all_held");
-                })
+                .thenExecute(
+                        () ->
+                                helper.assertValueEqual(
+                                        ReliquaryService.use(a, abs),
+                                        Offers.Outcome.GIVEN,
+                                        "row 8"))
+                .thenExecuteAfter(
+                        1,
+                        () -> {
+                            a.getInventory().clearContent();
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "row 5");
+                            helper.assertValueEqual(pages(a), 1, "the lost page back");
+                        })
+                .thenExecuteAfter(
+                        1,
+                        () -> {
+                            ResearchTestSupport.latch(a, PAGE);
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, abs), Offers.Outcome.DONE, "row 4");
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(c, abs), Offers.Outcome.ALL_HELD, "row 6");
+                        })
+                .thenExecuteAfter(
+                        1,
+                        () -> {
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(c, abs),
+                                    Offers.Outcome.ALL_HELD,
+                                    "row 6 again: nothing recorded");
+                            helper.assertValueEqual(
+                                    claims(c).sites().size(), 0, "no claim recorded");
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, silent),
+                                    Offers.Outcome.SILENT,
+                                    "row 3");
+                            helper.assertTrue(said(a, "reliquary.vftv.silent"), ".silent");
+                            helper.assertTrue(
+                                    said(a, "reliquary.vftv.done")
+                                            && said(a, "reliquary.vftv.reissued"),
+                                    "the messages");
+                            helper.assertTrue(said(c, "reliquary.vftv.all_held"), ".all_held");
+                        })
                 .thenSucceed();
     }
 
@@ -452,23 +583,42 @@ final class WorldgenGameTests {
             a.getInventory().setItem(i, new ItemStack(Items.STONE, 64));
         }
         helper.startSequence()
-                .thenExecute(() -> {
-                    helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.GIVEN, "given into a full inventory");
-                    helper.assertValueEqual(pages(a), 0, "dropped, not held");
-                    List<ItemEntity> dropped = helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(abs).inflate(4), e -> e.getItem().is(ResearchItems.choirPage()));
-                    helper.assertValueEqual(dropped.size(), 1, "the dropped copy");
-                    dropped.forEach(Entity::discard);
-                    a.getInventory().clearContent();
-                })
-                .thenExecuteAfter(1, () -> {
-                    helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "reissued at once");
-                    helper.assertValueEqual(pages(a), 1, "held");
-                    a.getInventory().clearContent(); // tossed and gone
-                })
-                .thenExecuteAfter(1, () -> {
-                    helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "reissued after a toss");
-                    helper.assertValueEqual(pages(a), 1, "held again");
-                })
+                .thenExecute(
+                        () -> {
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, abs),
+                                    Offers.Outcome.GIVEN,
+                                    "given into a full inventory");
+                            helper.assertValueEqual(pages(a), 0, "dropped, not held");
+                            List<ItemEntity> dropped =
+                                    helper.getLevel()
+                                            .getEntitiesOfClass(
+                                                    ItemEntity.class,
+                                                    new AABB(abs).inflate(4),
+                                                    e -> e.getItem().is(ResearchItems.choirPage()));
+                            helper.assertValueEqual(dropped.size(), 1, "the dropped copy");
+                            dropped.forEach(Entity::discard);
+                            a.getInventory().clearContent();
+                        })
+                .thenExecuteAfter(
+                        1,
+                        () -> {
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, abs),
+                                    Offers.Outcome.REISSUED,
+                                    "reissued at once");
+                            helper.assertValueEqual(pages(a), 1, "held");
+                            a.getInventory().clearContent(); // tossed and gone
+                        })
+                .thenExecuteAfter(
+                        1,
+                        () -> {
+                            helper.assertValueEqual(
+                                    ReliquaryService.use(a, abs),
+                                    Offers.Outcome.REISSUED,
+                                    "reissued after a toss");
+                            helper.assertValueEqual(pages(a), 1, "held again");
+                        })
                 .thenSucceed();
     }
 
@@ -485,13 +635,23 @@ final class WorldgenGameTests {
         toss = Toss.NONE;
         helper.assertValueEqual(first, Offers.Outcome.GIVEN, "given");
         helper.assertValueEqual(claims(a).sites().size(), 1, "the claim stands");
-        helper.assertTrue(helper.getLevel().getEntitiesOfClass(ItemEntity.class, new AABB(abs).inflate(4), e -> e.getItem().is(ResearchItems.choirPage())).isEmpty(), "the copy is lost");
+        helper.assertTrue(
+                helper.getLevel()
+                        .getEntitiesOfClass(
+                                ItemEntity.class,
+                                new AABB(abs).inflate(4),
+                                e -> e.getItem().is(ResearchItems.choirPage()))
+                        .isEmpty(),
+                "the copy is lost");
         a.getInventory().clearContent();
-        helper.runAfterDelay(1, () -> {
-            helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "given back");
-            helper.assertValueEqual(pages(a), 1, "held");
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                1,
+                () -> {
+                    helper.assertValueEqual(
+                            ReliquaryService.use(a, abs), Offers.Outcome.REISSUED, "given back");
+                    helper.assertValueEqual(pages(a), 1, "held");
+                    helper.succeed();
+                });
     }
 
     /** A throwing callback: logged, the claim kept, the hand-out goes on. */
@@ -535,7 +695,8 @@ final class WorldgenGameTests {
             toss = Toss.NONE;
         }
         helper.assertValueEqual(first, Offers.Outcome.GIVEN, "the outer use");
-        helper.assertValueEqual(List.copyOf(REENTRY), List.of(Offers.Outcome.BUSY), "the inner use");
+        helper.assertValueEqual(
+                List.copyOf(REENTRY), List.of(Offers.Outcome.BUSY), "the inner use");
         helper.assertTrue(said(a, "message.vftv.busy"), "message.vftv.busy");
         helper.assertValueEqual(claims(a).sites().size(), 1, "one claim");
         helper.succeed();
@@ -549,7 +710,8 @@ final class WorldgenGameTests {
         use(a, abs);
         int before = lines(a).size();
         a.getInventory().clearContent();
-        helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.ATTEMPT_CAP, "the second use");
+        helper.assertValueEqual(
+                ReliquaryService.use(a, abs), Offers.Outcome.ATTEMPT_CAP, "the second use");
         helper.assertValueEqual(lines(a).size(), before, "silent");
         helper.assertValueEqual(pages(a), 0, "nothing handed out");
         helper.succeed();
@@ -562,10 +724,13 @@ final class WorldgenGameTests {
         use(a, abs);
         ChoirClaims before = claims(a);
         helper.assertValueEqual(before.sites().size(), 1, "claimed");
-        TagValueOutput out = TagValueOutput.createWithContext(ProblemReporter.DISCARDING, a.registryAccess());
+        TagValueOutput out =
+                TagValueOutput.createWithContext(ProblemReporter.DISCARDING, a.registryAccess());
         a.saveWithoutId(out);
         ServerPlayer reloaded = ResearchTestSupport.player(helper);
-        reloaded.load(TagValueInput.create(ProblemReporter.DISCARDING, a.registryAccess(), out.buildResult()));
+        reloaded.load(
+                TagValueInput.create(
+                        ProblemReporter.DISCARDING, a.registryAccess(), out.buildResult()));
         helper.assertValueEqual(claims(reloaded), before, "after save and reload");
         ServerPlayer respawned = ResearchTestSupport.player(helper);
         respawned.restoreFrom(a, false);
@@ -583,22 +748,36 @@ final class WorldgenGameTests {
         ReliquaryService.claims().set(a, new Retained.Unreadable<>(raw, "a future format"));
         helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.UNREADABLE, "row 2");
         helper.assertTrue(said(a, "message.vftv.unreadable"), "message.vftv.unreadable");
-        helper.assertTrue(ReliquaryService.claims().get(a) instanceof Retained.Unreadable<ChoirClaims>, "kept");
+        helper.assertTrue(
+                ReliquaryService.claims().get(a) instanceof Retained.Unreadable<ChoirClaims>,
+                "kept");
         helper.assertValueEqual(pages(a), 0, "nothing given");
         helper.succeed();
     }
 
-    /** The block record, case by case: data-free initializes; every other bad record is unreadable. */
+    /**
+     * The block record, case by case: data-free initializes; every other bad record is unreadable.
+     */
     private static void recordCases(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos fresh = reliquary(helper, new BlockPos(1, 1, 1));
-        ReliquaryBlockEntity be = Objects.requireNonNull(level.getBlockEntity(fresh, WorldgenContent.reliquaryType()).orElse(null));
+        ReliquaryBlockEntity be =
+                Objects.requireNonNull(
+                        level.getBlockEntity(fresh, WorldgenContent.reliquaryType()).orElse(null));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         int x = 1;
-        for (String bad : List.of("{site:\"pack:road\"}", "{format:1}", "{format:1,site:3}", "{format:2,site:\"vftv:choir_ruin\"}")) {
+        for (String bad :
+                List.of(
+                        "{site:\"pack:road\"}",
+                        "{format:1}",
+                        "{format:1,site:3}",
+                        "{format:2,site:\"vftv:choir_ruin\"}")) {
             x += 2;
             BlockPos abs = reliquary(helper, new BlockPos(x, 1, 1));
-            ReliquaryBlockEntity b = Objects.requireNonNull(level.getBlockEntity(abs, WorldgenContent.reliquaryType()).orElse(null));
+            ReliquaryBlockEntity b =
+                    Objects.requireNonNull(
+                            level.getBlockEntity(abs, WorldgenContent.reliquaryType())
+                                    .orElse(null));
             CompoundTag tag;
             try {
                 tag = net.minecraft.nbt.TagParser.parseCompoundFully(bad);
@@ -606,8 +785,11 @@ final class WorldgenGameTests {
                 throw new IllegalStateException(e);
             }
             tag.putString("id", "vftv:reliquary");
-            b.loadWithComponents(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag));
-            helper.assertTrue(b.record() instanceof Retained.Unreadable<WorldgenCodecs.Reliquary>, bad + " is unreadable");
+            b.loadWithComponents(
+                    TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), tag));
+            helper.assertTrue(
+                    b.record() instanceof Retained.Unreadable<WorldgenCodecs.Reliquary>,
+                    bad + " is unreadable");
             CompoundTag saved = b.saveCustomOnly(level.registryAccess());
             for (String vanilla : List.of("components", "NeoForgeData", "neoforge:attachments")) {
                 saved.remove(vanilla);
@@ -616,13 +798,21 @@ final class WorldgenGameTests {
             expected.remove("id");
             helper.assertValueEqual(saved, expected, bad + " written back unchanged");
             if (x == 3) {
-                helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.UNREADABLE, "row 2 for the block");
+                helper.assertValueEqual(
+                        ReliquaryService.use(a, abs),
+                        Offers.Outcome.UNREADABLE,
+                        "row 2 for the block");
             }
         }
-        helper.runAfterDelay(1, () -> {
-            helper.assertValueEqual(Objects.requireNonNull(be.record()), new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN), "a data-free placement initializes");
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                1,
+                () -> {
+                    helper.assertValueEqual(
+                            Objects.requireNonNull(be.record()),
+                            new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN),
+                            "a data-free placement initializes");
+                    helper.succeed();
+                });
     }
 
     /** A cancelled RightClickBlock changes nothing. */
@@ -645,18 +835,36 @@ final class WorldgenGameTests {
         BlockPos rel = new BlockPos(2, 1, 2);
         BlockPos abs = reliquary(helper, rel);
         ServerPlayer a = survivor(helper, new BlockPos(2, 1, 1));
-        net.minecraft.world.level.block.state.BlockState state = helper.getLevel().getBlockState(abs);
-        helper.assertValueEqual(state.getDestroySpeed(helper.getLevel(), abs), -1.0F, "survival-unbreakable");
-        helper.assertValueEqual(state.getDestroyProgress(a, helper.getLevel(), abs), 0.0F, "no mining progress");
-        helper.getLevel().explode(null, abs.getX() + 0.5, abs.getY() + 1, abs.getZ() - 1.5, 3.0F, net.minecraft.world.level.Level.ExplosionInteraction.MOB);
+        net.minecraft.world.level.block.state.BlockState state =
+                helper.getLevel().getBlockState(abs);
+        helper.assertValueEqual(
+                state.getDestroySpeed(helper.getLevel(), abs), -1.0F, "survival-unbreakable");
+        helper.assertValueEqual(
+                state.getDestroyProgress(a, helper.getLevel(), abs), 0.0F, "no mining progress");
+        helper.getLevel()
+                .explode(
+                        null,
+                        abs.getX() + 0.5,
+                        abs.getY() + 1,
+                        abs.getZ() - 1.5,
+                        3.0F,
+                        net.minecraft.world.level.Level.ExplosionInteraction.MOB);
         helper.assertBlockPresent(WorldgenContent.reliquary(), rel);
-        helper.setBlock(new BlockPos(0, 1, 2), Blocks.PISTON.defaultBlockState().setValue(net.minecraft.world.level.block.piston.PistonBaseBlock.FACING, Direction.EAST));
+        helper.setBlock(
+                new BlockPos(0, 1, 2),
+                Blocks.PISTON
+                        .defaultBlockState()
+                        .setValue(
+                                net.minecraft.world.level.block.piston.PistonBaseBlock.FACING,
+                                Direction.EAST));
         helper.setBlock(new BlockPos(1, 1, 2), Blocks.AIR);
         helper.setBlock(new BlockPos(0, 2, 2), Blocks.REDSTONE_BLOCK);
-        helper.runAfterDelay(4, () -> {
-            helper.assertBlockPresent(WorldgenContent.reliquary(), rel);
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                4,
+                () -> {
+                    helper.assertBlockPresent(WorldgenContent.reliquary(), rel);
+                    helper.succeed();
+                });
     }
 
     // --- the structure ------------------------------------------------------------------------
@@ -673,8 +881,14 @@ final class WorldgenGameTests {
         ChunkPos chunk = ChunkPos.containing(at);
         int cx = chunk.getMinBlockX();
         int cz = chunk.getMinBlockZ();
-        helper.assertTrue(start.getPieces().size() <= 13, "at most 13 pieces: " + start.getPieces().size());
-        helper.assertTrue(box.minX() >= cx - 40 - 12 && box.maxX() <= cx + 40 + 12 && box.minZ() >= cz - 40 - 12 && box.maxZ() <= cz + 40 + 12, "within the envelope: " + box);
+        helper.assertTrue(
+                start.getPieces().size() <= 13, "at most 13 pieces: " + start.getPieces().size());
+        helper.assertTrue(
+                box.minX() >= cx - 40 - 12
+                        && box.maxX() <= cx + 40 + 12
+                        && box.minZ() >= cz - 40 - 12
+                        && box.maxZ() <= cz + 40 + 12,
+                "within the envelope: " + box);
         List<BlockPos> reliquaries = find(level, box, WorldgenContent.reliquary());
         helper.assertValueEqual(reliquaries.size(), 1, "one Reliquary");
         List<BlockPos> nodes = find(level, box, VisContent.node());
@@ -682,32 +896,82 @@ final class WorldgenGameTests {
         List<Answerer> mobs = level.getEntitiesOfClass(Answerer.class, AABB.of(box).inflate(2));
         long cantors = mobs.stream().filter(Answerer::isCantor).count();
         helper.assertValueEqual(cantors, 1L, "one Cantor");
-        helper.assertTrue(mobs.size() >= 2 && mobs.size() <= 10, "2 to 10 Answerers: " + mobs.size());
+        helper.assertTrue(
+                mobs.size() >= 2 && mobs.size() <= 10, "2 to 10 Answerers: " + mobs.size());
         for (Answerer m : mobs) {
             helper.assertTrue(m.hasHome() && m.getHomeRadius() == 24, "a home of 24");
             helper.assertValueEqual(m.getHealth(), m.getMaxHealth(), "full health");
         }
-        BlockPos.betweenClosed(box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ()).forEach(p -> {
-            if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
-                helper.assertValueEqual(Objects.requireNonNull(chest.getLootTable()), ResourceKey.create(Registries.LOOT_TABLE, Identifier.fromNamespaceAndPath("vftv", "chests/choir_ruin")), "the chest's table");
-            }
-        });
+        BlockPos.betweenClosed(
+                        box.minX(), box.minY(), box.minZ(), box.maxX(), box.maxY(), box.maxZ())
+                .forEach(
+                        p -> {
+                            if (level.getBlockEntity(p) instanceof ChestBlockEntity chest) {
+                                helper.assertValueEqual(
+                                        Objects.requireNonNull(chest.getLootTable()),
+                                        ResourceKey.create(
+                                                Registries.LOOT_TABLE,
+                                                Identifier.fromNamespaceAndPath(
+                                                        "vftv", "chests/choir_ruin")),
+                                        "the chest's table");
+                            }
+                        });
         BlockPos node = nodes.getFirst();
-        BlockPos node2 = find(level, BoundingBox.fromCorners(copy, copy.offset(22, 25, 22)), VisContent.node()).getFirst();
-        helper.runAfterDelay(3, () -> {
-            NodeState state = Objects.requireNonNull(((NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(node))).state());
-            NodeState state2 = Objects.requireNonNull(((NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(node2))).state());
-            helper.assertTrue(state.id() != 0 && state2.id() != 0 && state.id() != state2.id(), "two distinct ids");
-            helper.assertValueEqual(state.origin(), NodeState.Origin.STRUCTURE, "origin");
-            NodeRoll.Result r = NodeRoll.roll(level.getSeed(), node.asLong(), new int[] {0, 60, 40},
-                    List.of(new NodeRoll.Range("vftv:aer", 16, 32), new NodeRoll.Range("vftv:ordo", 24, 48), new NodeRoll.Range("vftv:sonus", 4, 12), new NodeRoll.Range("vftv:vacuos", 4, 12)));
-            helper.assertValueEqual(state.clarity(), NodeState.Clarity.byIndex(r.clarity()), "the rolled clarity");
-            helper.assertValueEqual(state.aspects().stream().map(NodeState.NodeAspect::max).toList(), r.maxes(), "the rolled maxes");
-            helper.assertValueEqual(state.aspects().stream().map(NodeState.NodeAspect::current).toList(), r.maxes(), "current = max");
-            helper.assertValueEqual(state.type(), WorldgenKeys.CHOIR_NODE_TYPE.identifier(), "the type");
-            helper.assertValueEqual(state.cultivation(), NodeState.Cultivation.NONE, "every other field as pinned");
-            helper.succeed();
-        });
+        BlockPos node2 =
+                find(
+                                level,
+                                BoundingBox.fromCorners(copy, copy.offset(22, 25, 22)),
+                                VisContent.node())
+                        .getFirst();
+        helper.runAfterDelay(
+                3,
+                () -> {
+                    NodeState state =
+                            Objects.requireNonNull(
+                                    ((NodeBlockEntity)
+                                                    Objects.requireNonNull(
+                                                            level.getBlockEntity(node)))
+                                            .state());
+                    NodeState state2 =
+                            Objects.requireNonNull(
+                                    ((NodeBlockEntity)
+                                                    Objects.requireNonNull(
+                                                            level.getBlockEntity(node2)))
+                                            .state());
+                    helper.assertTrue(
+                            state.id() != 0 && state2.id() != 0 && state.id() != state2.id(),
+                            "two distinct ids");
+                    helper.assertValueEqual(state.origin(), NodeState.Origin.STRUCTURE, "origin");
+                    NodeRoll.Result r =
+                            NodeRoll.roll(
+                                    level.getSeed(),
+                                    node.asLong(),
+                                    new int[] {0, 60, 40},
+                                    List.of(
+                                            new NodeRoll.Range("vftv:aer", 16, 32),
+                                            new NodeRoll.Range("vftv:ordo", 24, 48),
+                                            new NodeRoll.Range("vftv:sonus", 4, 12),
+                                            new NodeRoll.Range("vftv:vacuos", 4, 12)));
+                    helper.assertValueEqual(
+                            state.clarity(),
+                            NodeState.Clarity.byIndex(r.clarity()),
+                            "the rolled clarity");
+                    helper.assertValueEqual(
+                            state.aspects().stream().map(NodeState.NodeAspect::max).toList(),
+                            r.maxes(),
+                            "the rolled maxes");
+                    helper.assertValueEqual(
+                            state.aspects().stream().map(NodeState.NodeAspect::current).toList(),
+                            r.maxes(),
+                            "current = max");
+                    helper.assertValueEqual(
+                            state.type(), WorldgenKeys.CHOIR_NODE_TYPE.identifier(), "the type");
+                    helper.assertValueEqual(
+                            state.cultivation(),
+                            NodeState.Cultivation.NONE,
+                            "every other field as pinned");
+                    helper.succeed();
+                });
     }
 
     /** An existing node under a template block is kept; an obstructed belfry places no node. */
@@ -722,9 +986,16 @@ final class WorldgenGameTests {
         level.setBlock(nodeAt, Blocks.STONE.defaultBlockState(), 3);
         level.setBlock(floor, VisContent.node().defaultBlockState(), 3);
         template.placeInWorld(level, at, at, settings, level.getRandom(), 2);
-        helper.assertTrue(level.getBlockState(floor).is(VisContent.node()), "the existing node is kept");
-        helper.assertTrue(level.getBlockState(nodeAt).is(Blocks.STONE), "the obstructed belfry keeps its terrain");
-        helper.assertValueEqual(find(level, BoundingBox.fromCorners(at, at.offset(22, 25, 22)), VisContent.node()).size(), 1, "only the existing node");
+        helper.assertTrue(
+                level.getBlockState(floor).is(VisContent.node()), "the existing node is kept");
+        helper.assertTrue(
+                level.getBlockState(nodeAt).is(Blocks.STONE),
+                "the obstructed belfry keeps its terrain");
+        helper.assertValueEqual(
+                find(level, BoundingBox.fromCorners(at, at.offset(22, 25, 22)), VisContent.node())
+                        .size(),
+                1,
+                "only the existing node");
         helper.succeed();
     }
 
@@ -732,21 +1003,37 @@ final class WorldgenGameTests {
     private static void thirdNode(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos base = far(helper, 2);
-        BlockPos cell = new BlockPos(Math.floorDiv(base.getX(), 64) * 64 + 8, base.getY() + 4, Math.floorDiv(base.getZ(), 64) * 64 + 8);
+        BlockPos cell =
+                new BlockPos(
+                        Math.floorDiv(base.getX(), 64) * 64 + 8,
+                        base.getY() + 4,
+                        Math.floorDiv(base.getZ(), 64) * 64 + 8);
         load(level, BoundingBox.fromCorners(cell, cell.offset(20, 0, 20)));
         List<BlockPos> at = List.of(cell, cell.offset(10, 0, 10), cell.offset(20, 0, 20));
         for (BlockPos p : at) {
             level.setBlock(p, VisContent.node().defaultBlockState(), 3);
             NodeBlockEntity be = (NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(p));
-            be.setState(new NodeState(0, NodeState.Origin.STRUCTURE, WorldgenKeys.CHOIR_NODE_TYPE.identifier(), NodeState.Clarity.STEADY,
-                    List.of(new NodeState.NodeAspect(Identifier.parse("vftv:aer"), 16, 16)), new NodeState.RegenClock(0, 1, 1), NodeState.Cultivation.NONE));
+            be.setState(
+                    new NodeState(
+                            0,
+                            NodeState.Origin.STRUCTURE,
+                            WorldgenKeys.CHOIR_NODE_TYPE.identifier(),
+                            NodeState.Clarity.STEADY,
+                            List.of(new NodeState.NodeAspect(Identifier.parse("vftv:aer"), 16, 16)),
+                            new NodeState.RegenClock(0, 1, 1),
+                            NodeState.Cultivation.NONE));
             com.andrewbrogoff.vftv.core.vis.NodeService.queue(level, ChunkPos.containing(p));
         }
-        helper.runAfterDelay(3, () -> {
-            long kept = at.stream().filter(p -> level.getBlockState(p).is(VisContent.node())).count();
-            helper.assertValueEqual(kept, 2L, "two kept, the third removed");
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                3,
+                () -> {
+                    long kept =
+                            at.stream()
+                                    .filter(p -> level.getBlockState(p).is(VisContent.node()))
+                                    .count();
+                    helper.assertValueEqual(kept, 2L, "two kept, the third removed");
+                    helper.succeed();
+                });
     }
 
     /** A missing type keeps the complete template record unrolled. */
@@ -754,14 +1041,27 @@ final class WorldgenGameTests {
         ServerLevel level = helper.getLevel();
         StructureTemplate template = chancel(level);
         StructureTemplate.StructureBlockInfo info =
-                template.filterBlocks(BlockPos.ZERO, new StructurePlaceSettings(), VisContent.node()).getFirst();
+                template.filterBlocks(
+                                BlockPos.ZERO, new StructurePlaceSettings(), VisContent.node())
+                        .getFirst();
         CompoundTag nbt = Objects.requireNonNull(info.nbt()).copy();
         nbt.getCompoundOrEmpty("node").putString("type", "vftv:removed_by_a_pack");
         BlockPos target = far(helper, 3).above(40);
         load(level, new BoundingBox(target));
         var processor = com.andrewbrogoff.vftv.core.worldgen.RollNodeProcessor.INSTANCE;
-        var out = processor.process(level, target, target, info, new StructureTemplate.StructureBlockInfo(target, info.state(), nbt), new StructurePlaceSettings(), template);
-        helper.assertValueEqual(Objects.requireNonNull(Objects.requireNonNull(out).nbt()), nbt, "unrolled, field for field");
+        var out =
+                processor.process(
+                        level,
+                        target,
+                        target,
+                        info,
+                        new StructureTemplate.StructureBlockInfo(target, info.state(), nbt),
+                        new StructurePlaceSettings(),
+                        template);
+        helper.assertValueEqual(
+                Objects.requireNonNull(Objects.requireNonNull(out).nbt()),
+                nbt,
+                "unrolled, field for field");
         helper.succeed();
     }
 
@@ -784,22 +1084,30 @@ final class WorldgenGameTests {
         Vec3 out = Vec3.atBottomCenterOf(a.getHomePosition().offset(30, 0, 0));
         p.setPos(out.x, out.y, out.z);
         helper.assertFalse(Answerer.validTarget(a, p), "outside home and range");
-        helper.runAfterDelay(3, () -> {
-            helper.assertTrue(a.getTarget() == null, "the target dropped");
-            a.setHomeTo(a.blockPosition().offset(30, 0, 0), 4);
-            Vec3 start = a.position();
-            helper.runAfterDelay(20, () -> {
-                helper.assertTrue(a.getNavigation().isInProgress() || a.isWithinHome() || a.position().x > start.x + 0.5,
-                        "walking home: at " + a.position() + " from " + start);
-                helper.succeed();
-            });
-        });
+        helper.runAfterDelay(
+                3,
+                () -> {
+                    helper.assertTrue(a.getTarget() == null, "the target dropped");
+                    a.setHomeTo(a.blockPosition().offset(30, 0, 0), 4);
+                    Vec3 start = a.position();
+                    helper.runAfterDelay(
+                            20,
+                            () -> {
+                                helper.assertTrue(
+                                        a.getNavigation().isInProgress()
+                                                || a.isWithinHome()
+                                                || a.position().x > start.x + 0.5,
+                                        "walking home: at " + a.position() + " from " + start);
+                                helper.succeed();
+                            });
+                });
     }
 
     /** Hurt by a zombie, they change nothing; set on a zombie, the target is refused. */
     private static void ignoresZombie(GameTestHelper helper) {
         Answerer a = answerer(helper, new BlockPos(1, 1, 1), false);
-        Zombie z = helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(3, 1, 1));
+        Zombie z =
+                helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(3, 1, 1));
         a.hurtServer(helper.getLevel(), helper.getLevel().damageSources().mobAttack(z), 1.0F);
         a.setTarget(z);
         helper.assertTrue(a.getTarget() == null, "no target");
@@ -807,7 +1115,9 @@ final class WorldgenGameTests {
         helper.succeed();
     }
 
-    /** Retaliation by melee and by arrow, with the player valid and inside home but beyond range. */
+    /**
+     * Retaliation by melee and by arrow, with the player valid and inside home but beyond range.
+     */
     private static void retaliation(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         Answerer a = answerer(helper, new BlockPos(1, 1, 1), false);
@@ -829,7 +1139,9 @@ final class WorldgenGameTests {
         p.setPos(far.x, far.y, far.z);
         a.invulnerableTime = 0;
         a.hurtServer(level, level.damageSources().playerAttack(p), 1.0F);
-        helper.assertTrue(a.getTarget() == null && b.getTarget() == null, "beyond range: no target, no alert");
+        helper.assertTrue(
+                a.getTarget() == null && b.getTarget() == null,
+                "beyond range: no target, no alert");
         helper.succeed();
     }
 
@@ -841,20 +1153,32 @@ final class WorldgenGameTests {
         Answerer elsewhere = answerer(helper, new BlockPos(3, 1, 3), false);
         elsewhere.setHomeTo(elsewhere.blockPosition().offset(0, 0, 60), 8);
         Answerer outOfRange = answerer(helper, new BlockPos(3, 1, 1), false);
-        Objects.requireNonNull(outOfRange.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE)).setBaseValue(1.0);
+        Objects.requireNonNull(
+                        outOfRange.getAttribute(
+                                net.minecraft.world.entity.ai.attributes.Attributes.FOLLOW_RANGE))
+                .setBaseValue(1.0);
         ServerPlayer p = survivor(helper, new BlockPos(1, 1, 5));
         cantor.hurtServer(level, level.damageSources().playerAttack(p), 1.0F);
         helper.assertTrue(Objects.equals(p, cantor.getTarget()), "the Cantor retaliates");
         helper.assertTrue(Objects.equals(p, near.getTarget()), "a valid Answerer is alerted");
         helper.assertTrue(elsewhere.getTarget() == null, "home doesn't contain the player");
-        helper.assertTrue(outOfRange.getTarget() == null, "home contains the player, but out of range");
+        helper.assertTrue(
+                outOfRange.getTarget() == null, "home contains the player, but out of range");
         helper.succeed();
     }
 
-    /** The chant: concurrent with melee, at most max_targets within the radius, a full interval after a reload, a lowered radius at the next chant. */
+    /**
+     * The chant: concurrent with melee, at most max_targets within the radius, a full interval
+     * after a reload, a lowered radius at the next chant.
+     */
     private static void chant(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
-        WorldgenService.applyTuning(DataResult.success(WorldgenService.parse("{\"cantor.interval\": 20, \"cantor.max_targets\": 3}").getOrThrow()), true);
+        WorldgenService.applyTuning(
+                DataResult.success(
+                        WorldgenService.parse(
+                                        "{\"cantor.interval\": 20, \"cantor.max_targets\": 3}")
+                                .getOrThrow()),
+                true);
         Answerer cantor = answerer(helper, new BlockPos(2, 1, 2), true);
         List<Answerer> crowd = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
@@ -866,26 +1190,62 @@ final class WorldgenGameTests {
         cantor.setTarget(p);
         helper.startSequence()
                 .thenWaitUntil(() -> helper.assertTrue(cantor.chanting(), "it chants"))
-                .thenExecute(() -> {
-                    long given = crowd.stream().filter(m -> m.hasEffect(MobEffects.RESISTANCE)).count()
-                            + (cantor.hasEffect(MobEffects.RESISTANCE) ? 1 : 0);
-                    helper.assertValueEqual(given, 3L, "max_targets, the Cantor included");
-                    helper.assertFalse(distant.hasEffect(MobEffects.RESISTANCE), "outside the radius");
-                    helper.assertTrue(Objects.equals(p, cantor.getTarget()), "still fighting: the chant runs beside melee");
-                    crowd.forEach(m -> m.removeEffect(MobEffects.RESISTANCE));
-                    cantor.removeEffect(MobEffects.RESISTANCE);
-                    WorldgenService.applyTuning(DataResult.success(WorldgenService.parse("{\"cantor.interval\": 20, \"cantor.max_targets\": 3, \"cantor.radius\": 2}").getOrThrow()), true);
-                })
-                .thenWaitUntil(() -> helper.assertTrue(cantor.hasEffect(MobEffects.RESISTANCE), "chanted again"))
-                .thenExecute(() -> {
-                    long far = crowd.stream().filter(m -> m.distanceTo(cantor) > 2.5 && m.hasEffect(MobEffects.RESISTANCE)).count();
-                    helper.assertValueEqual(far, 0L, "the lowered radius applies at the next chant");
-                    Cantor reloaded = (Cantor) Objects.requireNonNull(WorldgenContent.cantor().create(level, EntitySpawnReason.LOAD));
-                    reloaded.load(TagValueInput.create(ProblemReporter.DISCARDING, level.registryAccess(), save(cantor)));
-                    helper.assertFalse(reloaded.chanting(), "chanting is transient");
-                    helper.assertValueEqual(reloaded.nextChant(), Long.MIN_VALUE, "no schedule until it ticks");
-                    WorldgenService.applyTuning(DataResult.success(WorldgenTuning.DEFAULTS), true);
-                })
+                .thenExecute(
+                        () -> {
+                            long given =
+                                    crowd.stream()
+                                                    .filter(m -> m.hasEffect(MobEffects.RESISTANCE))
+                                                    .count()
+                                            + (cantor.hasEffect(MobEffects.RESISTANCE) ? 1 : 0);
+                            helper.assertValueEqual(given, 3L, "max_targets, the Cantor included");
+                            helper.assertFalse(
+                                    distant.hasEffect(MobEffects.RESISTANCE), "outside the radius");
+                            helper.assertTrue(
+                                    Objects.equals(p, cantor.getTarget()),
+                                    "still fighting: the chant runs beside melee");
+                            crowd.forEach(m -> m.removeEffect(MobEffects.RESISTANCE));
+                            cantor.removeEffect(MobEffects.RESISTANCE);
+                            WorldgenService.applyTuning(
+                                    DataResult.success(
+                                            WorldgenService.parse(
+                                                            "{\"cantor.interval\": 20, \"cantor.max_targets\": 3, \"cantor.radius\": 2}")
+                                                    .getOrThrow()),
+                                    true);
+                        })
+                .thenWaitUntil(
+                        () ->
+                                helper.assertTrue(
+                                        cantor.hasEffect(MobEffects.RESISTANCE), "chanted again"))
+                .thenExecute(
+                        () -> {
+                            long far =
+                                    crowd.stream()
+                                            .filter(
+                                                    m ->
+                                                            m.distanceTo(cantor) > 2.5
+                                                                    && m.hasEffect(
+                                                                            MobEffects.RESISTANCE))
+                                            .count();
+                            helper.assertValueEqual(
+                                    far, 0L, "the lowered radius applies at the next chant");
+                            Cantor reloaded =
+                                    (Cantor)
+                                            Objects.requireNonNull(
+                                                    WorldgenContent.cantor()
+                                                            .create(level, EntitySpawnReason.LOAD));
+                            reloaded.load(
+                                    TagValueInput.create(
+                                            ProblemReporter.DISCARDING,
+                                            level.registryAccess(),
+                                            save(cantor)));
+                            helper.assertFalse(reloaded.chanting(), "chanting is transient");
+                            helper.assertValueEqual(
+                                    reloaded.nextChant(),
+                                    Long.MIN_VALUE,
+                                    "no schedule until it ticks");
+                            WorldgenService.applyTuning(
+                                    DataResult.success(WorldgenTuning.DEFAULTS), true);
+                        })
                 .thenSucceed();
     }
 
@@ -901,7 +1261,10 @@ final class WorldgenGameTests {
         try {
             server.setDifficulty(Difficulty.PEACEFUL, true);
             chancel(level).placeInWorld(level, at, at, settings(level), level.getRandom(), 2);
-            helper.assertValueEqual(level.getEntitiesOfClass(Answerer.class, new AABB(at).inflate(32)).size(), 2, "a ruin placed in peaceful has its Answerers");
+            helper.assertValueEqual(
+                    level.getEntitiesOfClass(Answerer.class, new AABB(at).inflate(32)).size(),
+                    2,
+                    "a ruin placed in peaceful has its Answerers");
             a.checkDespawn();
             helper.assertTrue(a.isAlive(), "kept through a switch to peaceful");
             a.hurtServer(level, level.damageSources().playerAttack(p), 1.0F);
@@ -923,16 +1286,29 @@ final class WorldgenGameTests {
         Answerer c = answerer(helper, new BlockPos(1, 1, 1), true);
         ServerPlayer p = survivor(helper, new BlockPos(2, 1, 1));
         c.hurtServer(level, level.damageSources().playerAttack(p), 1000.0F);
-        helper.runAfterDelay(2, () -> {
-            helper.assertTrue(!level.getEntitiesOfClass(ItemEntity.class, new AABB(c.blockPosition()).inflate(3), e -> e.getItem().is(Items.BOOK)).isEmpty(), "a book");
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                2,
+                () -> {
+                    helper.assertTrue(
+                            !level.getEntitiesOfClass(
+                                            ItemEntity.class,
+                                            new AABB(c.blockPosition()).inflate(3),
+                                            e -> e.getItem().is(Items.BOOK))
+                                    .isEmpty(),
+                            "a book");
+                    helper.succeed();
+                });
     }
 
     // --- the finds ----------------------------------------------------------------------------
 
     private static boolean done(ServerPlayer player, String find) {
-        AdvancementHolder holder = Objects.requireNonNull(player.level().getServer().getAdvancements().get(Identifier.fromNamespaceAndPath("vftv", "find/" + find)));
+        AdvancementHolder holder =
+                Objects.requireNonNull(
+                        player.level()
+                                .getServer()
+                                .getAdvancements()
+                                .get(Identifier.fromNamespaceAndPath("vftv", "find/" + find)));
         AdvancementProgress progress = player.getAdvancements().getOrStartProgress(holder);
         return progress.isDone();
     }
@@ -956,51 +1332,84 @@ final class WorldgenGameTests {
         Answerer b = answerer(helper, new BlockPos(3, 1, 1), true);
         Arrow arrow = new Arrow(level, q, new ItemStack(Items.ARROW), null);
         b.hurtServer(level, level.damageSources().arrow(arrow, q), 1000.0F);
-        helper.runAfterDelay(2, () -> {
-            helper.assertTrue(done(p, "distillation"), "find/distillation");
-            helper.assertTrue(done(p, "ruins"), "find/ruins");
-            helper.assertTrue(done(p, "answerers"), "find/answerers by sword");
-            helper.assertTrue(done(q, "answerers"), "find/answerers by arrow");
-            p.discard();
-            q.discard();
-            helper.succeed();
-        });
+        helper.runAfterDelay(
+                2,
+                () -> {
+                    helper.assertTrue(done(p, "distillation"), "find/distillation");
+                    helper.assertTrue(done(p, "ruins"), "find/ruins");
+                    helper.assertTrue(done(p, "answerers"), "find/answerers by sword");
+                    helper.assertTrue(done(q, "answerers"), "find/answerers by arrow");
+                    p.discard();
+                    q.discard();
+                    helper.succeed();
+                });
     }
 
     /** After research's reset, moving the dripstone stack relatches; an unrelated slot doesn't. */
     private static void relatch(GameTestHelper helper) {
         ServerPlayer p = online(helper);
         p.getInventory().setItem(0, new ItemStack(Items.POINTED_DRIPSTONE));
-        helper.runAfterDelay(1, () -> {
-            helper.assertTrue(done(p, "distillation"), "latched");
-            Resolver.reset(p);
-            helper.assertFalse(done(p, "distillation"), "revoked by reset");
-            p.getInventory().setItem(5, new ItemStack(Items.STONE));
-            helper.runAfterDelay(1, () -> {
-                helper.assertFalse(done(p, "distillation"), "an unrelated slot doesn't relatch");
-                ItemStack held = p.getInventory().removeItemNoUpdate(0);
-                p.getInventory().setItem(1, held);
-                helper.runAfterDelay(1, () -> {
-                    helper.assertTrue(done(p, "distillation"), "moving the stack relatches");
-                    p.discard();
-                    helper.succeed();
+        helper.runAfterDelay(
+                1,
+                () -> {
+                    helper.assertTrue(done(p, "distillation"), "latched");
+                    Resolver.reset(p);
+                    helper.assertFalse(done(p, "distillation"), "revoked by reset");
+                    p.getInventory().setItem(5, new ItemStack(Items.STONE));
+                    helper.runAfterDelay(
+                            1,
+                            () -> {
+                                helper.assertFalse(
+                                        done(p, "distillation"),
+                                        "an unrelated slot doesn't relatch");
+                                ItemStack held = p.getInventory().removeItemNoUpdate(0);
+                                p.getInventory().setItem(1, held);
+                                helper.runAfterDelay(
+                                        1,
+                                        () -> {
+                                            helper.assertTrue(
+                                                    done(p, "distillation"),
+                                                    "moving the stack relatches");
+                                            p.discard();
+                                            helper.succeed();
+                                        });
+                            });
                 });
-            });
-        });
     }
 
     /** The kill predicate decodes, matches an Answerer and a Cantor, and not a zombie. */
     private static void killPredicate(GameTestHelper helper) {
         ServerPlayer p = online(helper);
-        AdvancementHolder holder = Objects.requireNonNull(helper.getLevel().getServer().getAdvancements().get(Identifier.fromNamespaceAndPath("vftv", "find/answerers")));
-        var trigger = (net.minecraft.advancements.triggers.KilledTrigger.TriggerInstance) Objects.requireNonNull(holder.value().criteria().get("killed")).triggerInstance();
+        AdvancementHolder holder =
+                Objects.requireNonNull(
+                        helper.getLevel()
+                                .getServer()
+                                .getAdvancements()
+                                .get(Identifier.fromNamespaceAndPath("vftv", "find/answerers")));
+        var trigger =
+                (net.minecraft.advancements.triggers.KilledTrigger.TriggerInstance)
+                        Objects.requireNonNull(holder.value().criteria().get("killed"))
+                                .triggerInstance();
         var predicate = trigger.entity().orElseThrow();
         Answerer a = answerer(helper, new BlockPos(1, 1, 1), false);
         Answerer c = answerer(helper, new BlockPos(2, 1, 1), true);
-        Zombie z = helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(3, 1, 1));
-        helper.assertTrue(predicate.matches(net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(p, a)), "an Answerer");
-        helper.assertTrue(predicate.matches(net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(p, c)), "a Cantor");
-        helper.assertFalse(predicate.matches(net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(p, z)), "not a zombie");
+        Zombie z =
+                helper.spawn(net.minecraft.world.entity.EntityTypes.ZOMBIE, new BlockPos(3, 1, 1));
+        helper.assertTrue(
+                predicate.matches(
+                        net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(
+                                p, a)),
+                "an Answerer");
+        helper.assertTrue(
+                predicate.matches(
+                        net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(
+                                p, c)),
+                "a Cantor");
+        helper.assertFalse(
+                predicate.matches(
+                        net.minecraft.advancements.predicates.entity.EntityPredicate.createContext(
+                                p, z)),
+                "not a zombie");
         z.discard();
         p.discard();
         helper.succeed();
@@ -1008,23 +1417,41 @@ final class WorldgenGameTests {
 
     // --- the place query ----------------------------------------------------------------------
 
-    /** True in a referenced chunk at any y, false one chunk outside and at an unloaded chunk; allocates nothing. */
+    /**
+     * True in a referenced chunk at any y, false one chunk outside and at an unloaded chunk;
+     * allocates nothing.
+     */
     private static void placeQuery(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos abs = helper.absolutePos(new BlockPos(1, 1, 1));
         LevelChunk chunk = level.getChunkAt(abs);
-        Structure ruin = level.registryAccess().lookupOrThrow(Registries.STRUCTURE).getValueOrThrow(WorldgenKeys.CHOIR_RUIN);
+        Structure ruin =
+                level.registryAccess()
+                        .lookupOrThrow(Registries.STRUCTURE)
+                        .getValueOrThrow(WorldgenKeys.CHOIR_RUIN);
         BlockPos outside = abs.offset(0, 0, 16 * 40);
         level.getChunkAt(outside);
-        helper.assertFalse(ChoirSitePlaceQuery.INSTANCE.test(level, outside), "false with no reference");
+        helper.assertFalse(
+                ChoirSitePlaceQuery.INSTANCE.test(level, outside), "false with no reference");
         chunk.addReferenceForStructure(ruin, ChunkPos.containing(abs).pack());
         try {
-            helper.assertTrue(ChoirSitePlaceQuery.INSTANCE.test(level, abs.atY(level.getMaxY())), "true at the top");
-            helper.assertTrue(ChoirSitePlaceQuery.INSTANCE.test(level, abs.atY(level.getMinY())), "true at the bottom");
-            helper.assertTrue(com.andrewbrogoff.vftv.core.warp.WarpService.inVoidTouchedPlace(level, abs), "a Void-touched place");
+            helper.assertTrue(
+                    ChoirSitePlaceQuery.INSTANCE.test(level, abs.atY(level.getMaxY())),
+                    "true at the top");
+            helper.assertTrue(
+                    ChoirSitePlaceQuery.INSTANCE.test(level, abs.atY(level.getMinY())),
+                    "true at the bottom");
+            helper.assertTrue(
+                    com.andrewbrogoff.vftv.core.warp.WarpService.inVoidTouchedPlace(level, abs),
+                    "a Void-touched place");
             BlockPos unloaded = new BlockPos(29_000_000, 64, 29_000_000);
-            helper.assertFalse(ChoirSitePlaceQuery.INSTANCE.test(level, unloaded), "false at an unloaded chunk");
-            helper.assertTrue(level.getChunkSource().getChunkNow(unloaded.getX() >> 4, unloaded.getZ() >> 4) == null, "and nothing was loaded");
+            helper.assertFalse(
+                    ChoirSitePlaceQuery.INSTANCE.test(level, unloaded),
+                    "false at an unloaded chunk");
+            helper.assertTrue(
+                    level.getChunkSource().getChunkNow(unloaded.getX() >> 4, unloaded.getZ() >> 4)
+                            == null,
+                    "and nothing was loaded");
             var threads = (com.sun.management.ThreadMXBean) ManagementFactory.getThreadMXBean();
             long id = Thread.currentThread().threadId();
             boolean zero = false;
@@ -1037,7 +1464,8 @@ final class WorldgenGameTests {
             }
             helper.assertTrue(zero, "zero allocation");
         } finally {
-            Map<Structure, it.unimi.dsi.fastutil.longs.LongSet> refs = new java.util.HashMap<>(chunk.getAllReferences());
+            Map<Structure, it.unimi.dsi.fastutil.longs.LongSet> refs =
+                    new java.util.HashMap<>(chunk.getAllReferences());
             refs.remove(ruin);
             chunk.setAllReferences(refs);
         }

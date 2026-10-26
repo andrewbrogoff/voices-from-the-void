@@ -25,8 +25,8 @@ import org.jspecify.annotations.Nullable;
 import org.slf4j.Logger;
 
 /**
- * The Reliquary's block entity (worldgen spec, "Sync and state"): its owned record is the saved
- * tag minus vanilla's and NeoForge's own keys, {@code {format: 1, site}}, kept raw when unreadable.
+ * The Reliquary's block entity (worldgen spec, "Sync and state"): its owned record is the saved tag
+ * minus vanilla's and NeoForge's own keys, {@code {format: 1, site}}, kept raw when unreadable.
  * Only a genuinely data-free placement (an absent or empty owned record) initializes, to the
  * built-in site, on its first server load. Never synced: the client needs only the block state.
  */
@@ -60,7 +60,8 @@ public final class ReliquaryBlockEntity extends BlockEntity {
                                                                             k,
                                                                             ops.convertTo(
                                                                                     NbtOps.INSTANCE,
-                                                                                    e.getSecond()))));
+                                                                                    e
+                                                                                            .getSecond()))));
                     return DataResult.success(tag);
                 }
 

@@ -50,15 +50,16 @@ import org.jspecify.annotations.Nullable;
 
 /**
  * The {@code vftv:template/1} converter (worldgen spec, "Templates" and "Authored content,
- * Templates"): it validates a text template under its family's rules and writes vanilla's
- * structure NBT through {@link StructureTemplate} and {@link NbtIo}, deterministically. Every
- * family shares the format, namespace, banned-block, Hush and attachment rules; a {@link Family}
- * adds its files, roles, allowed {@code vftv:} blocks, entities and chest loot tables.
+ * Templates"): it validates a text template under its family's rules and writes vanilla's structure
+ * NBT through {@link StructureTemplate} and {@link NbtIo}, deterministically. Every family shares
+ * the format, namespace, banned-block, Hush and attachment rules; a {@link Family} adds its files,
+ * roles, allowed {@code vftv:} blocks, entities and chest loot tables.
  */
 public final class TemplateConverter {
     private TemplateConverter() {}
 
-    private static final Pattern POS = Pattern.compile("(0|[1-9][0-9]?),(0|[1-9][0-9]?),(0|[1-9][0-9]?)");
+    private static final Pattern POS =
+            Pattern.compile("(0|[1-9][0-9]?),(0|[1-9][0-9]?),(0|[1-9][0-9]?)");
     private static final Pattern KEY = Pattern.compile("[!-~]");
     private static final Pattern ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
     private static final Set<String> NAMESPACES = Set.of("minecraft", "vftv");
@@ -72,7 +73,8 @@ public final class TemplateConverter {
                             Schema.required("target", new Schema.Id()),
                             Schema.required("pool", new Schema.Id()),
                             Schema.required("final_state", new Schema.Str(1, 256, null)),
-                            Schema.required("joint", new Schema.OneOf(Set.of("aligned", "rollable"))),
+                            Schema.required(
+                                    "joint", new Schema.OneOf(Set.of("aligned", "rollable"))),
                             Schema.optional("placement_priority", new Schema.Int(0, 100)),
                             Schema.optional("selection_priority", new Schema.Int(0, 100))));
 
@@ -83,17 +85,19 @@ public final class TemplateConverter {
                             Schema.optional(
                                     "chest",
                                     new Schema.Obj(
-                                            List.of(Schema.required("loot_table", new Schema.Id())))),
+                                            List.of(
+                                                    Schema.required(
+                                                            "loot_table", new Schema.Id())))),
                             Schema.optional(
                                     "reliquary",
                                     new Schema.Obj(
                                             List.of(
                                                     Schema.required(
-                                                            "site",
-                                                            new Schema.Str(3, 256, ID))))),
+                                                            "site", new Schema.Str(3, 256, ID))))),
                             Schema.optional(
                                     "node",
-                                    new Schema.Obj(List.of(Schema.required("type", new Schema.Id()))))));
+                                    new Schema.Obj(
+                                            List.of(Schema.required("type", new Schema.Id()))))));
 
     /** {@code vftv:template/1}: the common shape; the converter checks the rest. */
     public static final Schema SCHEMA =
@@ -102,16 +106,23 @@ public final class TemplateConverter {
                     Schema.required(
                             "size",
                             new Schema.ListOf(
-                                    new Schema.Int(1, WorldgenLimits.MAX_TEMPLATE_SIDE), 3, 3, false)),
+                                    new Schema.Int(1, WorldgenLimits.MAX_TEMPLATE_SIDE),
+                                    3,
+                                    3,
+                                    false)),
                     Schema.required(
                             "palette",
                             new Schema.MapOf(
-                                    new Schema.Str(1, 1, KEY), new Schema.Str(1, 512, null), 1, 64)),
+                                    new Schema.Str(1, 1, KEY),
+                                    new Schema.Str(1, 512, null),
+                                    1,
+                                    64)),
                     Schema.required(
                             "layers",
                             new Schema.ListOf(
                                     new Schema.ListOf(
-                                            new Schema.Str(0, WorldgenLimits.MAX_TEMPLATE_SIDE, null),
+                                            new Schema.Str(
+                                                    0, WorldgenLimits.MAX_TEMPLATE_SIDE, null),
                                             1,
                                             WorldgenLimits.MAX_TEMPLATE_SIDE,
                                             false),
@@ -206,7 +217,8 @@ public final class TemplateConverter {
         }
         TemplateRules.Role role = family.files().get(name);
         if (role == null) {
-            return new Result(List.of(name + ": not a file of the " + family.name() + " family"), null);
+            return new Result(
+                    List.of(name + ": not a file of the " + family.name() + " family"), null);
         }
         JsonArray size = json.getAsJsonArray("size");
         int sx = size.get(0).getAsInt();
@@ -244,13 +256,28 @@ public final class TemplateConverter {
                 String row = rows.get(z).getAsString();
                 if (row.length() != sx) {
                     problems.add(
-                            "layers[" + y + "][" + z + "]: " + row.length() + " columns, not " + sx);
+                            "layers["
+                                    + y
+                                    + "]["
+                                    + z
+                                    + "]: "
+                                    + row.length()
+                                    + " columns, not "
+                                    + sx);
                 }
                 for (int x = 0; x < sx; x++) {
                     char c = x < row.length() ? row.charAt(x) : ' ';
                     if (c != ' ' && !palette.containsKey(c)) {
                         problems.add(
-                                "layers[" + y + "][" + z + "][" + x + "]: '" + c + "' is not in the palette");
+                                "layers["
+                                        + y
+                                        + "]["
+                                        + z
+                                        + "]["
+                                        + x
+                                        + "]: '"
+                                        + c
+                                        + "' is not in the palette");
                         c = ' ';
                     }
                     cells[y][z][x] = c;
@@ -262,7 +289,9 @@ public final class TemplateConverter {
         }
         // the block entities
         JsonObject blockEntities =
-                json.has("block_entities") ? json.getAsJsonObject("block_entities") : new JsonObject();
+                json.has("block_entities")
+                        ? json.getAsJsonObject("block_entities")
+                        : new JsonObject();
         Map<Long, CompoundTag> data = new TreeMap<>();
         List<TemplateRules.Jigsaw> jigsaws = new ArrayList<>();
         List<TemplateRules.Faced> reliquaries = new ArrayList<>();
@@ -334,7 +363,8 @@ public final class TemplateConverter {
                 case "chest" -> {
                     String table = fields.get("loot_table").getAsString();
                     if (!family.lootTables().contains(table)) {
-                        problems.add(where + "the loot table must be one of " + family.lootTables());
+                        problems.add(
+                                where + "the loot table must be one of " + family.lootTables());
                     }
                     tag.putString("LootTable", table);
                     chests++;
@@ -375,7 +405,13 @@ public final class TemplateConverter {
                             && NEEDS_DATA.contains(id(at(palette, c).getBlock()))
                             && !data.containsKey(BlockPos.asLong(x, y, z))) {
                         problems.add(
-                                "(" + x + ", " + y + ", " + z + "): "
+                                "("
+                                        + x
+                                        + ", "
+                                        + y
+                                        + ", "
+                                        + z
+                                        + "): "
                                         + id(at(palette, c).getBlock())
                                         + " needs its block entity");
                     }
@@ -385,7 +421,8 @@ public final class TemplateConverter {
         // the entities
         List<TemplateRules.Entity> entities = new ArrayList<>();
         ListTag entityList = new ListTag();
-        JsonArray entityJson = json.has("entities") ? json.getAsJsonArray("entities") : new JsonArray();
+        JsonArray entityJson =
+                json.has("entities") ? json.getAsJsonArray("entities") : new JsonArray();
         for (int i = 0; i < entityJson.size(); i++) {
             JsonObject e = entityJson.get(i).getAsJsonObject();
             JsonArray pos = e.getAsJsonArray("pos");
@@ -394,7 +431,8 @@ public final class TemplateConverter {
             int z = pos.get(2).getAsInt();
             String type = e.get("type").getAsString();
             if (!family.entities().contains(type)) {
-                problems.add("entities[" + i + "]: " + type + " is not one of " + family.entities());
+                problems.add(
+                        "entities[" + i + "]: " + type + " is not one of " + family.entities());
                 continue;
             }
             if (x >= sx || y >= sy || z >= sz) {
@@ -479,7 +517,9 @@ public final class TemplateConverter {
         return new Result(List.of(), template.save(new CompoundTag()));
     }
 
-    /** The complete template record of a node of {@code type} (spec, "The saved template record"). */
+    /**
+     * The complete template record of a node of {@code type} (spec, "The saved template record").
+     */
     static net.minecraft.nbt.Tag nodeRecord(Identifier type, List<NodeState.NodeAspect> aspects) {
         return NodeState.BOUNDED
                 .encodeStart(
@@ -528,7 +568,11 @@ public final class TemplateConverter {
     }
 
     private static void blockRules(
-            BlockState state, String where, Family family, Set<String> hushed, List<String> problems) {
+            BlockState state,
+            String where,
+            Family family,
+            Set<String> hushed,
+            List<String> problems) {
         Block block = state.getBlock();
         String id = id(block);
         String ns = id.substring(0, id.indexOf(':'));
@@ -536,7 +580,8 @@ public final class TemplateConverter {
             problems.add(where + id + ": only the minecraft and vftv namespaces");
         }
         if (ns.equals("vftv") && !family.vftvBlocks().contains(id)) {
-            problems.add(where + id + " is not a vftv block the " + family.name() + " family allows");
+            problems.add(
+                    where + id + " is not a vftv block the " + family.name() + " family allows");
         }
         if (hushed.contains(id)) {
             problems.add(where + id + " is in #vftv:hushed");

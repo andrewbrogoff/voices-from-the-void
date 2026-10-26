@@ -36,7 +36,8 @@ class WorldgenModelTest {
         };
     }
 
-    private static final Offers.State FRESH = state(Set.of("a:1", "a:2", "a:3"), Set.of(), Set.of());
+    private static final Offers.State FRESH =
+            state(Set.of("a:1", "a:2", "a:3"), Set.of(), Set.of());
 
     @Test
     void everyRowInOrder() {
@@ -71,7 +72,14 @@ class WorldgenModelTest {
                 Offers.decide(false, false, false, SITE, null, 0, FRESH));
         assertEquals(
                 Offers.Outcome.FULL,
-                Offers.decide(false, false, false, SITE, null, WorldgenLimits.MAX_CLAIM_SITES, FRESH)
+                Offers.decide(
+                                false,
+                                false,
+                                false,
+                                SITE,
+                                null,
+                                WorldgenLimits.MAX_CLAIM_SITES,
+                                FRESH)
                         .outcome());
         assertEquals(
                 Offers.Outcome.ALL_HELD,
@@ -82,7 +90,10 @@ class WorldgenModelTest {
                                 SITE,
                                 null,
                                 WorldgenLimits.MAX_CLAIM_SITES,
-                                state(Set.of("a:1", "a:2", "a:3"), Set.of("a:1", "a:2"), Set.of("a:3")))
+                                state(
+                                        Set.of("a:1", "a:2", "a:3"),
+                                        Set.of("a:1", "a:2"),
+                                        Set.of("a:3")))
                         .outcome(),
                 "all_held comes before full and records nothing");
     }
@@ -91,8 +102,7 @@ class WorldgenModelTest {
     void unknownPagesAreFilteredNeverHandedOut() {
         Offers.State gone = state(Set.of("a:3"), Set.of(), Set.of());
         assertEquals(
-                List.of("a:3"),
-                Offers.decide(false, false, false, SITE, null, 0, gone).pages());
+                List.of("a:3"), Offers.decide(false, false, false, SITE, null, 0, gone).pages());
         assertEquals(
                 Offers.Outcome.DONE,
                 Offers.decide(false, false, false, SITE, List.of("a:1", "a:2"), 1, gone).outcome());
@@ -111,9 +121,14 @@ class WorldgenModelTest {
         assertNull(c.at("minecraft:overworld", 6));
         assertEquals("minecraft:nether", c.sites().getFirst().dim());
         assertEquals(Set.of("a:1", "a:2", "a:3", "test:unknown"), c.claimedAnywhere());
-        assertThrows(IllegalArgumentException.class, () -> c.with("minecraft:overworld", 5, List.of("a:9")));
-        assertThrows(IllegalArgumentException.class, () -> new ChoirClaims.Site("Bad Id", 0, List.of("a:1")));
-        assertThrows(IllegalArgumentException.class, () -> new ChoirClaims.Site("a:b", 0, List.of()));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> c.with("minecraft:overworld", 5, List.of("a:9")));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> new ChoirClaims.Site("Bad Id", 0, List.of("a:1")));
+        assertThrows(
+                IllegalArgumentException.class, () -> new ChoirClaims.Site("a:b", 0, List.of()));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> new ChoirClaims.Site("a:b", 0, List.of("a:1", "a:1")));
@@ -142,11 +157,16 @@ class WorldgenModelTest {
     void siteRules() {
         Map<String, SiteRules.Entry> entries =
                 Map.of(
-                        SiteRules.BENEATH_THE_NOTES, new SiteRules.Entry(SiteRules.CHOIR_PAGES, 3, "find"),
-                        "vftv:choir/two", new SiteRules.Entry(SiteRules.CHOIR_PAGES, 3, "find"),
-                        "vftv:choir/road", new SiteRules.Entry(SiteRules.CHOIR_PAGES, 4, "find"),
-                        "vftv:other", new SiteRules.Entry("vftv:ruins", 3, "find"));
-        Offers.Site good = new Offers.Site(List.of(SiteRules.BENEATH_THE_NOTES, "vftv:choir/two"), 6);
+                        SiteRules.BENEATH_THE_NOTES,
+                        new SiteRules.Entry(SiteRules.CHOIR_PAGES, 3, "find"),
+                        "vftv:choir/two",
+                        new SiteRules.Entry(SiteRules.CHOIR_PAGES, 3, "find"),
+                        "vftv:choir/road",
+                        new SiteRules.Entry(SiteRules.CHOIR_PAGES, 4, "find"),
+                        "vftv:other",
+                        new SiteRules.Entry("vftv:ruins", 3, "find"));
+        Offers.Site good =
+                new Offers.Site(List.of(SiteRules.BENEATH_THE_NOTES, "vftv:choir/two"), 6);
         assertEquals(List.of(), SiteRules.check(Map.of(SiteRules.CHOIR_RUIN, good), entries));
         assertEquals(List.of(), SiteRules.builtIn(good, entries));
         assertTrue(SiteRules.check(Map.of(), entries).getFirst().contains("required"));
@@ -154,18 +174,22 @@ class WorldgenModelTest {
                 SiteRules.check(
                         Map.of(
                                 SiteRules.CHOIR_RUIN,
-                                new Offers.Site(List.of("vftv:other", "vftv:other", "vftv:none"), 9)),
+                                new Offers.Site(
+                                        List.of("vftv:other", "vftv:other", "vftv:none"), 9)),
                         entries);
         assertTrue(bad.stream().anyMatch(p -> p.contains("listed twice")), bad.toString());
         assertTrue(bad.stream().anyMatch(p -> p.contains("vftv:none is not a find entry")));
         assertTrue(bad.stream().anyMatch(p -> p.contains("vftv:other is not a find entry")));
         assertTrue(bad.stream().anyMatch(p -> p.contains("pages_per_claim")));
         assertTrue(
-                SiteRules.check(Map.of(SiteRules.CHOIR_RUIN, new Offers.Site(List.of(), 1)), entries)
+                SiteRules.check(
+                                Map.of(SiteRules.CHOIR_RUIN, new Offers.Site(List.of(), 1)),
+                                entries)
                         .stream()
                         .anyMatch(p -> p.contains("pages: 0")));
         List<String> builtIn =
-                SiteRules.builtIn(new Offers.Site(List.of("vftv:choir/two", "vftv:choir/road"), 6), entries);
+                SiteRules.builtIn(
+                        new Offers.Site(List.of("vftv:choir/two", "vftv:choir/road"), 6), entries);
         assertTrue(builtIn.stream().anyMatch(p -> p.contains("must be first")), builtIn.toString());
         assertTrue(builtIn.stream().anyMatch(p -> p.contains("outside Stage 3")));
         assertTrue(builtIn.stream().anyMatch(p -> p.contains("beneath_the_notes is missing")));

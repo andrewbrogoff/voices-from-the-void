@@ -56,27 +56,23 @@ public final class WorldgenCodecs {
     public static final Codec<ChoirClaims> CLAIMS =
             strict(
                     RecordCodecBuilder.<ChoirClaims>create(
-                                    i ->
-                                            i.group(
-                                                            Codec.INT
-                                                                    .fieldOf("format")
-                                                                    .forGetter(c -> ChoirClaims.FORMAT),
-                                                            SITE.listOf(
-                                                                            0,
-                                                                            WorldgenLimits
-                                                                                    .MAX_CLAIM_SITES)
-                                                                    .fieldOf("sites")
-                                                                    .forGetter(ChoirClaims::sites))
-                                                    .apply(
-                                                            i,
-                                                            (format, sites) -> {
-                                                                if (format != ChoirClaims.FORMAT) {
-                                                                    throw new IllegalArgumentException(
-                                                                            "unknown format "
-                                                                                    + format);
-                                                                }
-                                                                return new ChoirClaims(sites);
-                                                            })),
+                            i ->
+                                    i.group(
+                                                    Codec.INT
+                                                            .fieldOf("format")
+                                                            .forGetter(c -> ChoirClaims.FORMAT),
+                                                    SITE.listOf(0, WorldgenLimits.MAX_CLAIM_SITES)
+                                                            .fieldOf("sites")
+                                                            .forGetter(ChoirClaims::sites))
+                                            .apply(
+                                                    i,
+                                                    (format, sites) -> {
+                                                        if (format != ChoirClaims.FORMAT) {
+                                                            throw new IllegalArgumentException(
+                                                                    "unknown format " + format);
+                                                        }
+                                                        return new ChoirClaims(sites);
+                                                    })),
                     Set.of("format", "sites"));
 
     /**
@@ -86,7 +82,9 @@ public final class WorldgenCodecs {
      * @param pages the pages it gives, in order, 1 to 64
      * @param pagesPerClaim how many a first claim takes, 1 to 8
      */
-    public record SiteEntry(List<ResourceKey<com.andrewbrogoff.vftv.api.research.Research>> pages, int pagesPerClaim)
+    public record SiteEntry(
+            List<ResourceKey<com.andrewbrogoff.vftv.api.research.Research>> pages,
+            int pagesPerClaim)
             implements ChoirSite {
         /** The entry's codec. */
         public static final Codec<SiteEntry> CODEC =
@@ -106,7 +104,8 @@ public final class WorldgenCodecs {
                                                                         WorldgenLimits
                                                                                 .MAX_PAGES_PER_CLAIM)
                                                                 .fieldOf("pages_per_claim")
-                                                                .forGetter(SiteEntry::pagesPerClaim))
+                                                                .forGetter(
+                                                                        SiteEntry::pagesPerClaim))
                                                 .apply(i, SiteEntry::new)),
                         Set.of("pages", "pages_per_claim"));
 

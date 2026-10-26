@@ -20,9 +20,9 @@ import net.minecraft.world.phys.BlockHitResult;
 import org.jspecify.annotations.Nullable;
 
 /**
- * {@code vftv:reliquary} (worldgen spec, "The Reliquary"): survival-unbreakable, explosion-proof and
- * immovable, four facings. A use from either hand asks {@link ReliquaryService#use}; vanilla's and
- * NeoForge's interaction checks run before it.
+ * {@code vftv:reliquary} (worldgen spec, "The Reliquary"): survival-unbreakable, explosion-proof
+ * and immovable, four facings. A use from either hand asks {@link ReliquaryService#use}; vanilla's
+ * and NeoForge's interaction checks run before it.
  */
 public final class ReliquaryBlock extends HorizontalDirectionalBlock implements EntityBlock {
     private static final MapCodec<ReliquaryBlock> CODEC = simpleCodec(ReliquaryBlock::new);
@@ -30,7 +30,8 @@ public final class ReliquaryBlock extends HorizontalDirectionalBlock implements 
     /** A Reliquary with the given properties. */
     public ReliquaryBlock(BlockBehaviour.Properties properties) {
         super(properties);
-        registerDefaultState(stateDefinition.any().setValue(FACING, net.minecraft.core.Direction.NORTH));
+        registerDefaultState(
+                stateDefinition.any().setValue(FACING, net.minecraft.core.Direction.NORTH));
     }
 
     @Override

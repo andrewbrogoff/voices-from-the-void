@@ -24,7 +24,9 @@ import org.junit.jupiter.api.Test;
 class WorldgenPlacementTest {
     private static JsonObject fixtures() throws IOException {
         Path file =
-                Path.of(System.getProperty("vftv.projectDir", "."), "content/worldgen/fixtures.json");
+                Path.of(
+                        System.getProperty("vftv.projectDir", "."),
+                        "content/worldgen/fixtures.json");
         return JsonParser.parseString(Files.readString(file, StandardCharsets.UTF_8))
                 .getAsJsonObject();
     }
@@ -46,7 +48,9 @@ class WorldgenPlacementTest {
             JsonArray region = row.getAsJsonArray("region");
             ChunkPos start =
                     placement.getPotentialStructureChunk(
-                            seed, region.get(0).getAsInt() * spacing, region.get(1).getAsInt() * spacing);
+                            seed,
+                            region.get(0).getAsInt() * spacing,
+                            region.get(1).getAsInt() * spacing);
             JsonArray expect = row.getAsJsonArray("expect");
             assertEquals(expect.get(0).getAsInt(), start.x(), "x of " + region);
             assertEquals(expect.get(1).getAsInt(), start.z(), "z of " + region);
@@ -64,7 +68,8 @@ class WorldgenPlacementTest {
                 ChunkPos a = placement.getPotentialStructureChunk(seed, rx * 36, rz * 36);
                 ChunkPos b = placement.getPotentialStructureChunk(seed, (rx + 1) * 36, rz * 36);
                 ChunkPos c = placement.getPotentialStructureChunk(seed, rx * 36, (rz + 1) * 36);
-                ChunkPos d = placement.getPotentialStructureChunk(seed, (rx + 1) * 36, (rz + 1) * 36);
+                ChunkPos d =
+                        placement.getPotentialStructureChunk(seed, (rx + 1) * 36, (rz + 1) * 36);
                 for (ChunkPos o : new ChunkPos[] {b, c, d}) {
                     min = Math.min(min, Math.max(Math.abs(a.x() - o.x()), Math.abs(a.z() - o.z())));
                 }

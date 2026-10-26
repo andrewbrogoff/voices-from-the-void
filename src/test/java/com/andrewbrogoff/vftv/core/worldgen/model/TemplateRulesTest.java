@@ -56,7 +56,9 @@ class TemplateRulesTest {
                 int y = Integer.parseInt(p[1]);
                 int z = Integer.parseInt(p[2]);
                 JsonObject body = e.getValue().getAsJsonObject();
-                String state = java.util.Objects.requireNonNull(palette.get(String.valueOf(cells[y][z][x])));
+                String state =
+                        java.util.Objects.requireNonNull(
+                                palette.get(String.valueOf(cells[y][z][x])));
                 if (body.has("jigsaw")) {
                     JsonObject j = body.getAsJsonObject("jigsaw");
                     String o = state.substring(state.indexOf('=') + 1, state.indexOf(']'));
@@ -100,7 +102,9 @@ class TemplateRulesTest {
 
         String state(int x, int y, int z) {
             char c = cells[y][z][x];
-            return c == ' ' ? "void" : java.util.Objects.requireNonNull(palette.get(String.valueOf(c)));
+            return c == ' '
+                    ? "void"
+                    : java.util.Objects.requireNonNull(palette.get(String.valueOf(c)));
         }
 
         List<String> check() {
@@ -152,8 +156,14 @@ class TemplateRulesTest {
         rejects("rubble_a", g -> g.chests = 1, "chests: 1");
         rejects("chancel_a", g -> g.nodes.clear(), "nodes: 0");
         rejects("chancel_a", g -> g.reliquaries.clear(), "Reliquarys: 0");
-        rejects("cloister", g -> g.entities.add(new TemplateRules.Entity(8, 1, 4, false)), "Answerers: 3");
-        rejects("cloister", g -> g.entities.add(new TemplateRules.Entity(8, 1, 4, true)), "Cantors: 1");
+        rejects(
+                "cloister",
+                g -> g.entities.add(new TemplateRules.Entity(8, 1, 4, false)),
+                "Answerers: 3");
+        rejects(
+                "cloister",
+                g -> g.entities.add(new TemplateRules.Entity(8, 1, 4, true)),
+                "Cantors: 1");
         rejects("chancel_b", g -> g.entities.removeIf(e -> e.cantor()), "Cantors: 0");
         Grid g = new Grid("rubble_a");
         List<String> p =
@@ -191,7 +201,14 @@ class TemplateRulesTest {
                     TemplateRules.Jigsaw j = g.jigsaws.removeFirst();
                     g.jigsaws.add(
                             new TemplateRules.Jigsaw(
-                                    j.x(), j.y(), j.z(), "east", "up", j.fields(), j.finalState(), j.joint()));
+                                    j.x(),
+                                    j.y(),
+                                    j.z(),
+                                    "east",
+                                    "up",
+                                    j.fields(),
+                                    j.finalState(),
+                                    j.joint()));
                 },
                 "must face north_up");
         rejects(
@@ -200,7 +217,14 @@ class TemplateRulesTest {
                     TemplateRules.Jigsaw j = g.jigsaws.removeFirst();
                     g.jigsaws.add(
                             new TemplateRules.Jigsaw(
-                                    j.x(), j.y(), j.z(), j.facing(), j.up(), TemplateRules.WING_PLUG, j.finalState(), "rollable"));
+                                    j.x(),
+                                    j.y(),
+                                    j.z(),
+                                    j.facing(),
+                                    j.up(),
+                                    TemplateRules.WING_PLUG,
+                                    j.finalState(),
+                                    "rollable"));
                 },
                 "fields differ");
         rejects(
@@ -208,7 +232,14 @@ class TemplateRulesTest {
                 g ->
                         g.jigsaws.add(
                                 new TemplateRules.Jigsaw(
-                                        3, 1, 3, "north", "up", TemplateRules.END_PLUG, "minecraft:air", "aligned")),
+                                        3,
+                                        1,
+                                        3,
+                                        "north",
+                                        "up",
+                                        TemplateRules.END_PLUG,
+                                        "minecraft:air",
+                                        "aligned")),
                 "not at a connector position");
         rejects(
                 "rubble_b",
@@ -229,10 +260,7 @@ class TemplateRulesTest {
                 "chancel_a",
                 g -> g.entities.add(new TemplateRules.Entity(14, 1, 12, true)),
                 "two at");
-        rejects(
-                "chancel_a",
-                g -> g.cells[2][15][11] = '#',
-                "in front of its face");
+        rejects("chancel_a", g -> g.cells[2][15][11] = '#', "in front of its face");
         rejects(
                 "chancel_a",
                 g -> {

@@ -18,10 +18,10 @@ import net.minecraft.world.level.levelgen.structure.Structure;
 import org.slf4j.Logger;
 
 /**
- * {@code ChoirSitePlaceQuery} (worldgen spec, "The Choir-site place query"): true iff the position's
- * chunk is loaded and holds a reference to a start of some structure in the resolved {@code
- * #vftv:choir_sites}. It reads that the reference set is non-empty: one {@code getChunkNow} and at
- * most {@value WorldgenLimits#MAX_SITE_STRUCTURES} map lookups, allocating nothing.
+ * {@code ChoirSitePlaceQuery} (worldgen spec, "The Choir-site place query"): true iff the
+ * position's chunk is loaded and holds a reference to a start of some structure in the resolved
+ * {@code #vftv:choir_sites}. It reads that the reference set is non-empty: one {@code getChunkNow}
+ * and at most {@value WorldgenLimits#MAX_SITE_STRUCTURES} map lookups, allocating nothing.
  */
 public final class ChoirSitePlaceQuery implements VoidPlaceQuery {
     /** The one instance, registered with {@code WarpService.registerPlaceQuery}. */

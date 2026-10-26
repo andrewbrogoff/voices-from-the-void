@@ -24,7 +24,8 @@ final class WorldgenClientData implements FeatureClientData {
         blocks.modelOutput.accept(MODEL, WorldgenClientData::reliquary);
         blocks.blockStateOutput.accept(
                 MultiVariantGenerator.dispatch(
-                                WorldgenContent.reliquary(), BlockModelGenerators.plainVariant(MODEL))
+                                WorldgenContent.reliquary(),
+                                BlockModelGenerators.plainVariant(MODEL))
                         .with(BlockModelGenerators.ROTATION_HORIZONTAL_FACING));
         blocks.itemModelOutput.accept(
                 WorldgenContent.reliquaryItem(), ItemModelUtils.plainModel(MODEL));
@@ -49,8 +50,7 @@ final class WorldgenClientData implements FeatureClientData {
         return model;
     }
 
-    private static JsonObject cuboid(
-            int x1, int y1, int z1, int x2, int y2, int z2, String north) {
+    private static JsonObject cuboid(int x1, int y1, int z1, int x2, int y2, int z2, String north) {
         JsonObject faces = new JsonObject();
         face(faces, "north", north);
         face(faces, "south", "#side");

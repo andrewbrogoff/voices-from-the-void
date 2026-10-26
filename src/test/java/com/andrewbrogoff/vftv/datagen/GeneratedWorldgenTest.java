@@ -26,9 +26,9 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The datagen-phase checks over {@code src/generated/resources} (worldgen spec, "Tests"): the
- * parsed-NBT no-Hush test over every generated template and worldgen, processor and loot file;
- * each template round-tripping its content; the chancels' pinned node record; the entities' feet;
- * and the find advancements' exact JSON.
+ * parsed-NBT no-Hush test over every generated template and worldgen, processor and loot file; each
+ * template round-tripping its content; the chancels' pinned node record; the entities' feet; and
+ * the find advancements' exact JSON.
  */
 class GeneratedWorldgenTest {
     private static final Path DATA =
@@ -86,7 +86,8 @@ class GeneratedWorldgenTest {
             CompoundTag t = read(p);
             noHush(t, p.toString(), problems);
             for (Tag b : t.getListOrEmpty("blocks")) {
-                CompoundTag node = ((CompoundTag) b).getCompoundOrEmpty("nbt").getCompoundOrEmpty("node");
+                CompoundTag node =
+                        ((CompoundTag) b).getCompoundOrEmpty("nbt").getCompoundOrEmpty("node");
                 if (node.getStringOr("type", "").equals("vftv:hushed")) {
                     problems.add(p + ": a vftv:hushed node");
                 }
@@ -99,7 +100,11 @@ class GeneratedWorldgenTest {
     void noHushInAnyWorldgenOrLootFile() throws IOException {
         List<String> problems = new ArrayList<>();
         for (String glob :
-                List.of("*/worldgen/**.json", "*/structure/**.json", "*/loot_table/**.json", "vftv/vftv/**.json")) {
+                List.of(
+                        "*/worldgen/**.json",
+                        "*/structure/**.json",
+                        "*/loot_table/**.json",
+                        "vftv/vftv/**.json")) {
             for (Path p : files(glob)) {
                 JsonElement json = StrictJson.parse(Files.readString(p, StandardCharsets.UTF_8));
                 scan(json, p.toString(), problems);
@@ -123,7 +128,9 @@ class GeneratedWorldgenTest {
             e.getAsJsonArray().forEach(x -> scan(x, where, problems));
         } else if (e.isJsonPrimitive() && e.getAsJsonPrimitive().isString()) {
             String s = e.getAsString();
-            if (HUSHED.contains(s) || s.equals("vftv:hollow") || s.equals("vftv:hush_ash")
+            if (HUSHED.contains(s)
+                    || s.equals("vftv:hollow")
+                    || s.equals("vftv:hush_ash")
                     || s.equals("vftv:hushed")) {
                 problems.add(where + ": " + s);
             }
@@ -133,7 +140,8 @@ class GeneratedWorldgenTest {
     @Test
     void templatesRoundTripTheirContent() throws IOException {
         for (String name : TemplateConverter.CHOIR_RUIN.files().keySet()) {
-            CompoundTag generated = read(DATA.resolve("vftv/structure/choir_ruin/" + name + ".nbt"));
+            CompoundTag generated =
+                    read(DATA.resolve("vftv/structure/choir_ruin/" + name + ".nbt"));
             TemplateConverter.Result r =
                     TemplateConverterTest.convert(name, TemplateConverterTest.template(name));
             assertEquals(r.nbt(), generated, name + ": the committed NBT is the content's");
@@ -142,7 +150,10 @@ class GeneratedWorldgenTest {
                 CompoundTag nbt = ((CompoundTag) b).getCompoundOrEmpty("nbt");
                 if (nbt.getStringOr("id", "").equals("vftv:node")) {
                     nodes++;
-                    assertEquals(PINNED, TemplateConverterTest.sorted(nbt.getCompoundOrEmpty("node")), name);
+                    assertEquals(
+                            PINNED,
+                            TemplateConverterTest.sorted(nbt.getCompoundOrEmpty("node")),
+                            name);
                 }
             }
             assertEquals(name.startsWith("chancel") ? 1 : 0, nodes, name + ": nodes");
@@ -153,11 +164,16 @@ class GeneratedWorldgenTest {
                 assertEquals(block.getIntOr(0, -1) + 0.5, pos.getDoubleOr(0, 0), name);
                 assertEquals(block.getIntOr(1, -1), pos.getDoubleOr(1, 0), name);
                 assertEquals(block.getIntOr(2, -1) + 0.5, pos.getDoubleOr(2, 0), name);
-                assertEquals(Set.of("id"), entity.getCompoundOrEmpty("nbt").keySet(), name + ": only {id}");
+                assertEquals(
+                        Set.of("id"),
+                        entity.getCompoundOrEmpty("nbt").keySet(),
+                        name + ": only {id}");
             }
             int height = generated.getListOrEmpty("size").getIntOr(1, 0);
             if (name.startsWith("chancel")) {
-                assertTrue(highest(generated) - 1 >= 20, name + ": the tower rises 20 above the floor");
+                assertTrue(
+                        highest(generated) - 1 >= 20,
+                        name + ": the tower rises 20 above the floor");
                 assertTrue(height <= 30, name);
             }
         }
@@ -210,7 +226,13 @@ class GeneratedWorldgenTest {
             assertFalse(a.has("rewards"), find);
             a.getAsJsonObject("criteria")
                     .entrySet()
-                    .forEach(c -> triggers.add(c.getValue().getAsJsonObject().get("trigger").getAsString()));
+                    .forEach(
+                            c ->
+                                    triggers.add(
+                                            c.getValue()
+                                                    .getAsJsonObject()
+                                                    .get("trigger")
+                                                    .getAsString()));
         }
         assertEquals(
                 Set.of("minecraft:inventory_changed", "minecraft:player_killed_entity"), triggers);

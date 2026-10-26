@@ -32,8 +32,8 @@ import org.slf4j.Logger;
 
 /**
  * {@code ReliquaryService.use(player, pos)} (worldgen spec, "Using it" and "Handing out"): the
- * first matching row decides, under the player's Reliquary guard. A new claim is written before
- * any page is handed out; a hand-out that fails or throws loses only that copy, which the next use
+ * first matching row decides, under the player's Reliquary guard. A new claim is written before any
+ * page is handed out; a hand-out that fails or throws loses only that copy, which the next use
  * reissues. Server thread only.
  */
 public final class ReliquaryService {
@@ -92,7 +92,9 @@ public final class ReliquaryService {
     private static Offers.Outcome decideAndHandOut(
             ServerPlayer player, ServerLevel level, BlockPos pos) {
         Retained<WorldgenCodecs.Reliquary> record =
-                level.getBlockEntity(pos) instanceof ReliquaryBlockEntity be ? be.initialized() : null;
+                level.getBlockEntity(pos) instanceof ReliquaryBlockEntity be
+                        ? be.initialized()
+                        : null;
         ChoirClaims read =
                 claims().get(player) instanceof Retained.Read<ChoirClaims> c ? c.value() : null;
         WorldgenCodecs.Reliquary reliquary =
@@ -150,7 +152,8 @@ public final class ReliquaryService {
             case FULL -> {
                 if (!warnedFull) {
                     warnedFull = true;
-                    LOGGER.warn("A player reached {} Reliquary claims", WorldgenLimits.MAX_CLAIM_SITES);
+                    LOGGER.warn(
+                            "A player reached {} Reliquary claims", WorldgenLimits.MAX_CLAIM_SITES);
                 }
             }
             default -> {}

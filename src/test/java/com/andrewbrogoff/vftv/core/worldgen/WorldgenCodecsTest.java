@@ -56,15 +56,24 @@ class WorldgenCodecsTest {
     @Test
     void claimsRoundTripKeepingUnknownPages() {
         CompoundTag tag =
-                claims(1, site("minecraft:overworld", -5, "vftv:choir/beneath_the_notes", "pack:gone"));
+                claims(
+                        1,
+                        site(
+                                "minecraft:overworld",
+                                -5,
+                                "vftv:choir/beneath_the_notes",
+                                "pack:gone"));
         Retained<ChoirClaims> read = decode(CLAIMS, tag);
         assertInstanceOf(Retained.Read.class, read);
         ChoirClaims c = ((Retained.Read<ChoirClaims>) read).value();
-        assertEquals(List.of("vftv:choir/beneath_the_notes", "pack:gone"), c.at("minecraft:overworld", -5));
+        assertEquals(
+                List.of("vftv:choir/beneath_the_notes", "pack:gone"),
+                c.at("minecraft:overworld", -5));
         assertEquals(tag, CLAIMS.encodeStart(NbtOps.INSTANCE, read).getOrThrow());
         assertEquals(
                 claims(1),
-                CLAIMS.encodeStart(NbtOps.INSTANCE, new Retained.Read<>(ChoirClaims.EMPTY)).getOrThrow());
+                CLAIMS.encodeStart(NbtOps.INSTANCE, new Retained.Read<>(ChoirClaims.EMPTY))
+                        .getOrThrow());
     }
 
     @Test
@@ -81,7 +90,11 @@ class WorldgenCodecsTest {
                         claims(1, site("Bad Dim", 0, "a:b")),
                         claims(1, site("a:b", 0)),
                         claims(1, site("a:b", 0, "a:1", "a:1")),
-                        claims(1, site("a:b", 0, "a:1", "a:2", "a:3", "a:4", "a:5", "a:6", "a:7", "a:8", "a:9")),
+                        claims(
+                                1,
+                                site(
+                                        "a:b", 0, "a:1", "a:2", "a:3", "a:4", "a:5", "a:6", "a:7",
+                                        "a:8", "a:9")),
                         claims(1, site("a:b", 2, "a:1"), site("a:b", 1, "a:1")))) {
             Retained<ChoirClaims> read = decode(CLAIMS, bad);
             assertInstanceOf(Retained.Unreadable.class, read, bad.toString());
@@ -116,7 +129,8 @@ class WorldgenCodecsTest {
         }
         CompoundTag pack = good.copy();
         pack.putString("site", "pack:road");
-        assertInstanceOf(Retained.Read.class, decode(RELIQUARY, pack), "a parseable unknown site is inert");
+        assertInstanceOf(
+                Retained.Read.class, decode(RELIQUARY, pack), "a parseable unknown site is inert");
     }
 
     @Test

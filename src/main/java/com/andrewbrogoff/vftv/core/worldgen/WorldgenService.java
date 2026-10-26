@@ -16,8 +16,8 @@ import net.minecraft.core.HolderLookup;
 import org.slf4j.Logger;
 
 /**
- * The worldgen feature's server state: the tuning record and the site kinds' load validation when
- * a world opens (worldgen spec, "Site kinds" and "Tuning and limits").
+ * The worldgen feature's server state: the tuning record and the site kinds' load validation when a
+ * world opens (worldgen spec, "Site kinds" and "Tuning and limits").
  */
 public final class WorldgenService {
     /** The tuning file, under {@code data/vftv/}. */
@@ -48,7 +48,8 @@ public final class WorldgenService {
      *
      * @throws IllegalStateException for an invalid read while the world opens
      */
-    public static synchronized void applyTuning(DataResult<WorldgenTuning> read, boolean reloading) {
+    public static synchronized void applyTuning(
+            DataResult<WorldgenTuning> read, boolean reloading) {
         read.ifSuccess(t -> tuning = t)
                 .ifError(
                         error -> {
@@ -106,7 +107,8 @@ public final class WorldgenService {
             throw new IllegalStateException(
                     "Invalid vftv choir site data:\n" + String.join("\n", problems));
         }
-        SiteRules.builtIn(java.util.Objects.requireNonNull(sites.get(SiteRules.CHOIR_RUIN)), entries)
+        SiteRules.builtIn(
+                        java.util.Objects.requireNonNull(sites.get(SiteRules.CHOIR_RUIN)), entries)
                 .forEach(p -> LOGGER.warn("Choir site data: {}", p));
     }
 
