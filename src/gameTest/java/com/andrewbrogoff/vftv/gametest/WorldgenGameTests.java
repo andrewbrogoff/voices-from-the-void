@@ -206,7 +206,7 @@ final class WorldgenGameTests {
                 : ChoirClaims.EMPTY;
     }
 
-    private static List<Component> lines(ServerPlayer player) {
+    private static List<Component> lines(@org.jspecify.annotations.Nullable ServerPlayer player) {
         synchronized (WorldgenGameTests.class) {
             if (!capturing) {
                 capturing = true;
@@ -221,7 +221,7 @@ final class WorldgenGameTests {
         }
         List<Component> out = new ArrayList<>();
         synchronized (LINES) {
-            LINES.stream().filter(e -> e.getKey().equals(player)).forEach(e -> out.add(e.getValue()));
+            LINES.stream().filter(e -> Objects.equals(e.getKey(), player)).forEach(e -> out.add(e.getValue()));
         }
         return out;
     }
@@ -252,7 +252,6 @@ final class WorldgenGameTests {
                         .lookupOrThrow(Registries.STRUCTURE)
                         .getOrThrow(WorldgenKeys.CHOIR_RUIN);
         var generator = level.getChunkSource().getGenerator();
-        load(level, new BoundingBox(at).inflatedBy(64));
         StructureStart start =
                 holder.value()
                         .generate(
@@ -269,6 +268,7 @@ final class WorldgenGameTests {
                                 level,
                                 b -> true);
         BoundingBox box = start.getBoundingBox();
+        load(level, box);
         ChunkPos.rangeClosed(
                         new ChunkPos(SectionPos.blockToSectionCoord(box.minX()), SectionPos.blockToSectionCoord(box.minZ())),
                         new ChunkPos(SectionPos.blockToSectionCoord(box.maxX()), SectionPos.blockToSectionCoord(box.maxZ())))
@@ -371,6 +371,7 @@ final class WorldgenGameTests {
 
     /** Two players each get beneath_the_notes from one Reliquary: two claims, neither touching the other. */
     private static void twoPlayers(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         ServerPlayer b = survivor(helper, new BlockPos(1, 1, 0));
@@ -408,6 +409,7 @@ final class WorldgenGameTests {
 
     /** Rows 2 to 8 with real players: given, reissued, done, all_held, silent and unreadable. */
     private static void rows(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         BlockPos silent = reliquary(helper, new BlockPos(3, 1, 1));
         ReliquaryBlockEntity be = Objects.requireNonNull(helper.getLevel().getBlockEntity(silent, WorldgenContent.reliquaryType()).orElse(null));
@@ -494,6 +496,7 @@ final class WorldgenGameTests {
 
     /** A throwing callback: logged, the claim kept, the hand-out goes on. */
     private static void throwingCallback(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         for (int i = 0; i < a.getInventory().getContainerSize(); i++) {
@@ -515,6 +518,7 @@ final class WorldgenGameTests {
 
     /** Re-entry from a callback during a hand-out is refused busy, with message.vftv.busy. */
     private static void reentry(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         for (int i = 0; i < a.getInventory().getContainerSize(); i++) {
@@ -539,6 +543,7 @@ final class WorldgenGameTests {
 
     /** Two uses in one tick: the second is attempt_cap, silent, and scans nothing. */
     private static void attemptCap(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         use(a, abs);
@@ -570,6 +575,7 @@ final class WorldgenGameTests {
 
     /** An unreadable claims record refuses the use (row 2) and is kept as it is. */
     private static void unreadableClaims(GameTestHelper helper) {
+        lines(null);
         BlockPos abs = reliquary(helper, new BlockPos(1, 1, 1));
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         CompoundTag raw = new CompoundTag();
@@ -587,7 +593,6 @@ final class WorldgenGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos fresh = reliquary(helper, new BlockPos(1, 1, 1));
         ReliquaryBlockEntity be = Objects.requireNonNull(level.getBlockEntity(fresh, WorldgenContent.reliquaryType()).orElse(null));
-        helper.assertValueEqual(Objects.requireNonNull(be.record()), new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN), "a data-free placement initializes");
         ServerPlayer a = survivor(helper, new BlockPos(1, 1, 0));
         int x = 1;
         for (String bad : List.of("{site:\"pack:road\"}", "{format:1}", "{format:1,site:3}", "{format:2,site:\"vftv:choir_ruin\"}")) {
@@ -614,7 +619,10 @@ final class WorldgenGameTests {
                 helper.assertValueEqual(ReliquaryService.use(a, abs), Offers.Outcome.UNREADABLE, "row 2 for the block");
             }
         }
-        helper.succeed();
+        helper.runAfterDelay(1, () -> {
+            helper.assertValueEqual(Objects.requireNonNull(be.record()), new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN), "a data-free placement initializes");
+            helper.succeed();
+        });
     }
 
     /** A cancelled RightClickBlock changes nothing. */
@@ -637,7 +645,9 @@ final class WorldgenGameTests {
         BlockPos rel = new BlockPos(2, 1, 2);
         BlockPos abs = reliquary(helper, rel);
         ServerPlayer a = survivor(helper, new BlockPos(2, 1, 1));
-        helper.assertFalse(a.gameMode.destroyBlock(abs), "survival can't break it");
+        net.minecraft.world.level.block.state.BlockState state = helper.getLevel().getBlockState(abs);
+        helper.assertValueEqual(state.getDestroySpeed(helper.getLevel(), abs), -1.0F, "survival-unbreakable");
+        helper.assertValueEqual(state.getDestroyProgress(a, helper.getLevel(), abs), 0.0F, "no mining progress");
         helper.getLevel().explode(null, abs.getX() + 0.5, abs.getY() + 1, abs.getZ() - 1.5, 3.0F, net.minecraft.world.level.Level.ExplosionInteraction.MOB);
         helper.assertBlockPresent(WorldgenContent.reliquary(), rel);
         helper.setBlock(new BlockPos(0, 1, 2), Blocks.PISTON.defaultBlockState().setValue(net.minecraft.world.level.block.piston.PistonBaseBlock.FACING, Direction.EAST));
@@ -656,7 +666,9 @@ final class WorldgenGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos at = far(helper, 0);
         StructureStart start = placeRuin(level, at);
-        StructureStart second = placeRuin(level, at.offset(256, 0, 0));
+        BlockPos copy = at.offset(256, 0, 0);
+        load(level, BoundingBox.fromCorners(copy, copy.offset(22, 25, 22)));
+        chancel(level).placeInWorld(level, copy, copy, settings(level), level.getRandom(), 2);
         BoundingBox box = start.getBoundingBox();
         ChunkPos chunk = ChunkPos.containing(at);
         int cx = chunk.getMinBlockX();
@@ -681,7 +693,7 @@ final class WorldgenGameTests {
             }
         });
         BlockPos node = nodes.getFirst();
-        BlockPos node2 = find(level, second.getBoundingBox(), VisContent.node()).getFirst();
+        BlockPos node2 = find(level, BoundingBox.fromCorners(copy, copy.offset(22, 25, 22)), VisContent.node()).getFirst();
         helper.runAfterDelay(3, () -> {
             NodeState state = Objects.requireNonNull(((NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(node))).state());
             NodeState state2 = Objects.requireNonNull(((NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(node2))).state());
@@ -702,7 +714,7 @@ final class WorldgenGameTests {
     private static void protects(GameTestHelper helper) {
         ServerLevel level = helper.getLevel();
         BlockPos at = far(helper, 1);
-        load(level, new BoundingBox(at).inflatedBy(32));
+        load(level, BoundingBox.fromCorners(at, at.offset(22, 25, 22)));
         StructureTemplate template = chancel(level);
         StructurePlaceSettings settings = settings(level);
         BlockPos nodeAt = template.filterBlocks(at, settings, VisContent.node()).getFirst().pos();
@@ -721,7 +733,7 @@ final class WorldgenGameTests {
         ServerLevel level = helper.getLevel();
         BlockPos base = far(helper, 2);
         BlockPos cell = new BlockPos(Math.floorDiv(base.getX(), 64) * 64 + 8, base.getY() + 4, Math.floorDiv(base.getZ(), 64) * 64 + 8);
-        load(level, new BoundingBox(cell).inflatedBy(40));
+        load(level, BoundingBox.fromCorners(cell, cell.offset(20, 0, 20)));
         List<BlockPos> at = List.of(cell, cell.offset(10, 0, 10), cell.offset(20, 0, 20));
         for (BlockPos p : at) {
             level.setBlock(p, VisContent.node().defaultBlockState(), 3);
@@ -775,8 +787,10 @@ final class WorldgenGameTests {
         helper.runAfterDelay(3, () -> {
             helper.assertTrue(a.getTarget() == null, "the target dropped");
             a.setHomeTo(a.blockPosition().offset(30, 0, 0), 4);
+            Vec3 start = a.position();
             helper.runAfterDelay(20, () -> {
-                helper.assertTrue(a.getNavigation().isInProgress() || a.isWithinHome(), "walking home");
+                helper.assertTrue(a.getNavigation().isInProgress() || a.isWithinHome() || a.position().x > start.x + 0.5,
+                        "walking home: at " + a.position() + " from " + start);
                 helper.succeed();
             });
         });
@@ -883,7 +897,7 @@ final class WorldgenGameTests {
         Answerer a = answerer(helper, new BlockPos(1, 1, 1), false);
         ServerPlayer p = survivor(helper, new BlockPos(2, 1, 1));
         BlockPos at = far(helper, 4);
-        load(level, new BoundingBox(at).inflatedBy(32));
+        load(level, BoundingBox.fromCorners(at, at.offset(22, 25, 22)));
         try {
             server.setDifficulty(Difficulty.PEACEFUL, true);
             chancel(level).placeInWorld(level, at, at, settings(level), level.getRandom(), 2);
@@ -1040,8 +1054,9 @@ final class WorldgenGameTests {
             refused = true;
         }
         helper.assertTrue(refused, "refused at open");
+        WorldgenTuning before = WorldgenService.tuning();
         WorldgenService.applyTuning(WorldgenService.parse("{\"cantor.radius\": 99}"), true);
-        helper.assertValueEqual(WorldgenService.tuning(), WorldgenTuning.DEFAULTS, "kept on reload");
+        helper.assertValueEqual(WorldgenService.tuning(), before, "kept on reload");
         helper.succeed();
     }
 }

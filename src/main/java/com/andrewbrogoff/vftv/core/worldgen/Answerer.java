@@ -6,7 +6,6 @@ import com.andrewbrogoff.vftv.core.common.TickBudget;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
@@ -209,8 +208,9 @@ public class Answerer extends Monster {
         return false;
     }
 
-    /** Return home while outside it, dropping any target. */
+    /** Return home while outside it, dropping any target; far homes are walked to in legs. */
     static final class ReturnHomeGoal extends Goal {
+        private static final double LEG = 12.0;
         private final Answerer mob;
 
         ReturnHomeGoal(Answerer mob) {
@@ -224,16 +224,9 @@ public class Answerer extends Monster {
         }
 
         @Override
-        public boolean canContinueToUse() {
-            return canUse() && !mob.getNavigation().isDone();
-        }
-
-        @Override
         public void start() {
             mob.setTarget(null);
-            BlockPos home = mob.getHomePosition();
-            Vec3 at = Vec3.atBottomCenterOf(home);
-            mob.getNavigation().moveTo(at.x, at.y, at.z, 1.0);
+            walk();
         }
 
         @Override
@@ -241,6 +234,16 @@ public class Answerer extends Monster {
             if (mob.getTarget() != null) {
                 mob.setTarget(null);
             }
+            if (mob.getNavigation().isDone()) {
+                walk();
+            }
+        }
+
+        private void walk() {
+            Vec3 home = Vec3.atBottomCenterOf(mob.getHomePosition());
+            Vec3 to = home.subtract(mob.position());
+            Vec3 at = to.length() > LEG ? mob.position().add(to.normalize().scale(LEG)) : home;
+            mob.getNavigation().moveTo(at.x, at.y, at.z, 1.0);
         }
     }
 

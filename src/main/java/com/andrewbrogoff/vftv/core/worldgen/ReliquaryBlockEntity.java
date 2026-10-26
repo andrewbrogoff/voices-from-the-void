@@ -127,12 +127,21 @@ public final class ReliquaryBlockEntity extends BlockEntity {
     @Override
     public void onLoad() {
         if (level instanceof ServerLevel) {
-            if (record == null) {
-                record = new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN);
-                setChanged();
-            }
+            initialized();
             warnIfUnreadable();
         }
+    }
+
+    /**
+     * The record on the server, a data-free placement initialized to the built-in site first: on
+     * its first server load, or at a use that comes before it.
+     */
+    @Nullable Retained<WorldgenCodecs.Reliquary> initialized() {
+        if (record == null && level instanceof ServerLevel) {
+            record = new Retained.Read<>(WorldgenCodecs.Reliquary.BUILT_IN);
+            setChanged();
+        }
+        return record;
     }
 
     private void warnIfUnreadable() {

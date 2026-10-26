@@ -92,7 +92,7 @@ public final class ReliquaryService {
     private static Offers.Outcome decideAndHandOut(
             ServerPlayer player, ServerLevel level, BlockPos pos) {
         Retained<WorldgenCodecs.Reliquary> record =
-                level.getBlockEntity(pos) instanceof ReliquaryBlockEntity be ? be.record() : null;
+                level.getBlockEntity(pos) instanceof ReliquaryBlockEntity be ? be.initialized() : null;
         ChoirClaims read =
                 claims().get(player) instanceof Retained.Read<ChoirClaims> c ? c.value() : null;
         WorldgenCodecs.Reliquary reliquary =
