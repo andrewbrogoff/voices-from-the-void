@@ -186,12 +186,16 @@ public final class LangValidator {
     }
 
     private static @Nullable LangEntry owner(List<LangEntry> table, String key) {
+        LangEntry byPattern = null;
         for (LangEntry entry : table) {
-            if (entry.owns(key)) {
-                return entry;
+            if (key.equals(entry.key())) {
+                return entry; // an exact key wins over a pattern (a later tier's wand part)
+            }
+            if (byPattern == null && entry.owns(key)) {
+                byPattern = entry;
             }
         }
-        return null;
+        return byPattern;
     }
 
     private static void checkValue(
