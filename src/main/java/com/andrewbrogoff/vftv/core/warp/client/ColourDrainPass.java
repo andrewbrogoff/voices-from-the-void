@@ -27,6 +27,7 @@ public final class ColourDrainPass {
     private ColourDrainPass() {}
 
     /** Draws the drain at {@code amount} (0–1) over the level just rendered; 0 draws nothing. */
+    @SuppressWarnings("deprecation") // PostChain.process is the architecture spec's named path
     public static void render(float amount) {
         int level = Math.round(Math.clamp(amount, 0F, 1F) * 255);
         if (level == 0) {
@@ -45,9 +46,11 @@ public final class ColourDrainPass {
             texture.upload();
             written = level;
         }
-        PostChain chain = minecraft.getShaderManager().getPostChain(CHAIN, LevelTargetBundle.MAIN_TARGETS);
+        PostChain chain =
+                minecraft.getShaderManager().getPostChain(CHAIN, LevelTargetBundle.MAIN_TARGETS);
         if (chain != null) {
-            chain.process(minecraft.gameRenderer.mainRenderTarget(), GraphicsResourceAllocator.UNPOOLED);
+            chain.process(
+                    minecraft.gameRenderer.mainRenderTarget(), GraphicsResourceAllocator.UNPOOLED);
         }
     }
 }

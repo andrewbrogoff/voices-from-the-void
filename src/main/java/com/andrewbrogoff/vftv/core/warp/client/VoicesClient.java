@@ -51,6 +51,8 @@ import org.slf4j.Logger;
  * and apparitions; and the {@code VoiceQuiet} screen poll. Client thread only; never touches server
  * state.
  */
+@SuppressWarnings(
+        "ReferenceEquality") // players, levels and the apparition are compared as instances
 public final class VoicesClient {
     /** The Voice text's wrap width. */
     public static final int TEXT_WIDTH = 240;
@@ -77,6 +79,7 @@ public final class VoicesClient {
     private static Map<String, List<String>> pools = Map.of();
     private static Map<String, LineInfo> lines = Map.of();
     private static List<Identifier> phantomSounds = List.of();
+    private static int reloads;
 
     private static VoicePayloads.@Nullable VoiceCue held;
     private static int heldTicks;
@@ -84,7 +87,6 @@ public final class VoicesClient {
     private static @Nullable Component text;
     private static boolean textVoid;
     private static int textTicks;
-    private static int textTotal;
     private static int lineTicks;
     private static @Nullable SoundInstance lineSound;
 
@@ -151,7 +153,7 @@ public final class VoicesClient {
             return;
         }
         Random random = new Random(cue.seed());
-        switch (cue.type()) {
+        switch (cue.kind()) {
             case VoiceContent.WHISPER -> line(minecraft, random, "band" + cue.band(), true);
             case VoiceContent.INSIGHT -> {
                 line(minecraft, random, "insight", false);
@@ -161,7 +163,10 @@ public final class VoicesClient {
                             Component.translatable(
                                     "voice.vftv.insight_gain",
                                     Component.translatable(
-                                            "aspect." + aspect.getNamespace() + "." + aspect.getPath()),
+                                            "aspect."
+                                                    + aspect.getNamespace()
+                                                    + "."
+                                                    + aspect.getPath()),
                                     cue.points()),
                             minecraft.options.notificationDisplayTime().get());
                 }
@@ -210,7 +215,8 @@ public final class VoicesClient {
         }
         Identifier id = Identifier.parse(drawn.line());
         lineTicks = info.ticks();
-        Identifier sound = Identifier.fromNamespaceAndPath(id.getNamespace(), "voice." + id.getPath());
+        Identifier sound =
+                Identifier.fromNamespaceAndPath(id.getNamespace(), "voice." + id.getPath());
         // A line without audio yet (the owner's recordings) shows its text alone.
         if (minecraft.getSoundManager().getSoundEvent(sound) != null) {
             double side = drawn.side() == 0 ? -1 : drawn.side() == 1 ? 1 : 0;
@@ -232,11 +238,10 @@ public final class VoicesClient {
         }
         text = Component.translatable(VoiceContent.langKey(drawn.line()));
         textVoid = info.voids();
-        textTotal =
+        textTicks =
                 CaptionBand.hold(
                         info.ticks() + TEXT_EXTRA_TICKS,
                         minecraft.options.notificationDisplayTime().get());
-        textTicks = textTotal;
         StatusLineHud.voice(visibleLines());
     }
 
@@ -305,7 +310,12 @@ public final class VoicesClient {
         return textVoid;
     }
 
-    /** Ticks the text has left, and its whole hold. */
+    /** How many resource reloads have run: fonts may have changed. */
+    static int reloads() {
+        return reloads;
+    }
+
+    /** Ticks the text has left. */
     static int textTicks() {
         return textTicks;
     }
@@ -316,8 +326,7 @@ public final class VoicesClient {
         if (t == null) {
             return 0;
         }
-        List<FormattedText> wrapped =
-                TextFit.wrap(Minecraft.getInstance().font, t, TEXT_WIDTH);
+        List<FormattedText> wrapped = TextFit.wrap(Minecraft.getInstance().font, t, TEXT_WIDTH);
         return Math.min(CaptionBand.VOICE_MAX_LINES, wrapped.size());
     }
 
@@ -425,8 +434,8 @@ public final class VoicesClient {
     // ---- Resources ----------------------------------------------------------------------------
 
     /**
-     * Reads {@code assets/vftv/voices/phantoms.json} and {@code lines.json}, the topmost valid
-     * file of each winning; an invalid file is skipped with one logged error.
+     * Reads {@code assets/vftv/voices/phantoms.json} and {@code lines.json}, the topmost valid file
+     * of each winning; an invalid file is skipped with one logged error.
      */
     public static void onResources(ResourceManager manager) {
         List<Identifier> sounds = List.of();
@@ -453,6 +462,7 @@ public final class VoicesClient {
         Map<String, List<String>> sorted = new HashMap<>();
         byPool.forEach((pool, ids) -> sorted.put(pool, CueDraws.sorted(ids)));
         pools = sorted;
+        reloads++;
     }
 
     private static List<Resource> top(ResourceManager manager, Identifier id) {

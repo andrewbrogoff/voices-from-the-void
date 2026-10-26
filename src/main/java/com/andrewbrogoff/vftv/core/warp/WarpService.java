@@ -3,6 +3,7 @@ package com.andrewbrogoff.vftv.core.warp;
 import com.andrewbrogoff.vftv.api.warp.CommitResult;
 import com.andrewbrogoff.vftv.api.warp.WarpChangedPayload;
 import com.andrewbrogoff.vftv.api.warp.WarpCost;
+import com.andrewbrogoff.vftv.api.warp.WarpKeys;
 import com.andrewbrogoff.vftv.api.warp.WarpLimits;
 import com.andrewbrogoff.vftv.api.warp.WarpPreview;
 import com.andrewbrogoff.vftv.api.warp.WarpRules;
@@ -13,6 +14,7 @@ import com.andrewbrogoff.vftv.core.common.DataSlot;
 import com.andrewbrogoff.vftv.core.common.DataSlots;
 import com.andrewbrogoff.vftv.core.common.OperationGuard;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
+import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
 import com.andrewbrogoff.vftv.core.warp.model.WarpMath;
 import com.andrewbrogoff.vftv.core.warp.model.WarpPhase;
 import com.mojang.logging.LogUtils;
@@ -28,6 +30,7 @@ import java.util.function.Predicate;
 import java.util.function.ToIntFunction;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
@@ -317,7 +320,9 @@ public final class WarpService {
     public static @Nullable WarpPreview ritePreview(Player player) {
         WarpRecord r = get(player).readable();
         WarpRules rules = WarpRulesService.current();
-        return r == null ? null : preview(r, listenCost(rules), source(WarpSourceKind.LISTEN), rules);
+        return r == null
+                ? null
+                : preview(r, listenCost(rules), source(WarpSourceKind.LISTEN), rules);
     }
 
     /**
@@ -813,9 +818,12 @@ public final class WarpService {
     }
 
     /** Writes {@code next} (which syncs it to the owner), then posts the event if warp moved. */
-    static void write(
-            ServerPlayer player, WarpRecord before, WarpRecord next, WarpSource source) {
-        write(player, before, new WarpAttachment(new Retained.Read<>(next), get(player).offer()), source);
+    static void write(ServerPlayer player, WarpRecord before, WarpRecord next, WarpSource source) {
+        write(
+                player,
+                before,
+                new WarpAttachment(new Retained.Read<>(next), get(player).offer()),
+                source);
     }
 
     /** Writes a whole value (record and offer), then posts the event if warp moved. */

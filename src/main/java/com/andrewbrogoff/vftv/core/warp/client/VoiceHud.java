@@ -1,7 +1,6 @@
 package com.andrewbrogoff.vftv.core.warp.client;
 
 import com.andrewbrogoff.vftv.core.text.client.StatusLineHud;
-import com.andrewbrogoff.vftv.core.text.client.TextClient;
 import com.andrewbrogoff.vftv.core.text.client.TextFit;
 import com.andrewbrogoff.vftv.core.text.model.CaptionBand;
 import com.andrewbrogoff.vftv.core.text.model.Palette;
@@ -75,15 +74,19 @@ public final class VoiceHud {
         graphics.pose().popMatrix();
     }
 
+    @SuppressWarnings("ReferenceEquality") // a new line is a new instance: the O(1) cache check
     private static void layout(Font font, Component text) {
-        int fontKey = TextClient.fontKey();
+        int fontKey = VoicesClient.reloads();
         if (text == laidOut && fontKey == layoutFont) {
             return;
         }
         laidOut = text;
         layoutFont = fontKey;
         List<FormattedText> wrapped =
-                TextFit.wrap(font, text.copy().withStyle(Style.EMPTY.withItalic(true)), VoicesClient.TEXT_WIDTH);
+                TextFit.wrap(
+                        font,
+                        text.copy().withStyle(Style.EMPTY.withItalic(true)),
+                        VoicesClient.TEXT_WIDTH);
         lines = new FormattedCharSequence[wrapped.size()];
         widths = new int[wrapped.size()];
         int widest = 0;

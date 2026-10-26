@@ -16,14 +16,14 @@ public final class VoicePayloads {
      * S2C {@code VoiceCue}, to the owner only: what to perceive.
      *
      * @param event the Voice event's id
-     * @param type its type's id
+     * @param kind its type's id
      * @param band the band, 0–3
      * @param seed the cue seed the client draws from
      * @param aspect an insight's aspect id, else empty
      * @param points an insight's points, 0–64
      */
     public record VoiceCue(
-            String event, String type, int band, long seed, String aspect, int points)
+            String event, String kind, int band, long seed, String aspect, int points)
             implements CustomPacketPayload {
         /** {@code vftv:voice_cue}. */
         public static final Type<VoiceCue> TYPE = new Type<>(id("voice_cue"));
@@ -46,7 +46,7 @@ public final class VoicePayloads {
 
         private static void write(FriendlyByteBuf buf, VoiceCue c) {
             buf.writeUtf(c.event, WarpLimits.MAX_ID_CHARS);
-            buf.writeUtf(c.type, WarpLimits.MAX_ID_CHARS);
+            buf.writeUtf(c.kind, WarpLimits.MAX_ID_CHARS);
             buf.writeByte(c.band);
             buf.writeLong(c.seed);
             buf.writeUtf(c.aspect, WarpLimits.MAX_ID_CHARS);
@@ -91,7 +91,8 @@ public final class VoicePayloads {
         /** One boolean. */
         public static final StreamCodec<RegistryFriendlyByteBuf, VoiceQuiet> STREAM_CODEC =
                 StreamCodec.of(
-                        (buf, q) -> buf.writeBoolean(q.open), buf -> new VoiceQuiet(buf.readBoolean()));
+                        (buf, q) -> buf.writeBoolean(q.open),
+                        buf -> new VoiceQuiet(buf.readBoolean()));
 
         @Override
         public Type<VoiceQuiet> type() {

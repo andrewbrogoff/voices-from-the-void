@@ -18,8 +18,8 @@ import org.jspecify.annotations.Nullable;
  * ResearchAction} names by its container id. It owns the open book's quotes and their surface
  * revision (conventions, "The revision"): an O(1) change check every tick compares the quote's
  * inputs (the research and warp records, the warp rules, the tuning, the server switch, the Listen
- * rite's cooldown and the offer's expiry), and a
- * changed price or entry set bumps the revision and re-sends the quotes.
+ * rite's cooldown and the offer's expiry), and a changed price or entry set bumps the revision and
+ * re-sends the quotes.
  */
 public final class CommonplaceMenu extends AbstractContainerMenu {
     private final Player owner;

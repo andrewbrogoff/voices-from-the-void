@@ -22,7 +22,11 @@ final class WarpClientKeys {
                 (key, comment) ->
                         keys.add(
                                 ConfigKeys.bool(
-                                        builder, key, comment, "options.vftv.voices." + key, true)));
+                                        builder,
+                                        key,
+                                        comment,
+                                        "options.vftv.voices." + key,
+                                        true)));
         builder.pop();
         return List.of(
                 new ClientConfigPublisher.ClientRecord<>(

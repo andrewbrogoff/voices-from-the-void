@@ -279,7 +279,9 @@ public final class ResearchActions {
             case ResearchAction.Listen v -> listen(c, v);
             case ResearchAction.Bookmark v -> bookmark(c, v);
             case ResearchAction.AcceptOffer v ->
-                    answer(c.player(), WarpService.acceptOffer(c.player(), v.offerSeq(), v.echoedWarp()));
+                    answer(
+                            c.player(),
+                            WarpService.acceptOffer(c.player(), v.offerSeq(), v.echoedWarp()));
             case ResearchAction.RefuseOffer v ->
                     answer(c.player(), WarpService.refuseOffer(c.player(), v.offerSeq()));
             case ResearchAction.ListenRite v -> listenRite(c, v);

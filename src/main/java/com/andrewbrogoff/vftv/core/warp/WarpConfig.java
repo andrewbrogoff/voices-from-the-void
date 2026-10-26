@@ -12,8 +12,8 @@ package com.andrewbrogoff.vftv.core.warp;
  */
 public record WarpConfig(boolean voices, boolean tax, boolean amplifier, boolean gear) {
     /**
-     * The per-type Voice switches, keys 3-9 under {@code warp.voices}: each config key, its
-     * {@code vftv:voice_event_type}, its option name and its comment (verbatim, also the tooltip).
+     * The per-type Voice switches, keys 3-9 under {@code warp.voices}: each config key, its {@code
+     * vftv:voice_event_type}, its option name and its comment (verbatim, also the tooltip).
      *
      * @param key the key under {@code warp.voices}
      * @param type the event type it switches

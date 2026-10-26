@@ -337,8 +337,7 @@ public final class VoiceContent {
                                     "events",
                                     new Schema.MapOf(
                                             new Schema.Str(3, 256, ID),
-                                            new Schema.Checked(
-                                                    e -> entryList(EVENT, e)),
+                                            new Schema.Checked(e -> entryList(EVENT, e)),
                                             1,
                                             WarpLimits.MAX_EVENTS)))
                     .withExtra(root -> shipped(root, "events", SHIPPED_EVENTS));
@@ -494,8 +493,7 @@ public final class VoiceContent {
                                                     "perform_seconds_max",
                                                     new Schema.Num(3.5, 3.5)),
                                             Schema.required(
-                                                    "estimated_minutes",
-                                                    new Schema.Int(1, 600))))),
+                                                    "estimated_minutes", new Schema.Int(1, 600))))),
                     Schema.required(
                             "lines",
                             new Schema.MapOf(
@@ -544,7 +542,7 @@ public final class VoiceContent {
                 problems.add("$.names." + key + ": missing");
                 continue;
             }
-            String[] parts = names.get(key).getAsString().split(" ");
+            String[] parts = names.get(key).getAsString().split(" ", -1);
             if (parts.length > 3) {
                 problems.add("$.names." + key + ": more than 3 words");
             }
@@ -604,8 +602,9 @@ public final class VoiceContent {
                         });
         POOLS.forEach(
                 (pool, n) -> {
-                    if (count.getOrDefault(pool, 0) != n) {
-                        problems.add("$.lines: " + pool + " holds " + count.get(pool) + ", not " + n);
+                    if (count.getOrDefault(pool, 0).intValue() != n) {
+                        problems.add(
+                                "$.lines: " + pool + " holds " + count.get(pool) + ", not " + n);
                     }
                 });
         if (lines.size() != script.getAsJsonObject("session").get("lines").getAsInt()) {
@@ -674,9 +673,11 @@ public final class VoiceContent {
                 if (token.isEmpty() || !token.chars().allMatch(c -> c >= 'a' && c <= 'z')) {
                     problems.add(where + ".segments[" + i + "]: the token '" + token + "'");
                 } else if (!words.contains(token)) {
-                    problems.add(where + ".segments[" + i + "]: " + token + " is not in the lexicon");
+                    problems.add(
+                            where + ".segments[" + i + "]: " + token + " is not in the lexicon");
                 } else if (!VoidTongue.valid(token)) {
-                    problems.add(where + ".segments[" + i + "]: " + token + " breaks the phonology");
+                    problems.add(
+                            where + ".segments[" + i + "]: " + token + " breaks the phonology");
                 }
             }
         }
@@ -715,7 +716,8 @@ public final class VoiceContent {
         List<String> problems = new ArrayList<>();
         boolean bottle = false;
         for (JsonElement e : root.getAsJsonArray("items")) {
-            bottle |= e.getAsJsonObject().get("item").getAsString().equals("minecraft:glass_bottle");
+            bottle |=
+                    e.getAsJsonObject().get("item").getAsString().equals("minecraft:glass_bottle");
         }
         if (!bottle) {
             problems.add("$.items: the catalyst minecraft:glass_bottle is missing");
@@ -765,7 +767,9 @@ public final class VoiceContent {
     // ---- Helpers ----------------------------------------------------------------------------
 
     private static List<String> entryList(Schema schema, JsonElement e) {
-        return e.isJsonObject() ? entryProblems(schema, e.getAsJsonObject()) : List.of("not an object");
+        return e.isJsonObject()
+                ? entryProblems(schema, e.getAsJsonObject())
+                : List.of("not an object");
     }
 
     private static List<String> shipped(JsonObject root, String field, String roster) {

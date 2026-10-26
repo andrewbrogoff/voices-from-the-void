@@ -141,7 +141,7 @@ public final class VoiceChecks {
     static boolean dangerEligible(ServerPlayer player, ServerLevel level) {
         return !player.hasDisconnected()
                 && player.isAlive()
-                && player.level() == level
+                && player.level().equals(level)
                 && suppressed(player) == null
                 && WarpService.inContext(player);
     }
@@ -219,7 +219,8 @@ public final class VoiceChecks {
             eligible =
                     bound == 0
                             ? List.of()
-                            : List.of(new VoiceDraws.Candidate(only, e.weight(), Math.max(0, bound)));
+                            : List.of(
+                                    new VoiceDraws.Candidate(only, e.weight(), Math.max(0, bound)));
         }
         VoiceDraws.Draw draw = VoiceDraws.draw(player.getUUID(), r.checks(), pm, forced, eligible);
         if (draw.result() != VoiceDraws.Result.PICKED) {
@@ -245,7 +246,8 @@ public final class VoiceChecks {
             }
             case VoiceContent.BARGAIN -> {
                 List<String> ids = new ArrayList<>(bargains.keySet());
-                int[] weights = bargains.values().stream().mapToInt(VoiceContent.Bargain::weight).toArray();
+                int[] weights =
+                        bargains.values().stream().mapToInt(VoiceContent.Bargain::weight).toArray();
                 String bargainId = ids.get(VoiceDraws.weighted(draw.param(), weights));
                 VoiceContent.Bargain b = Objects.requireNonNull(bargains.get(bargainId));
                 created =
@@ -268,7 +270,12 @@ public final class VoiceChecks {
                         break;
                     }
                     VoiceContent.Effect f = effects.get(i);
-                    fired |= addEffect(player, Identifier.parse(f.effect()), f.duration(), f.amplifier());
+                    fired |=
+                            addEffect(
+                                    player,
+                                    Identifier.parse(f.effect()),
+                                    f.duration(),
+                                    f.amplifier());
                 }
                 cue = dangerEligible(player, level);
             }
@@ -288,9 +295,7 @@ public final class VoiceChecks {
      * and the offer (an expired one deleted, a new one stored). A held guard skips the write.
      */
     private static void settle(
-            ServerPlayer player,
-            WarpAttachment.@Nullable Offer offer,
-            boolean fired) {
+            ServerPlayer player, WarpAttachment.@Nullable Offer offer, boolean fired) {
         try (OperationGuard.Scope scope = WarpService.GUARD.tryEnter(player.getUUID())) {
             if (scope == null) {
                 return;
@@ -348,11 +353,14 @@ public final class VoiceChecks {
     static SortedMap<String, VoiceContent.Bargain> eligibleBargains(
             ServerPlayer player, WarpRecord r, WarpRules rules) {
         SortedMap<String, VoiceContent.Bargain> out = new TreeMap<>();
-        for (Map.Entry<ResourceKey<com.andrewbrogoff.vftv.api.warp.Bargain>, com.andrewbrogoff.vftv.api.warp.Bargain> e :
-                player.level()
-                        .registryAccess()
-                        .lookupOrThrow(WarpKeys.BARGAIN_REGISTRY)
-                        .entrySet()) {
+        for (Map.Entry<
+                        ResourceKey<com.andrewbrogoff.vftv.api.warp.Bargain>,
+                        com.andrewbrogoff.vftv.api.warp.Bargain>
+                e :
+                        player.level()
+                                .registryAccess()
+                                .lookupOrThrow(WarpKeys.BARGAIN_REGISTRY)
+                                .entrySet()) {
             VoiceContent.Bargain b = ((WarpContent.BargainEntry) e.getValue()).bargain();
             Identifier id = e.getKey().identifier();
             WarpPreview p =

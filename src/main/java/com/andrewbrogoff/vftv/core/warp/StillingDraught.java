@@ -79,7 +79,8 @@ public final class StillingDraught extends Item {
         if (player.hasInfiniteMaterials()) {
             return stack;
         }
-        return ItemUtils.createFilledResult(stack, player, new ItemStack(Items.GLASS_BOTTLE), false);
+        return ItemUtils.createFilledResult(
+                stack, player, new ItemStack(Items.GLASS_BOTTLE), false);
     }
 
     @Override

@@ -198,8 +198,13 @@ final class WarpData implements FeatureData {
         }
 
         @Override
+        public String getName() {
+            return "vftv warp content";
+        }
+
+        @Override
         protected CompletableFuture<?> generate(List<Envelope> envelopes, CachedOutput cache) {
-            Path root = Path.of(System.getProperty(CONTENT_DIR));
+            Path root = Path.of(java.util.Objects.requireNonNull(System.getProperty(CONTENT_DIR)));
             Map<String, JsonObject> bySchema = new TreeMap<>();
             List<String> problems = new ArrayList<>();
             for (Envelope e : envelopes) {
@@ -219,18 +224,18 @@ final class WarpData implements FeatureData {
                 throw new IllegalStateException(
                         "Rejected warp content:\n" + String.join("\n", problems));
             }
-            JsonObject script = bySchema.get(VoiceContent.VOICE_LINES.id());
+            JsonObject script = one(bySchema, VoiceContent.VOICE_LINES);
             Map<String, String> texts = new TreeMap<>();
             voices.asMap().forEach((k, v) -> texts.put(k, v.getAsString()));
             problems.addAll(VoiceContent.scriptRules(script, lexicon, texts));
             for (JsonElement sound :
-                    bySchema.get(VoiceContent.PHANTOMS.id()).getAsJsonArray("sounds")) {
+                    one(bySchema, VoiceContent.PHANTOMS).getAsJsonArray("sounds")) {
                 if (!BuiltInRegistries.SOUND_EVENT.containsKey(
                         Identifier.parse(sound.getAsString()))) {
                     problems.add("warp/phantoms.json: unknown sound " + sound.getAsString());
                 }
             }
-            JsonObject bootstrap = bySchema.get(VoiceContent.BOOTSTRAP.id());
+            JsonObject bootstrap = one(bySchema, VoiceContent.BOOTSTRAP);
             bootstrap
                     .getAsJsonArray("items")
                     .forEach(
@@ -267,27 +272,26 @@ final class WarpData implements FeatureData {
             List<CompletableFuture<?>> writes = new ArrayList<>();
             Path data = output.getOutputFolder(PackOutput.Target.DATA_PACK);
             Path assets = output.getOutputFolder(PackOutput.Target.RESOURCE_PACK).resolve("vftv");
-            bySchema.get(VoiceContent.EVENTS.id())
+            one(bySchema, VoiceContent.EVENTS)
                     .getAsJsonObject("events")
                     .asMap()
-                    .forEach(
-                            (id, body) ->
-                                    writes.add(
-                                            save(cache, data, id, "voice_event", body)));
-            bySchema.get(VoiceContent.BARGAINS.id())
+                    .forEach((id, body) -> writes.add(save(cache, data, id, "voice_event", body)));
+            one(bySchema, VoiceContent.BARGAINS)
                     .getAsJsonObject("bargains")
                     .asMap()
                     .forEach((id, body) -> writes.add(save(cache, data, id, "bargain", body)));
             JsonElement recipe =
-                    bySchema.get(VoiceContent.RECIPES.id())
+                    one(bySchema, VoiceContent.RECIPES)
                             .getAsJsonObject("recipes")
                             .get(VoiceContent.STILLING);
             writes.add(
                     DataProvider.saveStable(
                             cache, recipe, data.resolve("vftv/recipe/stilling_draught.json")));
             JsonObject phantoms = new JsonObject();
-            phantoms.add("sounds", bySchema.get(VoiceContent.PHANTOMS.id()).get("sounds"));
-            writes.add(DataProvider.saveStable(cache, phantoms, assets.resolve("voices/phantoms.json")));
+            phantoms.add("sounds", one(bySchema, VoiceContent.PHANTOMS).get("sounds"));
+            writes.add(
+                    DataProvider.saveStable(
+                            cache, phantoms, assets.resolve("voices/phantoms.json")));
             JsonObject lines = new JsonObject();
             script.getAsJsonObject("lines")
                     .asMap()
@@ -307,8 +311,13 @@ final class WarpData implements FeatureData {
                             });
             JsonObject linesFile = new JsonObject();
             linesFile.add("lines", lines);
-            writes.add(DataProvider.saveStable(cache, linesFile, assets.resolve("voices/lines.json")));
+            writes.add(
+                    DataProvider.saveStable(cache, linesFile, assets.resolve("voices/lines.json")));
             return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
+        }
+
+        private static JsonObject one(Map<String, JsonObject> bySchema, Schema schema) {
+            return java.util.Objects.requireNonNull(bySchema.get(schema.id()), schema.id());
         }
 
         private static CompletableFuture<?> save(

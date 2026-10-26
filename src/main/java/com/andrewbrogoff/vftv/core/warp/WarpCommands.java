@@ -2,6 +2,7 @@ package com.andrewbrogoff.vftv.core.warp;
 
 import com.andrewbrogoff.vftv.api.warp.CommitResult;
 import com.andrewbrogoff.vftv.api.warp.WarpCost;
+import com.andrewbrogoff.vftv.api.warp.WarpKeys;
 import com.andrewbrogoff.vftv.api.warp.WarpLimits;
 import com.andrewbrogoff.vftv.api.warp.WarpRules;
 import com.andrewbrogoff.vftv.api.warp.WarpSource;
@@ -14,24 +15,23 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
-import com.andrewbrogoff.vftv.api.warp.WarpKeys;
-import net.minecraft.commands.SharedSuggestionProvider;
-import net.minecraft.commands.arguments.IdentifierArgument;
-import net.minecraft.resources.Identifier;
 import java.util.Locale;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
+import net.minecraft.commands.SharedSuggestionProvider;
 import net.minecraft.commands.arguments.EntityArgument;
+import net.minecraft.commands.arguments.IdentifierArgument;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The warp feature's {@code /vftv} subtree, {@code warp get|set|add|clear|fire} (warp spec, "Commands";
- * configuration, "Commands"), built from vanilla Brigadier types only. {@code Vftv.commandRoot}
- * attaches it; the root already requires level 2. Every change goes through {@code apply} with
- * source {@code COMMAND}; {@code warp fire} runs one Voice event.
+ * The warp feature's {@code /vftv} subtree, {@code warp get|set|add|clear|fire} (warp spec,
+ * "Commands"; configuration, "Commands"), built from vanilla Brigadier types only. {@code
+ * Vftv.commandRoot} attaches it; the root already requires level 2. Every change goes through
+ * {@code apply} with source {@code COMMAND}; {@code warp fire} runs one Voice event.
  */
 public final class WarpCommands {
     /** {@code get}'s reply: the player, the kinds, gear, total, band, counter and chance. */
@@ -193,7 +193,8 @@ public final class WarpCommands {
         }
         String name = outcome.name().toLowerCase(Locale.ROOT);
         c.getSource()
-                .sendSuccess(() -> Component.translatable(FIRED, player.getDisplayName(), name), true);
+                .sendSuccess(
+                        () -> Component.translatable(FIRED, player.getDisplayName(), name), true);
         return outcome == VoiceChecks.Outcome.FIRED ? 1 : 0;
     }
 
