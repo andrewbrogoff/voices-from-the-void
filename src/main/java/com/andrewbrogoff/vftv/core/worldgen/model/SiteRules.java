@@ -30,7 +30,7 @@ public final class SiteRules {
      *
      * @param category its category id
      * @param stage its Stage
-     * @param kind its kind, e.g. {@code find}
+     * @param kind its kind, as the entry JSON names it
      */
     public record Entry(String category, int stage, String kind) {}
 

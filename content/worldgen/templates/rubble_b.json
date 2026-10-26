@@ -1,0 +1,63 @@
+{"schema": "vftv:template/1",
+ "size": [9, 4, 9],
+ "palette": {
+  "#": "minecraft:tuff_bricks",
+  "^": "minecraft:jigsaw[orientation=north_up]",
+  "b": "minecraft:cobbled_deepslate",
+  "c": "minecraft:chiseled_tuff",
+  "d": "minecraft:deepslate_tiles",
+  "k": "minecraft:calcite",
+  "t": "minecraft:tuff",
+  "x": "minecraft:cracked_deepslate_tiles"
+ },
+ "layers": [
+  [
+   "tdtbbbddb",
+   "tbddbbbbd",
+   "ttbddbbtb",
+   "dddtdbddb",
+   "dtbttbtbd",
+   "tddbddbbt",
+   "tttbtddbb",
+   "dbtbtttdd",
+   "tddbbtbbb"
+  ],
+  [
+   "    ^    ",
+   "         ",
+   "      b  ",
+   "         ",
+   "         ",
+   "  #   k  ",
+   "  x      ",
+   " #     b ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "         ",
+   "         ",
+   "         ",
+   "  k   k  ",
+   "         ",
+   "         ",
+   "         "
+  ],
+  [
+   "         ",
+   "         ",
+   "         ",
+   "         ",
+   "         ",
+   "  kc     ",
+   "         ",
+   "         ",
+   "         "
+  ]
+ ],
+ "block_entities": {
+  "4,1,0": {"jigsaw": {"name": "vftv:choir_ruin/end_plug", "target": "minecraft:empty", "pool": "minecraft:empty", "final_state": "minecraft:air", "joint": "aligned"}}
+ },
+ "entities": [
+ ]}

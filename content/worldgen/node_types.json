@@ -1,0 +1,5 @@
+{"schema": "vftv:node_types/1", "types": {
+  "vftv:choir": {"aspects": [{"aspect": "vftv:aer", "range": [16, 32]}, {"aspect": "vftv:ordo", "range": [24, 48]},
+                             {"aspect": "vftv:sonus", "range": [4, 12]}, {"aspect": "vftv:vacuos", "range": [4, 12]}],
+                 "main_aspect": "vftv:ordo",
+                 "clarity": {"faint": 0, "steady": 60, "clear": 40}}}}
