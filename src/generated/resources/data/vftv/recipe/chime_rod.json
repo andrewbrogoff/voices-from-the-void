@@ -1,0 +1,22 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "a": "#c:gems/amethyst",
+    "b": "vftv:resonant_brass_ingot"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "  a",
+    " b ",
+    "a  "
+  ],
+  "research": "vftv:singing_wands",
+  "result": {
+    "count": 1,
+    "id": "vftv:chime_rod"
+  },
+  "vis": {
+    "vftv:aer": 24,
+    "vftv:ordo": 16
+  }
+}

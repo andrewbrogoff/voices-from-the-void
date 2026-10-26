@@ -140,7 +140,7 @@ public final class NodeService {
         return null;
     }
 
-    private static void markDirty(MinecraftServer server) {
+    static void markDirty(MinecraftServer server) {
         ServerLevel overworld = server.overworld();
         SLOT.set(overworld, SLOT.get(overworld));
     }
@@ -176,7 +176,7 @@ public final class NodeService {
                 && ledger.starterMissing();
     }
 
-    private static NodeIndex index(ResourceKey<Level> dimension) {
+    static NodeIndex index(ResourceKey<Level> dimension) {
         return INDEX.computeIfAbsent(dimension, k -> new NodeIndex());
     }
 
@@ -212,7 +212,7 @@ public final class NodeService {
         unreadableWarned = false;
     }
 
-    private static void indexAdd(ResourceKey<Level> dim, long id, BlockPos pos) {
+    static void indexAdd(ResourceKey<Level> dim, long id, BlockPos pos) {
         index(dim).add(id, pos.getX(), pos.getY(), pos.getZ());
         CHUNK_IDS
                 .computeIfAbsent(dim, k -> new HashMap<>())
@@ -220,7 +220,7 @@ public final class NodeService {
                 .add(id);
     }
 
-    private static void indexRemove(ResourceKey<Level> dim, long id, BlockPos pos) {
+    static void indexRemove(ResourceKey<Level> dim, long id, BlockPos pos) {
         index(dim).remove(id, pos.getX(), pos.getZ());
         Set<Long> ids = CHUNK_IDS.getOrDefault(dim, Map.of()).get(ChunkPos.pack(pos));
         if (ids != null) {
@@ -243,8 +243,7 @@ public final class NodeService {
         return new Reconcile.Cell(ids.length, natural, structure);
     }
 
-    private static void post(
-            NodeEventKind kind, long id, @Nullable GlobalPos where, NodeCause cause) {
+    static void post(NodeEventKind kind, long id, @Nullable GlobalPos where, NodeCause cause) {
         VisEvents.node(new NodePayload(kind, new NodeRef(id, where), cause));
     }
 
@@ -257,6 +256,9 @@ public final class NodeService {
 
     /** A node block entity loaded: its chunk is queued. */
     static void onBlockEntityLoad(ServerLevel level, BlockPos pos) {
+        if (BellJar.installing(level)) {
+            return; // a provisional install queues no reconciliation
+        }
         queue(level, ChunkPos.containing(pos));
     }
 
@@ -404,7 +406,7 @@ public final class NodeService {
     static void onBlockRemoved(ServerLevel level, BlockPos pos, NodeBlockEntity be) {
         NodeState state = be.state();
         NodeLedger ledger = ledger(level.getServer());
-        if (state == null || state.id() == 0 || ledger == null) {
+        if (state == null || state.id() == 0 || ledger == null || BellJar.installing(level)) {
             return;
         }
         NodeLedger.Entry e = ledger.get(state.id());
@@ -431,7 +433,7 @@ public final class NodeService {
         return held == null || held.id() == id;
     }
 
-    private static boolean isStarter(NodeLedger ledger, long id) {
+    static boolean isStarter(NodeLedger ledger, long id) {
         NodeLedger.Starter s = ledger.starter();
         return s != null && s.id() == id;
     }
@@ -678,6 +680,7 @@ public final class NodeService {
                         .settle(level.getGameTime(), VisRulesService.tuning());
         be.setState(after);
         markForSync(level, pos);
+        NodeTaps.wakeAround(level, pos);
         boolean ok = true;
         if (boundary != null) {
             try {

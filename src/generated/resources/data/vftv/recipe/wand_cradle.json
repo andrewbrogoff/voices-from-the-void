@@ -1,0 +1,21 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "b": "vftv:resonant_brass_ingot",
+    "p": "#minecraft:planks"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "b b",
+    "ppp"
+  ],
+  "research": "vftv:vis_relays",
+  "result": {
+    "count": 1,
+    "id": "vftv:wand_cradle"
+  },
+  "vis": {
+    "vftv:ordo": 12,
+    "vftv:terra": 12
+  }
+}

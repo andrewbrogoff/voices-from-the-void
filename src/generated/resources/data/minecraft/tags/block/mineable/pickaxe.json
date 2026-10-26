@@ -1,5 +1,8 @@
 {
   "values": [
+    "vftv:node_tap",
+    "vftv:vis_relay",
+    "vftv:wand_cradle",
     "vftv:crucible",
     "vftv:essentia_tube",
     "vftv:tube_valve"

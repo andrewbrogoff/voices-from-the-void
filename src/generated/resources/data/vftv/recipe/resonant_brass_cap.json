@@ -1,0 +1,20 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "b": "vftv:resonant_brass_ingot"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    " b ",
+    "b b"
+  ],
+  "research": "vftv:singing_wands",
+  "result": {
+    "count": 2,
+    "id": "vftv:resonant_brass_cap"
+  },
+  "vis": {
+    "vftv:ignis": 16,
+    "vftv:ordo": 12
+  }
+}

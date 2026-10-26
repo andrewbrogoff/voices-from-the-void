@@ -100,6 +100,69 @@ public final class VisLang {
     /** Node commands while {@code vftv_nodes} is unreadable. */
     public static final String CMD_UNREADABLE = "commands.vftv.node.unreadable";
 
+    /** "I don't yet know how to move it." */
+    public static final String JAR_UNLEARNED = "message.vftv.jar.unlearned";
+
+    /** "It will not leave this place." */
+    public static final String JAR_ANCHORED = "message.vftv.jar.anchored";
+
+    /** "It rings in a key I don't know." */
+    public static final String JAR_UNKNOWN = "message.vftv.jar.unknown";
+
+    /** "This echo is old; the node has moved on." */
+    public static final String JAR_STALE = "message.vftv.jar.stale";
+
+    /** "There is no room for it here." */
+    public static final String JAR_NO_ROOM = "message.vftv.jar.no_room";
+
+    /** "The air here is already crowded." */
+    public static final String JAR_CROWDED = "message.vftv.jar.crowded";
+
+    /** "Too close to another node ({@code %s} blocks)." */
+    public static final String JAR_TOO_CLOSE = "message.vftv.jar.too_close";
+
+    /** "Right-click a node to take it up" */
+    public static final String JAR_EMPTY = "tooltip.vftv.bell_jar.empty";
+
+    /** "A {@code %s} {@code %s} node (no. {@code %s})" */
+    public static final String JAR_HOLDS = "tooltip.vftv.bell_jar.holds";
+
+    /** "Too many voices for one chord: {@code %s} of {@code %s}." */
+    public static final String RELAY_TOO_MANY = "message.vftv.relay.too_many";
+
+    /** "There is nothing here to listen to." */
+    public static final String RELAY_NO_NODE = "message.vftv.relay.no_node";
+
+    /** "Something already listens here." */
+    public static final String RELAY_TAKEN = "message.vftv.relay.taken";
+
+    /** "A chord of {@code %s} of {@code %s} voices: {@code %s} listening, {@code %s} charging." */
+    public static final String STATUS_NETWORK = "status.vftv.network";
+
+    /** "Nothing to listen to." */
+    public static final String STATUS_TAP_IDLE = "status.vftv.node_tap.idle";
+
+    /**
+     * "Listening to a {@code %s} {@code %s} (no. {@code %s}). Toward a clearer ring: {@code %s} of
+     * {@code %s}."
+     */
+    public static final String STATUS_TAP_LISTENING = "status.vftv.node_tap.listening";
+
+    /** "Too many voices for one chord." */
+    public static final String STATUS_UNLINKED = "status.vftv.vis_relay.unlinked";
+
+    /** The cradle holds no wand. */
+    public static final String STATUS_CRADLE_EMPTY = "status.vftv.wand_cradle.empty";
+
+    /** The cradled wand is full. */
+    public static final String STATUS_CRADLE_FULL = "status.vftv.wand_cradle.full";
+
+    /** Nothing reaches the cradle. */
+    public static final String STATUS_CRADLE_IDLE = "status.vftv.wand_cradle.idle";
+
+    /** "Charging: {@code %s} of {@code %s}." */
+    public static final String STATUS_CRADLE_CHARGING = "status.vftv.wand_cradle.charging";
+
     /** {@code vis_hud.x}'s comment, verbatim from the configuration spec; also its tooltip. */
     public static final String HUD_X_COMMENT =
             "Left edge of the vis HUD, in GUI pixels. Range: 0 to 4096. Default: 4.";
@@ -132,7 +195,7 @@ public final class VisLang {
                         "attribute.name.vftv.vis_discount",
                         TOOLTIP_MORE,
                         TOOLTIP_UNFINISHED,
-                        "tooltip.vftv.bell_jar.empty",
+                        JAR_EMPTY,
                         HUD_UNFINISHED,
                         TAP_UNLEARNED,
                         TAP_INERT,
@@ -142,19 +205,19 @@ public final class VisLang {
                         TAP_EMPTY,
                         SPEND_UNLEARNED,
                         SPEND_INERT,
-                        "message.vftv.jar.unlearned",
-                        "message.vftv.jar.anchored",
-                        "message.vftv.jar.unknown",
-                        "message.vftv.jar.stale",
-                        "message.vftv.jar.no_room",
-                        "message.vftv.jar.crowded",
-                        "message.vftv.relay.no_node",
-                        "message.vftv.relay.taken",
-                        "status.vftv.node_tap.idle",
-                        "status.vftv.vis_relay.unlinked",
-                        "status.vftv.wand_cradle.empty",
-                        "status.vftv.wand_cradle.full",
-                        "status.vftv.wand_cradle.idle",
+                        JAR_UNLEARNED,
+                        JAR_ANCHORED,
+                        JAR_UNKNOWN,
+                        JAR_STALE,
+                        JAR_NO_ROOM,
+                        JAR_CROWDED,
+                        RELAY_NO_NODE,
+                        RELAY_TAKEN,
+                        STATUS_TAP_IDLE,
+                        STATUS_UNLINKED,
+                        STATUS_CRADLE_EMPTY,
+                        STATUS_CRADLE_FULL,
+                        STATUS_CRADLE_IDLE,
                         NodeService.STARTER_MISSING,
                         FACT_STARTER_PRESENT,
                         FACT_STARTER_ABSENT,
@@ -169,14 +232,14 @@ public final class VisLang {
         t.add(authored(TOOLTIP_POOL, 3));
         t.add(authored(TOOLTIP_MISSING_ROD, 1));
         t.add(authored(TOOLTIP_MISSING_CAP, 1));
-        t.add(authored("tooltip.vftv.bell_jar.holds", 3));
+        t.add(authored(JAR_HOLDS, 3));
         t.add(authored(HUD_MISSING, 1));
         t.add(authored(SPEND_SHORT, 1));
-        t.add(authored("message.vftv.jar.too_close", 1));
-        t.add(authored("message.vftv.relay.too_many", 2));
-        t.add(authored("status.vftv.network", 4));
-        t.add(authored("status.vftv.node_tap.listening", 5));
-        t.add(authored("status.vftv.wand_cradle.charging", 2));
+        t.add(authored(JAR_TOO_CLOSE, 1));
+        t.add(authored(RELAY_TOO_MANY, 2));
+        t.add(authored(STATUS_NETWORK, 4));
+        t.add(authored(STATUS_TAP_LISTENING, 5));
+        t.add(authored(STATUS_CRADLE_CHARGING, 2));
         t.add(authored(CMD_REMOVED, 1));
         t.add(authored(CMD_UNKNOWN, 1));
         t.add(authored(CMD_STARTER_PLACED, 2));

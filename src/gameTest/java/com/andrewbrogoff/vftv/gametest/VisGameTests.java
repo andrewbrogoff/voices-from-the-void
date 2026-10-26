@@ -121,6 +121,7 @@ final class VisGameTests {
         tests.put("vis_node_strike_and_sounding", VisGameTests::nodeStrikeAndSounding);
         tests.put("vis_persistence", VisGameTests::persistence);
         tests.put("vis_natural_types_cover_biomes", VisGameTests::naturalTypesCoverBiomes);
+        RelayGameTests.register(tests);
         NeoForge.EVENT_BUS.addListener(VisSpentEvent.class, e -> spy.accept(e.payload()));
         NeoForge.EVENT_BUS.addListener(NodeEvent.class, e -> spy.accept(e.payload()));
     }
@@ -128,7 +129,7 @@ final class VisGameTests {
     // --- fixtures -----------------------------------------------------------------------------
 
     /** A loaded, forced chunk in a cell of its own, far from the test grid: its origin at y 100. */
-    private static BlockPos ownCell(GameTestHelper helper) {
+    static BlockPos ownCell(GameTestHelper helper) {
         int n = CELLS.incrementAndGet();
         BlockPos origin = new BlockPos(64 * (400 + n) + 8, 100, 64 * 400 + 8);
         ServerLevel level = helper.getLevel();
@@ -138,12 +139,12 @@ final class VisGameTests {
         return origin;
     }
 
-    private static void release(GameTestHelper helper, BlockPos origin) {
+    static void release(GameTestHelper helper, BlockPos origin) {
         ChunkPos chunk = ChunkPos.containing(origin);
         helper.getLevel().setChunkForced(chunk.x(), chunk.z(), false);
     }
 
-    private static SortedAspects six(int each) {
+    static SortedAspects six(int each) {
         SortedAspects m = new SortedAspects();
         for (String p :
                 List.of(
@@ -159,7 +160,7 @@ final class VisGameTests {
     }
 
     /** A sorted aspect map, by id text. */
-    private static final class SortedAspects extends TreeMap<String, Integer> {
+    static final class SortedAspects extends TreeMap<String, Integer> {
         private static final long serialVersionUID = 1L;
     }
 
@@ -168,7 +169,7 @@ final class VisGameTests {
      *
      * @return the minted id
      */
-    private static long node(
+    static long node(
             ServerLevel level,
             BlockPos pos,
             Identifier type,
@@ -189,11 +190,11 @@ final class VisGameTests {
         return Objects.requireNonNull(be.state()).id();
     }
 
-    private static NodeBlockEntity be(ServerLevel level, BlockPos pos) {
+    static NodeBlockEntity be(ServerLevel level, BlockPos pos) {
         return (NodeBlockEntity) Objects.requireNonNull(level.getBlockEntity(pos));
     }
 
-    private static ItemStack wand() {
+    static ItemStack wand() {
         return WandAssemblyRecipe.wand(WandPartKeys.WOODEN_ROD, WandPartKeys.COPPER_CAP);
     }
 
@@ -208,7 +209,7 @@ final class VisGameTests {
         return player;
     }
 
-    private static InteractionResult use(ServerPlayer player, BlockPos pos) {
+    static InteractionResult use(ServerPlayer player, BlockPos pos) {
         return player.gameMode.useItemOn(
                 player,
                 player.level(),
@@ -217,13 +218,13 @@ final class VisGameTests {
                 new BlockHitResult(Vec3.atCenterOf(pos), Direction.WEST, pos, false));
     }
 
-    private static int pool(ItemStack wand, String aspect) {
+    static int pool(ItemStack wand, String aspect) {
         return WandState.of(wand, WandParts.last()) instanceof WandState.Ready r
                 ? r.pool(ResourceKey.create(AspectKeys.REGISTRY, Identifier.parse(aspect)))
                 : -1;
     }
 
-    private static int current(ServerLevel level, BlockPos pos, String aspect) {
+    static int current(ServerLevel level, BlockPos pos, String aspect) {
         return Objects.requireNonNull(
                         Objects.requireNonNull(be(level, pos).state()).byAspect().get(aspect))
                 .current();
@@ -248,7 +249,7 @@ final class VisGameTests {
         }
     }
 
-    private static List<String> keys(List<Component> lines) {
+    static List<String> keys(List<Component> lines) {
         List<String> out = new ArrayList<>();
         lines.forEach(
                 l ->
@@ -259,7 +260,7 @@ final class VisGameTests {
         return out;
     }
 
-    private static List<Component> capture(Runnable body) {
+    static List<Component> capture(Runnable body) {
         List<Component> lines = new ArrayList<>();
         var previous = StatusLines.swapSender((p, line) -> lines.add(line.text()));
         try {
@@ -270,7 +271,7 @@ final class VisGameTests {
         return lines;
     }
 
-    private static List<Object> events(Runnable body) {
+    static List<Object> events(Runnable body) {
         List<Object> seen = new ArrayList<>();
         spy = seen::add;
         try {

@@ -388,4 +388,105 @@ class VisCodecsTest {
             assertFalse(VisService.sameCost(a, other), other.toString());
         }
     }
+
+    // --- T08b: the jar, the relays and cultivation ------------------------------------------
+
+    @Test
+    void capturedNodeRetention() {
+        CapturedNode jar = new CapturedNode(5, NODE);
+        retention(CapturedNode.BOUNDED, jar, "token", net.minecraft.nbt.StringTag.valueOf("x"));
+        CompoundTag zero = (CompoundTag) encode(CapturedNode.BOUNDED, jar);
+        zero.putLong("token", 0);
+        assertInstanceOf(
+                Retained.Unreadable.class, decode(VisContent.CAPTURED_CODEC, zero), "token 0");
+        CompoundTag badNode = (CompoundTag) encode(CapturedNode.BOUNDED, jar);
+        badNode.getCompoundOrEmpty("node").putInt("format", 2);
+        assertInstanceOf(
+                Retained.Unreadable.class,
+                decode(VisContent.CAPTURED_CODEC, badNode),
+                "an unreadable node state makes the jar unreadable");
+    }
+
+    @Test
+    void relayLedgerRetention() {
+        RelayLedger ledger =
+                new RelayLedger(
+                        List.of(
+                                new RelayLedger.Member(
+                                        new BlockPos(1, 64, -3),
+                                        com.andrewbrogoff.vftv.core.vis.model.RelayNetwork.Kind
+                                                .TAP),
+                                new RelayLedger.Member(
+                                        new BlockPos(9, 64, -3),
+                                        com.andrewbrogoff.vftv.core.vis.model.RelayNetwork.Kind
+                                                .CRADLE)));
+        retention(RelayLedger.BOUNDED, ledger, "members", net.minecraft.nbt.StringTag.valueOf("x"));
+        CompoundTag badKind = (CompoundTag) encode(RelayLedger.BOUNDED, ledger);
+        badKind.getListOrEmpty("members").getCompoundOrEmpty(0).putString("kind", "lantern");
+        assertInstanceOf(
+                Retained.Unreadable.class,
+                decode(RawRecordCodec.wrap(RelayLedger.BOUNDED), badKind),
+                "an unknown kind");
+        assertEquals(
+                "tap",
+                ((CompoundTag) encode(RelayLedger.BOUNDED, ledger))
+                        .getListOrEmpty("members")
+                        .getCompoundOrEmpty(0)
+                        .getStringOr("kind", ""));
+    }
+
+    private static final Identifier AER = Identifier.parse("vftv:aer");
+    private static final Identifier SONUS = Identifier.parse("vftv:sonus");
+    private static final Identifier ORDO = Identifier.parse("vftv:ordo");
+
+    @Test
+    void cultivationRoomAndAccept() {
+        VisTuning t = VisTuning.DEFAULTS; // per_max 4, clarity_cost 48, max_capacity 250
+        NodeState s = NODE.settle(1000, t);
+        assertEquals((250 - 30) * 4, NodeTaps.room(s, AER, true, t));
+        assertEquals(250 * 4, NodeTaps.room(s, ORDO, true, t), "a missing vis aspect from max 0");
+        assertEquals(48, NodeTaps.room(s, SONUS, false, t), "steady: one step to clear");
+        assertEquals(0, NodeTaps.room(s, Identifier.parse("vftv:metallum"), false, t));
+        NodeState more = NodeTaps.accept(s, AER, 9, 1000, t);
+        assertEquals(32, java.util.Objects.requireNonNull(more.byAspect().get("vftv:aer")).max());
+        assertEquals(
+                30,
+                java.util.Objects.requireNonNull(more.byAspect().get("vftv:aer")).current(),
+                "current unchanged");
+        assertEquals(1, more.cultivation().counters().get(AER));
+        NodeState added = NodeTaps.accept(s, ORDO, 1, 1000, t);
+        assertEquals(3, added.aspects().size(), "the new aspect reserves its slot");
+        assertEquals(0, java.util.Objects.requireNonNull(added.byAspect().get("vftv:ordo")).max());
+        assertEquals(
+                List.of("vftv:aer", "vftv:ordo", "vftv:terra"),
+                added.aspects().stream().map(a -> a.aspect().toString()).toList(),
+                "ascending id");
+        NodeState clear = NodeTaps.accept(s, SONUS, 48, 1000, t);
+        assertEquals(NodeState.Clarity.CLEAR, clear.clarity());
+        assertEquals(0, clear.cultivation().sonus());
+        assertEquals(40, clear.regen().interval(), "a clarity step rebases to clear's interval");
+        assertEquals(0, NodeTaps.room(clear, SONUS, false, t));
+    }
+
+    @Test
+    void settlementCarriesCountersAfterLoweredThresholds() {
+        NodeState s =
+                new NodeState(
+                        NODE.id(),
+                        NODE.origin(),
+                        NODE.type(),
+                        NODE.clarity(),
+                        NODE.aspects(),
+                        NODE.regen(),
+                        new NodeState.Cultivation(new TreeMap<>(Map.of(AER, 3)), 30));
+        VisTuning lowered =
+                VisTuning.parse("{\"cultivate.per_max\": 2, \"cultivate.clarity_cost\": 20}");
+        NodeState carried = s.settle(1000, lowered);
+        assertEquals(
+                31, java.util.Objects.requireNonNull(carried.byAspect().get("vftv:aer")).max());
+        assertEquals(1, carried.cultivation().counters().get(AER));
+        assertEquals(NodeState.Clarity.CLEAR, carried.clarity(), "steady + 30 Sonus at cost 20");
+        assertEquals(0, carried.cultivation().sonus());
+        assertEquals(s.settle(1000, VisTuning.DEFAULTS).cultivation(), s.cultivation());
+    }
 }

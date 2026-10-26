@@ -30,8 +30,8 @@ import org.junit.jupiter.api.Test;
 /**
  * Replays {@code content/nodes/fixtures.json} (wands spec, "Fixtures") against the model code: the
  * region, ring, quote and regeneration tables, which an independent reference computed. The pulse
- * table is the relays' (T08b) to replay; the coverage table is checked against the biome tags by a
- * GameTest.
+ * table is replayed by {@code RelayModelTest}; the coverage table is checked against the biome tags
+ * by a GameTest.
  */
 class VisFixturesTest {
     private static final JsonObject FIXTURES = load("content/nodes/fixtures.json");

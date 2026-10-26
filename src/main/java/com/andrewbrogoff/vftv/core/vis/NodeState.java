@@ -1,6 +1,7 @@
 package com.andrewbrogoff.vftv.core.vis;
 
 import com.andrewbrogoff.vftv.api.vis.VisLimits;
+import com.andrewbrogoff.vftv.core.vis.model.Cultivate;
 import com.andrewbrogoff.vftv.core.vis.model.Reconcile;
 import com.andrewbrogoff.vftv.core.vis.model.Regen;
 import com.andrewbrogoff.vftv.core.vis.model.VisTuning;
@@ -344,13 +345,41 @@ public record NodeState(
         for (int a = 0; a < n; a++) {
             next.add(new NodeAspect(aspects.get(a).aspect(), max[a], current[a]));
         }
-        int interval = tuning.regenInterval(clarity.index());
+        // A lowered per_max or clarity_cost carries counters at or over it into steps.
+        int perMax = tuning.integer("cultivate.per_max");
+        int cap = tuning.integer("cultivate.max_capacity");
+        int cost = tuning.integer("cultivate.clarity_cost");
+        Cultivation cult = cultivation;
+        SortedMap<Identifier, Integer> counters = null;
+        for (int a = 0; a < n; a++) {
+            NodeAspect at = next.get(a);
+            Integer c = cultivation.counters().get(at.aspect());
+            if (c != null && c > 0 && (c >= perMax || at.max() >= cap)) {
+                Cultivate.Vis v = Cultivate.insertVis(at.max(), c, 0, cap, perMax);
+                next.set(a, new NodeAspect(at.aspect(), v.max(), at.current()));
+                if (counters == null) {
+                    counters = new TreeMap<>(cultivation.counters());
+                }
+                counters.put(at.aspect(), v.counter());
+            }
+        }
+        Clarity cl = clarity;
+        int sonus = cultivation.sonus();
+        if (sonus > 0 && (sonus >= cost || clarity == Clarity.CLEAR)) {
+            Cultivate.Clarity c = Cultivate.insertSonus(clarity.index(), sonus, 0, cost);
+            cl = Clarity.byIndex(c.clarity());
+            sonus = c.sonus();
+        }
+        if (counters != null || sonus != cultivation.sonus()) {
+            cult = new Cultivation(counters == null ? cultivation.counters() : counters, sonus);
+        }
+        int interval = tuning.regenInterval(cl.index());
         int divisor = tuning.regenDivisor();
         RegenClock clock =
                 interval != regen.interval() || divisor != regen.divisor()
                         ? new RegenClock(now, interval, divisor)
                         : new RegenClock(tick, regen.interval(), regen.divisor());
-        return new NodeState(id, origin, type, clarity, next, clock, cultivation);
+        return new NodeState(id, origin, type, cl, next, clock, cult);
     }
 
     /** The aspects by id text. */

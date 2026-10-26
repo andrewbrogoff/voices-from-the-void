@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.vis.WandRod;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.common.Registrar;
+import com.andrewbrogoff.vftv.core.vis.model.RelayNetwork;
 import com.mojang.serialization.Codec;
 import java.util.List;
 import java.util.function.Supplier;
@@ -17,6 +18,7 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
 import net.minecraft.world.level.block.Block;
@@ -46,6 +48,22 @@ public final class VisContent {
     public static final ResourceKey<Block> NODE_KEY =
             ResourceKey.create(Registries.BLOCK, id("node"));
 
+    /** {@code vftv:bell_jar}. */
+    public static final ResourceKey<Item> BELL_JAR_KEY =
+            ResourceKey.create(Registries.ITEM, id("bell_jar"));
+
+    /** {@code vftv:node_tap}. */
+    public static final ResourceKey<Block> NODE_TAP_KEY =
+            ResourceKey.create(Registries.BLOCK, id("node_tap"));
+
+    /** {@code vftv:vis_relay}. */
+    public static final ResourceKey<Block> VIS_RELAY_KEY =
+            ResourceKey.create(Registries.BLOCK, id("vis_relay"));
+
+    /** {@code vftv:wand_cradle}. */
+    public static final ResourceKey<Block> WAND_CRADLE_KEY =
+            ResourceKey.create(Registries.BLOCK, id("wand_cradle"));
+
     /** {@code vftv:wand_assembly}: the special recipe's id and its serializer's. */
     public static final Identifier WAND_ASSEMBLY = id("wand_assembly");
 
@@ -62,10 +80,38 @@ public final class VisContent {
                     id("wand.tap_stop"),
                     id("wand.full"),
                     id("wand.tap_drone"),
-                    id("node.hum"));
+                    id("node.hum"),
+                    id("node.absorb"),
+                    id("node.clarity_rise"),
+                    id("relay.link"),
+                    id("cradle.charge"),
+                    id("bell_jar.capture"),
+                    id("bell_jar.release"));
+
+    /** {@code node.absorb}'s index in {@link #SOUNDS}. */
+    public static final int ABSORB = 5;
+
+    /** {@code node.clarity_rise}'s index. */
+    public static final int CLARITY_RISE = 6;
+
+    /** {@code relay.link}'s index. */
+    public static final int RELAY_LINK = 7;
+
+    /** {@code cradle.charge}'s index. */
+    public static final int CRADLE_CHARGE = 8;
+
+    /** {@code bell_jar.capture}'s index. */
+    public static final int JAR_CAPTURE = 9;
+
+    /** {@code bell_jar.release}'s index. */
+    public static final int JAR_RELEASE = 10;
 
     /** {@code vftv:vis}'s codec: the pools, kept raw when unreadable. */
     public static final Codec<Retained<VisPools>> VIS_CODEC = RawRecordCodec.wrap(VisPools.BOUNDED);
+
+    /** {@code vftv:captured_node}'s codec: the jar's node, kept raw when unreadable. */
+    public static final Codec<Retained<CapturedNode>> CAPTURED_CODEC =
+            RawRecordCodec.wrap(CapturedNode.BOUNDED);
 
     /** {@code vftv:wand_focus}'s codec. */
     public static final Codec<Retained<WandFocus>> FOCUS_CODEC =
@@ -81,6 +127,14 @@ public final class VisContent {
     private static @Nullable Supplier<DataComponentType<Retained<VisPools>>> vis;
     private static @Nullable Supplier<DataComponentType<Retained<WandFocus>>> focus;
     private static @Nullable Supplier<ParticleType<?>> glint;
+    private static @Nullable Supplier<Item> bellJar;
+    private static @Nullable Supplier<Block> nodeTap;
+    private static @Nullable Supplier<Block> visRelay;
+    private static @Nullable Supplier<Block> wandCradle;
+    private static @Nullable Supplier<BlockEntityType<?>> nodeTapEntity;
+    private static @Nullable Supplier<BlockEntityType<?>> visRelayEntity;
+    private static @Nullable Supplier<BlockEntityType<?>> cradleEntity;
+    private static @Nullable Supplier<DataComponentType<Retained<CapturedNode>>> captured;
     private static List<Supplier<SoundEvent>> sounds = List.of();
 
     private VisContent() {}
@@ -110,6 +164,57 @@ public final class VisContent {
         @SuppressWarnings("unchecked") // registered as a BlockEntityType<NodeBlockEntity>
         BlockEntityType<NodeBlockEntity> type = (BlockEntityType<NodeBlockEntity>) get(nodeEntity);
         return type;
+    }
+
+    /** The Bell Jar. */
+    public static Item bellJar() {
+        return get(bellJar);
+    }
+
+    /** The Node Tap block. */
+    public static Block nodeTap() {
+        return get(nodeTap);
+    }
+
+    /** The Vis Relay block. */
+    public static Block visRelay() {
+        return get(visRelay);
+    }
+
+    /** The Wand Cradle block. */
+    public static Block wandCradle() {
+        return get(wandCradle);
+    }
+
+    /** The Node Tap's block entity type. */
+    public static BlockEntityType<RelayBlockEntity> nodeTapEntity() {
+        @SuppressWarnings("unchecked") // registered as a BlockEntityType<RelayBlockEntity>
+        BlockEntityType<RelayBlockEntity> type =
+                (BlockEntityType<RelayBlockEntity>) get(nodeTapEntity);
+        return type;
+    }
+
+    /** The Vis Relay's block entity type. */
+    public static BlockEntityType<?> visRelayEntity() {
+        return get(visRelayEntity);
+    }
+
+    /** The data-less member type of a tap or relay state. */
+    static BlockEntityType<?> relayEntity(net.minecraft.world.level.block.state.BlockState state) {
+        return state.is(nodeTap()) ? nodeTapEntity() : visRelayEntity();
+    }
+
+    /** The Wand Cradle's block entity type. */
+    public static BlockEntityType<WandCradleBlockEntity> cradleEntity() {
+        @SuppressWarnings("unchecked") // registered as a BlockEntityType<WandCradleBlockEntity>
+        BlockEntityType<WandCradleBlockEntity> type =
+                (BlockEntityType<WandCradleBlockEntity>) get(cradleEntity);
+        return type;
+    }
+
+    /** {@code vftv:captured_node}. */
+    public static DataComponentType<Retained<CapturedNode>> captured() {
+        return get(captured);
     }
 
     /** {@code vftv:wand_rod}. */
@@ -166,6 +271,66 @@ public final class VisContent {
                         Registries.BLOCK_ENTITY_TYPE,
                         "node",
                         () -> new BlockEntityType<NodeBlockEntity>(NodeBlockEntity::new, node()));
+        bellJar =
+                r.register(
+                        Registries.ITEM,
+                        "bell_jar",
+                        () ->
+                                new BellJarItem(
+                                        new Item.Properties().setId(BELL_JAR_KEY).stacksTo(1)));
+        nodeTap =
+                r.register(
+                        Registries.BLOCK,
+                        "node_tap",
+                        () -> new NodeTapBlock(RelayBlock.properties(NODE_TAP_KEY)));
+        visRelay =
+                r.register(
+                        Registries.BLOCK,
+                        "vis_relay",
+                        () ->
+                                new RelayBlock(
+                                        RelayBlock.properties(VIS_RELAY_KEY),
+                                        RelayNetwork.Kind.RELAY,
+                                        Block.box(4, 0, 4, 12, 15, 12)));
+        wandCradle =
+                r.register(
+                        Registries.BLOCK,
+                        "wand_cradle",
+                        () -> new WandCradleBlock(RelayBlock.properties(WAND_CRADLE_KEY)));
+        blockItem(r, NODE_TAP_KEY, VisContent::nodeTap);
+        blockItem(r, VIS_RELAY_KEY, VisContent::visRelay);
+        blockItem(r, WAND_CRADLE_KEY, VisContent::wandCradle);
+        nodeTapEntity =
+                r.register(
+                        Registries.BLOCK_ENTITY_TYPE,
+                        "node_tap",
+                        () ->
+                                new BlockEntityType<RelayBlockEntity>(
+                                        RelayBlockEntity::new, nodeTap()));
+        visRelayEntity =
+                r.register(
+                        Registries.BLOCK_ENTITY_TYPE,
+                        "vis_relay",
+                        () ->
+                                new BlockEntityType<RelayBlockEntity>(
+                                        RelayBlockEntity::new, visRelay()));
+        cradleEntity =
+                r.register(
+                        Registries.BLOCK_ENTITY_TYPE,
+                        "wand_cradle",
+                        () ->
+                                new BlockEntityType<WandCradleBlockEntity>(
+                                        WandCradleBlockEntity::new, wandCradle()));
+        captured =
+                component(
+                        r,
+                        VisKeys.CAPTURED_NODE_COMPONENT.getPath(),
+                        () ->
+                                DataComponentType.<Retained<CapturedNode>>builder()
+                                        .persistent(CAPTURED_CODEC)
+                                        .networkSynchronized(
+                                                ByteBufCodecs.fromCodec(CAPTURED_CODEC))
+                                        .build());
         rod =
                 component(
                         r,
@@ -228,6 +393,20 @@ public final class VisContent {
                                                 s.getPath(),
                                                 () -> SoundEvent.createVariableRangeEvent(s)))
                         .toList();
+    }
+
+    private static void blockItem(Registrar r, ResourceKey<Block> key, Supplier<Block> block) {
+        r.register(
+                Registries.ITEM,
+                key.identifier().getPath(),
+                () ->
+                        new BlockItem(
+                                block.get(),
+                                new Item.Properties()
+                                        .setId(
+                                                ResourceKey.create(
+                                                        Registries.ITEM, key.identifier()))
+                                        .useBlockDescriptionPrefix()));
     }
 
     private static <T> Supplier<DataComponentType<T>> component(

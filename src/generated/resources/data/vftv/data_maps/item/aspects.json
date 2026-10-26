@@ -5381,6 +5381,11 @@
       "vftv:metallum": 2,
       "vftv:vitreus": 2
     },
+    "vftv:bell_jar": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:vitreus": 3
+    },
     "vftv:chime_rod": {
       "vftv:metallum": 2,
       "vftv:praecantatio": 1,
@@ -5412,6 +5417,11 @@
     "vftv:label": {
       "vftv:cognitio": 1
     },
+    "vftv:node_tap": {
+      "vftv:metallum": 4,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 2
+    },
     "vftv:resonant_brass_cap": {
       "vftv:metallum": 2,
       "vftv:praecantatio": 1,
@@ -5431,10 +5441,21 @@
       "vftv:sonus": 2,
       "vftv:vitreus": 1
     },
+    "vftv:vis_relay": {
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1,
+      "vftv:sonus": 1,
+      "vftv:terra": 1
+    },
     "vftv:wand": {
       "vftv:instrumentum": 2,
       "vftv:metallum": 1,
       "vftv:praecantatio": 2
+    },
+    "vftv:wand_cradle": {
+      "vftv:arbor": 2,
+      "vftv:metallum": 2,
+      "vftv:praecantatio": 1
     },
     "vftv:worktable": {
       "vftv:arbor": 4,

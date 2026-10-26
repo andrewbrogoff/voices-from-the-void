@@ -1,0 +1,170 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#stand"
+        },
+        "east": {
+          "texture": "#stand"
+        },
+        "north": {
+          "texture": "#stand"
+        },
+        "south": {
+          "texture": "#stand"
+        },
+        "up": {
+          "texture": "#stand"
+        },
+        "west": {
+          "texture": "#stand"
+        }
+      },
+      "from": [
+        3,
+        0,
+        3
+      ],
+      "to": [
+        13,
+        2,
+        13
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#fork"
+        },
+        "east": {
+          "texture": "#fork"
+        },
+        "north": {
+          "texture": "#fork"
+        },
+        "south": {
+          "texture": "#fork"
+        },
+        "up": {
+          "texture": "#fork"
+        },
+        "west": {
+          "texture": "#fork"
+        }
+      },
+      "from": [
+        7,
+        2,
+        7
+      ],
+      "to": [
+        9,
+        8,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#fork"
+        },
+        "east": {
+          "texture": "#fork"
+        },
+        "north": {
+          "texture": "#fork"
+        },
+        "south": {
+          "texture": "#fork"
+        },
+        "up": {
+          "texture": "#fork"
+        },
+        "west": {
+          "texture": "#fork"
+        }
+      },
+      "from": [
+        4,
+        8,
+        7
+      ],
+      "to": [
+        12,
+        10,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#fork"
+        },
+        "east": {
+          "texture": "#fork"
+        },
+        "north": {
+          "texture": "#fork"
+        },
+        "south": {
+          "texture": "#fork"
+        },
+        "up": {
+          "texture": "#fork"
+        },
+        "west": {
+          "texture": "#fork"
+        }
+      },
+      "from": [
+        4,
+        10,
+        7
+      ],
+      "to": [
+        6,
+        15,
+        9
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#fork"
+        },
+        "east": {
+          "texture": "#fork"
+        },
+        "north": {
+          "texture": "#fork"
+        },
+        "south": {
+          "texture": "#fork"
+        },
+        "up": {
+          "texture": "#fork"
+        },
+        "west": {
+          "texture": "#fork"
+        }
+      },
+      "from": [
+        10,
+        10,
+        7
+      ],
+      "to": [
+        12,
+        15,
+        9
+      ]
+    }
+  ],
+  "textures": {
+    "fork": "vftv:block/vis_relay_fork",
+    "particle": "vftv:block/vis_relay_fork",
+    "stand": "vftv:block/vis_relay_stand"
+  }
+}

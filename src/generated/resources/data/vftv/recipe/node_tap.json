@@ -1,0 +1,23 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "a": "#c:gems/amethyst",
+    "b": "vftv:resonant_brass_ingot"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "b b",
+    "bab",
+    " b "
+  ],
+  "research": "vftv:cultivating_nodes",
+  "result": {
+    "count": 1,
+    "id": "vftv:node_tap"
+  },
+  "vis": {
+    "vftv:aqua": 20,
+    "vftv:ordo": 12,
+    "vftv:terra": 8
+  }
+}
