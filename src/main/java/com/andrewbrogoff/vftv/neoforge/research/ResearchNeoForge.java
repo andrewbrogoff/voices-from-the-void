@@ -9,7 +9,6 @@ import com.andrewbrogoff.vftv.api.neoforge.warp.WarpChangedEvent;
 import com.andrewbrogoff.vftv.api.warp.WarpState;
 import com.andrewbrogoff.vftv.core.aspect.AspectSet;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
-import com.andrewbrogoff.vftv.core.research.ResearchActions;
 import com.andrewbrogoff.vftv.core.research.ResearchEvents;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.Resolver;
@@ -146,7 +145,6 @@ public final class ResearchNeoForge {
                 event -> {
                     if (event.getEntity() instanceof ServerPlayer player) {
                         Resolver.logout(player);
-                        ResearchActions.logout(player);
                     }
                 });
         gameBus.addListener(
@@ -160,7 +158,6 @@ public final class ResearchNeoForge {
                 ServerStoppedEvent.class,
                 event -> {
                     Resolver.onServerStopped();
-                    ResearchActions.onServerStopped();
                     ResearchService.onServerStopped();
                 });
     }

@@ -27,13 +27,13 @@ import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.UUID;
+import java.util.WeakHashMap;
+import java.util.function.BiConsumer;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.network.protocol.game.ClientboundSoundPacket;
@@ -81,9 +81,15 @@ public final class ResearchActions {
     public static final String NOT_NOW = "message.vftv.research.not_now";
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final Map<UUID, Rate> RATE = new HashMap<>();
-    private static final Map<UUID, Integer> LAST_REQUEST = new HashMap<>();
+
+    /** Per connection: a reconnect is a new player entity (weak, so no cleanup). */
+    private static final Map<ServerPlayer, Window> WINDOWS = new WeakHashMap<>();
+
     private static @Nullable Network network;
+    private static BiConsumer<ServerPlayer, CustomPacketPayload> sender =
+            (player, payload) ->
+                    Objects.requireNonNull(network, "ResearchFeature.init")
+                            .toPlayer(player, payload);
 
     private ResearchActions() {}
 
@@ -93,26 +99,23 @@ public final class ResearchActions {
 
     /** Sends a feedback payload to its owner. */
     static void send(ServerPlayer player, CustomPacketPayload payload) {
-        Objects.requireNonNull(network, "ResearchFeature.init").toPlayer(player, payload);
+        sender.accept(player, payload);
     }
 
-    /** A rate window: one server tick's actions and commits. */
-    private static final class Rate {
+    /** Replaces where feedback goes and returns the previous; for GameTests. */
+    public static BiConsumer<ServerPlayer, CustomPacketPayload> swapSender(
+            BiConsumer<ServerPlayer, CustomPacketPayload> next) {
+        BiConsumer<ServerPlayer, CustomPacketPayload> previous = sender;
+        sender = next;
+        return previous;
+    }
+
+    /** One connection's rate window (one server tick's actions and commits) and last request. */
+    private static final class Window {
         long tick = -1;
         int actions;
         int commits;
-    }
-
-    /** The player left: the next connection starts its request ids afresh. */
-    public static void logout(ServerPlayer player) {
-        RATE.remove(player.getUUID());
-        LAST_REQUEST.remove(player.getUUID());
-    }
-
-    /** The server stopped. */
-    public static void onServerStopped() {
-        RATE.clear();
-        LAST_REQUEST.clear();
+        int lastRequest = -1;
     }
 
     // ---- Quotes --------------------------------------------------------------------------------
@@ -187,9 +190,8 @@ public final class ResearchActions {
     }
 
     private static void handle(ResearchAction action, ServerPlayer player) {
-        UUID id = player.getUUID();
         long tick = player.level().getServer().getTickCount();
-        Rate rate = RATE.computeIfAbsent(id, k -> new Rate());
+        Window rate = WINDOWS.computeIfAbsent(player, k -> new Window());
         if (rate.tick != tick) {
             rate.tick = tick;
             rate.actions = 0;
@@ -204,12 +206,11 @@ public final class ResearchActions {
         if (commit) {
             rate.commits++;
         }
-        Integer last = LAST_REQUEST.get(id);
-        if (last != null && action.requestId() <= last) {
+        if (action.requestId() <= rate.lastRequest) {
             reply(player, action, Reply.refuse(STALE)); // check 2
             return;
         }
-        LAST_REQUEST.put(id, action.requestId());
+        rate.lastRequest = action.requestId();
         if (!(player.containerMenu instanceof CommonplaceMenu menu)
                 || menu.containerId != action.containerId()
                 || !menu.stillValid(player)) {
