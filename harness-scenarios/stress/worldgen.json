@@ -1,4 +1,21 @@
 {
   "feature": "worldgen",
-  "steps": []
+  "steps": [
+    {"op": "cmd", "args": {"command": "forceload add 192 -64 447 63"}},
+    {"op": "cmd", "args": {"command": "place structure vftv:choir_ruin 256 64 0"}},
+    {"op": "cmd", "args": {"command": "fill 380 139 -8 396 139 8 minecraft:tuff_bricks"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer_cantor 384.5 140 0.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 382.5 140 2.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 386.5 140 2.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 382.5 140 -1.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 386.5 140 -1.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 384.5 140 4.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 384.5 140 -3.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 380.5 140 0.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 388.5 140 0.5"}},
+    {"op": "cmd", "args": {"command": "summon vftv:answerer 384.5 140 6.5"}},
+    {"op": "cmd", "args": {"command": "setblock 384 140 -6 vftv:reliquary[facing=south]"}},
+    {"op": "wait_ticks", "args": {"ticks": 20}},
+    {"op": "dump", "args": {"kind": "vftv:worldgen", "pos": [384, 140, -6]}, "expect": {"reliquary": "vftv:choir_ruin"}}
+  ]
 }

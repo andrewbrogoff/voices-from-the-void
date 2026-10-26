@@ -31,9 +31,17 @@ import org.slf4j.Logger;
  * built-in site, on its first server load. Never synced: the client needs only the block state.
  */
 public final class ReliquaryBlockEntity extends BlockEntity {
-    /** The keys every block entity writes that are not ours. */
+    /** The keys vanilla and NeoForge write for every block entity, and the chunk's own flag. */
     static final Set<String> NOT_OWNED =
-            Set.of("id", "x", "y", "z", "components", "NeoForgeData", "neoforge:attachments");
+            Set.of(
+                    "id",
+                    "x",
+                    "y",
+                    "z",
+                    "keepPacked",
+                    "components",
+                    "NeoForgeData",
+                    "neoforge:attachments");
 
     private static final Codec<Retained<WorldgenCodecs.Reliquary>> RETAINED =
             RawRecordCodec.wrap(WorldgenCodecs.Reliquary.CODEC);
