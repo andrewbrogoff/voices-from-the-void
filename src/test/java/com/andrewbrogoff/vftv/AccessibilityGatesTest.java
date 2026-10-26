@@ -89,6 +89,8 @@ class AccessibilityGatesTest {
             List.of(
                     // aspect: the crosshair cards' nine-slice frame, its interior opaque ink1.
                     new Region("gui/sprites/hud/vis_frame", 4, 4, 8, 8, Palette.HUSH3, "ink1"),
+                    // hush: the Clearing Bell's reading frame, its interior opaque ink1.
+                    new Region("gui/sprites/hud/hush_frame", 4, 4, 8, 8, Palette.HUSH3, "ink1"),
                     // arcane: the cost number field in both cells, the preview's count corner,
                     // and the Worktable's title, status and inventory label strips.
                     new Region(
