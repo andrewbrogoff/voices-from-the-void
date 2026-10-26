@@ -205,11 +205,6 @@ public final class NodeTaps {
         return k;
     }
 
-    /** Restores a journalled state (a transaction's abort). */
-    public static void restore(NodeBlockEntity be, NodeState state) {
-        be.setState(state);
-    }
-
     /**
      * A cultivation transaction's root commit: the node is marked for sync, {@code
      * NodeEvent(CULTIVATED)} is posted, and the absorb sound plays (at most once per node per 20

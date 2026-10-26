@@ -103,11 +103,6 @@ public final class RelayNetwork {
         return new TreeSet<>(members.keySet());
     }
 
-    /** The member count. */
-    public int size() {
-        return members.size();
-    }
-
     // --- admission ----------------------------------------------------------------------------
 
     /**

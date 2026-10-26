@@ -14,7 +14,6 @@ import com.andrewbrogoff.vftv.core.essentia.EssentiaContent;
 import com.andrewbrogoff.vftv.core.essentia.EssentiaService;
 import com.andrewbrogoff.vftv.core.essentia.JarBlockEntity;
 import com.andrewbrogoff.vftv.core.essentia.model.EssentiaMath.Contents;
-import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
 import com.andrewbrogoff.vftv.core.vis.BellJar;
 import com.andrewbrogoff.vftv.core.vis.CapturedNode;
 import com.andrewbrogoff.vftv.core.vis.NodeBlockEntity;
@@ -1170,8 +1169,6 @@ final class RelayGameTests {
         helper.assertTrue(
                 RelayService.SLOT.get(level) instanceof Retained.Read<RelayLedger>,
                 "vftv_relays reads");
-        helper.assertTrue(
-                SharedMessages.UNREADABLE.equals("message.vftv.unreadable"), "the shared key");
         helper.succeed();
     }
 }

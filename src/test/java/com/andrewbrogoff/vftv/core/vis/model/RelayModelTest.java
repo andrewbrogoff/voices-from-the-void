@@ -143,7 +143,7 @@ class RelayModelTest {
         assertEquals(n.component(key(0, 0, 0)), n.component(key(3, 0, 0)));
         n.setKind(key(3, 0, 0), RELAY);
         assertEquals(RELAY, n.kind(key(3, 0, 0)));
-        assertEquals(2, n.size());
+        assertEquals(2, n.keys().size());
     }
 
     // --- the pulse ----------------------------------------------------------------------------

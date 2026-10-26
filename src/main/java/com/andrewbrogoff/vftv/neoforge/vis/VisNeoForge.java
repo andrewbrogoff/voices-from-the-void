@@ -8,8 +8,6 @@ import com.andrewbrogoff.vftv.core.common.TickBudget;
 import com.andrewbrogoff.vftv.core.vis.NodeBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.NodeService;
 import com.andrewbrogoff.vftv.core.vis.NodeState;
-import com.andrewbrogoff.vftv.core.vis.WandCradleBlockEntity;
-import com.andrewbrogoff.vftv.core.vis.WandState;
 import com.andrewbrogoff.vftv.core.vis.NodeTapBlock;
 import com.andrewbrogoff.vftv.core.vis.RelayBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.RelayService;
@@ -18,7 +16,9 @@ import com.andrewbrogoff.vftv.core.vis.VisContent;
 import com.andrewbrogoff.vftv.core.vis.VisEvents;
 import com.andrewbrogoff.vftv.core.vis.VisFeature;
 import com.andrewbrogoff.vftv.core.vis.VisRulesService;
+import com.andrewbrogoff.vftv.core.vis.WandCradleBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.WandParts;
+import com.andrewbrogoff.vftv.core.vis.WandState;
 import com.andrewbrogoff.vftv.core.vis.model.VisTuning;
 import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
 import com.google.gson.JsonArray;
@@ -263,7 +263,10 @@ public final class VisNeoForge {
                 at(
                         data,
                         server.overworld(),
-                        new BlockPos(xyz.get(0).getAsInt(), xyz.get(1).getAsInt(), xyz.get(2).getAsInt()));
+                        new BlockPos(
+                                xyz.get(0).getAsInt(),
+                                xyz.get(1).getAsInt(),
+                                xyz.get(2).getAsInt()));
             }
         }
         return data.toString();
@@ -271,13 +274,19 @@ public final class VisNeoForge {
 
     /** One position's node, relay membership and cradled wand, for the {@code vftv:vis} dump. */
     private static void at(JsonObject data, ServerLevel level, BlockPos pos) {
-        data.addProperty("block", BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString());
+        data.addProperty(
+                "block",
+                BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString());
         if (level.getBlockEntity(pos) instanceof NodeBlockEntity node && node.state() != null) {
             NodeState s = NodeService.settle(level, node);
             data.addProperty("nodeId", s.id());
             data.addProperty("clarity", s.clarity().getSerializedName());
             JsonObject aspects = new JsonObject();
-            s.aspects().forEach(x -> aspects.addProperty(x.aspect().toString(), x.current() + "/" + x.max()));
+            s.aspects()
+                    .forEach(
+                            x ->
+                                    aspects.addProperty(
+                                            x.aspect().toString(), x.current() + "/" + x.max()));
             data.add("aspects", aspects);
         }
         RelayService.Membership m = RelayService.membership(level, pos);

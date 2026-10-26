@@ -51,7 +51,7 @@ final class NodeTapEssentia implements ResourceHandler<EssentiaResource>, Essent
 
                 @Override
                 protected void revertToSnapshot(Snap snapshot) {
-                    NodeTaps.restore(snapshot.node, snapshot.state);
+                    snapshot.node.setState(snapshot.state);
                 }
 
                 @Override
