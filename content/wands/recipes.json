@@ -1,6 +1,60 @@
 {
   "schema": "vftv:wand_recipes/1",
   "recipes": {
-    "vftv:wand_assembly": {"type": "vftv:wand_assembly", "category": "equipment"}
+    "vftv:wand_assembly": {"type": "vftv:wand_assembly", "category": "equipment"},
+    "vftv:chime_rod": {
+      "type": "vftv:arcane",
+      "research": "vftv:singing_wands",
+      "kind": "ordinary",
+      "pattern": ["  a", " b ", "a  "],
+      "key": {"a": "minecraft:amethyst_shard", "b": "vftv:resonant_brass_ingot"},
+      "result": {"id": "vftv:chime_rod", "count": 1},
+      "vis": {"vftv:aer": 24, "vftv:ordo": 16}
+    },
+    "vftv:resonant_brass_cap": {
+      "type": "vftv:arcane",
+      "research": "vftv:singing_wands",
+      "kind": "ordinary",
+      "pattern": [" b ", "b b"],
+      "key": {"b": "vftv:resonant_brass_ingot"},
+      "result": {"id": "vftv:resonant_brass_cap", "count": 2},
+      "vis": {"vftv:ignis": 16, "vftv:ordo": 12}
+    },
+    "vftv:node_tap": {
+      "type": "vftv:arcane",
+      "research": "vftv:cultivating_nodes",
+      "kind": "ordinary",
+      "pattern": ["b b", "bab", " b "],
+      "key": {"b": "vftv:resonant_brass_ingot", "a": "minecraft:amethyst_shard"},
+      "result": {"id": "vftv:node_tap", "count": 1},
+      "vis": {"vftv:aqua": 20, "vftv:ordo": 12, "vftv:terra": 8}
+    },
+    "vftv:vis_relay": {
+      "type": "vftv:arcane",
+      "research": "vftv:vis_relays",
+      "kind": "ordinary",
+      "pattern": ["a a", " b ", "sss"],
+      "key": {"a": "minecraft:amethyst_shard", "b": "vftv:resonant_brass_ingot", "s": "minecraft:smooth_stone_slab"},
+      "result": {"id": "vftv:vis_relay", "count": 2},
+      "vis": {"vftv:aer": 16, "vftv:ordo": 16}
+    },
+    "vftv:wand_cradle": {
+      "type": "vftv:arcane",
+      "research": "vftv:vis_relays",
+      "kind": "ordinary",
+      "pattern": ["b b", "ppp"],
+      "key": {"b": "vftv:resonant_brass_ingot", "p": "#minecraft:planks"},
+      "result": {"id": "vftv:wand_cradle", "count": 1},
+      "vis": {"vftv:ordo": 12, "vftv:terra": 12}
+    },
+    "vftv:bell_jar": {
+      "type": "vftv:arcane",
+      "research": "vftv:moving_nodes",
+      "kind": "ordinary",
+      "pattern": [" g ", "g g", "bbb"],
+      "key": {"g": "minecraft:glass", "b": "vftv:resonant_brass_ingot"},
+      "result": {"id": "vftv:bell_jar", "count": 1},
+      "vis": {"vftv:aer": 20, "vftv:ordo": 16, "vftv:perditio": 8}
+    }
   }
 }

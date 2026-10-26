@@ -142,7 +142,10 @@ public final class VisLang {
     /** "Nothing to listen to." */
     public static final String STATUS_TAP_IDLE = "status.vftv.node_tap.idle";
 
-    /** "Listening to a {@code %s} {@code %s} (no. {@code %s}). Toward a clearer ring: {@code %s} of {@code %s}." */
+    /**
+     * "Listening to a {@code %s} {@code %s} (no. {@code %s}). Toward a clearer ring: {@code %s} of
+     * {@code %s}."
+     */
     public static final String STATUS_TAP_LISTENING = "status.vftv.node_tap.listening";
 
     /** "Too many voices for one chord." */

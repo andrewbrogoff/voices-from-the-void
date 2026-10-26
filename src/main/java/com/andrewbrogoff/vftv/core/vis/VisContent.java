@@ -6,6 +6,7 @@ import com.andrewbrogoff.vftv.api.vis.WandRod;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec;
 import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.common.Registrar;
+import com.andrewbrogoff.vftv.core.vis.model.RelayNetwork;
 import com.mojang.serialization.Codec;
 import java.util.List;
 import java.util.function.Supplier;
@@ -17,7 +18,6 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvent;
-import com.andrewbrogoff.vftv.core.vis.model.RelayNetwork;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.crafting.RecipeSerializer;
@@ -275,7 +275,9 @@ public final class VisContent {
                 r.register(
                         Registries.ITEM,
                         "bell_jar",
-                        () -> new BellJarItem(new Item.Properties().setId(BELL_JAR_KEY).stacksTo(1)));
+                        () ->
+                                new BellJarItem(
+                                        new Item.Properties().setId(BELL_JAR_KEY).stacksTo(1)));
         nodeTap =
                 r.register(
                         Registries.BLOCK,
@@ -302,7 +304,9 @@ public final class VisContent {
                 r.register(
                         Registries.BLOCK_ENTITY_TYPE,
                         "node_tap",
-                        () -> new BlockEntityType<RelayBlockEntity>(RelayBlockEntity::new, nodeTap()));
+                        () ->
+                                new BlockEntityType<RelayBlockEntity>(
+                                        RelayBlockEntity::new, nodeTap()));
         visRelayEntity =
                 r.register(
                         Registries.BLOCK_ENTITY_TYPE,
@@ -324,7 +328,8 @@ public final class VisContent {
                         () ->
                                 DataComponentType.<Retained<CapturedNode>>builder()
                                         .persistent(CAPTURED_CODEC)
-                                        .networkSynchronized(ByteBufCodecs.fromCodec(CAPTURED_CODEC))
+                                        .networkSynchronized(
+                                                ByteBufCodecs.fromCodec(CAPTURED_CODEC))
                                         .build());
         rod =
                 component(
@@ -398,7 +403,9 @@ public final class VisContent {
                         new BlockItem(
                                 block.get(),
                                 new Item.Properties()
-                                        .setId(ResourceKey.create(Registries.ITEM, key.identifier()))
+                                        .setId(
+                                                ResourceKey.create(
+                                                        Registries.ITEM, key.identifier()))
                                         .useBlockDescriptionPrefix()));
     }
 

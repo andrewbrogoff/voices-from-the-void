@@ -1,16 +1,16 @@
 package com.andrewbrogoff.vftv.neoforge.vis;
 
+import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaCapabilities;
 import com.andrewbrogoff.vftv.api.neoforge.vis.NodeEvent;
 import com.andrewbrogoff.vftv.api.neoforge.vis.VisSpentEvent;
 import com.andrewbrogoff.vftv.api.vis.VisKeys;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
-import com.andrewbrogoff.vftv.api.neoforge.essentia.EssentiaCapabilities;
 import com.andrewbrogoff.vftv.core.vis.NodeService;
 import com.andrewbrogoff.vftv.core.vis.NodeTapBlock;
 import com.andrewbrogoff.vftv.core.vis.RelayBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.RelayService;
-import com.andrewbrogoff.vftv.core.vis.VisContent;
 import com.andrewbrogoff.vftv.core.vis.Tapping;
+import com.andrewbrogoff.vftv.core.vis.VisContent;
 import com.andrewbrogoff.vftv.core.vis.VisEvents;
 import com.andrewbrogoff.vftv.core.vis.VisFeature;
 import com.andrewbrogoff.vftv.core.vis.VisRulesService;
@@ -45,8 +45,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.InterModComms;
 import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
-import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
+import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.common.PercentageAttribute;
 import net.neoforged.neoforge.common.util.BlockSnapshot;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
@@ -204,7 +204,8 @@ public final class VisNeoForge {
         @Override
         public boolean mayBreak(
                 ServerPlayer player, ServerLevel level, BlockPos pos, BlockState state) {
-            return !NeoForge.EVENT_BUS.post(new BreakBlockEvent(level, pos, state, player))
+            return !NeoForge.EVENT_BUS
+                    .post(new BreakBlockEvent(level, pos, state, player))
                     .isCanceled();
         }
 
@@ -217,8 +218,8 @@ public final class VisNeoForge {
                 Runnable install) {
             BlockSnapshot snapshot = BlockSnapshot.create(level.dimension(), level, pos);
             install.run();
-            return !NeoForge.EVENT_BUS.post(
-                            new BlockEvent.EntityPlaceEvent(snapshot, against, player))
+            return !NeoForge.EVENT_BUS
+                    .post(new BlockEvent.EntityPlaceEvent(snapshot, against, player))
                     .isCanceled();
         }
     }

@@ -1,0 +1,23 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "b": "vftv:resonant_brass_ingot",
+    "g": "minecraft:glass"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    " g ",
+    "g g",
+    "bbb"
+  ],
+  "research": "vftv:moving_nodes",
+  "result": {
+    "count": 1,
+    "id": "vftv:bell_jar"
+  },
+  "vis": {
+    "vftv:aer": 20,
+    "vftv:ordo": 16,
+    "vftv:perditio": 8
+  }
+}

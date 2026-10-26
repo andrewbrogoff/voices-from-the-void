@@ -30,8 +30,8 @@ import net.minecraft.world.level.block.state.BlockState;
 /**
  * Moving nodes (wands spec, "Moving nodes: the Bell Jar"): a capture takes a node whole into an
  * empty jar under a new token; a release sets it down at the clicked face, provisionally installed
- * while the placement event is asked, then committed. Both run in the jar's {@code
- * onItemUseFirst}, so this class controls every mutation and its order.
+ * while the placement event is asked, then committed. Both run in the jar's {@code onItemUseFirst},
+ * so this class controls every mutation and its order.
  */
 public final class BellJar {
     /** {@code vftv:moving_nodes}: the gate on capture and release. */

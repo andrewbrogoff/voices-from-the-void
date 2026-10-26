@@ -2,6 +2,7 @@ package com.andrewbrogoff.vftv.neoforge.vis.client;
 
 import com.andrewbrogoff.vftv.core.common.model.StrictJson;
 import com.andrewbrogoff.vftv.core.vis.VisContent;
+import com.andrewbrogoff.vftv.core.vis.client.CradleRenderer;
 import com.andrewbrogoff.vftv.core.vis.client.NodeAmbience;
 import com.andrewbrogoff.vftv.core.vis.client.NodeGlintParticle;
 import com.andrewbrogoff.vftv.core.vis.client.NodeRenderer;
@@ -49,9 +50,12 @@ public final class VisNeoForgeClient {
     public static void register(IEventBus modBus) {
         modBus.addListener(
                 EntityRenderersEvent.RegisterRenderers.class,
-                event ->
-                        event.registerBlockEntityRenderer(
-                                VisContent.nodeEntity(), context -> new NodeRenderer()));
+                event -> {
+                    event.registerBlockEntityRenderer(
+                            VisContent.nodeEntity(), context -> new NodeRenderer());
+                    event.registerBlockEntityRenderer(
+                            VisContent.cradleEntity(), CradleRenderer::new);
+                });
         modBus.addListener(
                 RegisterParticleProvidersEvent.class,
                 event ->

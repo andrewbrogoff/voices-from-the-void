@@ -243,8 +243,7 @@ public final class NodeService {
         return new Reconcile.Cell(ids.length, natural, structure);
     }
 
-    static void post(
-            NodeEventKind kind, long id, @Nullable GlobalPos where, NodeCause cause) {
+    static void post(NodeEventKind kind, long id, @Nullable GlobalPos where, NodeCause cause) {
         VisEvents.node(new NodePayload(kind, new NodeRef(id, where), cause));
     }
 

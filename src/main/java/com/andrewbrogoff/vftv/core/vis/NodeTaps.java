@@ -74,7 +74,9 @@ public final class NodeTaps {
             return false;
         }
         BlockPos first = tappedBy(level, node, null);
-        return level.getBlockState(node).is(VisContent.node()) && first != null && tap.equals(first);
+        return level.getBlockState(node).is(VisContent.node())
+                && first != null
+                && tap.equals(first);
     }
 
     /**
@@ -146,8 +148,7 @@ public final class NodeTaps {
                             NodeState.Clarity.byIndex(c.clarity()),
                             settled.aspects(),
                             settled.regen(),
-                            new NodeState.Cultivation(
-                                    settled.cultivation().counters(), c.sonus()))
+                            new NodeState.Cultivation(settled.cultivation().counters(), c.sonus()))
                     .settle(now, t);
         }
         List<NodeState.NodeAspect> aspects = new ArrayList<>(settled.aspects());

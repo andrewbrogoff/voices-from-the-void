@@ -1,0 +1,15 @@
+{
+  "model": {
+    "type": "minecraft:condition",
+    "component": "vftv:captured_node",
+    "on_false": {
+      "type": "minecraft:model",
+      "model": "vftv:item/bell_jar"
+    },
+    "on_true": {
+      "type": "minecraft:model",
+      "model": "vftv:item/bell_jar_filled"
+    },
+    "property": "minecraft:has_component"
+  }
+}

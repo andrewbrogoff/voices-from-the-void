@@ -22,8 +22,8 @@ import org.slf4j.Logger;
 /**
  * The Node Tap's essentia handler and suction (wands spec, "Cultivation"): insert-only, holding
  * nothing extractable (no slots, hold 0). The first insert in a transaction snapshots the node's
- * state through this journal, then settles; an abort restores the snapshot exactly; the root
- * commit publishes once. One instance per tap block entity.
+ * state through this journal, then settles; an abort restores the snapshot exactly; the root commit
+ * publishes once. One instance per tap block entity.
  */
 final class NodeTapEssentia implements ResourceHandler<EssentiaResource>, EssentiaSuction {
     private static final Logger LOGGER = LogUtils.getLogger();

@@ -1,0 +1,23 @@
+{
+  "type": "vftv:arcane",
+  "key": {
+    "a": "#c:gems/amethyst",
+    "b": "vftv:resonant_brass_ingot",
+    "s": "minecraft:smooth_stone_slab"
+  },
+  "kind": "ordinary",
+  "pattern": [
+    "a a",
+    " b ",
+    "sss"
+  ],
+  "research": "vftv:vis_relays",
+  "result": {
+    "count": 2,
+    "id": "vftv:vis_relay"
+  },
+  "vis": {
+    "vftv:aer": 16,
+    "vftv:ordo": 16
+  }
+}

@@ -37,8 +37,8 @@ import org.slf4j.Logger;
 
 /**
  * The relay networks (wands spec, "Relays"): per dimension, the persisted membership ({@code
- * vftv_relays}), its components in memory, the membership queue processed at the end of each
- * server tick, the active sinks and the pulse. Server thread only; nothing here loads a chunk.
+ * vftv_relays}), its components in memory, the membership queue processed at the end of each server
+ * tick, the active sinks and the pulse. Server thread only; nothing here loads a chunk.
  */
 public final class RelayService {
     /** The membership's SavedData, {@code vftv_relays}, in each dimension's storage. */
@@ -163,9 +163,7 @@ public final class RelayService {
     }
 
     private static boolean loaded(ServerLevel level, long key) {
-        return level.getChunkSource()
-                        .getChunkNow(
-                                BlockPos.getX(key) >> 4, BlockPos.getZ(key) >> 4)
+        return level.getChunkSource().getChunkNow(BlockPos.getX(key) >> 4, BlockPos.getZ(key) >> 4)
                 != null;
     }
 
@@ -241,7 +239,8 @@ public final class RelayService {
             int size = n.net.admissionSize(key, pos.getX(), pos.getY(), pos.getZ());
             if (size > RelayNetwork.MAX_MEMBERS) {
                 level.destroyBlock(pos, true);
-                ServerPlayer p = placer == null ? null : level.getServer().getPlayerList().getPlayer(placer);
+                ServerPlayer p =
+                        placer == null ? null : level.getServer().getPlayerList().getPlayer(placer);
                 if (p != null) {
                     StatusLines.send(p, tooMany(size));
                 }
@@ -253,7 +252,12 @@ public final class RelayService {
             n.dirty = true;
             if (links) {
                 level.playSound(
-                        null, pos, VisContent.sound(VisContent.RELAY_LINK), SoundSource.BLOCKS, 1, 1);
+                        null,
+                        pos,
+                        VisContent.sound(VisContent.RELAY_LINK),
+                        SoundSource.BLOCKS,
+                        1,
+                        1);
             }
             refreshSink(level, pos);
         } else if (actual != null && actual != persisted) {
@@ -515,7 +519,10 @@ public final class RelayService {
                 for (int i = 0; i < next.size(); i++) {
                     NodeState.NodeAspect na = next.get(i);
                     if (na.aspect().equals(vis.get(a).identifier())) {
-                        next.set(i, new NodeState.NodeAspect(na.aspect(), na.max(), na.current() - take));
+                        next.set(
+                                i,
+                                new NodeState.NodeAspect(
+                                        na.aspect(), na.max(), na.current() - take));
                         changed = true;
                     }
                 }
@@ -530,7 +537,9 @@ public final class RelayService {
             for (int a = 0; a < aspects; a++) {
                 int got = n.given[k * aspects + a];
                 if (got > 0) {
-                    pools.put(vis.get(a).identifier().toString(), wands.get(k).pool(vis.get(a)) + got);
+                    pools.put(
+                            vis.get(a).identifier().toString(),
+                            wands.get(k).pool(vis.get(a)) + got);
                 }
             }
             if (!pools.isEmpty()) {

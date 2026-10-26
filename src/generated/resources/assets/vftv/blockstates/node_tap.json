@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "vftv:block/node_tap",
+      "x": 90
+    },
+    "facing=east": {
+      "model": "vftv:block/node_tap",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vftv:block/node_tap"
+    },
+    "facing=south": {
+      "model": "vftv:block/node_tap",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "vftv:block/node_tap",
+      "x": 270
+    },
+    "facing=west": {
+      "model": "vftv:block/node_tap",
+      "y": 270
+    }
+  }
+}

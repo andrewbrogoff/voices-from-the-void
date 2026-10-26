@@ -52,7 +52,8 @@ public record RelayLedger(List<Member> members) {
                                                         BlockPos.CODEC
                                                                 .fieldOf("pos")
                                                                 .forGetter(Member::pos),
-                                                        KIND.fieldOf("kind").forGetter(Member::kind))
+                                                        KIND.fieldOf("kind")
+                                                                .forGetter(Member::kind))
                                                 .apply(i, Member::new)),
                         Set.of("pos", "kind"));
     }

@@ -35,7 +35,8 @@ public class RelayBlock extends Block implements EntityBlock {
     private final VoxelShape shape;
 
     /** A member of {@code kind} with a selection and collision shape. */
-    public RelayBlock(BlockBehaviour.Properties properties, RelayNetwork.Kind kind, VoxelShape shape) {
+    public RelayBlock(
+            BlockBehaviour.Properties properties, RelayNetwork.Kind kind, VoxelShape shape) {
         super(properties);
         this.kind = kind;
         this.shape = shape;

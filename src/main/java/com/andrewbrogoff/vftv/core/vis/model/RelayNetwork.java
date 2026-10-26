@@ -11,11 +11,11 @@ import java.util.TreeSet;
 import org.jspecify.annotations.Nullable;
 
 /**
- * One dimension's relay topology (wands spec, "Topology"): members by key (their position's
- * {@code BlockPos.asLong()}), linked iff their centres are within the range, in connected components
- * of at most {@link #MAX_MEMBERS}. A spatial hash with cell side {@code range} finds neighbours. A
- * member that a range rebuild could not admit is <em>unlinked</em>: kept, but in no component.
- * Mutable, on one thread.
+ * One dimension's relay topology (wands spec, "Topology"): members by key (their position's {@code
+ * BlockPos.asLong()}), linked iff their centres are within the range, in connected components of at
+ * most {@link #MAX_MEMBERS}. A spatial hash with cell side {@code range} finds neighbours. A member
+ * that a range rebuild could not admit is <em>unlinked</em>: kept, but in no component. Mutable, on
+ * one thread.
  */
 public final class RelayNetwork {
     /** The most members in one component. */
@@ -237,7 +237,10 @@ public final class RelayNetwork {
         return true;
     }
 
-    /** Gives a component to every linked-to-be member reachable from {@code start} among {@code -1}s. */
+    /**
+     * Gives a component to every linked-to-be member reachable from {@code start} among {@code
+     * -1}s.
+     */
     private void flood(Member start) {
         int id = nextComponent++;
         TreeSet<Long> keys = new TreeSet<>();

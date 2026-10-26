@@ -5,7 +5,11 @@ import com.andrewbrogoff.vftv.api.aspect.AspectKeys;
 import com.andrewbrogoff.vftv.api.vis.VisLimits;
 import com.andrewbrogoff.vftv.core.aspect.AspectIcons;
 import com.andrewbrogoff.vftv.core.aspect.AspectLang;
+import com.andrewbrogoff.vftv.core.common.RawRecordCodec.Retained;
 import com.andrewbrogoff.vftv.core.text.model.NumberFormats;
+import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
+import com.andrewbrogoff.vftv.core.vis.CapturedNode;
+import com.andrewbrogoff.vftv.core.vis.NodeService;
 import com.andrewbrogoff.vftv.core.vis.VisContent;
 import com.andrewbrogoff.vftv.core.vis.VisLang;
 import com.andrewbrogoff.vftv.core.vis.VisRulesService;
@@ -24,6 +28,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.util.FormattedCharSequence;
@@ -209,8 +214,13 @@ public final class VisHud {
         };
     }
 
-    /** The wand's tooltip lines, after its name. */
+    /** The wand's and the Bell Jar's tooltip lines, after the name. */
     public static void tooltip(ItemStack stack, List<Component> tooltip, @Nullable Player player) {
+        if (stack.is(VisContent.bellJar())) {
+            tooltip.add(
+                    Math.min(1, tooltip.size()), bellJarLine(stack).withStyle(ChatFormatting.GRAY));
+            return;
+        }
         if (!stack.is(VisContent.wand()) || player == null) {
             return;
         }
@@ -260,6 +270,21 @@ public final class VisHud {
                                     capacity)
                             .withStyle(ChatFormatting.GRAY));
         }
+    }
+
+    /** The Bell Jar's line: how to use it, the node it holds, or that it can't be read. */
+    static MutableComponent bellJarLine(ItemStack stack) {
+        return switch (stack.get(VisContent.captured())) {
+            case null -> Component.translatable(VisLang.JAR_EMPTY);
+            case Retained.Read<CapturedNode> r ->
+                    Component.translatable(
+                            VisLang.JAR_HOLDS,
+                            Component.translatable(r.value().node().clarity().langKey()),
+                            NodeService.typeName(r.value().node().type()),
+                            NumberFormats.integer(r.value().node().id()));
+            case Retained.Unreadable<CapturedNode> u ->
+                    Component.translatable(SharedMessages.UNREADABLE);
+        };
     }
 
     /** The harness's {@code vftv:vis_client} dump: the held wand's state and the HUD layout. */

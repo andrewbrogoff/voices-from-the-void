@@ -1,0 +1,106 @@
+{
+  "parent": "minecraft:block/block",
+  "elements": [
+    {
+      "faces": {
+        "down": {
+          "texture": "#base"
+        },
+        "east": {
+          "texture": "#base"
+        },
+        "north": {
+          "texture": "#base"
+        },
+        "south": {
+          "texture": "#base"
+        },
+        "up": {
+          "texture": "#base"
+        },
+        "west": {
+          "texture": "#base"
+        }
+      },
+      "from": [
+        2,
+        0,
+        2
+      ],
+      "to": [
+        14,
+        3,
+        14
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#rest"
+        },
+        "east": {
+          "texture": "#rest"
+        },
+        "north": {
+          "texture": "#rest"
+        },
+        "south": {
+          "texture": "#rest"
+        },
+        "up": {
+          "texture": "#rest"
+        },
+        "west": {
+          "texture": "#rest"
+        }
+      },
+      "from": [
+        2,
+        3,
+        6
+      ],
+      "to": [
+        4,
+        7,
+        10
+      ]
+    },
+    {
+      "faces": {
+        "down": {
+          "texture": "#rest"
+        },
+        "east": {
+          "texture": "#rest"
+        },
+        "north": {
+          "texture": "#rest"
+        },
+        "south": {
+          "texture": "#rest"
+        },
+        "up": {
+          "texture": "#rest"
+        },
+        "west": {
+          "texture": "#rest"
+        }
+      },
+      "from": [
+        12,
+        3,
+        6
+      ],
+      "to": [
+        14,
+        7,
+        10
+      ]
+    }
+  ],
+  "textures": {
+    "base": "vftv:block/wand_cradle_base",
+    "particle": "vftv:block/wand_cradle_base",
+    "rest": "vftv:block/wand_cradle_rest"
+  }
+}

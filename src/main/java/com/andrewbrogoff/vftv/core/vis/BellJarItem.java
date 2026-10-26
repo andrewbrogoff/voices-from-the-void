@@ -21,7 +21,8 @@ public final class BellJarItem extends Item {
     @Override
     public InteractionResult onItemUseFirst(ItemStack stack, UseOnContext context) {
         boolean filled = stack.has(VisContent.captured());
-        boolean onNode = context.getLevel().getBlockState(context.getClickedPos()).is(VisContent.node());
+        boolean onNode =
+                context.getLevel().getBlockState(context.getClickedPos()).is(VisContent.node());
         if (!filled && !onNode) {
             return InteractionResult.PASS;
         }

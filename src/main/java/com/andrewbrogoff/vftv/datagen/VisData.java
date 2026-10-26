@@ -26,12 +26,18 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.regex.Pattern;
+import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.data.CachedOutput;
 import net.minecraft.data.DataProvider;
 import net.minecraft.data.PackOutput;
+import net.minecraft.data.loot.BlockLootSubProvider;
+import net.minecraft.data.loot.LootTableProvider;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
+import net.minecraft.world.flag.FeatureFlags;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.storage.loot.parameters.LootContextParamSets;
 import net.neoforged.neoforge.data.event.GatherDataEvent;
 
 /**
@@ -80,32 +86,48 @@ final class VisData implements FeatureData {
                                     0,
                                     1000)));
 
-    /** {@code vftv:wand_recipes/1}: the assembly instance (the Stage 2 bodies are T08b's). */
-    static final Schema RECIPES =
-            Schema.of(
-                            "vftv:wand_recipes/1",
-                            Schema.required(
-                                    "recipes",
-                                    new Schema.MapOf(
-                                            KEY,
-                                            new Schema.Obj(
-                                                    List.of(
-                                                            Schema.required(
-                                                                    "type",
-                                                                    new Schema.OneOf(
-                                                                            Set.of(
-                                                                                    "vftv:wand_assembly"))),
-                                                            Schema.optional(
-                                                                    "category",
-                                                                    new Schema.OneOf(
-                                                                            Set.of(
-                                                                                    "building",
-                                                                                    "redstone",
-                                                                                    "equipment",
-                                                                                    "misc"))))),
-                                            1,
-                                            16)))
-                    .withExtra(VisData::recipeRules);
+    /** The Stage 2 arcane recipes' gates (wands spec, "Recipes"), in the table's order. */
+    static final Map<String, String> STAGE_2 = stage2();
+
+    /**
+     * {@code vftv:wand_recipes/1}: exactly the table's ids, the assembly instance with at most a
+     * {@code category}, each Stage 2 recipe an arcane body with the table's {@code research}.
+     */
+    static final Schema RECIPES = recipesSchema();
+
+    private static Map<String, String> stage2() {
+        Map<String, String> m = new LinkedHashMap<>();
+        m.put("vftv:chime_rod", "vftv:singing_wands");
+        m.put("vftv:resonant_brass_cap", "vftv:singing_wands");
+        m.put("vftv:node_tap", "vftv:cultivating_nodes");
+        m.put("vftv:vis_relay", "vftv:vis_relays");
+        m.put("vftv:wand_cradle", "vftv:vis_relays");
+        m.put("vftv:bell_jar", "vftv:moving_nodes");
+        return java.util.Collections.unmodifiableMap(m);
+    }
+
+    private static Schema recipesSchema() {
+        List<Schema.Field> fields = new ArrayList<>();
+        fields.add(
+                Schema.required(
+                        VisContent.WAND_ASSEMBLY.toString(),
+                        new Schema.Obj(
+                                List.of(
+                                        Schema.required(
+                                                "type",
+                                                new Schema.OneOf(Set.of("vftv:wand_assembly"))),
+                                        Schema.optional(
+                                                "category",
+                                                new Schema.OneOf(
+                                                        Set.of(
+                                                                "building",
+                                                                "redstone",
+                                                                "equipment",
+                                                                "misc")))))));
+        STAGE_2.keySet().forEach(id -> fields.add(Schema.required(id, ArcaneBodies.BODY)));
+        return Schema.of("vftv:wand_recipes/1", Schema.required("recipes", new Schema.Obj(fields)))
+                .withExtra(VisData::recipeRules);
+    }
 
     private static final Schema.Obj CLARITY =
             new Schema.Obj(
@@ -250,6 +272,33 @@ final class VisData implements FeatureData {
         tags.tag(BlockTags.WITHER_IMMUNE).add(VisContent.NODE_KEY);
         tags.tag(BlockTags.DRAGON_IMMUNE).add(VisContent.NODE_KEY);
         tags.tag(BlockTags.FEATURES_CANNOT_REPLACE).add(VisContent.NODE_KEY);
+        tags.tag(BlockTags.MINEABLE_WITH_PICKAXE)
+                .add(VisContent.NODE_TAP_KEY)
+                .add(VisContent.VIS_RELAY_KEY)
+                .add(VisContent.WAND_CRADLE_KEY);
+    }
+
+    @Override
+    public List<LootTableProvider.SubProviderEntry> loot() {
+        return List.of(
+                new LootTableProvider.SubProviderEntry(Loot::new, LootContextParamSets.BLOCK));
+    }
+
+    /** The relay members drop themselves; a cradle's wand drops from its block entity. */
+    private static final class Loot extends BlockLootSubProvider {
+        Loot(HolderLookup.Provider registries) {
+            super(Set.of(), FeatureFlags.REGISTRY.allFlags(), registries);
+        }
+
+        @Override
+        protected void generate() {
+            getKnownBlocks().forEach(this::dropSelf);
+        }
+
+        @Override
+        protected Iterable<Block> getKnownBlocks() {
+            return List.of(VisContent.nodeTap(), VisContent.visRelay(), VisContent.wandCradle());
+        }
     }
 
     @Override
@@ -300,14 +349,16 @@ final class VisData implements FeatureData {
     private static List<String> recipeRules(JsonObject root) {
         JsonObject recipes = root.getAsJsonObject("recipes");
         List<String> problems = new ArrayList<>();
-        for (String id : recipes.keySet()) {
-            if (!id.equals(VisContent.WAND_ASSEMBLY.toString())) {
-                problems.add("$.recipes." + id + ": not in the recipe table");
-            }
-        }
-        if (!recipes.has(VisContent.WAND_ASSEMBLY.toString())) {
-            problems.add("$.recipes: " + VisContent.WAND_ASSEMBLY + " is missing");
-        }
+        STAGE_2.forEach(
+                (id, research) -> {
+                    JsonObject body = recipes.getAsJsonObject(id);
+                    if (!research.equals(body.get("research").getAsString())) {
+                        problems.add("$.recipes." + id + ".research: must be " + research);
+                    }
+                    if (!id.equals(body.getAsJsonObject("result").get("id").getAsString())) {
+                        problems.add("$.recipes." + id + ".result.id: must be " + id);
+                    }
+                });
         return problems;
     }
 
@@ -621,14 +672,23 @@ final class VisData implements FeatureData {
                         .resolve(id.getPath() + ".json"));
     }
 
-    /** {@code content/wands}: the part entries and the assembly recipe. */
+    /** {@code content/wands}: the part entries, the assembly recipe and the Stage 2 recipes. */
     private static final class WandsProvider extends ContentProvider {
-        WandsProvider(PackOutput output) {
+        private final CompletableFuture<HolderLookup.Provider> lookup;
+
+        WandsProvider(PackOutput output, CompletableFuture<HolderLookup.Provider> lookup) {
             super(output, "wands", List.of(PARTS, RECIPES));
+            this.lookup = lookup;
         }
 
         @Override
         protected CompletableFuture<?> generate(List<Envelope> envelopes, CachedOutput cache) {
+            return lookup.thenCompose(registries -> generate(envelopes, cache, registries));
+        }
+
+        private CompletableFuture<?> generate(
+                List<Envelope> envelopes, CachedOutput cache, HolderLookup.Provider registries) {
+            Set<String> research = ResearchContent.read(contentDir()).entries().keySet();
             List<CompletableFuture<?>> writes = new ArrayList<>();
             Map<String, VisRegistryRules.Part> rods = new TreeMap<>();
             Map<String, VisRegistryRules.Part> caps = new TreeMap<>();
@@ -672,18 +732,24 @@ final class VisData implements FeatureData {
                                         });
                     }
                 } else {
-                    json.getAsJsonObject("recipes")
-                            .entrySet()
-                            .forEach(
-                                    r ->
-                                            writes.add(
-                                                    save(
-                                                            cache,
-                                                            output,
-                                                            PackOutput.Target.DATA_PACK,
-                                                            Identifier.parse(r.getKey()),
-                                                            "recipe",
-                                                            r.getValue())));
+                    for (Map.Entry<String, JsonElement> r :
+                            json.getAsJsonObject("recipes").entrySet()) {
+                        if (STAGE_2.containsKey(r.getKey())) {
+                            JsonObject body = r.getValue().getAsJsonObject();
+                            problems.addAll(
+                                    ArcaneBodies.check(r.getKey(), body, registries, research));
+                            writes.add(ArcaneBodies.write(cache, output, r.getKey(), body));
+                        } else {
+                            writes.add(
+                                    save(
+                                            cache,
+                                            output,
+                                            PackOutput.Target.DATA_PACK,
+                                            Identifier.parse(r.getKey()),
+                                            "recipe",
+                                            r.getValue()));
+                        }
+                    }
                 }
             }
             problems.addAll(
