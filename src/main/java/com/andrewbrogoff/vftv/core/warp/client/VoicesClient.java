@@ -477,8 +477,9 @@ public final class VoicesClient {
         try {
             JsonObject json = parse(resource);
             JsonArray array = json.getAsJsonArray("sounds");
-            if (json.size() != 1 || array == null || array.isEmpty() || array.size() > 32) {
-                throw new IllegalArgumentException("not 1 to 32 sounds");
+            // An empty list is valid at runtime: vftv:sound then plays nothing.
+            if (json.size() != 1 || array == null || array.size() > 32) {
+                throw new IllegalArgumentException("not 0 to 32 sounds");
             }
             List<Identifier> out = new ArrayList<>();
             for (JsonElement e : array) {

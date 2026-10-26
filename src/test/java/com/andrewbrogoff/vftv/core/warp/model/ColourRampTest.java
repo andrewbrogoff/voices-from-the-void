@@ -52,6 +52,13 @@ class ColourRampTest {
         step(ramp, true, 60);
         step(ramp, false, 50);
         assertEquals(0F, ramp.intensity(), EPS);
+        ramp.start(3);
+        step(ramp, true, 60);
+        step(ramp, false, 20);
+        step(ramp, true, 40);
+        assertEquals(0F, ramp.intensity(), EPS);
+        step(ramp, true, 10);
+        assertEquals(0F, ramp.intensity(), EPS);
         ramp.start(2);
         ramp.clear();
         assertEquals(0F, ramp.intensity());

@@ -25,6 +25,7 @@ public final class ColourRamp {
     private float from;
     private float peak;
     private int age = -1;
+    private boolean fading;
 
     /** The peak at a band: nothing at band 0, then 25%, 45% and 65%. */
     public static float peak(int band) {
@@ -36,13 +37,23 @@ public final class ColourRamp {
         from = intensity;
         peak = peak(band);
         age = 0;
+        fading = false;
     }
 
-    /** One tick: with {@code enabled} false the drain only falls. */
+    /**
+     * One tick. Once {@code enabled} goes false the drain only falls, until it is gone, even if the
+     * option comes back on meanwhile (on affects the next cue).
+     */
     public void tick(boolean enabled) {
-        if (!enabled) {
+        if (!enabled && intensity > 0) {
+            fading = true;
+        }
+        if (fading || !enabled) {
             intensity = Math.max(0F, intensity - OFF_STEP);
-            age = intensity > 0 ? age : -1;
+            if (intensity == 0F) {
+                fading = false;
+                age = -1;
+            }
             return;
         }
         if (age < 0) {
@@ -70,5 +81,6 @@ public final class ColourRamp {
     public void clear() {
         intensity = 0F;
         age = -1;
+        fading = false;
     }
 }
