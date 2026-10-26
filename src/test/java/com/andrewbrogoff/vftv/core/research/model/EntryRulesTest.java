@@ -80,6 +80,13 @@ class EntryRulesTest {
         refuses(
                 w -> get(w, "vftv:commonplace_book").skip.put("vftv:aer", 1),
                 "skip_cost on a free");
+        refuses(
+                w -> {
+                    for (int i = 0; i <= EntryRules.MAX_PRICE_ENTRIES; i++) {
+                        get(w, "vftv:taking_notes").skip.put("vftv:aer" + i, 1);
+                    }
+                },
+                "more than 64 aspects");
         refuses(w -> get(w, "vftv:taking_notes").anchors = List.of("vftv:aer"), "2 to 5 anchors");
         refuses(
                 w -> get(w, "vftv:taking_notes").anchors = List.of("vftv:aer", "vftv:aer"),
