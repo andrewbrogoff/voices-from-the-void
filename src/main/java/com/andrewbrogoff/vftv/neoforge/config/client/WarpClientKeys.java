@@ -1,5 +1,6 @@
 package com.andrewbrogoff.vftv.neoforge.config.client;
 
+import com.andrewbrogoff.vftv.core.warp.WarpLang;
 import com.andrewbrogoff.vftv.core.warp.client.VoicesClient;
 import com.andrewbrogoff.vftv.core.warp.client.WarpClientConfig;
 import com.andrewbrogoff.vftv.neoforge.common.ConfigKeys;
@@ -18,7 +19,7 @@ final class WarpClientKeys {
     static List<ClientConfigPublisher.ClientRecord<?>> define(ModConfigSpec.Builder builder) {
         builder.translation("options.vftv.voices").push("voices");
         List<ModConfigSpec.ConfigValue<Boolean>> keys = new ArrayList<>();
-        WarpClientConfig.COMMENTS.forEach(
+        WarpLang.VOICE_OPTIONS.forEach(
                 (key, comment) ->
                         keys.add(
                                 ConfigKeys.bool(

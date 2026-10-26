@@ -8,9 +8,9 @@ import com.andrewbrogoff.vftv.core.warp.StillingDraught;
 import com.andrewbrogoff.vftv.core.warp.WarpCommands;
 import com.andrewbrogoff.vftv.core.warp.WarpConfig;
 import com.andrewbrogoff.vftv.core.warp.WarpContent;
+import com.andrewbrogoff.vftv.core.warp.WarpLang;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
-import com.andrewbrogoff.vftv.core.warp.client.WarpClientConfig;
 import com.andrewbrogoff.vftv.core.warp.model.VoiceContent;
 import com.andrewbrogoff.vftv.core.warp.model.WarpTuning;
 import com.google.gson.JsonElement;
@@ -66,7 +66,7 @@ final class WarpData implements FeatureData {
         option(t, "warp.amplifier", "Warp amplifier", WarpConfig.AMPLIFIER_COMMENT);
         option(t, "warp.gear", "Gear warp", WarpConfig.GEAR_COMMENT);
         t.add(LangEntry.codeDefined("options.vftv.voices", 0, CONFIG, "The Voices"));
-        WarpClientConfig.COMMENTS.forEach(
+        WarpLang.VOICE_OPTIONS.forEach(
                 (key, comment) ->
                         t.add(
                                 LangEntry.codeDefined(
@@ -313,6 +313,21 @@ final class WarpData implements FeatureData {
             linesFile.add("lines", lines);
             writes.add(
                     DataProvider.saveStable(cache, linesFile, assets.resolve("voices/lines.json")));
+            // The Voice text backing's nine-slice, border 4.
+            JsonObject scaling = new JsonObject();
+            scaling.addProperty("type", "nine_slice");
+            scaling.addProperty("width", 16);
+            scaling.addProperty("height", 16);
+            scaling.addProperty("border", 4);
+            JsonObject gui = new JsonObject();
+            gui.add("scaling", scaling);
+            JsonObject mcmeta = new JsonObject();
+            mcmeta.add("gui", gui);
+            writes.add(
+                    DataProvider.saveStable(
+                            cache,
+                            mcmeta,
+                            assets.resolve("textures/gui/sprites/hud/voice_text.png.mcmeta")));
             return CompletableFuture.allOf(writes.toArray(CompletableFuture[]::new));
         }
 

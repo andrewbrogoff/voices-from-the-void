@@ -6,7 +6,7 @@ Writes, under <assets_root>/vftv/textures: item/stilling_draught.png (16 x 16, a
 Stage 3 row: a stoppered phial, a felt-bound neck and a brass cap, the stilled draught hush grey
 with the teal dimmed into one groove); entity/apparition.png (64 x 64: mauve cloth, an ink hollow
 for the face, no teal); gui/sprites/ledger/offer_panel.png (130 x 64, the offer card's frame) and
-gui/sprites/hud/voice_text.png (16 x 16, nine-slice border 4). Into <warp_dir>: apparition.bbmodel
+gui/sprites/hud/voice_text.png (16 x 16; its nine-slice .mcmeta is datagen's). Into <warp_dir>: apparition.bbmodel
 (the parts, pivots, cuboids, UV origins and mirroring of ApparitionRenderer's layer) and
 apparition_uv.png (each face's region labelled, at 8x). Deterministic: no randomness.
 """
@@ -189,9 +189,6 @@ if __name__ == "__main__":
     save_any(apparition(), os.path.join(tex, "entity/apparition.png"))
     save_any(offer_panel(), os.path.join(tex, "gui/sprites/ledger/offer_panel.png"))
     save(voice_text(), os.path.join(tex, "gui/sprites/hud/voice_text.png"))
-    with open(os.path.join(tex, "gui/sprites/hud/voice_text.png.mcmeta"), "w", encoding="utf-8", newline="\n") as f:
-        json.dump({"gui": {"scaling": {"type": "nine_slice", "width": 16, "height": 16, "border": 4}}}, f, indent=2)
-        f.write("\n")
     os.makedirs(OUT, exist_ok=True)
     with open(os.path.join(OUT, "apparition.bbmodel"), "w", encoding="utf-8", newline="\n") as f:
         json.dump(bbmodel(), f, indent=1, sort_keys=True)
