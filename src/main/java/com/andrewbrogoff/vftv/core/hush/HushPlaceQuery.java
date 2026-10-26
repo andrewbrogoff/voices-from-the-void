@@ -27,9 +27,13 @@ public final class HushPlaceQuery implements VoidPlaceQuery {
 
     /** The query over any level, client or server: two reads of a loaded chunk. */
     public static boolean inHush(Level level, BlockPos pos) {
+        // On the server only getChunkNow is load-free; the client's cache never loads.
         ChunkAccess chunk =
-                level.getChunkSource()
-                        .getChunk(pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
+                level instanceof ServerLevel server
+                        ? server.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4)
+                        : level.getChunkSource()
+                                .getChunk(
+                                        pos.getX() >> 4, pos.getZ() >> 4, ChunkStatus.FULL, false);
         return hushed(chunk, pos) || hushed(chunk, pos.below());
     }
 

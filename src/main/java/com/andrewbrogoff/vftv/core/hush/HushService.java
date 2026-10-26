@@ -671,8 +671,12 @@ public final class HushService {
                                     Optional.of(NodeState.Clarity.FAINT)),
                             NodeCause.API,
                             (b, a) -> {
+                                // the live store: a listener may have changed it during the event
                                 Map<Long, HushRecords.Original> nodes =
-                                        new TreeMap<>(journal.nodes());
+                                        new TreeMap<>(
+                                                java.util.Objects.requireNonNullElse(
+                                                                journal(server), journal)
+                                                        .nodes());
                                 nodes.put(id, original);
                                 putJournal(server, nodes);
                                 aura.flux -= r.hushNodeCost();
