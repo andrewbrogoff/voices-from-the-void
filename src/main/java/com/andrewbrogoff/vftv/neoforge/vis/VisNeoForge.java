@@ -5,7 +5,11 @@ import com.andrewbrogoff.vftv.api.neoforge.vis.NodeEvent;
 import com.andrewbrogoff.vftv.api.neoforge.vis.VisSpentEvent;
 import com.andrewbrogoff.vftv.api.vis.VisKeys;
 import com.andrewbrogoff.vftv.core.common.TickBudget;
+import com.andrewbrogoff.vftv.core.vis.NodeBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.NodeService;
+import com.andrewbrogoff.vftv.core.vis.NodeState;
+import com.andrewbrogoff.vftv.core.vis.WandCradleBlockEntity;
+import com.andrewbrogoff.vftv.core.vis.WandState;
 import com.andrewbrogoff.vftv.core.vis.NodeTapBlock;
 import com.andrewbrogoff.vftv.core.vis.RelayBlockEntity;
 import com.andrewbrogoff.vftv.core.vis.RelayService;
@@ -17,7 +21,10 @@ import com.andrewbrogoff.vftv.core.vis.VisRulesService;
 import com.andrewbrogoff.vftv.core.vis.WandParts;
 import com.andrewbrogoff.vftv.core.vis.model.VisTuning;
 import com.andrewbrogoff.vftv.neoforge.common.NeoForgeRegistrar;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.mojang.serialization.DataResult;
 import java.io.IOException;
 import java.io.InputStream;
@@ -30,6 +37,7 @@ import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.server.MinecraftServer;
@@ -250,8 +258,43 @@ public final class VisNeoForge {
                 }
             }
             data.add("rules", VisRulesService.current(server).toJson());
+            JsonElement parsed = args.isBlank() ? null : JsonParser.parseString(args);
+            if (parsed instanceof JsonObject a && a.get("pos") instanceof JsonArray xyz) {
+                at(
+                        data,
+                        server.overworld(),
+                        new BlockPos(xyz.get(0).getAsInt(), xyz.get(1).getAsInt(), xyz.get(2).getAsInt()));
+            }
         }
         return data.toString();
+    }
+
+    /** One position's node, relay membership and cradled wand, for the {@code vftv:vis} dump. */
+    private static void at(JsonObject data, ServerLevel level, BlockPos pos) {
+        data.addProperty("block", BuiltInRegistries.BLOCK.getKey(level.getBlockState(pos).getBlock()).toString());
+        if (level.getBlockEntity(pos) instanceof NodeBlockEntity node && node.state() != null) {
+            NodeState s = NodeService.settle(level, node);
+            data.addProperty("nodeId", s.id());
+            data.addProperty("clarity", s.clarity().getSerializedName());
+            JsonObject aspects = new JsonObject();
+            s.aspects().forEach(x -> aspects.addProperty(x.aspect().toString(), x.current() + "/" + x.max()));
+            data.add("aspects", aspects);
+        }
+        RelayService.Membership m = RelayService.membership(level, pos);
+        if (m != null) {
+            data.addProperty("member", m.kind().name().toLowerCase(java.util.Locale.ROOT));
+            data.addProperty("unlinked", m.unlinked());
+            data.addProperty("network", m.size());
+        }
+        if (level.getBlockEntity(pos) instanceof WandCradleBlockEntity cradle) {
+            WandParts parts = WandParts.of(level.registryAccess());
+            JsonObject pools = new JsonObject();
+            if (WandState.of(cradle.wand(), parts) instanceof WandState.Ready w) {
+                w.pools(parts).forEach(pools::addProperty);
+            }
+            data.addProperty("cradled", !cradle.wand().isEmpty());
+            data.add("pools", pools);
+        }
     }
 
     /**
