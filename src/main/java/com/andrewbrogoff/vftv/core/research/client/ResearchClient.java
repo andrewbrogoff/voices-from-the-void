@@ -1,23 +1,64 @@
 package com.andrewbrogoff.vftv.core.research.client;
 
 import com.andrewbrogoff.vftv.api.research.ResearchKeys;
+import com.andrewbrogoff.vftv.core.research.ResearchFeedback;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.player.LocalPlayer;
+import org.jspecify.annotations.Nullable;
 
-/** The research feature's client state as the E2E harness reads it. Client thread only. */
+/**
+ * The research feature's client state: the open book's latest quotes and action results, as the
+ * book reads them, and the harness's dump. Client thread only.
+ */
 public final class ResearchClient {
+    private static ResearchFeedback.@Nullable Quotes quotes;
+    private static final Map<Integer, ResearchFeedback.Result> RESULTS = new LinkedHashMap<>();
+
+    /** The results kept, so a book polling for its pending request finds it. */
+    private static final int KEPT_RESULTS = 32;
+
     private ResearchClient() {}
+
+    /** The latest quotes, or null before the book has opened. */
+    public static ResearchFeedback.@Nullable Quotes quotes() {
+        return quotes;
+    }
+
+    /** The result of a request, or null while it is pending. */
+    public static ResearchFeedback.@Nullable Result result(int requestId) {
+        return RESULTS.get(requestId);
+    }
+
+    static void onQuotes(ResearchFeedback.Quotes next) {
+        quotes = next;
+    }
+
+    static void onResult(ResearchFeedback.Result result) {
+        RESULTS.put(result.requestId(), result);
+        if (RESULTS.size() > KEPT_RESULTS) {
+            RESULTS.remove(RESULTS.keySet().iterator().next());
+        }
+    }
+
+    /** The connection closed: nothing of it stays. */
+    public static void clear() {
+        quotes = null;
+        RESULTS.clear();
+    }
 
     /**
      * The {@code vftv:research} dump: how many entries and categories the client's synced
      * registries hold, and the owner's synced record (Stage, learned count and ids, revealed ids,
-     * revision, and Vacuos's links in their view), or {@code readable: false}.
+     * revision, open notes, and Vacuos's links in their view), or {@code readable: false}; and the
+     * open book's latest quotes (revision, mode and each quoted entry's skip price).
      */
     public static String dump(String args) {
         JsonObject data = new JsonObject();
@@ -48,6 +89,21 @@ public final class ResearchClient {
                 var view = ResearchService.Data.of(level.registryAccess()).view(record);
                 data.addProperty("trueView", view.revealed("vftv:vacuos"));
                 data.add("vacuosLinks", ids(view.links("vftv:vacuos")));
+                data.add("notes", ids(record.notes().keySet()));
+            }
+            ResearchFeedback.Quotes q = quotes;
+            if (q != null) {
+                JsonObject out = new JsonObject();
+                out.addProperty("revision", q.revision());
+                out.addProperty("mode", q.mode());
+                JsonObject prices = new JsonObject();
+                for (ResearchFeedback.EntryQuote e : q.entries()) {
+                    JsonObject price = new JsonObject();
+                    e.price().forEach(price::addProperty);
+                    prices.add(e.entry(), price);
+                }
+                out.add("prices", prices);
+                data.add("quotes", out);
             }
         }
         return data.toString();

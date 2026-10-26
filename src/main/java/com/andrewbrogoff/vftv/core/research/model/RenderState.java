@@ -18,6 +18,14 @@ public enum RenderState {
     LOCKED;
 
     /**
+     * Whether the entry is HIDDEN: its Stage is above the player's, or it is secret, unrevealed.
+     */
+    public static boolean hidden(String id, ResearchEntry entry, ResearchRecord player) {
+        return entry.stage() > player.stage()
+                || (entry.secret() && !player.revealed().contains(id));
+    }
+
+    /**
      * The first matching state.
      *
      * @param id the entry's id
@@ -31,7 +39,7 @@ public enum RenderState {
             ResearchEntry entry,
             ResearchRecord player,
             Predicate<ResearchEntry> canBegin) {
-        if (entry.stage() > player.stage() || (entry.secret() && !player.revealed().contains(id))) {
+        if (hidden(id, entry, player)) {
             return HIDDEN;
         }
         if (player.isLearned(id)) {

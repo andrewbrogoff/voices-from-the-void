@@ -1,0 +1,27 @@
+{
+  "projectDir": "..",
+  "gradleTask": "runHarnessClient",
+  "timeoutSeconds": 900,
+  "world": "research_notes",
+  "freshWorld": true,
+  "steps": [
+    {"op": "wait_boot", "args": {"stableTicks": 40}},
+    {"op": "cmd", "args": {"command": "clear @s"}},
+    {"op": "cmd", "args": {"command": "give @s vftv:commonplace_book"}},
+    {"op": "cmd", "args": {"command": "vftv research grant @s vftv:sounding"}},
+    {"op": "cmd", "args": {"command": "vftv research grant @s vftv:notes_of_things"}},
+    {"op": "cmd", "args": {"command": "vftv research grant @s vftv:commonplace_book"}},
+    {"op": "hotbar", "args": {"slot": 0}},
+    {"op": "wait_ticks", "args": {"ticks": 10}},
+    {"op": "dump", "args": {"kind": "vftv:research"},
+     "expect": {"readable": true, "stage": 1, "learnedIds": {"contains": "vftv:sounding"}}},
+    {"op": "look", "args": {"yaw": 0, "pitch": -80}},
+    {"op": "use", "args": {"target": "air", "hand": "main_hand"}},
+    {"op": "wait_ticks", "args": {"ticks": 10}},
+    {"op": "dump", "args": {"kind": "vftv:research"},
+     "expect": {"quotes.mode": 1, "quotes.revision": {"gte": 1},
+                "quotes.prices.vftv:taking_notes.vftv:lux": 2}},
+    {"op": "screenshot", "args": {"name": "research-book-open.png"}},
+    {"op": "quit", "args": {}}
+  ]
+}

@@ -25,6 +25,17 @@ public final class ResearchFeature {
                         ResearchCodecs.RESEARCH_CATEGORY,
                         ResearchCodecs.RESEARCH_CATEGORY);
         ResearchItems.register(platform.registrar());
+        // The book's actions and feedback (research spec, "Sync and state").
+        platform.network()
+                .serverbound(
+                        ResearchAction.TYPE,
+                        ResearchAction.STREAM_CODEC,
+                        ResearchActions::onAction);
+        platform.network()
+                .clientbound(ResearchFeedback.Quotes.TYPE, ResearchFeedback.Quotes.STREAM_CODEC);
+        platform.network()
+                .clientbound(ResearchFeedback.Result.TYPE, ResearchFeedback.Result.STREAM_CODEC);
+        ResearchActions.init(platform.network());
         // The milestone rules join this registry to the warp tuning (warp spec, "Permanent warp").
         WarpRulesService.registerTuningCheck(ResearchService::milestoneProblems);
         ResearchService.init(

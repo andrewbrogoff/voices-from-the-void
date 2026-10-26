@@ -1,0 +1,32 @@
+{
+  "anchors.max_used": {
+    "gentle": 3,
+    "hard": 5,
+    "standard": 5
+  },
+  "anchors.min_distance": {
+    "gentle": 2,
+    "hard": 3,
+    "standard": 2
+  },
+  "combine.parent_cost": 1,
+  "generate.max_attempts": 32,
+  "grid.anchor_bonus_at": 4,
+  "grid.base_radius": {
+    "gentle": 2,
+    "hard": 3,
+    "standard": 3
+  },
+  "palette_help": {
+    "gentle": "neighbours",
+    "hard": "parents",
+    "standard": "parents"
+  },
+  "place_cost": 1,
+  "silent_cells": {
+    "gentle": 0,
+    "hard": 5,
+    "standard": 0
+  },
+  "skip.multiplier": 1.5
+}

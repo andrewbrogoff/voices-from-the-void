@@ -31,6 +31,9 @@ public final class EntryRules {
     static final int MAX_CELLS =
             3 * ResearchLimits.MAX_GRID_RADIUS * (ResearchLimits.MAX_GRID_RADIUS + 1) + 1;
 
+    /** The most aspects a price may name: the quotes' and echoes' codec bound. */
+    static final int MAX_PRICE_ENTRIES = 64;
+
     private EntryRules() {}
 
     /**
@@ -289,6 +292,9 @@ public final class EntryRules {
             List<String> found,
             List<String> warnings) {
         boolean note = e.kind() == EntryKind.NOTE;
+        if (e.skipCost().size() > MAX_PRICE_ENTRIES) {
+            found.add("its skip_cost names more than " + MAX_PRICE_ENTRIES + " aspects");
+        }
         if (note) {
             anchors(id, e, aspects, found, warnings);
         } else {
@@ -337,6 +343,9 @@ public final class EntryRules {
             found.add("its anchors don't connect in the taught view");
         } else if (chain.size() == anchors.size()) {
             found.add("its reference vector is empty: every anchor links to the next");
+        } else if (e.skipCost().isEmpty()
+                && Notes.reference(anchors, aspects, 1).size() > MAX_PRICE_ENTRIES) {
+            found.add("its derived skip price names more than " + MAX_PRICE_ENTRIES + " aspects");
         } else if (chain.size() + Note.MAX_SILENT > MAX_CELLS) {
             // ponytail: the tuning range's top silent cells, until research.json exists (T14).
             warnings.add(

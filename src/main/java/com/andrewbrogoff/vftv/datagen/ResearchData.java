@@ -10,6 +10,7 @@ import com.andrewbrogoff.vftv.core.research.ResearchConfig;
 import com.andrewbrogoff.vftv.core.research.ResearchItems;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.model.EntryRules;
+import com.andrewbrogoff.vftv.core.research.model.ResearchTuning;
 import com.andrewbrogoff.vftv.core.research.model.Trigger;
 import com.andrewbrogoff.vftv.core.text.model.LangEntry;
 import com.andrewbrogoff.vftv.core.warp.model.WarpTuning;
@@ -268,6 +269,7 @@ final class ResearchData implements FeatureData {
     @Override
     public void providers(GatherDataEvent event) {
         event.createProvider((output, lookup) -> new RegistryProvider(output, lookup, content()));
+        event.createProvider(TuningProvider::new);
     }
 
     private static ResearchContent.Content content() {
@@ -372,6 +374,24 @@ final class ResearchData implements FeatureData {
         @Override
         public String getName() {
             return "vftv research registries";
+        }
+    }
+
+    /** {@code data/vftv/tuning/research.json}, every key at its default. */
+    private record TuningProvider(PackOutput output) implements DataProvider {
+        @Override
+        public CompletableFuture<?> run(CachedOutput cache) {
+            return DataProvider.saveStable(
+                    cache,
+                    ResearchTuning.DEFAULTS.toJson(),
+                    output.getOutputFolder(PackOutput.Target.DATA_PACK)
+                            .resolve(Vftv.MOD_ID)
+                            .resolve(ResearchService.TUNING_PATH));
+        }
+
+        @Override
+        public String getName() {
+            return "vftv research tuning";
         }
     }
 }

@@ -194,6 +194,30 @@ public final class KnowledgeService {
         }
     }
 
+    /**
+     * Spends points, all or nothing, as a research Learn or purchase does (research spec, "Paying
+     * for placements"). It posts no event.
+     *
+     * @param points the amount of each aspect to take
+     * @return whether it was spent; false when refused (the guard held, unreadable knowledge, a
+     *     short balance), so nothing changed
+     */
+    public static boolean debit(ServerPlayer player, Map<String, Integer> points) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope == null) {
+                busy(player);
+                return false;
+            }
+            Knowledge before = readable(player);
+            Knowledge next = before == null ? null : before.debit(points);
+            if (next == null) {
+                return false;
+            }
+            slot().set(player, new Retained.Read<>(next));
+            return true;
+        }
+    }
+
     /** Whether a knowledge write is under way for the player, so a write now would be refused. */
     public static boolean isBusy(Player player) {
         return GUARD.isHeld(player.getUUID());

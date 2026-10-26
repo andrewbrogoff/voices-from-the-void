@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
@@ -24,6 +25,7 @@ import org.jspecify.annotations.Nullable;
  */
 public final class AspectGraph {
     private final Map<String, List<String>> taught;
+    private final Map<String, List<String>> parents;
     private final Map<String, String> revealedBy;
     private final List<String> exposed;
 
@@ -42,6 +44,9 @@ public final class AspectGraph {
      */
     public AspectGraph(Map<String, List<String>> taughtParents, Map<String, String> revealedBy) {
         this.revealedBy = Collections.unmodifiableMap(new TreeMap<>(revealedBy));
+        Map<String, List<String>> sortedParents = new HashMap<>();
+        taughtParents.forEach((a, ps) -> sortedParents.put(a, ps.stream().sorted().toList()));
+        this.parents = Collections.unmodifiableMap(sortedParents);
         this.exposed =
                 taughtParents.entrySet().stream()
                         .filter(e -> e.getValue().isEmpty() && !revealedBy.containsKey(e.getKey()))
@@ -74,6 +79,14 @@ public final class AspectGraph {
     /** The aspects {@code aspect} links to in the taught view, ascending; empty if unknown. */
     public List<String> taughtLinks(String aspect) {
         return taught.getOrDefault(aspect, List.of());
+    }
+
+    /**
+     * An aspect's parents in the taught view, ascending: a compound's two parents, a hidden
+     * primal's taught parents, none for an exposed primal or an unknown id.
+     */
+    public List<String> parents(String aspect) {
+        return parents.getOrDefault(aspect, List.of());
     }
 
     /** Each hidden primal, mapped to the research entry that reveals it. */
@@ -135,6 +148,20 @@ public final class AspectGraph {
         public boolean linked(String a, String b) {
             return !a.equals(b) && links(a).contains(b);
         }
+
+        /**
+         * The shortest path between each consecutive pair of {@code anchors} in the player's
+         * known-link graph: the {@code known} aspects only, linked by this view (research spec,
+         * "Generating a note", step 1). Returns null when an anchor is unknown or a pair doesn't
+         * connect.
+         */
+        public @Nullable List<List<String>> segments(List<String> anchors, Set<String> known) {
+            if (!known.containsAll(anchors)) {
+                return null;
+            }
+            return AspectGraph.segments(
+                    anchors, a -> links(a).stream().filter(known::contains).toList());
+        }
     }
 
     /**
@@ -144,30 +171,52 @@ public final class AspectGraph {
      * from the second. Returns null when a pair doesn't connect.
      */
     public @Nullable List<String> chain(List<String> anchors) {
+        if (!anchors.stream().allMatch(this::contains)) {
+            return null;
+        }
+        List<List<String>> segments = segments(anchors, this::taughtLinks);
+        return segments == null ? null : join(anchors, segments);
+    }
+
+    /**
+     * Joins consecutive segments, sharing the anchors: the unpadded chain. With no segment it is
+     * the first anchor alone, or empty.
+     */
+    public static List<String> join(List<String> anchors, List<List<String>> segments) {
         if (anchors.isEmpty()) {
             return List.of();
         }
         List<String> chain = new ArrayList<>(List.of(anchors.getFirst()));
-        for (int i = 1; i < anchors.size(); i++) {
-            List<String> path = path(anchors.get(i - 1), anchors.get(i));
-            if (path == null) {
-                return null;
-            }
-            chain.addAll(path.subList(1, path.size()));
-        }
+        segments.forEach(path -> chain.addAll(path.subList(1, path.size())));
         return List.copyOf(chain);
     }
 
-    private @Nullable List<String> path(String from, String to) {
-        if (!contains(from) || !contains(to)) {
-            return null;
+    /**
+     * Each consecutive pair of {@code anchors} joined by a BFS from the first over {@code links}
+     * (neighbours in the order given, a predecessor set on first discovery, the path read back from
+     * the second), or null when a pair doesn't connect.
+     */
+    static @Nullable List<List<String>> segments(
+            List<String> anchors, Function<String, List<String>> links) {
+        List<List<String>> out = new ArrayList<>();
+        for (int i = 1; i < anchors.size(); i++) {
+            List<String> path = path(anchors.get(i - 1), anchors.get(i), links);
+            if (path == null) {
+                return null;
+            }
+            out.add(path);
         }
+        return List.copyOf(out);
+    }
+
+    private static @Nullable List<String> path(
+            String from, String to, Function<String, List<String>> links) {
         Map<String, String> previous = new HashMap<>();
         previous.put(from, from);
         Deque<String> queue = new ArrayDeque<>(List.of(from));
         while (!queue.isEmpty() && !previous.containsKey(to)) {
             String at = queue.removeFirst();
-            for (String next : taughtLinks(at)) {
+            for (String next : links.apply(at)) {
                 if (previous.putIfAbsent(next, at) == null) {
                     queue.addLast(next);
                 }
@@ -181,6 +230,6 @@ public final class AspectGraph {
             path.add(at);
         }
         path.add(from);
-        return path.reversed();
+        return List.copyOf(path.reversed());
     }
 }

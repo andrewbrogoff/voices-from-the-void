@@ -432,10 +432,12 @@ final class WorktableGameTests {
                 .thenExecuteAfter(
                         1,
                         () -> {
+                            // An older revision: a newer one can come true when another test's
+                            // reload replaces the snapshot or the rules, which bumps the menu.
                             refusedSilently.accept(
                                     new WorktableCraft(
                                             good.containerId(),
-                                            good.revision() + 1,
+                                            good.revision() - 1,
                                             good.recipeId(),
                                             echo,
                                             false));

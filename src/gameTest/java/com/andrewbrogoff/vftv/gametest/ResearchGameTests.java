@@ -64,6 +64,7 @@ final class ResearchGameTests {
         tests.put("research_config_mode", ResearchGameTests::configMode);
         tests.put("research_strike_makes_the_book", ResearchGameTests::strikeMakesTheBook);
         ResearchFullGameTests.register(tests);
+        ResearchNotesGameTests.register(tests);
     }
 
     /**
