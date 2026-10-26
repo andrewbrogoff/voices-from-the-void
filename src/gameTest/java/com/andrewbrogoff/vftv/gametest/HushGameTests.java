@@ -145,6 +145,7 @@ final class HushGameTests {
         tests.put("hush_stores_retain_unreadable", HushGameTests::storesRetain);
         tests.put("hush_commands", HushGameTests::commands);
         tests.put("hush_recipes_loaded", HushGameTests::recipes);
+        tests.put("hush_switches_and_silence", HushGameTests::switches);
     }
 
     // --- helpers ------------------------------------------------------------------------------
@@ -544,7 +545,7 @@ final class HushGameTests {
         helper.assertValueEqual(aura.flux(), 200 - 2 * (int) aura.taken(), "block cost each");
         helper.assertTrue(aura.taken() >= 1 && made >= aura.taken(), "converted");
         helper.assertValueEqual(
-                hushedIn(helper, 1, 2, 1, 3, 4, 3), (int) aura.taken(), "beside the seep");
+                hushedIn(helper, 0, 1, 0, 4, 5, 4), (int) aura.taken(), "in the cube");
         clearAura(helper, seep);
         helper.succeed();
     }
@@ -967,6 +968,81 @@ final class HushGameTests {
                                             id(id)))
                             .isPresent(),
                     id + " loads");
+        }
+        helper.succeed();
+    }
+
+    /**
+     * {@code hush.spread} off makes no attempt; attendance follows {@code hush.unattended} and
+     * excludes a Silenced player, who still attends a bell and is never hunted; {@code
+     * hush.hollows} off raises nothing.
+     */
+    private static void switches(GameTestHelper helper) {
+        ServerLevel level = helper.getLevel();
+        BlockPos rel = new BlockPos(1, 2, 1);
+        ChunkPos c = chunk(helper, rel);
+        com.andrewbrogoff.vftv.core.flux.HushConfig before = FluxRulesService.config();
+        ServerPlayer player = null;
+        try {
+            FluxRulesService.installConfig(
+                    new com.andrewbrogoff.vftv.core.flux.HushConfig(false, true, true));
+            deposit(helper, rel, 10_000);
+            HushService.serve(level);
+            helper.assertValueEqual(aura(helper, rel).steps(), 0L, "spread off: no attempt at all");
+            int[] tuning = FluxTuning.defaults();
+            FluxRules attendedOnly = FluxTuning.rules(tuning, true, true, false);
+            FluxRules unattended = FluxTuning.rules(tuning, true, true, true);
+            helper.assertTrue(
+                    !HushService.attended(
+                            level, ChunkPos.pack(1_000_000, 1_000_000), attendedOnly, false),
+                    "nobody near: idle");
+            helper.assertTrue(
+                    HushService.attended(
+                            level, ChunkPos.pack(1_000_000, 1_000_000), unattended, false),
+                    "unattended on");
+            player = ResearchTestSupport.player(helper);
+            level.addNewPlayer(player);
+            // far from every other test's players: only this one can attend
+            long far = ChunkPos.pack(1_000_000, 1_000_000);
+            player.snapTo(16_000_008, 100, 16_000_008);
+            helper.assertTrue(
+                    HushService.attended(level, far, attendedOnly, false), "a player attends");
+            com.andrewbrogoff.vftv.core.warp.WarpService.silence(
+                    player, new com.andrewbrogoff.vftv.api.warp.WarpPreview(0, 0, 0, false));
+            helper.assertTrue(
+                    com.andrewbrogoff.vftv.core.warp.WarpService.isSilenced(player), "silenced");
+            helper.assertTrue(
+                    !HushService.attended(level, far, attendedOnly, false),
+                    "the Hush can't hear them");
+            helper.assertTrue(
+                    HushService.attended(level, far, attendedOnly, true), "a bell still can");
+            player.snapTo(net.minecraft.world.phys.Vec3.atCenterOf(helper.absolutePos(rel)));
+            Hollow h = helper.spawn(HushContent.hollow(), rel);
+            h.setHomeTo(helper.absolutePos(rel), 8);
+            helper.assertTrue(!Hollow.validTarget(h, player), "never hunts the Silenced");
+            h.discard();
+            FluxRulesService.installConfig(
+                    new com.andrewbrogoff.vftv.core.flux.HushConfig(true, false, false));
+            for (int x = 0; x < 3; x++) {
+                for (int z = 0; z < 3; z++) {
+                    helper.setBlock(x, 1, z, Blocks.DIRT);
+                }
+            }
+            aura(helper, rel).setTaken(FluxRulesService.current().hollowEvery() - 1);
+            BlockPos target = helper.absolutePos(new BlockPos(1, 1, 1));
+            player.snapTo(
+                    net.minecraft.world.phys.Vec3.atCenterOf(
+                            helper.absolutePos(rel).offset(20, 0, 0)));
+            helper.assertValueEqual(
+                    HushService.spreadTo(level, c, target), 1, "hollows off: no rise");
+        } finally {
+            FluxRulesService.installConfig(before);
+            if (player != null) {
+                player.discard();
+                level.removePlayerImmediately(
+                        player, net.minecraft.world.entity.Entity.RemovalReason.DISCARDED);
+            }
+            clearAura(helper, rel);
         }
         helper.succeed();
     }

@@ -152,7 +152,8 @@ public final class HushService {
     }
 
     /** Whether a non-spectator player stands within {@code hush.player_chunks} of the chunk. */
-    static boolean attended(ServerLevel level, long pack, FluxRules r, boolean silencedCount) {
+    public static boolean attended(
+            ServerLevel level, long pack, FluxRules r, boolean silencedCount) {
         if (r.unattended()) {
             return true;
         }
@@ -234,7 +235,7 @@ public final class HushService {
     }
 
     /** The spread's service, in {@code (due, pack)} order under the per-tick caps. */
-    static void serve(ServerLevel level) {
+    public static void serve(ServerLevel level) {
         FluxRules r = rules();
         if (!r.spread()) {
             return;

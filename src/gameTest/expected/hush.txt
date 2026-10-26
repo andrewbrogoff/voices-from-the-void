@@ -25,3 +25,4 @@ vftv:hush_aura_persists_and_retains
 vftv:hush_stores_retain_unreadable
 vftv:hush_commands
 vftv:hush_recipes_loaded
+vftv:hush_switches_and_silence
