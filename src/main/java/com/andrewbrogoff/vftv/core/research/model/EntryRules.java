@@ -343,6 +343,9 @@ public final class EntryRules {
             found.add("its anchors don't connect in the taught view");
         } else if (chain.size() == anchors.size()) {
             found.add("its reference vector is empty: every anchor links to the next");
+        } else if (e.skipCost().isEmpty()
+                && Notes.reference(anchors, aspects, 1).size() > MAX_PRICE_ENTRIES) {
+            found.add("its derived skip price names more than " + MAX_PRICE_ENTRIES + " aspects");
         } else if (chain.size() + Note.MAX_SILENT > MAX_CELLS) {
             // ponytail: the tuning range's top silent cells, until research.json exists (T14).
             warnings.add(

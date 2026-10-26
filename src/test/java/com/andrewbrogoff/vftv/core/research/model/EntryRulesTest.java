@@ -73,6 +73,31 @@ class EntryRulesTest {
     }
 
     @Test
+    void aDerivedSkipPriceOverTheWireBoundIsRefused() {
+        Map<String, List<String>> line = new java.util.TreeMap<>(Fixtures.taught());
+        String previous = "vftv:aer";
+        for (int i = 0; i < 70; i++) {
+            String primal = "t:p" + i;
+            String compound = "t:c" + i;
+            line.put(primal, List.of());
+            line.put(compound, List.of(previous, primal));
+            previous = compound;
+        }
+        Map<String, Fixtures.B> w = Fixtures.world();
+        get(w, "vftv:taking_notes").anchors = List.of("vftv:aer", previous);
+        EntryRules.Report report =
+                EntryRules.validate(
+                        Fixtures.build(w),
+                        Fixtures.categories(),
+                        new AspectGraph(line, Map.of("vftv:vacuos", "vftv:silence_beneath")),
+                        java.util.Set.of(),
+                        java.util.Set.of());
+        assertTrue(
+                report.errors().stream().anyMatch(e -> e.contains("derived skip price")),
+                report.errors().toString());
+    }
+
+    @Test
     void anchorsBelongToNotesAndMustConnectThroughSomething() {
         refuses(
                 w -> get(w, "vftv:commonplace_book").anchors("vftv:aer", "vftv:ignis"),
@@ -270,6 +295,7 @@ class EntryRulesTest {
         }
         Map<String, Fixtures.B> world = Fixtures.world();
         get(world, "vftv:taking_notes").anchors = List.of("x:a0", "x:a160");
+        get(world, "vftv:taking_notes").skip.put("x:a1", 1); // an authored price: no derived one
         EntryRules.Report report =
                 EntryRules.validate(
                         Fixtures.build(world),
