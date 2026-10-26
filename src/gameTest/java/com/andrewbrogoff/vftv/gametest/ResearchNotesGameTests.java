@@ -1,9 +1,14 @@
 package com.andrewbrogoff.vftv.gametest;
 
+import com.andrewbrogoff.vftv.api.aspect.AspectValues;
 import com.andrewbrogoff.vftv.api.research.ResearchLimits;
 import com.andrewbrogoff.vftv.api.warp.WarpPreview;
+import com.andrewbrogoff.vftv.core.aspect.AspectLookup;
+import com.andrewbrogoff.vftv.core.aspect.AspectSet;
 import com.andrewbrogoff.vftv.core.aspect.KnowledgeService;
+import com.andrewbrogoff.vftv.core.aspect.ScanningService;
 import com.andrewbrogoff.vftv.core.aspect.model.Knowledge;
+import com.andrewbrogoff.vftv.core.common.model.PendingAudio;
 import com.andrewbrogoff.vftv.core.research.ChoirPageItem;
 import com.andrewbrogoff.vftv.core.research.CommonplaceBookItem;
 import com.andrewbrogoff.vftv.core.research.CommonplaceMenu;
@@ -14,6 +19,7 @@ import com.andrewbrogoff.vftv.core.research.ResearchFeedback;
 import com.andrewbrogoff.vftv.core.research.ResearchItems;
 import com.andrewbrogoff.vftv.core.research.ResearchService;
 import com.andrewbrogoff.vftv.core.research.Resolver;
+import com.andrewbrogoff.vftv.core.research.model.AffordabilityPath;
 import com.andrewbrogoff.vftv.core.research.model.DebitPlan;
 import com.andrewbrogoff.vftv.core.research.model.Note;
 import com.andrewbrogoff.vftv.core.research.model.Notes;
@@ -21,7 +27,15 @@ import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.andrewbrogoff.vftv.core.research.model.ResearchTuning;
 import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
+import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +44,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.function.Consumer;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.Identifier;
@@ -74,6 +89,7 @@ final class ResearchNotesGameTests {
         tests.put("research_note_reconcile", ResearchNotesGameTests::reconcile);
         tests.put("research_listen_action", ResearchNotesGameTests::listenAction);
         tests.put("research_bookmarks", ResearchNotesGameTests::bookmarks);
+        tests.put("research_affordability_paths", ResearchNotesGameTests::affordabilityPaths);
     }
 
     private static synchronized void capture(ServerPlayer player, CustomPacketPayload payload) {
@@ -896,5 +912,126 @@ final class ResearchNotesGameTests {
                             helper.assertValueEqual(
                                     b.rec().bookmarks(), visible.subList(1, 9), "kept in order");
                         }));
+    }
+
+    /**
+     * Every shipped {@code content/research/path-stage<N>.json}, replayed with the world's real
+     * data at the standard preset and in skip, each Stage from the previous one's end in the same
+     * mode; and a smoke path over the shipped skeleton's Stage 1, so the harness itself is proved
+     * against real aspect values, tags and node compositions.
+     */
+    private static void affordabilityPaths(GameTestHelper helper) {
+        Path project =
+                Objects.requireNonNull(PendingAudio.findProject(Path.of("").toAbsolutePath()));
+        for (ResearchConfig.Mode mode :
+                List.of(ResearchConfig.Mode.STANDARD, ResearchConfig.Mode.SKIP)) {
+            AffordabilityPath.World world = replayWorld(helper, project, mode);
+            AffordabilityPath.State state = AffordabilityPath.State.EMPTY;
+            for (int stage = 1; stage <= 4; stage++) {
+                Path file = project.resolve("content/research/path-stage" + stage + ".json");
+                if (!Files.exists(file)) {
+                    break; // the content tickets ship them in order
+                }
+                state = AffordabilityPath.parse(read(file)).replay(world, state);
+            }
+            AffordabilityPath smoke =
+                    AffordabilityPath.parse(
+                            """
+                            {"schema": "vftv:affordability_path/1", "stage": 1,
+                             "sources": {
+                               "geode": {"advancement": "vftv:find/resonance", "count": 1,
+                                         "why": "geodes generate in every overworld"},
+                               "starter": {"node": "vftv:starter", "count": 1,
+                                           "requires": {"research": ["vftv:sounding"]},
+                                           "why": "the starter-node guarantee"},
+                               "star": {"scan": "item:minecraft:firework_star", "count": 1,
+                                        "why": "craftable from gunpowder and dye"},
+                               "drip": {"advancement": "vftv:find/distillation", "count": 1,
+                                        "why": "dripstone caves"}
+                             },
+                             "steps": [
+                               {"use": "geode"}, {"use": "starter"}, {"use": "star"},
+                               {"learn": "vftv:taking_notes"}, {"learn": "vftv:tapping"},
+                               {"learn": "vftv:arcane_crafting"}, {"learn": "vftv:foci"},
+                               {"learn": "vftv:tuned_spectacles"}, {"use": "drip"}
+                             ]}""");
+            AffordabilityPath.State end = smoke.replay(world, AffordabilityPath.State.EMPTY);
+            helper.assertTrue(end.research().isLearned("vftv:first_wand"), "a free entry");
+            helper.assertTrue(end.research().isLearned("vftv:knots_in_the_air"), "the node find");
+            helper.assertValueEqual(end.research().stage(), 2, "Stage 2 opened");
+        }
+        helper.succeed();
+    }
+
+    private static AffordabilityPath.World replayWorld(
+            GameTestHelper helper, Path project, ResearchConfig.Mode mode) {
+        var access = helper.getLevel().registryAccess();
+        ResearchService.Data data = ResearchService.data(access);
+        JsonObject guarantees =
+                JsonParser.parseString(read(project.resolve("content/nodes/guarantees.json")))
+                        .getAsJsonObject()
+                        .getAsJsonObject("guarantees");
+        JsonObject types =
+                JsonParser.parseString(read(project.resolve("content/nodes/types.json")))
+                        .getAsJsonObject()
+                        .getAsJsonObject("types");
+        return new AffordabilityPath.World(
+                data.entries(),
+                data.aspects(),
+                AspectSet.of(access).rules(ScanningService.tuning().discoveryBonus()),
+                ResearchNotesGameTests::scanValues,
+                id -> nodeValues(guarantees, types, id),
+                Resolver::inTag,
+                WarpRulesService.current(),
+                ResearchService.preset(mode));
+    }
+
+    /** A scan key's values through the real lookup (authored, then derived). */
+    private static Map<String, Integer> scanValues(String key) {
+        int colon = key.indexOf(':');
+        Identifier id = Identifier.tryParse(key.substring(colon + 1));
+        AspectValues values =
+                id == null
+                        ? null
+                        : switch (key.substring(0, colon)) {
+                            case "item" ->
+                                    BuiltInRegistries.ITEM
+                                            .getOptional(id)
+                                            .map(AspectLookup::item)
+                                            .orElse(null);
+                            case "block" ->
+                                    BuiltInRegistries.BLOCK
+                                            .getOptional(id)
+                                            .map(b -> AspectLookup.block(b.defaultBlockState()))
+                                            .orElse(null);
+                            default -> null;
+                        };
+        Map<String, Integer> out = new TreeMap<>();
+        if (values != null) {
+            values.aspects().forEach((a, n) -> out.put(a.identifier().toString(), n));
+        }
+        return out;
+    }
+
+    /** A node guarantee's composition: its type's aspects, each at the low end of its range. */
+    private static Map<String, Integer> nodeValues(
+            JsonObject guarantees, JsonObject types, String id) {
+        Map<String, Integer> out = new TreeMap<>();
+        if (guarantees.get(id) instanceof JsonObject g
+                && types.get(g.get("type").getAsString()) instanceof JsonObject type) {
+            for (JsonElement a : type.getAsJsonArray("aspects")) {
+                JsonObject o = a.getAsJsonObject();
+                out.put(o.get("aspect").getAsString(), o.getAsJsonArray("range").get(0).getAsInt());
+            }
+        }
+        return out;
+    }
+
+    private static String read(Path file) {
+        try {
+            return Files.readString(file);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 }

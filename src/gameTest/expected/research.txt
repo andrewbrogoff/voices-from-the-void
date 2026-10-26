@@ -34,3 +34,4 @@ vftv:research_quote_refresh
 vftv:research_note_reconcile
 vftv:research_listen_action
 vftv:research_bookmarks
+vftv:research_affordability_paths
