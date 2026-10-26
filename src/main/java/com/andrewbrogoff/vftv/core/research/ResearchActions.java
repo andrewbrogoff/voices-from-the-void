@@ -24,6 +24,7 @@ import com.andrewbrogoff.vftv.core.research.model.ResearchEntry;
 import com.andrewbrogoff.vftv.core.research.model.ResearchRecord;
 import com.andrewbrogoff.vftv.core.research.model.ResearchTuning;
 import com.andrewbrogoff.vftv.core.text.model.SharedMessages;
+import com.andrewbrogoff.vftv.core.warp.WarpAttachment;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
 import com.mojang.logging.LogUtils;
 import java.util.ArrayList;
@@ -79,6 +80,9 @@ public final class ResearchActions {
 
     /** "I can't do that yet.": any other eligibility failure. */
     public static final String NOT_NOW = "message.vftv.research.not_now";
+
+    /** The reveal that opens the Listen rite. */
+    static final String SILENCE_BENEATH = "vftv:silence_beneath";
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
@@ -150,7 +154,19 @@ public final class ResearchActions {
                                 }
                             });
         }
-        return new ResearchFeedback.Quotes(revision, mode, out);
+        ResearchFeedback.OfferQuote offer = null;
+        WarpAttachment.Offer live = WarpService.offer(player);
+        WarpPreview offerWarp = WarpService.offerPreview(player);
+        if (live != null && offerWarp != null) {
+            offer = new ResearchFeedback.OfferQuote(live.seq(), offerWarp);
+        }
+        WarpPreview riteWarp = WarpService.ritePreview(player);
+        ResearchFeedback.RiteQuote rite =
+                riteWarp == null
+                        ? null
+                        : new ResearchFeedback.RiteQuote(
+                                riteWarp, WarpService.riteRefusal(player).key());
+        return new ResearchFeedback.Quotes(revision, mode, out, offer, rite);
     }
 
     /** The player's preview of an entry's warp, or null when it carries none or can't apply. */
@@ -244,6 +260,8 @@ public final class ResearchActions {
                     case ResearchAction.Learn v -> v.revision();
                     case ResearchAction.Buy v -> v.revision();
                     case ResearchAction.Listen v -> v.revision();
+                    case ResearchAction.AcceptOffer v -> v.revision();
+                    case ResearchAction.ListenRite v -> v.revision();
                     default -> menu.revision();
                 };
         if (CheckedCommit.revision(menu.revision(), quoted) == CheckedCommit.Outcome.STALE) {
@@ -260,6 +278,11 @@ public final class ResearchActions {
             case ResearchAction.Buy v -> buy(c, v);
             case ResearchAction.Listen v -> listen(c, v);
             case ResearchAction.Bookmark v -> bookmark(c, v);
+            case ResearchAction.AcceptOffer v ->
+                    answer(c.player(), WarpService.acceptOffer(c.player(), v.offerSeq(), v.echoedWarp()));
+            case ResearchAction.RefuseOffer v ->
+                    answer(c.player(), WarpService.refuseOffer(c.player(), v.offerSeq()));
+            case ResearchAction.ListenRite v -> listenRite(c, v);
         };
     }
 
@@ -490,7 +513,12 @@ public final class ResearchActions {
         if (refused != null) {
             return refused;
         }
-        ServerPlayer player = c.player();
+        playListen(c.player());
+        return Reply.OK;
+    }
+
+    /** {@code vftv:book.listen}, to the listener alone. */
+    private static void playListen(ServerPlayer player) {
         player.connection.send(
                 new ClientboundSoundPacket(
                         BuiltInRegistries.SOUND_EVENT.wrapAsHolder(ResearchItems.sound("listen")),
@@ -501,7 +529,32 @@ public final class ResearchActions {
                         1.0F,
                         1.0F,
                         player.getRandom().nextLong()));
-        return Reply.OK;
+    }
+
+    /** The silence-beneath gate, then the warp spec's rite; on OK the sound and the book closes. */
+    private static Reply listenRite(Context c, ResearchAction.ListenRite v) {
+        if (!c.record().isLearned(SILENCE_BENEATH)) {
+            return Reply.refuse(WarpService.Answer.CLOSED.key());
+        }
+        ServerPlayer player = c.player();
+        WarpService.Answer answer = WarpService.listen(player, v.echoedWarp());
+        if (answer == WarpService.Answer.OK) {
+            playListen(player);
+            player.closeContainer();
+        }
+        return answer(player, answer);
+    }
+
+    /** A warp answer as a reply: {@code STALE} as a checked commit's, the cooldown with seconds. */
+    private static Reply answer(ServerPlayer player, WarpService.Answer answer) {
+        return switch (answer) {
+            case OK -> Reply.OK;
+            case STALE -> Reply.STALE_COMMIT;
+            case COOLDOWN ->
+                    Reply.refuse(
+                            answer.key(), Long.toString(WarpService.listenCooldownSeconds(player)));
+            default -> Reply.refuse(answer.key());
+        };
     }
 
     private static Reply bookmark(Context c, ResearchAction.Bookmark v) {

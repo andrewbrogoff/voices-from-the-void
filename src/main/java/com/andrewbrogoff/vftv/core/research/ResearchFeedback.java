@@ -48,13 +48,36 @@ public final class ResearchFeedback {
     }
 
     /**
+     * The live offer's quote.
+     *
+     * @param seq the offer's sequence number
+     * @param warp the player's preview of its cost, with {@code clipped}
+     */
+    public record OfferQuote(long seq, WarpPreview warp) {}
+
+    /**
+     * The Listen rite's quote.
+     *
+     * @param warp the player's preview of {@code listen.cost}, with {@code clipped}
+     * @param refusal the rite's current refusal key from the warp spec's rows 3–6, or empty
+     */
+    public record RiteQuote(WarpPreview warp, String refusal) {}
+
+    /**
      * The book's quotes.
      *
      * @param revision the open book's surface revision, bumped on every re-send
      * @param mode {@code research.mode}: 0 gentle, 1 standard, 2 hard, 3 skip
      * @param entries every non-HIDDEN note and listen entry's quote, in ascending id order
+     * @param offer the live offer's quote, or null with none
+     * @param rite the Listen rite's quote, or null while the warp record is unreadable
      */
-    public record Quotes(int revision, int mode, List<EntryQuote> entries)
+    public record Quotes(
+            int revision,
+            int mode,
+            List<EntryQuote> entries,
+            @Nullable OfferQuote offer,
+            @Nullable RiteQuote rite)
             implements CustomPacketPayload {
         /** {@code vftv:research_quotes}. */
         public static final Type<Quotes> TYPE =
@@ -69,6 +92,11 @@ public final class ResearchFeedback {
             entries = List.copyOf(entries);
         }
 
+        /** Quotes with no offer and no rite. */
+        public Quotes(int revision, int mode, List<EntryQuote> entries) {
+            this(revision, mode, entries, null, null);
+        }
+
         /** The quote of an entry, or null when it isn't quoted. */
         public @Nullable EntryQuote of(String entry) {
             for (EntryQuote q : entries) {
@@ -81,7 +109,10 @@ public final class ResearchFeedback {
 
         /** Whether the priced content (mode and entries) equals another quote's. */
         public boolean samePrices(Quotes other) {
-            return mode == other.mode && entries.equals(other.entries);
+            return mode == other.mode
+                    && entries.equals(other.entries)
+                    && java.util.Objects.equals(offer, other.offer)
+                    && java.util.Objects.equals(rite, other.rite);
         }
 
         @Override
@@ -108,6 +139,16 @@ public final class ResearchFeedback {
                     ResearchAction.writeWarp(buf, w);
                 }
             }
+            buf.writeBoolean(q.offer != null);
+            if (q.offer != null) {
+                buf.writeVarLong(q.offer.seq());
+                ResearchAction.writeWarp(buf, q.offer.warp());
+            }
+            buf.writeBoolean(q.rite != null);
+            if (q.rite != null) {
+                ResearchAction.writeWarp(buf, q.rite.warp());
+                buf.writeUtf(q.rite.refusal(), MAX_ARG_CHARS);
+            }
         }
 
         private static Quotes read(RegistryFriendlyByteBuf buf) {
@@ -131,7 +172,19 @@ public final class ResearchFeedback {
                 WarpPreview warp = buf.readBoolean() ? ResearchAction.warp(buf) : null;
                 entries.add(new EntryQuote(entry, price, warp));
             }
-            return new Quotes(revision, mode, entries);
+            OfferQuote offer = null;
+            if (buf.readBoolean()) {
+                long seq = buf.readVarLong();
+                if (seq < 1) {
+                    throw new DecoderException("offer seq " + seq);
+                }
+                offer = new OfferQuote(seq, ResearchAction.warp(buf));
+            }
+            RiteQuote rite =
+                    buf.readBoolean()
+                            ? new RiteQuote(ResearchAction.warp(buf), buf.readUtf(MAX_ARG_CHARS))
+                            : null;
+            return new Quotes(revision, mode, entries, offer, rite);
         }
     }
 

@@ -13,6 +13,11 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.DynamicCommandExceptionType;
+import com.andrewbrogoff.vftv.api.warp.WarpKeys;
+import net.minecraft.commands.SharedSuggestionProvider;
+import net.minecraft.commands.arguments.IdentifierArgument;
+import net.minecraft.resources.Identifier;
 import java.util.Locale;
 import net.minecraft.commands.CommandBuildContext;
 import net.minecraft.commands.CommandSourceStack;
@@ -23,10 +28,10 @@ import net.minecraft.server.level.ServerPlayer;
 import org.jspecify.annotations.Nullable;
 
 /**
- * The warp feature's {@code /vftv} subtree, {@code warp get|set|add|clear} (warp spec, "Commands";
+ * The warp feature's {@code /vftv} subtree, {@code warp get|set|add|clear|fire} (warp spec, "Commands";
  * configuration, "Commands"), built from vanilla Brigadier types only. {@code Vftv.commandRoot}
  * attaches it; the root already requires level 2. Every change goes through {@code apply} with
- * source {@code COMMAND}. {@code warp fire} joins with the Voice events.
+ * source {@code COMMAND}; {@code warp fire} runs one Voice event.
  */
 public final class WarpCommands {
     /** {@code get}'s reply: the player, the kinds, gear, total, band, counter and chance. */
@@ -34,6 +39,13 @@ public final class WarpCommands {
 
     /** A change's reply: the player and the new value. */
     public static final String SET = "commands.vftv.warp.set";
+
+    /** {@code fire}'s reply: the player and the outcome. */
+    public static final String FIRED = "commands.vftv.warp.fired";
+
+    private static final DynamicCommandExceptionType UNKNOWN_EVENT =
+            new DynamicCommandExceptionType(
+                    id -> Component.translatableEscape("argument.id.unknown", id));
 
     private enum Kind {
         TEMPORARY,
@@ -90,7 +102,30 @@ public final class WarpCommands {
                                 Commands.literal("clear")
                                         .then(
                                                 Commands.argument("player", EntityArgument.player())
-                                                        .executes(WarpCommands::clear))));
+                                                        .executes(WarpCommands::clear)))
+                        .then(
+                                Commands.literal("fire")
+                                        .then(
+                                                Commands.argument("player", EntityArgument.player())
+                                                        .then(
+                                                                Commands.argument(
+                                                                                "event",
+                                                                                IdentifierArgument
+                                                                                        .id())
+                                                                        .suggests(
+                                                                                (c, b) ->
+                                                                                        SharedSuggestionProvider
+                                                                                                .suggestResource(
+                                                                                                        c.getSource()
+                                                                                                                .registryAccess()
+                                                                                                                .lookupOrThrow(
+                                                                                                                        WarpKeys
+                                                                                                                                .VOICE_EVENT_REGISTRY)
+                                                                                                                .keySet(),
+                                                                                                        b))
+                                                                        .executes(
+                                                                                WarpCommands
+                                                                                        ::fire)))));
     }
 
     private static int get(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
@@ -143,6 +178,23 @@ public final class WarpCommands {
         ServerPlayer player = EntityArgument.getPlayer(c, "player");
         int n = IntegerArgumentType.getInteger(c, "n");
         return report(c, player, kind, WarpService.apply(player, cost(kind, n), command()));
+    }
+
+    /**
+     * {@code fire}: the event's server part and cue, past the roll and eligibility but not the
+     * suppression rows; replies with the outcome.
+     */
+    private static int fire(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {
+        ServerPlayer player = EntityArgument.getPlayer(c, "player");
+        Identifier event = IdentifierArgument.getId(c, "event");
+        VoiceChecks.Outcome outcome = VoiceChecks.fire(player, event);
+        if (outcome == null) {
+            throw UNKNOWN_EVENT.create(event);
+        }
+        String name = outcome.name().toLowerCase(Locale.ROOT);
+        c.getSource()
+                .sendSuccess(() -> Component.translatable(FIRED, player.getDisplayName(), name), true);
+        return outcome == VoiceChecks.Outcome.FIRED ? 1 : 0;
     }
 
     private static int clear(CommandContext<CommandSourceStack> c) throws CommandSyntaxException {

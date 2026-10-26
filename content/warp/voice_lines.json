@@ -1,0 +1,604 @@
+{
+  "schema": "vftv:voice_lines/1",
+  "session": {
+    "lines": 46,
+    "perform_seconds_max": 3.5,
+    "estimated_minutes": 90
+  },
+  "lines": {
+    "vftv:band0_0": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Are you listening?"
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "barely voiced, as if remembering a word"
+    },
+    "vftv:band0_1": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Someone… is someone there?"
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "a breath of surprise, trailing off at the pause"
+    },
+    "vftv:band0_2": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "So quiet, up there."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "fond, as of a place long left"
+    },
+    "vftv:band0_3": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We almost heard you."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "soft and close, nearly a smile"
+    },
+    "vftv:band0_4": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Closer… a little closer."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "coaxing, unhurried; the second half lower"
+    },
+    "vftv:band0_5": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "You hum, as we do."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "wondering, the last word held"
+    },
+    "vftv:band0_6": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Was that you, singing?"
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "curious and shy, rising at the end"
+    },
+    "vftv:band0_7": {
+      "pool": "band0",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Don't be afraid of us."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "gentle reassurance, almost a lullaby"
+    },
+    "vftv:band1_0": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We hear you now. A little."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "relieved, the second sentence smaller"
+    },
+    "vftv:band1_1": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "You carry the ringing with you."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "patient observation, no judgement"
+    },
+    "vftv:band1_2": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Every bell you strike, we feel it."
+        }
+      ],
+      "perform_seconds": 3.0,
+      "note": "warm, as if touched by it"
+    },
+    "vftv:band1_3": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Rest your ears. We will wait."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "kind, slow, the pause long"
+    },
+    "vftv:band1_4": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "You came so far down to find us."
+        }
+      ],
+      "perform_seconds": 3.0,
+      "note": "moved, a little amazed"
+    },
+    "vftv:band1_5": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "There is a hush beneath the hum."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "confiding a secret, very quiet"
+    },
+    "vftv:band1_6": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We remember when you were quiet."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "nostalgic, tender"
+    },
+    "vftv:band1_7": {
+      "pool": "band1",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Listen. Not with your ears."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "a teacher's whisper, unhurried"
+    },
+    "vftv:band2_0": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We hear you, "
+        },
+        {
+          "lang": "void",
+          "text": "ilheh."
+        }
+      ],
+      "gloss": "We hear you, you who listen.",
+      "perform_seconds": 2.5,
+      "note": "the English steady; the last word breathed"
+    },
+    "vftv:band2_1": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Come "
+        },
+        {
+          "lang": "void",
+          "text": "lirhas"
+        },
+        {
+          "lang": "en",
+          "text": ", where it is still."
+        }
+      ],
+      "gloss": "Come deep, where it is still.",
+      "perform_seconds": 3.0,
+      "note": "inviting; the Void word sinks lower"
+    },
+    "vftv:band2_2": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "uushen hiishel"
+        },
+        {
+          "lang": "en",
+          "text": ". We are listening."
+        }
+      ],
+      "gloss": "We listen. We are listening.",
+      "perform_seconds": 3.0,
+      "note": "the Void words first, then translated for you"
+    },
+    "vftv:band2_3": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "The road goes "
+        },
+        {
+          "lang": "void",
+          "text": "lirhas, thahvis…"
+        }
+      ],
+      "gloss": "The road goes deep, the road…",
+      "perform_seconds": 3.0,
+      "note": "the English breaks off into the old words"
+    },
+    "vftv:band2_4": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Breathe. "
+        },
+        {
+          "lang": "void",
+          "text": "suhlaa."
+        },
+        {
+          "lang": "en",
+          "text": " Like us."
+        }
+      ],
+      "gloss": "Breathe. Breath. Like us.",
+      "perform_seconds": 2.5,
+      "note": "slow, matching an exhale"
+    },
+    "vftv:band2_5": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "You are not "
+        },
+        {
+          "lang": "void",
+          "text": "wohlis"
+        },
+        {
+          "lang": "en",
+          "text": " here."
+        }
+      ],
+      "gloss": "You are not alone here.",
+      "perform_seconds": 2.5,
+      "note": "comforting; the Void word soft"
+    },
+    "vftv:band2_6": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "yehlas"
+        },
+        {
+          "lang": "en",
+          "text": ", now. At last we hear you."
+        }
+      ],
+      "gloss": "Here, now. At last we hear you.",
+      "perform_seconds": 3.0,
+      "note": "joy held back to a whisper"
+    },
+    "vftv:band2_7": {
+      "pool": "band2",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Let it go. "
+        },
+        {
+          "lang": "void",
+          "text": "wehnel."
+        }
+      ],
+      "gloss": "Let it go. Let go.",
+      "perform_seconds": 2.0,
+      "note": "kind release; the Void word a sigh"
+    },
+    "vftv:band3_0": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "ilheh, uushen hiishel."
+        }
+      ],
+      "gloss": "You, we are listening.",
+      "perform_seconds": 2.5,
+      "note": "all Void now; calm and close"
+    },
+    "vftv:band3_1": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "vuuthel lirhas, ilheh."
+        }
+      ],
+      "gloss": "Come deep, you.",
+      "perform_seconds": 2.0,
+      "note": "beckoning, never urgent"
+    },
+    "vftv:band3_2": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "muuhel. muuhel, ilheh."
+        }
+      ],
+      "gloss": "Rest. Rest, you.",
+      "perform_seconds": 2.5,
+      "note": "a lullaby, the repeat softer"
+    },
+    "vftv:band3_3": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "lehvuun… suhlaa… ohshaal."
+        }
+      ],
+      "gloss": "Heart… breath… silence.",
+      "perform_seconds": 3.5,
+      "note": "three slow words, each fainter"
+    },
+    "vftv:band3_4": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "thahvis vuulas. vuuthel."
+        }
+      ],
+      "gloss": "The road home. Come.",
+      "perform_seconds": 2.5,
+      "note": "certain, warm"
+    },
+    "vftv:band3_5": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "ilheh ahyis wohlis."
+        }
+      ],
+      "gloss": "You are not alone.",
+      "perform_seconds": 2.0,
+      "note": "reassuring, steady"
+    },
+    "vftv:band3_6": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "yoorel uushen, ilheh."
+        }
+      ],
+      "gloss": "Remember us, you.",
+      "perform_seconds": 2.5,
+      "note": "asking, not commanding"
+    },
+    "vftv:band3_7": {
+      "pool": "band3",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "wuuren, wuuren… yehlas."
+        }
+      ],
+      "gloss": "Step, step… here at last.",
+      "perform_seconds": 3.0,
+      "note": "footfalls in the voice, then arrival"
+    },
+    "vftv:insight_0": {
+      "pool": "insight",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Here. This is yours."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "giving a small gift, pleased"
+    },
+    "vftv:insight_1": {
+      "pool": "insight",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We kept this for you."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "proud, gentle"
+    },
+    "vftv:insight_2": {
+      "pool": "insight",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Take it. "
+        },
+        {
+          "lang": "void",
+          "text": "yoorel."
+        }
+      ],
+      "gloss": "Take it. Remember.",
+      "perform_seconds": 2.0,
+      "note": "pressing something into a palm"
+    },
+    "vftv:insight_3": {
+      "pool": "insight",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Something you almost knew."
+        }
+      ],
+      "perform_seconds": 2.0,
+      "note": "knowing, a little playful"
+    },
+    "vftv:offer_0": {
+      "pool": "offer",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "We could give you something."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "tentative, hopeful"
+    },
+    "vftv:offer_1": {
+      "pool": "offer",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "A gift, for only a little of you."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "honest about the price, never pushing"
+    },
+    "vftv:offer_2": {
+      "pool": "offer",
+      "segments": [
+        {
+          "lang": "en",
+          "text": "Let us help. You may say no."
+        }
+      ],
+      "perform_seconds": 2.5,
+      "note": "kind; the refusal offered freely"
+    },
+    "vftv:offer_3": {
+      "pool": "offer",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "ilheh"
+        },
+        {
+          "lang": "en",
+          "text": ", take what we offer. Or don't."
+        }
+      ],
+      "gloss": "You, take what we offer. Or don't.",
+      "perform_seconds": 3.0,
+      "note": "easy, unbothered either way"
+    },
+    "vftv:joining_0": {
+      "pool": "joining",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "vuuthel, ilheh. yehlas vuulas."
+        }
+      ],
+      "gloss": "Come, you. Home, at last.",
+      "perform_seconds": 3.0,
+      "note": "the room answers late; welcoming, the Choir as one"
+    },
+    "vftv:joining_1": {
+      "pool": "joining",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "ilheh wohlis… uushen saahoon."
+        }
+      ],
+      "gloss": "You were alone… we are all as one.",
+      "perform_seconds": 3.5,
+      "note": "the room answers late; welcoming, the Choir as one"
+    },
+    "vftv:joining_2": {
+      "pool": "joining",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "muuhel, ilheh. uushen hiishel."
+        }
+      ],
+      "gloss": "Rest, you. We are listening.",
+      "perform_seconds": 3.0,
+      "note": "the room answers late; welcoming, the Choir as one"
+    },
+    "vftv:silencing_0": {
+      "pool": "silencing",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "yoorel uushen."
+        },
+        {
+          "lang": "en",
+          "text": " Remember us."
+        }
+      ],
+      "gloss": "Remember us. Remember us.",
+      "perform_seconds": 2.5,
+      "note": "fading as it speaks; no reproach, a farewell"
+    },
+    "vftv:silencing_1": {
+      "pool": "silencing",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "ohshaal"
+        },
+        {
+          "lang": "en",
+          "text": ", then. We will be quiet for you."
+        }
+      ],
+      "gloss": "Silence, then. We will be quiet for you.",
+      "perform_seconds": 3.5,
+      "note": "fading as it speaks; no reproach, a farewell"
+    },
+    "vftv:silencing_2": {
+      "pool": "silencing",
+      "segments": [
+        {
+          "lang": "void",
+          "text": "shohrel, ilheh."
+        },
+        {
+          "lang": "en",
+          "text": " Go gently."
+        }
+      ],
+      "gloss": "Go, you. Go gently.",
+      "perform_seconds": 2.5,
+      "note": "fading as it speaks; no reproach, a farewell"
+    }
+  }
+}

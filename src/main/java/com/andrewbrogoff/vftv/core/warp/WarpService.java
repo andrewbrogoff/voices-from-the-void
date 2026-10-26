@@ -56,7 +56,7 @@ public final class WarpService {
     public static final int GEAR_INTERVAL = 20;
 
     private static final Logger LOGGER = LogUtils.getLogger();
-    private static final OperationGuard GUARD = new OperationGuard("warp");
+    static final OperationGuard GUARD = new OperationGuard("warp");
     private static final List<VoidPlaceQuery> QUERIES = new CopyOnWriteArrayList<>();
     private static final Map<UUID, Transient> TRANSIENT = new HashMap<>();
 
@@ -260,9 +260,296 @@ public final class WarpService {
             }
             WarpRecord next = next(r, 0, 0, r.permanent(), r.gear(), 0, r.milestonesPaid(), true);
             slot().set(player, new WarpAttachment(new Retained.Read<>(next), null));
-            publish(player, r.state(), next.state(), source(WarpSourceKind.SILENCING));
+            transientOf(player).listenDue = false;
+            try {
+                publish(player, r.state(), next.state(), source(WarpSourceKind.SILENCING));
+            } finally {
+                VoiceChecks.send(player, new VoicePayloads.VoiceClear());
+            }
             return new CommitResult(
                     CommitResult.Status.OK, current, OptionalLong.of(next.revision()));
+        }
+    }
+
+    // ---- Bargains and the Listen rite --------------------------------------------------------
+
+    /** What an offer action or the Listen rite answered; each refusal has its message key. */
+    public enum Answer {
+        /** Done. */
+        OK(""),
+        /** The guard is held. */
+        BUSY(SharedMessages.BUSY),
+        /** The record is unreadable. */
+        UNREADABLE(SharedMessages.UNREADABLE),
+        /** Silenced, or the Voices are switched off. */
+        CLOSED("message.vftv.warp.listen_closed"),
+        /** Not in a Void-touched place. */
+        PLACE("message.vftv.warp.listen_place"),
+        /** The rite is cooling; the seconds left are {@link #listenCooldownSeconds}. */
+        COOLDOWN("message.vftv.warp.listen_cooldown"),
+        /** No live offer with that sequence number. */
+        GONE("message.vftv.warp.offer_gone"),
+        /** The price would be clipped. */
+        FULL("message.vftv.warp.offer_full"),
+        /** The echoed preview differs from the current one. */
+        STALE(SharedMessages.COST_CHANGED),
+        /** The power could not be given; nothing was charged. */
+        CANNOT("message.vftv.warp.offer_cannot");
+
+        private final String key;
+
+        Answer(String key) {
+            this.key = key;
+        }
+
+        /** The refusal's message key; empty for {@link #OK}. */
+        public String key() {
+            return key;
+        }
+    }
+
+    /** The Listen rite's cost, {@code listen.cost}. */
+    public static WarpCost listenCost(WarpRules rules) {
+        return new WarpCost(rules.listenCostTemporary(), rules.listenCostLasting(), 0);
+    }
+
+    /** The preview of the Listen rite's cost, or null for an unreadable record. */
+    public static @Nullable WarpPreview ritePreview(Player player) {
+        WarpRecord r = get(player).readable();
+        WarpRules rules = WarpRulesService.current();
+        return r == null ? null : preview(r, listenCost(rules), source(WarpSourceKind.LISTEN), rules);
+    }
+
+    /**
+     * The Listen rite's current refusal from rows 2–6 ("The Listen rite"), as the book's quote
+     * carries it, or {@link Answer#OK} when it would be accepted. The place is read now.
+     */
+    public static Answer riteRefusal(ServerPlayer player) {
+        WarpRecord r = get(player).readable();
+        if (r == null) {
+            return Answer.UNREADABLE;
+        }
+        WarpRules rules = WarpRulesService.current();
+        if (r.silenced() || !rules.voicesEnabled()) {
+            return Answer.CLOSED;
+        }
+        if (!inVoidTouchedPlace(player.level(), player.blockPosition())) {
+            return Answer.PLACE;
+        }
+        if (!riteReady(r, gameTime(player), rules)) {
+            return Answer.COOLDOWN;
+        }
+        WarpPreview p = preview(r, listenCost(rules), source(WarpSourceKind.LISTEN), rules);
+        return p == null || p.clipped() ? Answer.FULL : Answer.OK;
+    }
+
+    /** Whether the rite's cooldown has passed, at overworld time {@code g}. */
+    public static boolean riteReady(WarpRecord r, long g, WarpRules rules) {
+        long last = r.lastListen();
+        return last < 0 || g < last || g - last >= rules.listenCooldown();
+    }
+
+    /** The whole seconds left on the rite's cooldown, 0 when ready or unreadable. */
+    public static long listenCooldownSeconds(ServerPlayer player) {
+        WarpRecord r = get(player).readable();
+        WarpRules rules = WarpRulesService.current();
+        long g = gameTime(player);
+        if (r == null || riteReady(r, g, rules)) {
+            return 0;
+        }
+        return Math.ceilDiv(rules.listenCooldown() - (g - r.lastListen()), 20);
+    }
+
+    /**
+     * The Listen rite (warp spec, "The Listen rite"), one guarded compound operation after the
+     * research layer's checks: {@code BUSY}, {@code UNREADABLE}, {@code CLOSED}, {@code PLACE},
+     * {@code COOLDOWN}, {@code FULL}, {@code STALE}, or {@code OK}: the cost written as a commit
+     * (the counter rising with it), {@code last_listen} set and the forced check made due, with
+     * {@code WarpChangedEvent(LISTEN)} posted while the guard is held.
+     */
+    public static Answer listen(ServerPlayer player, WarpPreview expected) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope == null) {
+                return Answer.BUSY;
+            }
+            WarpRecord r = record(player);
+            if (r == null) {
+                return Answer.UNREADABLE;
+            }
+            WarpRules rules = WarpRulesService.current();
+            long g = gameTime(player);
+            if (r.silenced() || !rules.voicesEnabled()) {
+                return Answer.CLOSED;
+            }
+            if (!inVoidTouchedPlace(player.level(), player.blockPosition())) {
+                return Answer.PLACE;
+            }
+            if (!riteReady(r, g, rules)) {
+                return Answer.COOLDOWN;
+            }
+            WarpSource source = source(WarpSourceKind.LISTEN);
+            WarpPreview actual = preview(r, listenCost(rules), source, rules);
+            if (actual == null || actual.clipped()) {
+                return Answer.FULL;
+            }
+            if (!actual.equals(expected)) {
+                return Answer.STALE;
+            }
+            WarpRecord next =
+                    new WarpRecord(
+                            WarpRecord.FORMAT,
+                            r.temporary() + actual.dT(),
+                            r.lasting() + actual.dL(),
+                            r.permanent(),
+                            r.gear(),
+                            WarpMath.counterAfterGain(r.counter(), WarpMath.gains(actual), rules),
+                            r.checks(),
+                            r.milestonesPaid(),
+                            g,
+                            r.silenced(),
+                            r.revision() + 1);
+            transientOf(player).listenDue = true;
+            write(player, r, next, source);
+            return Answer.OK;
+        }
+    }
+
+    /**
+     * The standing offer, or null; an expired one counts as absent and is deleted here (warp spec,
+     * "The offer": expiry is lazy).
+     */
+    public static WarpAttachment.@Nullable Offer offer(ServerPlayer player) {
+        WarpAttachment value = get(player);
+        WarpAttachment.Offer o = value.offer();
+        if (o != null && gameTime(player) >= o.expires()) {
+            try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+                if (scope != null) {
+                    slot().set(player, new WarpAttachment(get(player).record(), null));
+                }
+            }
+            return null;
+        }
+        return o;
+    }
+
+    /** The preview of the standing offer's cost, or null with no offer or an unreadable record. */
+    public static @Nullable WarpPreview offerPreview(ServerPlayer player) {
+        WarpAttachment.Offer o = offer(player);
+        WarpRecord r = get(player).readable();
+        if (o == null || r == null) {
+            return null;
+        }
+        WarpRules rules = WarpRulesService.current();
+        return preview(r, offerCost(o), new WarpSource(WarpSourceKind.BARGAIN, o.bargain()), rules);
+    }
+
+    /**
+     * Accepts the offer {@code seq} (warp spec, "Accepting"), one guarded compound operation:
+     * {@code BUSY}; {@code GONE} (an expired or invalid offer deleted, a newer one kept); {@code
+     * FULL}; {@code STALE}; {@code CANNOT} when the one {@code addEffect} call says no; or {@code
+     * OK}: the warp written as a commit, the offer deleted, {@code WarpChangedEvent(BARGAIN)}
+     * posted and {@code bargain.accept} played to the owner.
+     */
+    public static Answer acceptOffer(ServerPlayer player, long seq, WarpPreview echoed) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope == null) {
+                return Answer.BUSY;
+            }
+            WarpAttachment value = get(player);
+            WarpAttachment.Offer o = value.offer();
+            if (o == null) {
+                return Answer.GONE;
+            }
+            boolean expired = gameTime(player) >= o.expires();
+            boolean invalid =
+                    player.level()
+                            .registryAccess()
+                            .lookupOrThrow(WarpKeys.BARGAIN_REGISTRY)
+                            .get(ResourceKey.create(WarpKeys.BARGAIN_REGISTRY, o.bargain()))
+                            .isEmpty();
+            if (expired || (o.seq() == seq && invalid)) {
+                slot().set(player, new WarpAttachment(value.record(), null));
+                return Answer.GONE;
+            }
+            if (o.seq() != seq) {
+                return Answer.GONE;
+            }
+            WarpRecord r = record(player);
+            if (r == null) {
+                return Answer.UNREADABLE;
+            }
+            WarpRules rules = WarpRulesService.current();
+            WarpSource source = new WarpSource(WarpSourceKind.BARGAIN, o.bargain());
+            WarpPreview actual = preview(r, offerCost(o), source, rules);
+            if (actual == null || actual.clipped()) {
+                return Answer.FULL;
+            }
+            if (!actual.equals(echoed)) {
+                return Answer.STALE;
+            }
+            if (!VoiceChecks.addEffect(player, o.effect(), o.duration(), o.amplifier())) {
+                return Answer.CANNOT;
+            }
+            WarpRecord next =
+                    next(
+                            r,
+                            r.temporary() + actual.dT(),
+                            r.lasting() + actual.dL(),
+                            r.permanent(),
+                            r.gear(),
+                            WarpMath.counterAfterGain(r.counter(), WarpMath.gains(actual), rules),
+                            r.milestonesPaid(),
+                            r.silenced());
+            write(player, r, new WarpAttachment(new Retained.Read<>(next), null), source);
+            VoiceChecks.playToOwner(player, WarpContent.sound(WarpContent.BARGAIN_ACCEPT));
+            return Answer.OK;
+        }
+    }
+
+    /**
+     * Refuses the offer {@code seq}: it costs nothing, ever. {@code BUSY}; {@code GONE} (an expired
+     * offer deleted, a newer one kept); or {@code OK}, the offer deleted.
+     */
+    public static Answer refuseOffer(ServerPlayer player, long seq) {
+        try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+            if (scope == null) {
+                return Answer.BUSY;
+            }
+            WarpAttachment value = get(player);
+            WarpAttachment.Offer o = value.offer();
+            if (o == null) {
+                return Answer.GONE;
+            }
+            boolean expired = gameTime(player) >= o.expires();
+            if (!expired && o.seq() != seq) {
+                return Answer.GONE;
+            }
+            slot().set(player, new WarpAttachment(value.record(), null));
+            return expired ? Answer.GONE : Answer.OK;
+        }
+    }
+
+    static WarpCost offerCost(WarpAttachment.Offer o) {
+        return new WarpCost(o.costTemporary(), o.costLasting(), 0);
+    }
+
+    // ---- Screens, arrival and death ----------------------------------------------------------
+
+    /** {@code VoiceQuiet(open)}: stores the client's screen state; the last value wins. */
+    public static void quiet(ServerPlayer player, boolean open) {
+        transientOf(player).quiet = open;
+    }
+
+    /** A death: the offer and the rite's due check are deleted; warp itself is untouched. */
+    public static void onDeath(ServerPlayer player) {
+        transientOf(player).listenDue = false;
+        WarpAttachment value = get(player);
+        if (value.offer() != null) {
+            try (OperationGuard.Scope scope = GUARD.tryEnter(player.getUUID())) {
+                if (scope != null) {
+                    slot().set(player, new WarpAttachment(value.record(), null));
+                }
+            }
         }
     }
 
@@ -412,10 +699,28 @@ public final class WarpService {
         if (g % GEAR_INTERVAL == t.gearPhase) {
             sampleGear(player);
         }
+        int check = rules.checkInterval();
+        if (t.checkInterval != check) {
+            t.checkInterval = check;
+            t.checkPhase = WarpPhase.of(player.getUUID(), check);
+        }
+        if (g % check == t.checkPhase) {
+            VoiceChecks.check(player, false);
+        }
+        if (t.listenDue && VoiceChecks.suppressed(player) == null) {
+            t.listenDue = false;
+            VoiceChecks.check(player, true);
+        }
     }
 
-    /** A login, respawn or dimension change: the gear is sampled in the same tick. */
+    /**
+     * A login, respawn or dimension change: the gear is sampled in the same tick, the grace period
+     * begins and a due rite check lapses (its price stays paid).
+     */
     public static void onArrive(ServerPlayer player) {
+        Transient t = transientOf(player);
+        t.graceUntil = gameTime(player) + WarpRulesService.current().grace();
+        t.listenDue = false;
         sampleGear(player);
     }
 
@@ -484,7 +789,7 @@ public final class WarpService {
     // ---- Internals ---------------------------------------------------------------------------
 
     /** The next record: the given values, every other field kept, the revision bumped. */
-    private static WarpRecord next(
+    static WarpRecord next(
             WarpRecord r,
             int temporary,
             int lasting,
@@ -508,9 +813,16 @@ public final class WarpService {
     }
 
     /** Writes {@code next} (which syncs it to the owner), then posts the event if warp moved. */
-    private static void write(
+    static void write(
             ServerPlayer player, WarpRecord before, WarpRecord next, WarpSource source) {
-        slot().set(player, get(player).with(next));
+        write(player, before, new WarpAttachment(new Retained.Read<>(next), get(player).offer()), source);
+    }
+
+    /** Writes a whole value (record and offer), then posts the event if warp moved. */
+    static void write(
+            ServerPlayer player, WarpRecord before, WarpAttachment value, WarpSource source) {
+        WarpRecord next = java.util.Objects.requireNonNull(value.readable());
+        slot().set(player, value);
         if (!before.state().equals(next.state())) {
             publish(player, before.state(), next.state(), source);
         }
@@ -533,23 +845,23 @@ public final class WarpService {
         }
     }
 
-    private static WarpSource source(WarpSourceKind kind) {
+    static WarpSource source(WarpSourceKind kind) {
         return new WarpSource(kind, null);
     }
 
-    private static CommitResult result(CommitResult.Status status, @Nullable WarpPreview preview) {
+    static CommitResult result(CommitResult.Status status, @Nullable WarpPreview preview) {
         return new CommitResult(status, preview, OptionalLong.empty());
     }
 
-    private static long gameTime(ServerPlayer player) {
+    static long gameTime(ServerPlayer player) {
         return player.level().getServer().overworld().getGameTime();
     }
 
-    private static Transient transientOf(ServerPlayer player) {
+    static Transient transientOf(ServerPlayer player) {
         return TRANSIENT.computeIfAbsent(player.getUUID(), Transient::new);
     }
 
-    private static DataSlot<Player, WarpAttachment> slot() {
+    static DataSlot<Player, WarpAttachment> slot() {
         DataSlot<Player, WarpAttachment> s = slot;
         if (s == null) {
             throw new IllegalStateException("WarpFeature.init has not run");
@@ -558,12 +870,26 @@ public final class WarpService {
     }
 
     /** A player's transient memory: never persisted, dropped at logout. */
-    private static final class Transient {
+    static final class Transient {
         private final int gearPhase;
         private int decayInterval = -1;
         private int decayPhase;
+        private int checkInterval = -1;
+        private int checkPhase;
         private long voidWorkUntil = Long.MIN_VALUE;
         private boolean warned;
+
+        /** The client's screen state ({@code VoiceQuiet}): suppression row 8. */
+        boolean quiet;
+
+        /** No check before this overworld tick: suppression row 6. */
+        long graceUntil = Long.MIN_VALUE;
+
+        /** A Listen rite has paid and its forced check is due. */
+        boolean listenDue;
+
+        /** The last offer's per-login sequence number. */
+        long offerSeq;
 
         private Transient(UUID player) {
             gearPhase = WarpPhase.of(player, GEAR_INTERVAL);

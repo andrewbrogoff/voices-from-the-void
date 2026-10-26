@@ -1,6 +1,8 @@
 package com.andrewbrogoff.vftv.core.research;
 
 import com.andrewbrogoff.vftv.core.common.model.CheckedCommit;
+import com.andrewbrogoff.vftv.core.warp.WarpAttachment;
+import com.andrewbrogoff.vftv.core.warp.WarpRecord;
 import com.andrewbrogoff.vftv.core.warp.WarpRulesService;
 import com.andrewbrogoff.vftv.core.warp.WarpService;
 import net.minecraft.server.level.ServerPlayer;
@@ -15,7 +17,8 @@ import org.jspecify.annotations.Nullable;
  * stays valid while the book is in a hand and the player is alive, and is the context every {@link
  * ResearchAction} names by its container id. It owns the open book's quotes and their surface
  * revision (conventions, "The revision"): an O(1) change check every tick compares the quote's
- * inputs (the research and warp records, the warp rules, the tuning and the server switch), and a
+ * inputs (the research and warp records, the warp rules, the tuning, the server switch, the Listen
+ * rite's cooldown and the offer's expiry), and a
  * changed price or entry set bumps the revision and re-sends the quotes.
  */
 public final class CommonplaceMenu extends AbstractContainerMenu {
@@ -54,7 +57,9 @@ public final class CommonplaceMenu extends AbstractContainerMenu {
         ResearchFeedback.Quotes fresh = ResearchActions.quotes(player, revision);
         if (force || sent == null || !fresh.samePrices(sent)) {
             revision = CheckedCommit.bump(revision);
-            sent = new ResearchFeedback.Quotes(revision, fresh.mode(), fresh.entries());
+            sent =
+                    new ResearchFeedback.Quotes(
+                            revision, fresh.mode(), fresh.entries(), fresh.offer(), fresh.rite());
             ResearchActions.send(player, sent);
         }
     }
@@ -85,14 +90,26 @@ public final class CommonplaceMenu extends AbstractContainerMenu {
 
     /** What the quotes are made from, compared by identity: each change replaces its instance. */
     private record Inputs(
-            Object research, Object warp, Object rules, Object tuning, Object config) {
+            Object research,
+            Object warp,
+            Object rules,
+            Object tuning,
+            Object config,
+            boolean riteReady,
+            boolean offerLive) {
         static Inputs of(ServerPlayer player) {
+            WarpAttachment warp = WarpService.get(player);
+            WarpRecord r = warp.readable();
+            long g = player.level().getServer().overworld().getGameTime();
+            WarpAttachment.Offer offer = warp.offer();
             return new Inputs(
                     ResearchService.get(player),
-                    WarpService.get(player),
+                    warp,
                     WarpRulesService.current(),
                     ResearchService.tuning(),
-                    ResearchService.config());
+                    ResearchService.config(),
+                    r != null && WarpService.riteReady(r, g, WarpRulesService.current()),
+                    offer != null && g < offer.expires());
         }
 
         @SuppressWarnings("ReferenceEquality") // the O(1) change check compares instances
@@ -102,7 +119,9 @@ public final class CommonplaceMenu extends AbstractContainerMenu {
                     && warp == other.warp
                     && rules == other.rules
                     && tuning == other.tuning
-                    && config == other.config;
+                    && config == other.config
+                    && riteReady == other.riteReady
+                    && offerLive == other.offerLive;
         }
     }
 }

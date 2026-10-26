@@ -1,0 +1,5 @@
+{"schema": "vftv:bargains/1", "bargains": {
+  "vftv:keen_eyes":        {"type": "vftv:effect", "weight": 30, "cost": {"temporary": 3},
+                            "effect": "minecraft:night_vision", "amplifier": 0, "duration": 6000},
+  "vftv:quick_hands":      {"type": "vftv:effect", "weight": 20, "cost": {"temporary": 2, "lasting": 1},
+                            "effect": "minecraft:haste", "amplifier": 1, "duration": 3600}}}

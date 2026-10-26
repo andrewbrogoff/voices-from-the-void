@@ -14,7 +14,18 @@ public final class WarpFeature {
     /** Registers the feature's content, registries, data slots and payloads. */
     public static void init(Platform platform) {
         platform.network().clientbound(WarpRulesPayload.TYPE, WarpRulesPayload.STREAM_CODEC);
+        platform.network()
+                .clientbound(VoicePayloads.VoiceCue.TYPE, VoicePayloads.VoiceCue.STREAM_CODEC);
+        platform.network()
+                .clientbound(VoicePayloads.VoiceClear.TYPE, VoicePayloads.VoiceClear.STREAM_CODEC);
+        platform.network()
+                .serverbound(
+                        VoicePayloads.VoiceQuiet.TYPE,
+                        VoicePayloads.VoiceQuiet.STREAM_CODEC,
+                        (payload, player) -> WarpService.quiet(player, payload.open()));
         WarpRulesService.init(platform.network());
+        VoiceChecks.init(platform.network());
         WarpService.init(platform.dataSlots());
+        WarpContent.register(platform.registrar());
     }
 }

@@ -22,6 +22,13 @@
     {"total": 2200, "expect": {"band": 3, "factor_ordinary": 1500, "factor_void": 1000, "penalty_ordinary": 20, "penalty_void": 0}},
     {"total": 24, "tax": false, "expect": {"band": 3, "factor_ordinary": 1000, "factor_void": 1000, "penalty_ordinary": 0, "penalty_void": 0}}
   ],
+  "magnitude": [
+    {"base": 4000, "force": 0, "step_pm": 250, "w": 12, "void": true, "per_warp_pm": 40, "max_bonus_pm": 1000, "cap": 40000, "expect": {"power_pm": 1000, "amp_pm": 1480, "out": 5920}},
+    {"base": 4000, "force": 0, "step_pm": 250, "w": 15, "void": true, "per_warp_pm": 40, "max_bonus_pm": 1000, "cap": 40000, "expect": {"power_pm": 1000, "amp_pm": 1600, "out": 6400}},
+    {"base": 4000, "force": 0, "step_pm": 250, "w": 25, "void": true, "per_warp_pm": 40, "max_bonus_pm": 1000, "cap": 40000, "expect": {"power_pm": 1000, "amp_pm": 2000, "out": 8000}},
+    {"base": 4000, "force": 3, "step_pm": 250, "w": 250, "void": true, "per_warp_pm": 40, "max_bonus_pm": 1000, "cap": 40000, "expect": {"power_pm": 1750, "amp_pm": 2000, "out": 14000}},
+    {"base": 4000, "force": 0, "step_pm": 250, "w": 37, "void": true, "per_warp_pm": 20, "max_bonus_pm": 1000, "cap": 40000, "expect": {"power_pm": 1000, "amp_pm": 1740, "out": 6960}}
+  ],
   "preview": [
     {"state": [0, 0, 0], "cost": [0, 4, 0], "source": {"kind": "entry", "id": "vftv:silence_beneath"}, "expect": {"actual": [0, 4, 0], "clipped": false}},
     {"state": [3, 4, 9], "cost": [0, 0, 2], "source": {"kind": "milestone", "id": "vftv:under_the_silence"}, "expect": {"actual": [0, 0, 1], "clipped": true}},
@@ -36,25 +43,48 @@
     {"state": [0, 0, 9], "cost": [0, 0, 5], "source": {"kind": "milestone", "id": "vftv:joining"}, "cap": 6, "expect": {"actual": [0, 0, 0], "clipped": true}},
     {"state": [0, 0, 9], "cost": [0, 0, -2], "source": {"kind": "command"}, "cap": 6, "expect": {"actual": [0, 0, -2], "clipped": false}}
   ],
+  "checks": [
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 0, "total": 9, "permanent": 2, "counter": 90, "expect": {"roll": 188, "pm": 115, "outcome": "quiet", "counter": 90}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 1, "total": 9, "permanent": 2, "counter": 90, "expect": {"roll": 859, "pm": 115, "outcome": "quiet", "counter": 90}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 2, "total": 9, "permanent": 2, "counter": 90, "expect": {"roll": 766, "pm": 115, "outcome": "quiet", "counter": 90}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 3, "total": 9, "permanent": 2, "counter": 90, "expect": {"roll": 549, "pm": 115, "outcome": "quiet", "counter": 90}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 4, "total": 9, "permanent": 2, "counter": 90, "expect": {"roll": 26, "pm": 115, "outcome": "fired", "counter": 60, "pick": 12, "of": 88, "event": "vftv:footsteps", "cue": "0DF0AA695B97CC14"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 5, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 584, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 6, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 671, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 7, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 532, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 8, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 604, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 9, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 677, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 10, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 595, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 11, "total": 9, "permanent": 2, "counter": 60, "expect": {"roll": 388, "pm": 85, "outcome": "quiet", "counter": 60}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 100, "total": 52, "permanent": 10, "counter": 400, "context": true, "offer": true, "known": 20, "expect": {"roll": 528, "pm": 250, "outcome": "quiet", "counter": 400}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 101, "total": 52, "permanent": 10, "counter": 400, "context": true, "offer": true, "known": 20, "expect": {"roll": 659, "pm": 250, "outcome": "quiet", "counter": 400}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 102, "total": 52, "permanent": 10, "counter": 400, "context": true, "offer": true, "known": 20, "expect": {"roll": 71, "pm": 250, "outcome": "fired", "counter": 370, "pick": 27, "of": 96, "event": "vftv:insight", "cue": "611DA5A7DEEFDC87", "aspect": [19, 20]}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 103, "total": 52, "permanent": 10, "counter": 370, "context": true, "offer": true, "known": 20, "expect": {"roll": 486, "pm": 250, "outcome": "quiet", "counter": 370}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 104, "total": 52, "permanent": 10, "counter": 370, "context": true, "offer": true, "known": 20, "expect": {"roll": 862, "pm": 250, "outcome": "quiet", "counter": 370}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 105, "total": 52, "permanent": 10, "counter": 370, "context": true, "offer": true, "known": 20, "expect": {"roll": 704, "pm": 250, "outcome": "quiet", "counter": 370}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 203, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 235, "pm": 250, "outcome": "fired", "counter": 970, "pick": 2, "of": 94, "event": "vftv:drained", "cue": "339C9C5D43AE62AC"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 204, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 122, "pm": 250, "outcome": "fired", "counter": 970, "pick": 20, "of": 94, "event": "vftv:footsteps", "cue": "0D874E6671D1C117"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 212, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 176, "pm": 250, "outcome": "fired", "counter": 970, "pick": 87, "of": 94, "event": "vftv:whisper", "cue": "FDBDCB55FA6CDBB7"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 215, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 32, "pm": 250, "outcome": "fired", "counter": 970, "pick": 52, "of": 94, "event": "vftv:watcher", "cue": "295BA7579F883854"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 222, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 211, "pm": 250, "outcome": "fired", "counter": 970, "pick": 43, "of": 94, "event": "vftv:offer", "cue": "A22D32BB04C2F67E", "bargain": "vftv:quick_hands"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 228, "total": 20, "permanent": 0, "counter": 1000, "expect": {"roll": 45, "pm": 250, "outcome": "fired", "counter": 970, "pick": 33, "of": 94, "event": "vftv:insight", "cue": "D6C2A8E3AADAB044", "aspect": [0, 7]}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 222, "total": 20, "permanent": 0, "counter": 1000, "bargains": ["vftv:keen_eyes"], "expect": {"roll": 211, "pm": 250, "outcome": "fired", "counter": 970, "pick": 43, "of": 94, "event": "vftv:offer", "cue": "A22D32BB04C2F67E", "bargain": "vftv:keen_eyes"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 509, "total": 5, "permanent": 0, "counter": 1000, "known": 0, "disabled": ["vftv:whisper"], "expect": {"roll": 168, "pm": 250, "outcome": "none", "counter": 1000}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 12, "total": 2, "permanent": 0, "counter": 20, "forced": true, "expect": {"roll": 230, "pm": 35, "outcome": "fired", "counter": 0, "pick": 38, "of": 55, "event": "vftv:whisper", "cue": "17DB95611369EEE9"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 13, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 396, "pm": 115, "outcome": "fired", "counter": 70, "pick": 84, "of": 88, "event": "vftv:whisper", "cue": "45B9ECC5196FAD18"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 14, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 435, "pm": 115, "outcome": "fired", "counter": 70, "pick": 9, "of": 88, "event": "vftv:drained", "cue": "03B96FD3CA6F2CE2"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 15, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 595, "pm": 115, "outcome": "fired", "counter": 70, "pick": 50, "of": 88, "event": "vftv:whisper", "cue": "D49266C63348E278"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 16, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 782, "pm": 115, "outcome": "fired", "counter": 70, "pick": 53, "of": 88, "event": "vftv:whisper", "cue": "FA7617B4A3AC2389"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 17, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 825, "pm": 115, "outcome": "fired", "counter": 70, "pick": 51, "of": 88, "event": "vftv:whisper", "cue": "B6FB8572B56AB179"}},
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "index": 18, "total": 8, "permanent": 0, "counter": 100, "forced": true, "expect": {"roll": 273, "pm": 115, "outcome": "fired", "counter": 70, "pick": 71, "of": 88, "event": "vftv:whisper", "cue": "BF05F3BCFCA1AEE3"}}
+  ],
   "background": [
     {"total": 4, "permanent": 0, "counter": 0, "expect_pm": 15},
     {"total": 0, "permanent": 0, "counter": 0, "expect_pm": 0},
     {"total": 10, "permanent": 10, "counter": 0, "expect_pm": 65}
   ],
   "schedule": [
-    {"uuid": "00112233-4455-6677-8899-aabbccddeeff",
-     "start": {"T": 3, "L": 4, "P": 0, "gear": 0, "counter": 70},
-     "gear_held": {"from": 790, "to": 1499, "value": 2},
-     "until": 2005,
-     "expect": [
-       {"tick": 5, "op": "decay", "T": 2, "total": 6},
-       {"tick": 405, "op": "decay", "T": 1, "total": 5},
-       {"tick": 805, "op": "decay", "T": 0, "total": 4},
-       {"tick": 805, "op": "gear", "gear": 2, "total": 6},
-       {"tick": 805, "op": "check", "total": 6, "band": 1, "index": 0, "expect": {"roll": 188, "pm": 85, "outcome": "quiet", "counter": 70}},
-       {"tick": 1505, "op": "gear", "gear": 0, "total": 4},
-       {"tick": 2005, "op": "check", "total": 4, "band": 0, "index": 1, "expect": {"roll": 859, "pm": 85, "outcome": "quiet", "counter": 70}}
-     ]}
+    {"uuid": "00112233-4455-6677-8899-aabbccddeeff", "start": {"T": 3, "L": 4, "P": 0, "gear": 0, "counter": 70}, "gear_held": {"from": 790, "to": 1499, "value": 2}, "until": 2005, "expect": [{"tick": 5, "op": "decay", "T": 2, "total": 6}, {"tick": 405, "op": "decay", "T": 1, "total": 5}, {"tick": 805, "op": "decay", "T": 0, "total": 4}, {"tick": 805, "op": "gear", "gear": 2, "total": 6}, {"tick": 805, "op": "check", "total": 6, "band": 1, "index": 0, "expect": {"roll": 188, "pm": 85, "outcome": "quiet", "counter": 70}}, {"tick": 1505, "op": "gear", "gear": 0, "total": 4}, {"tick": 2005, "op": "check", "total": 4, "band": 0, "index": 1, "expect": {"roll": 859, "pm": 85, "outcome": "quiet", "counter": 70}}]}
   ],
   "reconcile": [
     {"counter": 900, "counter_max": 150, "total": 9, "permanent": 0, "expect": {"pm": 165, "after_fire": 120, "after_gain_2": 150, "after_void_work": 150}},

@@ -3,7 +3,7 @@ package com.andrewbrogoff.vftv.core.warp;
 /**
  * The warp server switches that {@code WarpRules} carries, keys 2 and 10-12 of {@code
  * vftv-server.toml} (configuration, "Server keys"). The seven per-type Voice switches (keys 3-9)
- * join it with the Voice events.
+ * are server-only, so they are not in this record: {@link VoiceChecks#installTypesOff} takes them.
  *
  * @param voices {@code warp.voices.enabled}: off, no Voice check rolls
  * @param tax {@code warp.tax}: off, the vis factor and the infusion penalty go neutral
@@ -11,6 +11,57 @@ package com.andrewbrogoff.vftv.core.warp;
  * @param gear {@code warp.gear}: off, the gear sample is 0
  */
 public record WarpConfig(boolean voices, boolean tax, boolean amplifier, boolean gear) {
+    /**
+     * The per-type Voice switches, keys 3-9 under {@code warp.voices}: each config key, its
+     * {@code vftv:voice_event_type}, its option name and its comment (verbatim, also the tooltip).
+     *
+     * @param key the key under {@code warp.voices}
+     * @param type the event type it switches
+     * @param name the option's English name
+     * @param comment the file comment
+     */
+    public record TypeSwitch(String key, String type, String name, String comment) {}
+
+    /** Keys 3-9, in the configuration spec's order. Server-only: never sent. */
+    public static final java.util.List<TypeSwitch> TYPE_SWITCHES =
+            java.util.List.of(
+                    new TypeSwitch(
+                            "whisper",
+                            "vftv:whisper",
+                            "Whispers",
+                            "Whisper events. Off: never chosen. Default: true."),
+                    new TypeSwitch(
+                            "insight",
+                            "vftv:insight",
+                            "Insights",
+                            "Insight events (aspect points). Off: never chosen. Default: true."),
+                    new TypeSwitch(
+                            "sound",
+                            "vftv:sound",
+                            "Sounds",
+                            "Phantom sound events. Off: never chosen. Default: true."),
+                    new TypeSwitch(
+                            "colour",
+                            "vftv:colour",
+                            "Colour drain",
+                            "Colour drain events. Off: never chosen. Default: true."),
+                    new TypeSwitch(
+                            "phantom_mob",
+                            "vftv:phantom_mob",
+                            "Apparitions",
+                            "Apparition events. Off: never chosen. Default: true."),
+                    new TypeSwitch(
+                            "bargain",
+                            "vftv:bargain",
+                            "Bargains",
+                            "Bargain offers. Off: no new offer; a standing one stays. Default:"
+                                    + " true."),
+                    new TypeSwitch(
+                            "status",
+                            "vftv:status",
+                            "Status effects",
+                            "Status-effect events in context. Off: never chosen. Default: true."));
+
     /** The defaults: every switch on. */
     public static final WarpConfig DEFAULT = new WarpConfig(true, true, true, true);
 

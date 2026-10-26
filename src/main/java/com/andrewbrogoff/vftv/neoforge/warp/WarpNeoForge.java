@@ -36,6 +36,7 @@ import net.neoforged.fml.event.lifecycle.InterModEnqueueEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.AddServerReloadListenersEvent;
 import net.neoforged.neoforge.event.OnDatapackSyncEvent;
+import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
@@ -88,6 +89,13 @@ public final class WarpNeoForge {
                 event -> {
                     if (event.getEntity() instanceof ServerPlayer player) {
                         WarpService.onLogout(player);
+                    }
+                });
+        gameBus.addListener(
+                LivingDeathEvent.class,
+                event -> {
+                    if (event.getEntity() instanceof ServerPlayer player) {
+                        WarpService.onDeath(player);
                     }
                 });
         gameBus.addListener(
